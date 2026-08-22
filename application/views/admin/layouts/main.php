@@ -21,6 +21,8 @@ $menu  = array(
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title><?= e($title) ?> - Quản trị</title>
+<!-- Khu quản trị luôn chặn lập chỉ mục, không phụ thuộc cấu hình -->
+<meta name="robots" content="noindex, nofollow, noarchive">
 <link rel="stylesheet" href="<?= base_url('assets/admin/css/admin.css') ?>?v=<?= @filemtime(FCPATH.'assets/admin/css/admin.css') ?>">
 </head>
 <body>

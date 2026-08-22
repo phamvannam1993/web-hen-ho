@@ -10,6 +10,9 @@ class Settings extends Admin_Controller
             'site_slogan' => 'Khẩu hiệu (hiển thị ở đầu trang)',
             'site_desc'   => 'Mô tả website (SEO)',
         ),
+        'seo'        => array(
+            'site_noindex' => 'Chặn Google lập chỉ mục (1 = chặn, 0 = cho phép)',
+        ),
         'contact'    => array(
             'hotline'       => 'Hotline',
             'contact_email' => 'Email hỗ trợ',

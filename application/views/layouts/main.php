@@ -8,6 +8,21 @@ $menu  = $categories ?? array();
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title><?= e($title ?? 'Hẹn hò kết bạn') ?> - <?= e($settings['site_name'] ?? 'HenHo24') ?></title>
 <meta name="description" content="<?= e($meta_desc ?? '') ?>">
+<?php
+/*
+ * Chặn công cụ tìm kiếm lập chỉ mục.
+ * Bật/tắt tại Quản trị -> Cấu hình -> "Chặn Google lập chỉ mục".
+ * Khi website còn đang phát triển nên để bật, lúc chạy thật thì tắt đi.
+ */
+$noindex = ($settings['site_noindex'] ?? '1') === '1';
+?>
+<?php if ($noindex): ?>
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+    <meta name="googlebot" content="noindex, nofollow">
+<?php else: ?>
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="<?= current_url() ?>">
+<?php endif; ?>
 <link rel="stylesheet" href="<?= base_url('assets/site/css/style.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/style.css') ?>">
 </head>
 <body>
