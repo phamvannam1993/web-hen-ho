@@ -50,7 +50,7 @@
                     <option value="delete">Xoá</option>
                 </select>
                 <button class="btn btn-light btn-sm" type="submit"
-                        onclick="return confirm('Áp dụng cho các tin đã chọn?')">Áp dụng</button>
+                        data-confirm="Áp dụng cho các tin đã chọn?">Áp dụng</button>
             </div>
         </div>
         <div class="table-scroll">
@@ -88,7 +88,7 @@
                                 <a class="btn btn-light btn-sm" href="<?= site_url('tin/' . $p['slug']) ?>" target="_blank">Xem</a>
                             <?php endif; ?>
                             <a class="btn btn-danger btn-sm" href="<?= site_url('admin/posts/delete/' . $p['id']) ?>"
-                               onclick="return confirm('Xoá tin này?')">Xoá</a>
+                               data-confirm="Xoá tin này?" data-confirm-danger>Xoá</a>
                         </td>
                     </tr>
                 <?php endforeach; ?>

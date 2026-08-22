@@ -28,7 +28,7 @@
                     <td class="actions">
                         <a class="btn btn-light btn-sm" href="<?= site_url('admin/categories/edit/' . $c['id']) ?>">Sửa</a>
                         <a class="btn btn-danger btn-sm" href="<?= site_url('admin/categories/delete/' . $c['id']) ?>"
-                           onclick="return confirm('Xoá danh mục này?')">Xoá</a>
+                           data-confirm="Xoá danh mục này?" data-confirm-danger>Xoá</a>
                     </td>
                 </tr>
             <?php endforeach; ?>

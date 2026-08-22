@@ -6,7 +6,7 @@
             <a class="btn btn-light btn-sm" href="<?= site_url('admin/users/edit/' . $u['id']) ?>">Sửa hồ sơ</a>
             <a class="btn btn-light btn-sm" href="<?= site_url('thanh-vien/' . $u['slug']) ?>" target="_blank">Xem trang cá nhân</a>
             <a class="btn btn-danger btn-sm" href="<?= site_url('admin/users/delete/' . $u['id']) ?>"
-               onclick="return confirm('Xoá thành viên này?')">Xoá</a>
+               data-confirm="Xoá thành viên này?" data-confirm-danger>Xoá</a>
         </div>
     </div>
     <div class="panel-body form-grid">

@@ -41,10 +41,10 @@ $reasons = array('lua_dao' => 'Lừa đảo', 'noi_dung_xau' => 'Nội dung xấ
                     <td class="actions">
                         <?php if ($r['target_type'] === 'post'): ?>
                             <a class="btn btn-danger btn-sm" href="<?= site_url('admin/reports/act/' . $r['id'] . '/hide_post') ?>"
-                               onclick="return confirm('Ẩn tin bị báo cáo?')">Ẩn tin</a>
+                               data-confirm="Ẩn tin bị báo cáo?" data-confirm-danger>Ẩn tin</a>
                         <?php elseif ($r['target_type'] === 'user'): ?>
                             <a class="btn btn-danger btn-sm" href="<?= site_url('admin/reports/act/' . $r['id'] . '/ban_user') ?>"
-                               onclick="return confirm('Cấm tài khoản này?')">Cấm TK</a>
+                               data-confirm="Cấm tài khoản này?" data-confirm-danger>Cấm TK</a>
                         <?php endif; ?>
                         <a class="btn btn-success btn-sm" href="<?= site_url('admin/reports/resolve/' . $r['id'] . '/resolved') ?>">Đã xử lý</a>
                         <a class="btn btn-light btn-sm" href="<?= site_url('admin/reports/resolve/' . $r['id'] . '/dismissed') ?>">Bỏ qua</a>

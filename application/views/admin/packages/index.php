@@ -23,7 +23,7 @@
                     <td class="actions">
                         <a class="btn btn-light btn-sm" href="<?= site_url('admin/packages/edit/' . $p['id']) ?>">Sửa</a>
                         <a class="btn btn-danger btn-sm" href="<?= site_url('admin/packages/delete/' . $p['id']) ?>"
-                           onclick="return confirm('Xoá gói này?')">Xoá</a>
+                           data-confirm="Xoá gói này?" data-confirm-danger>Xoá</a>
                     </td>
                 </tr>
             <?php endforeach; ?>

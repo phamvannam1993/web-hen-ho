@@ -176,7 +176,7 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
                                 <?php endif; ?>
                                 <?php if ($can_delete): ?>
                                     <a class="comment-del" href="<?= site_url('thanh-vien/' . $m['slug'] . '/xoa-binh-luan/' . $c['id']) ?>"
-                                       onclick="return confirm('Xoá bình luận này?')">Xoá</a>
+                                       data-confirm="Xoá bình luận này?" data-confirm-danger>Xoá</a>
                                 <?php endif; ?>
                             </div>
 

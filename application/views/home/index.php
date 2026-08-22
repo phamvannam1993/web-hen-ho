@@ -105,11 +105,13 @@
         <div class="article-grid">
             <?php foreach ($articles as $a): ?>
                 <article class="article-card">
-                    <a href="<?= site_url('tin-tuc/' . $a['slug']) ?>">
+                    <a class="article-thumb" href="<?= site_url('tin-tuc/' . $a['slug']) ?>">
                         <img src="<?= $a['thumbnail'] ? base_url(ltrim($a['thumbnail'], '/')) : base_url('assets/site/img/placeholder.svg') ?>" alt="<?= e($a['title']) ?>">
-                        <h3><?= e($a['title']) ?></h3>
                     </a>
+                    <div class="article-body">
+                        <h3><a href="<?= site_url('tin-tuc/' . $a['slug']) ?>"><?= e($a['title']) ?></a></h3>
                     <p><?= e(excerpt($a['excerpt'] ?: $a['content'], 110)) ?></p>
+                    </div>
                 </article>
             <?php endforeach; ?>
         </div>

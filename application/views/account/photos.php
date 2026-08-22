@@ -27,7 +27,7 @@
                             <figcaption>
                                 <?= status_label($ph['status'] === 'approved' ? 'approved' : ($ph['status'] === 'rejected' ? 'rejected' : 'pending')) ?>
                                 <a href="<?= site_url('tai-khoan/xoa-anh/' . $ph['id']) ?>"
-                                   onclick="return confirm('Xoá ảnh này?')">Xoá</a>
+                                   data-confirm="Xoá ảnh này?" data-confirm-danger>Xoá</a>
                             </figcaption>
                         </figure>
                     <?php endforeach; ?>

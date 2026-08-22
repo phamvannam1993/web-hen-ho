@@ -29,7 +29,7 @@
                             <td>
                                 <a href="<?= site_url('tai-khoan/sua-tin/' . $p['id']) ?>">Sửa</a> ·
                                 <a href="<?= site_url('tai-khoan/xoa-tin/' . $p['id']) ?>"
-                                   onclick="return confirm('Xoá tin này?')">Xoá</a>
+                                   data-confirm="Xoá tin này?" data-confirm-danger>Xoá</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
