@@ -48,21 +48,88 @@
 
     window.appModal = showModal;
 
-    /* ------------------------- Menu mobile ------------------------- */
+    /* ------------------------- Menu mobile: ngăn kéo ------------------------- */
 
-    // Trên màn hình hẹp, bấm vào mục cha để mở/đóng danh mục con thay vì hover.
-    // Không chặn điều hướng ở desktop vì ở đó submenu mở bằng hover.
-    document.querySelectorAll('.has-mega > a').forEach(function (link) {
-        link.addEventListener('click', function (e) {
-            if (window.innerWidth > 720) { return; }
-            e.preventDefault();
-            var li = link.parentNode;
-            document.querySelectorAll('.has-mega.open').forEach(function (other) {
-                if (other !== li) { other.classList.remove('open'); }
+    (function () {
+        var toggle  = document.getElementById('nav-toggle');
+        var drawer  = document.getElementById('nav-drawer');
+        var overlay = document.getElementById('nav-overlay');
+        var closeBtn = document.getElementById('drawer-close');
+        if (!toggle || !drawer || !overlay) { return; }
+
+        var MOBILE = 900;   // khớp với ngưỡng @media trong CSS
+
+        function isMobile() { return window.innerWidth <= MOBILE; }
+
+        function openDrawer() {
+            drawer.classList.add('open');
+            toggle.classList.add('active');
+            toggle.setAttribute('aria-expanded', 'true');
+            overlay.hidden = false;
+            // đợi một khung hình để hiệu ứng mờ dần chạy được
+            requestAnimationFrame(function () { overlay.classList.add('show'); });
+            document.body.classList.add('drawer-open');
+        }
+
+        function closeDrawer() {
+            drawer.classList.remove('open');
+            toggle.classList.remove('active');
+            toggle.setAttribute('aria-expanded', 'false');
+            overlay.classList.remove('show');
+            document.body.classList.remove('drawer-open');
+            // ẩn hẳn sau khi hiệu ứng kết thúc để không chắn thao tác
+            setTimeout(function () {
+                if (!drawer.classList.contains('open')) { overlay.hidden = true; }
+            }, 280);
+            // thu gọn mọi danh mục con đang mở
+            document.querySelectorAll('.has-mega.open').forEach(function (li) {
+                li.classList.remove('open');
             });
-            li.classList.toggle('open');
+        }
+
+        toggle.addEventListener('click', function () {
+            if (drawer.classList.contains('open')) { closeDrawer(); } else { openDrawer(); }
         });
-    });
+
+        overlay.addEventListener('click', closeDrawer);
+        if (closeBtn) { closeBtn.addEventListener('click', closeDrawer); }
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && drawer.classList.contains('open')) { closeDrawer(); }
+        });
+
+        // Bấm vào một mục menu thường thì đóng ngăn kéo rồi mới chuyển trang
+        drawer.querySelectorAll('a').forEach(function (link) {
+            link.addEventListener('click', function () {
+                if (isMobile() && !link.parentNode.classList.contains('has-mega')) {
+                    closeDrawer();
+                }
+            });
+        });
+
+        // Mục có danh mục con: bấm để xổ ra thay vì chuyển trang ngay
+        document.querySelectorAll('.has-mega > a').forEach(function (link) {
+            link.addEventListener('click', function (e) {
+                if (!isMobile()) { return; }
+                e.preventDefault();
+                var li = link.parentNode;
+                // mở mục này thì đóng các mục khác cho gọn
+                document.querySelectorAll('.has-mega.open').forEach(function (other) {
+                    if (other !== li) { other.classList.remove('open'); }
+                });
+                li.classList.toggle('open');
+            });
+        });
+
+        // Xoay ngang hoặc phóng to cửa sổ qua ngưỡng desktop thì trả về trạng thái thường
+        var resizeTimer;
+        window.addEventListener('resize', function () {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function () {
+                if (!isMobile() && drawer.classList.contains('open')) { closeDrawer(); }
+            }, 150);
+        });
+    })();
 
     /* ------------------------- Xem trước ảnh khi chọn file ------------------------- */
 
