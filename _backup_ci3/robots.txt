@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /*.css$
+Disallow: /*.js$
+Disallow: /admin/
+Disallow: /admin
+Disallow: /admin/
+Disallow: /admin/*
+Disallow: /*ajax/*
+Sitemap: https://vnesports.vn/sitemap.xml

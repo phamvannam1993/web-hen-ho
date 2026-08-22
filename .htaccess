@@ -1,0 +1,15 @@
+RewriteEngine On
+
+# Không rewrite với file/thư mục có thật (assets, uploads, fonts...)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php/$1 [L,QSA]
+
+# Chặn truy cập trực tiếp vào thư mục mã nguồn
+RewriteRule ^(application|system|database|writable)/ - [F,L]
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|jpg|jpeg|png|webp|gif|svg|woff2?)$">
+        Header set Cache-Control "public, max-age=2592000"
+    </FilesMatch>
+</IfModule>

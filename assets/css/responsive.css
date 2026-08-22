@@ -1,0 +1,185 @@
+.landing-layout{position: relative;}
+@media screen and (max-width:1366px){
+	.slider-top img.slider-bg {
+      height: 355px;
+  }
+
+}
+@media screen and (min-width:1200px){
+    
+}
+
+@media screen and (max-width:1199px){
+	.slider-top img.slider-bg {
+		height: 380px;
+	}
+    .width-80{width: 95%; margin: auto;}
+}
+
+@media screen and (min-width:1024px) and (max-width:1199px){
+}
+
+@media screen and (max-width:1023px){
+    .logo-info {
+     width: 218px; 
+    height: 58px;
+}
+}
+
+@media screen and (min-width:992px) and (max-width:1023px){
+
+}
+
+@media screen and (max-width:991px){
+    .mainContainer, .mainContainer iframe, .mainContainer img{max-width: 100% !important}
+    .header-bar{width: 100%; padding: 0px 20px;}
+    #content-slider h2{font-size: 25px;}
+    #content-slider h4{font-size: 18px; color: #fff; position: relative;}
+    #content-slider p{color: #919392; font-size: 14px;}
+    #content-slider .btn-registry{font-size: 14px; padding: 8px 20px; margin-top: 10px;}
+    .solution{display: none;}
+    .items-step h3, .items-step .des-step{width: 100%;}
+    .navbar-nav>li {
+        float: left;
+    }
+    .landing-layout-shop {padding-left: 10px; padding-right: 10px;}
+
+}
+@media (min-width: 768px)
+{
+    /*.logo-info{
+        width: 218px;
+        height: 58px;
+    }*/
+}
+@media screen and (min-width:768px) and (max-width:991px){
+}
+@media screen and (max-width:799px){
+    .add-to-cart a{padding: 7px 5px;}
+    .cart-navi{padding-bottom: 0;}
+    .item_product {
+        min-height: 320px;
+    }
+}
+@media screen and (max-width:767px){
+    
+    .header-menu{
+    	display: inline-block;
+    }
+    .logo-info{
+    	width: 180px;
+        font-size: 24px;
+    }
+    .logo span{
+    	display: none;
+    }
+    #search{
+        font-size: 12px;
+    }
+    h2{
+        font-size: 18px;
+    }
+    #categories_list{
+        width: 70px;
+    }
+    #container{
+        padding: 33px 30px 0 10px;
+    }
+    .content-tutorial{
+        padding-left: 0;
+    }
+    .content-userfull,.content-usedmore{
+        padding-left: 8px;
+    }
+    li {
+        font-size: 14px;
+    }
+    #bottom{
+        padding-bottom: 240px; 
+        padding-left: 48px;
+    }
+    .landing-title{
+        font-size: 16px;
+    }
+}
+@media screen and (max-width:600px){
+   /*#right_block{
+       padding: 0 0 0 80px;
+   }*/
+   .logo img {
+        padding-right: 6px;
+    }
+    .logo{
+        padding-left: 0;
+        padding-right: 0;
+        width: 148px;
+    }
+    #f_search input{
+        padding: 0 0 0 10px;
+        overflow: hidden;
+    }
+    .header-title{
+        padding: 7px 13px 7px 71px
+    }
+    .content-tutorial{
+        padding-right: 13px;
+    }
+    #title-span p {
+        text-align: center;
+        margin-right: 16px;
+    }
+    .bottom {
+        margin-right: 20px;
+        margin-left: 20px;
+    }
+    .bottom span {
+        font-size: 14px;
+    }
+    .bottom a {
+        font-size: 14px;
+    }
+    #right_block span{
+        font-size: 14px;
+    }
+    #copy_block{
+        width: 80%;
+        font-size: 18px;
+    }
+    
+}
+@media screen and (min-width:480px) and (max-width:767px){
+
+}
+
+@media screen and (max-width:479px){
+    .add-to-cart a{padding: 7px 15px;}
+    .header-shop-name{font-size: 15px !important; margin-top: 0 !important;}
+    #work-table .table>thead>tr>th {padding: 5px;
+    }
+    #work-table {
+        width: 100%;
+    }
+    div#result-vendor {
+        padding: 10px;
+        }.slider-top img.slider-bg {
+            height: 430px;
+        }
+        .item-mobile-cart .cart-image{width: 100%;max-height: 80px; object-fit: cover;}
+        .col-xsm-12{width: 100% !important;}    
+        .label-coupon-ques{display: block;}
+    }
+    @media screen and (max-width:321px){
+        .header-shop-name{font-size: 15px !important; margin-top: 0 !important;}
+        .header-shop-name{font-size: 14px !important; margin-top: 0 !important;}
+    }
+    @media screen and (max-width:320px){
+        #customer_form .col-12-full{width: 100%;}
+    }
+    @media screen and (max-width:240px){
+        .header-shop-name{font-size: 15px !important; margin-top: 0 !important;}
+        #right_block{
+           padding: 0 0 0 80px;
+       }
+   }
+
+

@@ -1,0 +1,21 @@
+RewriteEngine on
+RewriteCond %{HTTP_HOST} ^mobifonts\.com [NC]
+RewriteCond %{SERVER_PORT} 80
+RewriteRule ^(.*)$ https://mobifonts.com/$1 [R,L]
+RewriteCond %{HTTP_HOST} ^www.mobifonts.com [NC]
+RewriteRule ^(.*)$ https://mobifonts.com/$1 [L,R=301]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+
+RewriteCond %{REQUEST_FILENAME} !-d
+
+RewriteRule ^(.*)$ index.php/?$1 [L,QSA]
+
+
+#RewriteEngine on
+#RewriteCond %{HTTPS} off
+#RewriteCond %{HTTP:X-Forwarded-SSL} !on
+#RewriteCond %{HTTP_HOST} ^tftactics\.vn$ [OR]
+#RewriteCond %{HTTP_HOST} ^www\.tftactics\.vn$
+#RewriteRule ^(.*)$ "https\:\/\/tftactics\.vn\/$1" [R=301,L]
+
