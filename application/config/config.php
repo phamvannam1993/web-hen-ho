@@ -32,7 +32,7 @@ if (getenv('APP_URL')) {
 	$dir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
 	$config['base_url'] = $scheme . '://' . $_SERVER['HTTP_HOST'] . rtrim($dir, '/') . '/';
 } else {
-	$config['base_url'] = 'http://localhost/';
+	$config['base_url'] = 'https://saigoncupid.com';
 }
 
 /*
@@ -396,7 +396,7 @@ $config['encryption_key'] = getenv('APP_KEY') ?: 'henho24_dev_key_change_me_2026
 $config['sess_driver'] = 'files';
 $config['sess_cookie_name'] = 'henho_session';
 $config['sess_expiration'] = 86400;
-$config['sess_save_path'] = NULL;
+$config['sess_save_path'] = FCPATH . 'writable/sessions';;
 $config['sess_match_ip'] = FALSE;
 $config['sess_time_to_update'] = 300;
 $config['sess_regenerate_destroy'] = FALSE;
