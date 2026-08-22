@@ -57,6 +57,7 @@ $menu  = array(
         </div>
     </div>
 </div>
+<script src="<?= base_url('assets/admin/js/password-toggle.js') ?>?v=<?= @filemtime(FCPATH.'assets/admin/js/password-toggle.js') ?>"></script>
 <script src="<?= base_url('assets/admin/js/admin.js') ?>?v=<?= @filemtime(FCPATH.'assets/admin/js/admin.js') ?>"></script>
 <script src="<?= base_url('assets/ckeditor/ckeditor.js') ?>"></script>
 <script src="<?= base_url('assets/admin/js/editor.js') ?>?v=<?= @filemtime(FCPATH.'assets/admin/js/editor.js') ?>"></script>

@@ -20,5 +20,6 @@
         <input type="password" id="password" name="password" required>
         <button class="btn btn-primary" type="submit">Đăng nhập</button>
     </form>
+<script src="<?= base_url('assets/admin/js/password-toggle.js') ?>"></script>
 </body>
 </html>

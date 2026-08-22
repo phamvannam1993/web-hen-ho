@@ -266,26 +266,6 @@
         }).then(function (r) { return r.json(); });
     }
 
-    /* --- Lấy mã bảo mật cho form đăng ký / đăng nhập --- */
-    document.querySelectorAll('[data-get-code]').forEach(function (link) {
-        link.addEventListener('click', function (e) {
-            e.preventDefault();
-            post(link.href, {}).then(function (res) {
-                if (!res.ok) {
-                    return showModal({ type: 'error', title: 'Không lấy được mã', message: res.message || 'Vui lòng thử lại.' });
-                }
-                var input = link.closest('form').querySelector('[name=access_code]');
-                if (input) { input.value = res.code; }
-                showModal({
-                    type: 'success',
-                    title: 'Mã bảo mật của bạn',
-                    message: 'Mã đã được điền sẵn vào ô bên dưới, hiệu lực trong 30 phút.',
-                    code: res.code
-                });
-            }).catch(function () { window.location.href = link.href; });
-        });
-    });
-
     /* --- Trang Khám phá: thích / bỏ qua từng hồ sơ --- */
     var grid = document.getElementById('swipe-grid');
     if (grid) {

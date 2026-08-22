@@ -6,40 +6,7 @@ class Auth extends MY_Controller
     public function __construct()
     {
         parent::__construct();
-        $this->load->model(array('m_user', 'm_access_code'));
-    }
-
-    /**
-     * Nút "LẤY PASS": cấp mã bảo mật cho form đăng ký / đăng nhập.
-     * Trả JSON khi gọi bằng AJAX, ngược lại hiện mã qua flash message.
-     */
-    public function get_code($purpose = 'register')
-    {
-        if (!in_array($purpose, array('register', 'login'), true)) {
-            show_404();
-        }
-        $result = $this->m_access_code->issue($purpose, $this->auth->id(), null, 0, 30);
-
-        if ($this->input->is_ajax_request()) {
-            return $this->json($result);
-        }
-        set_flash('info', 'Mã bảo mật của bạn: ' . $result['code'] . ' (hiệu lực 30 phút)');
-        redirect($purpose === 'login' ? 'dang-nhap' : 'dang-ky');
-    }
-
-    /** Kiểm tra mã bảo mật nếu cấu hình yêu cầu. Trả về true nếu hợp lệ. */
-    private function check_code($purpose)
-    {
-        if (setting('require_code_' . $purpose, '0') !== '1') {
-            return true;
-        }
-        $row = $this->m_access_code->verify($this->input->post('access_code'), $purpose);
-        if (!$row) {
-            set_flash('danger', 'Mã bảo mật không đúng hoặc đã hết hạn. Vui lòng bấm "Lấy pass" để nhận mã mới.');
-            return false;
-        }
-        $this->m_access_code->consume($row['id']);
-        return true;
+        $this->load->model('m_user');
     }
 
     public function register()
@@ -57,7 +24,7 @@ class Auth extends MY_Controller
             $this->form_validation->set_rules('gender', 'Giới tính', 'required|in_list[male,female,other]');
             $this->form_validation->set_rules('agree', 'Điều khoản', 'required');
 
-            if ($this->form_validation->run() && $this->check_code('register')) {
+            if ($this->form_validation->run()) {
                 $email = $this->input->post('email', true);
                 $phone = $this->input->post('phone', true);
 
@@ -95,7 +62,7 @@ class Auth extends MY_Controller
             $this->form_validation->set_rules('identity', 'Email/SĐT', 'required');
             $this->form_validation->set_rules('password', 'Mật khẩu', 'required');
 
-            if ($this->form_validation->run() && $this->check_code('login')) {
+            if ($this->form_validation->run()) {
                 $result = $this->auth->attempt(
                     $this->input->post('identity', true),
                     $this->input->post('password'),
