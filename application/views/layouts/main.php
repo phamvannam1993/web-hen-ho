@@ -45,8 +45,18 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
             <span class="brand-text"><?= e($settings['site_name'] ?? 'HenHo24') ?></span>
         </a>
 
-        <button class="nav-toggle" type="button" aria-label="Mở menu"
-                onclick="document.querySelector('.nav-list').classList.toggle('open')">☰</button>
+        <button class="nav-toggle" type="button" id="nav-toggle"
+                aria-label="Mở menu" aria-expanded="false" aria-controls="nav-drawer">
+            <span class="nav-toggle-bar"></span>
+            <span class="nav-toggle-bar"></span>
+            <span class="nav-toggle-bar"></span>
+        </button>
+
+        <div class="nav-drawer" id="nav-drawer">
+        <div class="drawer-head">
+            <span class="drawer-title">Menu</span>
+            <button type="button" class="drawer-close" id="drawer-close" aria-label="Đóng menu">&times;</button>
+        </div>
 
         <ul class="nav-list">
             <li><a class="active" href="<?= site_url() ?>">Trang chủ</a></li>
@@ -84,6 +94,9 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
                 <a class="btn-nav-solid" href="<?= site_url('dang-ky') ?>">Tạo tài khoản</a>
             <?php endif; ?>
         </div>
+        </div><!-- /.nav-drawer -->
+
+        <div class="nav-overlay" id="nav-overlay" hidden></div>
     </div>
 </header>
 
