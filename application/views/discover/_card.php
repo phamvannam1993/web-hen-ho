@@ -10,6 +10,9 @@ $score = min(100, (int) ($c['match_score'] ?? 0));
         <?php if (is_online($c['last_active_at'])): ?><span class="dot-online"></span><?php endif; ?>
         <?php if (!empty($c['is_vip'])): ?><span class="badge-vip">VIP</span><?php endif; ?>
 
+    </div>
+
+    <div class="swipe-body">
         <div class="swipe-caption">
             <h3><?= e(display_name($c)) ?><?= !empty($c['age']) ? ', ' . (int) $c['age'] : '' ?></h3>
             <p>
@@ -17,9 +20,6 @@ $score = min(100, (int) ($c['match_score'] ?? 0));
                 <?= !empty($c['job']) ? ' · ' . e($c['job']) : '' ?>
             </p>
         </div>
-    </div>
-
-    <div class="swipe-body">
         <p class="swipe-tags">
             <?php if (!empty($c['height_cm'])): ?><span><?= (int) $c['height_cm'] ?> cm</span><?php endif; ?>
             <?php if (!empty($c['weight_kg'])): ?><span><?= (int) $c['weight_kg'] ?> kg</span><?php endif; ?>

@@ -1096,11 +1096,15 @@ img { max-width: 100%; height: auto; display: block; }
 .swipe-photo .dot-online { right: 12px; top: 12px; }
 .swipe-photo .badge-vip { left: auto; right: 12px; top: 44px; border-radius: 20px; }
 
-.swipe-caption { position: absolute; left: 0; right: 0; bottom: 12px; padding: 0 16px; z-index: 2; color: #fff; }
+/* Tên và khu vực nằm trong phần thân nhưng được neo ngược lên đè đáy ảnh,
+   nhờ vậy mobile chỉ cần bỏ neo là chữ tự về cột bên phải. */
+.swipe-body { padding: 14px 16px 18px; position: relative; }
+.swipe-caption {
+    position: absolute; left: 0; right: 0; bottom: 100%;
+    padding: 0 16px 12px; z-index: 2; color: #fff;
+}
 .swipe-caption h3 { margin: 0; font-size: 20px; text-shadow: 0 1px 4px rgba(0,0,0,.6); }
 .swipe-caption p { margin: 2px 0 0; font-size: 14px; opacity: .92; text-shadow: 0 1px 4px rgba(0,0,0,.6); }
-
-.swipe-body { padding: 14px 16px 18px; }
 .swipe-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
 .swipe-tags span { background: #f4f4f6; color: #555; padding: 3px 12px; border-radius: 20px; font-size: 13px; }
 .swipe-bio { margin: 0 0 14px; color: var(--muted); font-size: 14px; min-height: 42px; }
@@ -1478,3 +1482,49 @@ img { max-width: 100%; height: auto; display: block; }
 }
 .pw-toggle:hover { opacity: 1; background: #f4f4f6; }
 .pw-toggle.on { opacity: 1; }
+
+/* ---------- Mobile: thẻ Khám phá chuyển sang hàng ngang như thẻ thành viên ----------
+   Đặt ở cuối tệp để chắc chắn ghi đè các khai báo desktop phía trên. */
+
+@media (max-width: 560px) {
+    .swipe-grid { grid-template-columns: 1fr; gap: 10px; }
+
+    .swipe-card {
+        display: flex; align-items: stretch; border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,.08);
+    }
+
+    /* Ảnh vuông cố định bên trái */
+    .swipe-photo { flex: 0 0 108px; width: 108px; }
+    .swipe-photo img { aspect-ratio: 1; height: 100%; }
+    .swipe-photo::after { display: none; }   /* bỏ lớp phủ tối vì chữ không còn đè lên ảnh */
+    .match-score { top: 6px; left: 6px; padding: 2px 8px; font-size: 12px; }
+    .swipe-photo .dot-online { top: 6px; right: 6px; }
+    .swipe-photo .badge-vip { top: auto; bottom: 6px; right: 0; padding: 2px 8px; font-size: 10.5px; }
+
+    /* Cột thông tin bên phải */
+    .swipe-body {
+        flex: 1; min-width: 0; position: static; padding: 10px 12px;
+        display: flex; flex-direction: column; gap: 5px;
+    }
+
+    /* Tên trở lại luồng bình thường, chữ đen trên nền trắng */
+    .swipe-caption { position: static; padding: 0; color: var(--ink); }
+    .swipe-caption h3 {
+        font-size: 15.5px; text-shadow: none;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .swipe-caption p {
+        font-size: 12.5px; color: var(--muted); opacity: 1; text-shadow: none;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    .swipe-tags { gap: 5px; margin: 0; }
+    .swipe-tags span { padding: 2px 9px; font-size: 12px; }
+    .swipe-bio { display: none; }   /* ẩn giới thiệu cho gọn, xem đầy đủ ở trang hồ sơ */
+
+    /* Ba nút gọn lại nhưng vẫn đủ lớn để bấm bằng ngón tay */
+    .swipe-actions { gap: 8px; margin-top: auto; }
+    .btn-pass-round, .btn-like-round { width: 40px; height: 40px; font-size: 17px; }
+    .btn-view-round { padding: 9px; font-size: 13.5px; border-radius: 20px; }
+}

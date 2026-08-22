@@ -7,6 +7,7 @@ class Auth extends MY_Controller
     {
         parent::__construct();
         $this->load->model('m_user');
+        $this->load->library('mailer');
     }
 
     public function register()
@@ -95,24 +96,57 @@ class Auth extends MY_Controller
             if ($this->form_validation->run()) {
                 $email = $this->input->post('email', true);
                 $user  = $this->db->where('email', $email)->get('users')->row_array();
-                if ($user) {
-                    $token = bin2hex(random_bytes(24));
-                    $this->db->insert('user_tokens', array(
-                        'user_id'    => $user['id'],
-                        'type'       => 'reset_password',
-                        'token'      => $token,
-                        'expires_at' => date('Y-m-d H:i:s', strtotime('+2 hours')),
-                    ));
-                    // TODO: gửi email thật khi cấu hình SMTP; tạm hiển thị liên kết ở môi trường dev.
-                    $link = site_url('dat-lai-mat-khau/' . $token);
-                    set_flash('info', ENVIRONMENT === 'production'
-                        ? 'Đã gửi hướng dẫn đặt lại mật khẩu tới email của bạn.'
-                        : 'Liên kết đặt lại (dev): ' . $link);
-                } else {
-                    set_flash('info', 'Nếu email tồn tại, hướng dẫn đặt lại đã được gửi.');
+                if (!$user) {
+                    set_flash('danger', 'Email này chưa được đăng ký trên hệ thống. '
+                        . 'Hãy kiểm tra lại hoặc tạo tài khoản mới.');
+                    redirect('quen-mat-khau');
                 }
+
+                if ($user['status'] === 'banned') {
+                    set_flash('danger', 'Tài khoản này đã bị khoá. Vui lòng liên hệ hỗ trợ.');
+                    redirect('quen-mat-khau');
+                }
+
+                // Vô hiệu các liên kết cũ chưa dùng, mỗi lần yêu cầu chỉ còn một liên kết hợp lệ
+                $this->db->where('user_id', $user['id'])
+                    ->where('type', 'reset_password')->where('used_at', null)
+                    ->update('user_tokens', array('used_at' => date('Y-m-d H:i:s')));
+
+                $hours = 2;
+                $token = bin2hex(random_bytes(24));
+                $this->db->insert('user_tokens', array(
+                    'user_id'    => $user['id'],
+                    'type'       => 'reset_password',
+                    'token'      => $token,
+                    'expires_at' => date('Y-m-d H:i:s', strtotime('+' . $hours . ' hours')),
+                ));
+
+                $link = site_url('dat-lai-mat-khau/' . $token);
+                $sent = $this->mailer->send(
+                    $user['email'],
+                    'Đặt lại mật khẩu - ' . setting('site_name', 'HenHo24'),
+                    'reset_password',
+                    array(
+                        'name'  => display_name($user),
+                        'link'  => $link,
+                        'hours' => $hours,
+                    )
+                );
+
+                if ($sent) {
+                    set_flash('success', 'Đã gửi hướng dẫn đặt lại mật khẩu tới '
+                        . mask_email($user['email']) . '. Liên kết có hiệu lực trong '
+                        . $hours . ' giờ. Nếu không thấy thư, hãy kiểm tra mục Spam.');
+                } else {
+                    // Không gửi được: nói thật thay vì để người dùng chờ vô ích
+                    set_flash('warning', ENVIRONMENT === 'production'
+                        ? 'Hệ thống chưa gửi được email, vui lòng thử lại sau hoặc liên hệ hỗ trợ.'
+                        : 'Chưa gửi được email. Liên kết đặt lại (chỉ hiện khi đang phát triển): ' . $link);
+                }
+                redirect('quen-mat-khau');
             }
         }
+
         $this->render('auth/forgot', array('title' => 'Quên mật khẩu'));
     }
 

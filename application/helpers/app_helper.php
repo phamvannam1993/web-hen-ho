@@ -244,3 +244,21 @@ if (!function_exists('robots_content')) {
         return implode("\n", $lines) . "\n";
     }
 }
+
+
+if (!function_exists('mask_email')) {
+    /** Che bớt địa chỉ email khi hiển thị: nguyenvana@gmail.com -> ngu***@gmail.com */
+    function mask_email($email)
+    {
+        $email = (string) $email;
+        $at = strpos($email, '@');
+        if ($at === false) {
+            return $email;
+        }
+        $name   = substr($email, 0, $at);
+        $domain = substr($email, $at);
+        $keep   = min(3, max(1, (int) floor(mb_strlen($name) / 2)));
+
+        return mb_substr($name, 0, $keep) . str_repeat('*', 3) . $domain;
+    }
+}
