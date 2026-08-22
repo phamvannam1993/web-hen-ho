@@ -26,10 +26,6 @@ class Settings extends Admin_Controller
             'unlock_cost'       => 'Xu để mở liên hệ',
             'signup_bonus_coin' => 'Xu tặng khi đăng ký',
         ),
-        'security'   => array(
-            'require_code_register' => 'Bắt buộc mã bảo mật khi đăng ký (1/0)',
-            'require_code_login'    => 'Bắt buộc mã bảo mật khi đăng nhập (1/0)',
-        ),
         'payment'    => array(
             'bank_info' => 'Thông tin chuyển khoản',
         ),
@@ -43,6 +39,7 @@ class Settings extends Admin_Controller
                     $this->m_setting->set($key, $this->input->post($key, true), $group);
                 }
             }
+            $this->write_robots();
             $this->log_action('update_settings', 'settings', null);
             set_flash('success', 'Đã lưu cấu hình.');
             redirect('admin/settings');
@@ -53,6 +50,18 @@ class Settings extends Admin_Controller
             'fields' => $this->fields,
             'values' => $this->m_setting->all(),
         ));
+    }
+
+    /**
+     * Ghi file robots.txt tĩnh ở thư mục gốc.
+     *
+     * Vẫn có controller Robots sinh động, nhưng file tĩnh chắc chắn hoạt động
+     * trên mọi máy chủ kể cả khi rewrite chưa cấu hình đúng.
+     */
+    private function write_robots()
+    {
+        $noindex = $this->input->post('site_noindex', true) === '1';
+        @file_put_contents(FCPATH . 'robots.txt', robots_content($noindex));
     }
 
     /** Nhật ký thao tác quản trị. */

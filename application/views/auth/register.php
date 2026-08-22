@@ -44,14 +44,6 @@
             <label for="password_confirm">Xác nhận mật khẩu</label>
             <input type="password" id="password_confirm" name="password_confirm" required>
 
-            <?php if (setting('require_code_register', '1') === '1'): ?>
-                <p class="code-hint">
-                    Bạn vui lòng bấm vào đây =&gt;&gt;&gt;&gt;
-                    <a class="code-link" href="<?= site_url('lay-pass/register') ?>" data-get-code="register">LẤY PASS</a>
-                    rồi nhập vào ô dưới để đăng ký
-                </p>
-                <input type="text" name="access_code" placeholder="Nhập mã bảo mật vào đây" autocomplete="off">
-            <?php endif; ?>
 
             <label class="checkbox">
                 <input type="checkbox" name="agree" value="1" required>
