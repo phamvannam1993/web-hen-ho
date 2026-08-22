@@ -17,9 +17,10 @@ INSERT INTO `settings` (`key`,`value`,`group`) VALUES
 ('post_expire_days','30','moderation'),
 ('unlock_cost','20','coin'),
 ('signup_bonus_coin','50','coin'),
-('require_code_register','1','security'),
-('require_code_login','1','security'),
-('bank_info','Vietcombank - 0123456789 - CTY HENHO24','payment')
+('require_code_register','0','security'),
+('require_code_login','0','security'),
+('bank_info','Vietcombank - 0123456789 - CTY HENHO24','payment'),
+('site_noindex','1','seo')
 ON DUPLICATE KEY UPDATE `value` = VALUES(`value`);
 
 /* ------------------------- Tỉnh thành ------------------------- */

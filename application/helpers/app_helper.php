@@ -213,3 +213,34 @@ if (!function_exists('display_name')) {
         return $nick !== '' ? $nick : ($user['display_name'] ?? '');
     }
 }
+
+if (!function_exists('robots_content')) {
+    /**
+     * Sinh nội dung robots.txt.
+     *
+     * @param bool $noindex TRUE = chặn toàn bộ website khỏi công cụ tìm kiếm
+     */
+    function robots_content($noindex)
+    {
+        $lines = array('User-agent: *');
+
+        if ($noindex) {
+            $lines[] = 'Disallow: /';
+            return implode("\n", $lines) . "\n";
+        }
+
+        // Cho phép lập chỉ mục, nhưng giấu các khu vực riêng tư
+        foreach (array(
+            '/admin', '/tai-khoan', '/dang-nhap', '/dang-ky', '/quen-mat-khau',
+            '/dat-lai-mat-khau', '/lay-pass', '/ajax', '/kham-pha',
+            '/application', '/system', '/writable', '/database',
+        ) as $path) {
+            $lines[] = 'Disallow: ' . $path;
+        }
+
+        $lines[] = '';
+        $lines[] = 'Sitemap: ' . base_url('sitemap.xml');
+
+        return implode("\n", $lines) . "\n";
+    }
+}

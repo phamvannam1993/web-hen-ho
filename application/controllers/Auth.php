@@ -30,7 +30,7 @@ class Auth extends MY_Controller
     /** Kiểm tra mã bảo mật nếu cấu hình yêu cầu. Trả về true nếu hợp lệ. */
     private function check_code($purpose)
     {
-        if (setting('require_code_' . $purpose, '1') !== '1') {
+        if (setting('require_code_' . $purpose, '0') !== '1') {
             return true;
         }
         $row = $this->m_access_code->verify($this->input->post('access_code'), $purpose);

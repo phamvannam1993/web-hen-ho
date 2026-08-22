@@ -12,13 +12,6 @@
             <label for="password">Mật khẩu</label>
             <input type="password" id="password" name="password" required>
 
-            <?php if (setting('require_code_login', '1') === '1'): ?>
-                <p class="code-hint">
-                    Bạn vui lòng bấm vào đây =&gt;&gt;&gt;&gt;
-                    <a class="code-link" href="<?= site_url('lay-pass/login') ?>" data-get-code="login">LẤY KHOÁ BẢO MẬT</a>
-                </p>
-                <input type="text" name="access_code" placeholder="Nhập mã bảo mật vào đây" autocomplete="off">
-            <?php endif; ?>
 
             <label class="checkbox">
                 <input type="checkbox" name="remember" value="1"> Ghi nhớ đăng nhập

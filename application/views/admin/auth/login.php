@@ -5,6 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Đăng nhập quản trị</title>
+<meta name="robots" content="noindex, nofollow, noarchive">
 <link rel="stylesheet" href="<?= base_url('assets/admin/css/admin.css') ?>">
 </head>
 <body class="login-page">
