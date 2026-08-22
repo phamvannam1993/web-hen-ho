@@ -1463,3 +1463,18 @@ img { max-width: 100%; height: auto; display: block; }
     }
     .brand { min-height: 40px; }
 }
+
+/* ---------- Nút hiện / ẩn mật khẩu ---------- */
+
+.pw-wrap { position: relative; display: block; }
+/* chừa chỗ bên phải cho nút, tránh chữ chạy dưới con mắt */
+.pw-wrap input { width: 100%; padding-right: 46px !important; }
+
+.pw-toggle {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    background: none; border: 0; cursor: pointer; padding: 6px 8px;
+    font-size: 17px; line-height: 1; border-radius: 8px; opacity: .55;
+    transition: opacity .15s, background .15s;
+}
+.pw-toggle:hover { opacity: 1; background: #f4f4f6; }
+.pw-toggle.on { opacity: 1; }

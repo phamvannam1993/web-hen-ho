@@ -12,7 +12,6 @@ $route['robots.txt']              = 'robots/index';
 $route['dang-ky']                 = 'auth/register';
 $route['dang-nhap']               = 'auth/login';
 $route['dang-xuat']               = 'auth/logout';
-$route['lay-pass/(:any)']         = 'auth/get_code/$1';
 $route['quen-mat-khau']           = 'auth/forgot';
 $route['dat-lai-mat-khau/(:any)'] = 'auth/reset/$1';
 
