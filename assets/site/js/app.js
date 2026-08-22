@@ -25,13 +25,15 @@
 
         function close() { el.classList.remove('open'); }
         el.querySelector('.modal-close').addEventListener('click', close);
-        el.querySelector('.modal-ok').addEventListener('click', close);
         el.addEventListener('click', function (e) { if (e.target === el) { close(); } });
         document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { close(); } });
         return el;
     }
 
-    /** showModal({title, message, type: 'success'|'error'|'info', code: 'ABC123'}) */
+    /**
+     * showModal({title, message, type, code})           -> thông báo, một nút
+     * showModal({..., onConfirm: fn, confirmText, danger}) -> hỏi xác nhận, hai nút
+     */
     function showModal(opts) {
         var el = ensureModal();
         var type = opts.type || 'info';
@@ -40,13 +42,80 @@
         el.querySelector('.modal-icon').textContent = icons[type] || 'i';
         el.querySelector('.modal-icon').className = 'modal-icon ' + type;
         el.querySelector('.modal-title').textContent = opts.title || '';
-        el.querySelector('.modal-body').innerHTML = opts.code
-            ? '<p>' + (opts.message || '') + '</p><div class="modal-code">' + opts.code + '</div>'
-            : '<p>' + (opts.message || '') + '</p>';
+
+        var body = el.querySelector('.modal-body');
+        body.textContent = '';
+        var p = document.createElement('p');
+        p.textContent = opts.message || '';
+        body.appendChild(p);
+        if (opts.code) {
+            var codeBox = document.createElement('div');
+            codeBox.className = 'modal-code';
+            codeBox.textContent = opts.code;
+            body.appendChild(codeBox);
+        }
+
+        // Dựng lại vùng nút để bỏ trình xử lý của lần mở trước
+        var actions = el.querySelector('.modal-actions');
+        actions.textContent = '';
+
+        if (typeof opts.onConfirm === 'function') {
+            var cancel = document.createElement('button');
+            cancel.type = 'button';
+            cancel.className = 'btn btn-ghost';
+            cancel.textContent = 'Huỷ';
+            cancel.addEventListener('click', function () { el.classList.remove('open'); });
+
+            var ok = document.createElement('button');
+            ok.type = 'button';
+            ok.className = 'btn ' + (opts.danger ? 'btn-danger' : 'btn-primary');
+            ok.textContent = opts.confirmText || 'Đồng ý';
+            ok.addEventListener('click', function () {
+                el.classList.remove('open');
+                opts.onConfirm();
+            });
+
+            actions.appendChild(cancel);
+            actions.appendChild(ok);
+        } else {
+            var close = document.createElement('button');
+            close.type = 'button';
+            close.className = 'btn btn-primary modal-ok';
+            close.textContent = 'Đã hiểu';
+            close.addEventListener('click', function () { el.classList.remove('open'); });
+            actions.appendChild(close);
+        }
+
         el.classList.add('open');
     }
 
     window.appModal = showModal;
+
+    /* Nút có data-confirm: hỏi bằng modal thay cho hộp thoại của trình duyệt */
+    document.addEventListener('click', function (e) {
+        var trigger = e.target.closest('[data-confirm]');
+        if (!trigger) { return; }
+
+        e.preventDefault();
+        showModal({
+            type: 'error',
+            title: 'Xác nhận',
+            message: trigger.getAttribute('data-confirm'),
+            danger: trigger.hasAttribute('data-confirm-danger'),
+            confirmText: trigger.hasAttribute('data-confirm-danger') ? 'Xoá' : 'Đồng ý',
+            onConfirm: function () {
+                if (trigger.tagName === 'A') {
+                    window.location.href = trigger.href;
+                    return;
+                }
+                var form = trigger.form || trigger.closest('form');
+                if (form) {
+                    trigger.removeAttribute('data-confirm');
+                    trigger.click();
+                }
+            }
+        });
+    });
 
     /* ------------------------- Menu mobile: ngăn kéo ------------------------- */
 
@@ -69,6 +138,9 @@
             // đợi một khung hình để hiệu ứng mờ dần chạy được
             requestAnimationFrame(function () { overlay.classList.add('show'); });
             document.body.classList.add('drawer-open');
+            // nâng header lên trên các lớp nổi khác (bong bóng chat…)
+            var hdr = document.querySelector('.site-header');
+            if (hdr) { hdr.classList.add('drawer-active'); }
         }
 
         function closeDrawer() {
@@ -77,6 +149,8 @@
             toggle.setAttribute('aria-expanded', 'false');
             overlay.classList.remove('show');
             document.body.classList.remove('drawer-open');
+            var hdrOff = document.querySelector('.site-header');
+            if (hdrOff) { hdrOff.classList.remove('drawer-active'); }
             // ẩn hẳn sau khi hiệu ứng kết thúc để không chắn thao tác
             setTimeout(function () {
                 if (!drawer.classList.contains('open')) { overlay.hidden = true; }
@@ -269,17 +343,97 @@
         });
     });
 
-    /* --- Báo cáo thành viên --- */
+    /* --- Báo cáo thành viên: modal chọn lý do --- */
+
+    var REPORT_REASONS = [
+        ['lua_dao',      'Lừa đảo, xin tiền'],
+        ['noi_dung_xau', 'Ảnh hoặc nội dung phản cảm'],
+        ['mao_danh',     'Mạo danh người khác'],
+        ['spam',         'Spam, quảng cáo'],
+        ['khac',         'Lý do khác']
+    ];
+
+    function openReportModal(userId) {
+        var el = ensureModal();
+
+        el.querySelector('.modal-icon').textContent = '!';
+        el.querySelector('.modal-icon').className = 'modal-icon error';
+        el.querySelector('.modal-title').textContent = 'Báo cáo thành viên';
+
+        var body = el.querySelector('.modal-body');
+        body.textContent = '';
+
+        var intro = document.createElement('p');
+        intro.textContent = 'Chọn lý do báo cáo. Ban quản trị sẽ xem xét và xử lý.';
+        body.appendChild(intro);
+
+        var list = document.createElement('div');
+        list.className = 'report-reasons';
+        REPORT_REASONS.forEach(function (item, i) {
+            var label = document.createElement('label');
+            var radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = 'report_reason';
+            radio.value = item[0];
+            if (i === 0) { radio.checked = true; }
+            var text = document.createElement('span');
+            text.textContent = item[1];
+            label.appendChild(radio);
+            label.appendChild(text);
+            list.appendChild(label);
+        });
+        body.appendChild(list);
+
+        var note = document.createElement('textarea');
+        note.className = 'report-note';
+        note.rows = 3;
+        note.placeholder = 'Mô tả thêm (không bắt buộc)…';
+        body.appendChild(note);
+
+        var actions = el.querySelector('.modal-actions');
+        actions.textContent = '';
+
+        var cancel = document.createElement('button');
+        cancel.type = 'button';
+        cancel.className = 'btn btn-ghost';
+        cancel.textContent = 'Huỷ';
+        cancel.addEventListener('click', function () { el.classList.remove('open'); });
+
+        var send = document.createElement('button');
+        send.type = 'button';
+        send.className = 'btn btn-danger';
+        send.textContent = 'Gửi báo cáo';
+        send.addEventListener('click', function () {
+            var chosen = list.querySelector('input:checked');
+            send.disabled = true;
+            send.textContent = 'Đang gửi…';
+
+            post(base + 'ajax/report', {
+                target_type: 'user',
+                target_id: userId,
+                reason: chosen ? chosen.value : 'khac',
+                note: note.value
+            }).then(function (res) {
+                el.classList.remove('open');
+                showModal({
+                    type: res.ok ? 'success' : 'error',
+                    title: res.ok ? 'Đã gửi báo cáo' : 'Không gửi được',
+                    message: res.message
+                });
+            }).catch(function () {
+                el.classList.remove('open');
+                showModal({ type: 'error', title: 'Lỗi kết nối', message: 'Vui lòng thử lại sau.' });
+            });
+        });
+
+        actions.appendChild(cancel);
+        actions.appendChild(send);
+        el.classList.add('open');
+    }
+
     document.querySelectorAll('[data-report-user]').forEach(function (btn) {
         btn.addEventListener('click', function () {
-            var note = window.prompt('Mô tả ngắn lý do bạn báo cáo thành viên này:');
-            if (note === null) { return; }
-            post(base + 'ajax/report', {
-                target_type: 'user', target_id: btn.getAttribute('data-report-user'),
-                reason: 'khac', note: note
-            }).then(function (res) {
-                showModal({ type: res.ok ? 'success' : 'error', title: res.ok ? 'Đã gửi báo cáo' : 'Lỗi', message: res.message });
-            });
+            openReportModal(btn.getAttribute('data-report-user'));
         });
     });
 

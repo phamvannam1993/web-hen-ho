@@ -44,7 +44,7 @@
                     <td class="actions">
                         <?php if ($o['status'] === 'pending'): ?>
                             <a class="btn btn-success btn-sm" href="<?= site_url('admin/orders/set_status/' . $o['id'] . '/paid') ?>"
-                               onclick="return confirm('Xác nhận đã nhận tiền? Hệ thống sẽ cộng xu/VIP ngay.')">Xác nhận</a>
+                               data-confirm="Xác nhận đã nhận tiền? Hệ thống sẽ cộng xu/VIP ngay.">Xác nhận</a>
                             <a class="btn btn-danger btn-sm" href="<?= site_url('admin/orders/set_status/' . $o['id'] . '/canceled') ?>">Huỷ</a>
                         <?php else: ?>
                             <span class="badge bg-secondary"><?= $o['paid_at'] ? date('d/m/Y H:i', strtotime($o['paid_at'])) : '—' ?></span>

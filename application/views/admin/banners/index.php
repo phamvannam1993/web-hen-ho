@@ -35,7 +35,7 @@ $positions = array(
                     <td class="actions">
                         <a class="btn btn-light btn-sm" href="<?= site_url('admin/banners/edit/' . $b['id']) ?>">Sửa</a>
                         <a class="btn btn-danger btn-sm" href="<?= site_url('admin/banners/delete/' . $b['id']) ?>"
-                           onclick="return confirm('Xoá banner này?')">Xoá</a>
+                           data-confirm="Xoá banner này?" data-confirm-danger>Xoá</a>
                     </td>
                 </tr>
             <?php endforeach; ?>

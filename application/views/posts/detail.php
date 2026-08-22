@@ -131,7 +131,7 @@ $place = trim(($post['district'] ? $post['district'] . ', ' : '') . ($post['prov
                                 <?php endif; ?>
                                 <?php if ($can_delete): ?>
                                     <a class="comment-del" href="<?= site_url('ajax/delete_comment/' . $c['id']) ?>"
-                                       onclick="return confirm('Xoá bình luận này?')">Xoá</a>
+                                       data-confirm="Xoá bình luận này?" data-confirm-danger>Xoá</a>
                                 <?php endif; ?>
                             </div>
 

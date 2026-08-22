@@ -42,7 +42,7 @@
                         <?php endif; ?>
                         <a class="btn btn-light btn-sm" href="<?= site_url('admin/articles/edit/' . $a['id']) ?>">Sửa</a>
                         <a class="btn btn-danger btn-sm" href="<?= site_url('admin/articles/delete/' . $a['id']) ?>"
-                           onclick="return confirm('Xoá bài viết này?')">Xoá</a>
+                           data-confirm="Xoá bài viết này?" data-confirm-danger>Xoá</a>
                     </td>
                 </tr>
             <?php endforeach; ?>

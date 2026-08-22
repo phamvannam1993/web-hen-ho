@@ -60,25 +60,9 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
 
         <ul class="nav-list">
             <li><a class="active" href="<?= site_url() ?>">Trang chủ</a></li>
-            <?php foreach ($menu as $cat): ?>
-                <li class="<?= !empty($cat['children']) ? 'has-mega' : '' ?>">
-                    <a href="<?= site_url('danh-muc/' . $cat['slug']) ?>"><?= e($cat['name']) ?><?= !empty($cat['children']) ? ' <span class="caret">▾</span>' : '' ?></a>
-                    <?php if (!empty($cat['children'])): ?>
-                        <!-- mega menu: CSS tự dàn danh mục con thành nhiều cột -->
-                        <div class="mega-menu">
-                            <div class="container">
-                                <ul class="mega-cols">
-                                    <?php foreach ($cat['children'] as $sub): ?>
-                                        <li><a href="<?= site_url('danh-muc/' . $sub['slug']) ?>"><?= e($sub['name']) ?></a></li>
-                                    <?php endforeach; ?>
-                                </ul>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-                </li>
-            <?php endforeach; ?>
             <li><a href="<?= site_url('kham-pha') ?>">Khám phá</a></li>
             <li><a href="<?= site_url('thanh-vien') ?>">Thành viên</a></li>
+            <li><a href="<?= site_url('tin-tuc') ?>">Cẩm nang</a></li>
             <li><a href="<?= site_url('trang/noi-quy') ?>">Nội quy</a></li>
         </ul>
 
@@ -117,11 +101,12 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
             <p><?= e($settings['site_desc'] ?? 'Nền tảng kết bạn, hẹn hò nghiêm túc dành cho người Việt.') ?></p>
         </div>
         <div>
-            <h4>Danh mục</h4>
+            <h4>Kết nối</h4>
             <ul>
-                <?php foreach (array_slice($menu, 0, 5) as $cat): ?>
-                    <li><a href="<?= site_url('danh-muc/' . $cat['slug']) ?>"><?= e($cat['name']) ?></a></li>
-                <?php endforeach; ?>
+                <li><a href="<?= site_url('kham-pha') ?>">Khám phá &amp; ghép đôi</a></li>
+                <li><a href="<?= site_url('thanh-vien') ?>">Danh sách thành viên</a></li>
+                <li><a href="<?= site_url('dang-ky') ?>">Tạo tài khoản</a></li>
+                <li><a href="<?= site_url('tai-khoan/ho-so') ?>">Hồ sơ của tôi</a></li>
             </ul>
         </div>
         <div>
