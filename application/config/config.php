@@ -520,7 +520,31 @@ $config['time_reference'] = 'local';
 |
 */
 $config['rewrite_short_tags'] = FALSE;
-$config['sess_save_path'] = FCPATH.'writable/sessions';
+/*
+ | Thư mục lưu session.
+ |
+ | CodeIgniter dùng save handler kiểu "user"; nếu thư mục không tồn tại hoặc
+ | web server không có quyền ghi, PHP báo:
+ |   session_start(): Failed to initialize storage module: user
+ |
+ | Đoạn dưới tự tạo thư mục, và nếu vẫn không ghi được (ví dụ chủ sở hữu sai
+ | trên máy chủ production) thì lùi về thư mục tạm của hệ thống để website
+ | vẫn chạy thay vì trắng trang.
+ */
+$sess_dir = FCPATH . 'writable/sessions';
+
+if (!is_dir($sess_dir)) {
+	@mkdir($sess_dir, 0775, TRUE);
+}
+
+if (!is_dir($sess_dir) OR !is_writable($sess_dir)) {
+	$sess_dir = rtrim(sys_get_temp_dir(), '/\\') . DIRECTORY_SEPARATOR . 'henho_sessions';
+	if (!is_dir($sess_dir)) {
+		@mkdir($sess_dir, 0775, TRUE);
+	}
+}
+
+$config['sess_save_path'] = $sess_dir;
 /*
 |--------------------------------------------------------------------------
 | Reverse Proxy IPs

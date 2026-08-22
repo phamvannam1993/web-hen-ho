@@ -1,7 +1,7 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
 $group_labels = array(
     'general' => 'Thông tin chung', 'contact' => 'Liên hệ', 'moderation' => 'Kiểm duyệt',
-    'coin' => 'Xu & VIP', 'security' => 'Bảo mật', 'payment' => 'Thanh toán',
+    'seo' => 'Công cụ tìm kiếm', 'coin' => 'Xu & VIP', 'security' => 'Bảo mật', 'payment' => 'Thanh toán',
 );
 ?>
 <form method="post">
