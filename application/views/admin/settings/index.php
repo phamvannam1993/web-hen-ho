@@ -2,6 +2,7 @@
 $group_labels = array(
     'general' => 'Thông tin chung', 'contact' => 'Liên hệ', 'moderation' => 'Kiểm duyệt',
     'seo' => 'Công cụ tìm kiếm', 'coin' => 'Xu & VIP', 'security' => 'Bảo mật', 'payment' => 'Thanh toán',
+    'company' => 'Thông tin công ty', 'social' => 'Mạng xã hội',
 );
 ?>
 <form method="post">

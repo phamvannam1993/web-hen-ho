@@ -40,8 +40,8 @@
         </div>
         <div class="sidebar-box">
             <h3>Bắt đầu hẹn hò</h3>
-            <p>Đăng tin miễn phí để tìm người phù hợp với bạn.</p>
-            <p><a class="btn btn-primary" href="<?= site_url('dang-tin') ?>">Đăng tin ngay</a></p>
+            <p>Tạo hồ sơ miễn phí để được gợi ý những người phù hợp với bạn.</p>
+            <p><a class="btn btn-primary" href="<?= site_url('kham-pha') ?>">Khám phá ngay</a></p>
         </div>
     </aside>
 </div>

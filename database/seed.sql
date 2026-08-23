@@ -22,28 +22,42 @@ INSERT INTO `settings` (`key`,`value`,`group`) VALUES
 ('home_title','Saigon Cupid - Cộng đồng tìm kiếm đối tượng hẹn hò và bạn bè','seo')
 ON DUPLICATE KEY UPDATE `value` = VALUES(`value`);
 
-/* ------------------------- Tỉnh thành ------------------------- */
+/* Tỉnh thành: 34 đơn vị hành chính theo sắp xếp có hiệu lực 01/07/2025 */
 INSERT INTO `provinces` (`name`,`slug`,`region`,`sort`) VALUES
-('Hà Nội','ha-noi','bac',1),
-('TP Hồ Chí Minh','tp-ho-chi-minh','nam',2),
-('Đà Nẵng','da-nang','trung',3),
-('Hải Phòng','hai-phong','bac',4),
-('Cần Thơ','can-tho','nam',5),
-('Bình Dương','binh-duong','nam',6),
-('Đồng Nai','dong-nai','nam',7),
-('Bà Rịa - Vũng Tàu','ba-ria-vung-tau','nam',8),
-('Long An','long-an','nam',9),
-('Khánh Hòa','khanh-hoa','trung',10),
-('Nghệ An','nghe-an','trung',11),
-('Thanh Hóa','thanh-hoa','trung',12),
-('Quảng Ninh','quang-ninh','bac',13),
-('Bắc Ninh','bac-ninh','bac',14),
-('Hưng Yên','hung-yen','bac',15),
-('Thừa Thiên Huế','thua-thien-hue','trung',16),
-('Lâm Đồng','lam-dong','trung',17),
-('Tiền Giang','tien-giang','nam',18),
-('Vĩnh Long','vinh-long','nam',19),
-('Kiên Giang','kien-giang','nam',20);
+('Hà Nội','ha-noi','bac',10),
+('TP Hồ Chí Minh','tp-ho-chi-minh','nam',20),
+('Hải Phòng','hai-phong','bac',30),
+('Đà Nẵng','da-nang','trung',40),
+('Huế','hue','trung',50),
+('Cần Thơ','can-tho','nam',60),
+('Quảng Ninh','quang-ninh','bac',70),
+('Bắc Ninh','bac-ninh','bac',80),
+('Hưng Yên','hung-yen','bac',90),
+('Ninh Bình','ninh-binh','bac',100),
+('Phú Thọ','phu-tho','bac',110),
+('Thái Nguyên','thai-nguyen','bac',120),
+('Lào Cai','lao-cai','bac',130),
+('Tuyên Quang','tuyen-quang','bac',140),
+('Cao Bằng','cao-bang','bac',150),
+('Lạng Sơn','lang-son','bac',160),
+('Sơn La','son-la','bac',170),
+('Điện Biên','dien-bien','bac',180),
+('Lai Châu','lai-chau','bac',190),
+('Thanh Hóa','thanh-hoa','trung',200),
+('Nghệ An','nghe-an','trung',210),
+('Hà Tĩnh','ha-tinh','trung',220),
+('Quảng Trị','quang-tri','trung',230),
+('Quảng Ngãi','quang-ngai','trung',240),
+('Gia Lai','gia-lai','trung',250),
+('Đắk Lắk','dak-lak','trung',260),
+('Khánh Hòa','khanh-hoa','trung',270),
+('Lâm Đồng','lam-dong','trung',280),
+('Đồng Nai','dong-nai','nam',290),
+('Tây Ninh','tay-ninh','nam',300),
+('Vĩnh Long','vinh-long','nam',310),
+('Đồng Tháp','dong-thap','nam',320),
+('An Giang','an-giang','nam',330),
+('Cà Mau','ca-mau','nam',340);
 
 /* ------------------------- Danh mục tin ------------------------- */
 INSERT INTO `categories` (`id`,`parent_id`,`type`,`name`,`slug`,`sort`) VALUES

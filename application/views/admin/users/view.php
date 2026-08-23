@@ -4,7 +4,7 @@
         <h2><?= e($u['display_name']) ?> <?= status_label($u['status']) ?></h2>
         <div class="actions">
             <a class="btn btn-light btn-sm" href="<?= site_url('admin/users/edit/' . $u['id']) ?>">Sửa hồ sơ</a>
-            <a class="btn btn-light btn-sm" href="<?= site_url('thanh-vien/' . $u['slug']) ?>" target="_blank">Xem trang cá nhân</a>
+            <a class="btn btn-light btn-sm" href="<?= site_url('profile/' . $u['slug']) ?>" target="_blank">Xem trang cá nhân</a>
             <a class="btn btn-danger btn-sm" href="<?= site_url('admin/users/delete/' . $u['id']) ?>"
                data-confirm="Xoá thành viên này?" data-confirm-danger>Xoá</a>
         </div>

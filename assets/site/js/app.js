@@ -440,7 +440,7 @@
         var slug = memberContact.getAttribute('data-member');
 
         memberContact.querySelector('[data-action=get-pass]').addEventListener('click', function () {
-            post(base + 'thanh-vien/' + slug + '/lay-pass', {}).then(function (res) {
+            post(base + 'profile/' + slug + '/lay-pass', {}).then(function (res) {
                 if (!res.ok) {
                     return showModal({ type: 'error', title: 'Không lấy được pass', message: res.message });
                 }
@@ -453,7 +453,7 @@
         });
 
         memberContact.querySelector('[data-action=reveal]').addEventListener('click', function () {
-            post(base + 'thanh-vien/' + slug + '/mo-lien-he', {
+            post(base + 'profile/' + slug + '/mo-lien-he', {
                 code: memberContact.querySelector('[data-field=pass]').value
             }).then(function (res) {
                 if (!res.ok) {

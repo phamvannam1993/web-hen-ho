@@ -23,11 +23,16 @@
             <?php endif; ?>
 
             <div class="auth-actions">
-                <a class="btn btn-primary" href="<?= site_url('dang-tin') ?>">Đăng tin hẹn hò</a>
+                <?php if (!empty($settings['enable_posts'])): ?>
+                    <a class="btn btn-primary" href="<?= site_url('dang-tin') ?>">Đăng tin hẹn hò</a>
+                <?php else: ?>
+                    <a class="btn btn-primary" href="<?= site_url('kham-pha') ?>">Khám phá &amp; ghép đôi</a>
+                <?php endif; ?>
                 <a class="btn btn-ghost" href="<?= site_url('tai-khoan/nap-xu') ?>">Nạp xu / mua VIP</a>
             </div>
         </div>
 
+        <?php if (!empty($settings['enable_posts'])): ?>
         <div class="content-box">
             <h2 class="section-title">Tin đăng gần đây</h2>
             <?php if (empty($recent_posts)): ?>
@@ -46,6 +51,7 @@
                 </table>
             <?php endif; ?>
         </div>
+        <?php endif; ?>
 
         <?php if ($liked_me): ?>
             <div class="content-box">

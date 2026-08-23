@@ -30,4 +30,69 @@ class M_province extends CI_Model
               LIMIT ?", array((int) $limit)
         )->result_array();
     }
+
+    public function find($id)
+    {
+        return $this->db->where('id', (int) $id)->get('provinces')->row_array();
+    }
+
+    /** Danh sách tỉnh kèm số thành viên đang hoạt động, dùng cho trang khu vực. */
+    public function with_member_count()
+    {
+        return $this->db->query(
+            "SELECT p.*, COUNT(u.id) AS member_count
+               FROM provinces p
+          LEFT JOIN users u ON u.province_id = p.id
+                           AND u.status = 'active' AND u.role = 'member' AND u.deleted_at IS NULL
+           GROUP BY p.id
+           ORDER BY member_count DESC, p.sort ASC, p.name ASC"
+        )->result_array();
+    }
+
+    /* ------------------------- Dùng cho khu quản trị ------------------------- */
+
+    public function admin_list($keyword = null, $region = null)
+    {
+        $this->db->select('p.*,
+            (SELECT COUNT(*) FROM users u
+              WHERE u.province_id = p.id AND u.deleted_at IS NULL) AS member_count')
+            ->from('provinces p');
+
+        if ($keyword) {
+            $this->db->group_start()->like('p.name', $keyword)->or_like('p.slug', $keyword)->group_end();
+        }
+        if ($region) {
+            $this->db->where('p.region', $region);
+        }
+        return $this->db->order_by('p.sort')->order_by('p.name')->get()->result_array();
+    }
+
+    public function save(array $data, $id = null)
+    {
+        $data['slug'] = unique_slug('provinces', $data['slug'] ?: $data['name'], $id);
+
+        if ($id) {
+            $this->db->where('id', (int) $id)->update('provinces', $data);
+            self::$cache = null;
+            return (int) $id;
+        }
+        $this->db->insert('provinces', $data);
+        self::$cache = null;
+        return (int) $this->db->insert_id();
+    }
+
+    /** Số thành viên đang gắn với tỉnh này, để cảnh báo trước khi xoá. */
+    public function member_count($id)
+    {
+        return (int) $this->db->where('province_id', (int) $id)
+            ->where('deleted_at', null)->count_all_results('users');
+    }
+
+    public function remove($id)
+    {
+        // Khoá ngoại đặt ON DELETE SET NULL nên thành viên không bị mất,
+        // chỉ chuyển sang trạng thái chưa rõ khu vực.
+        $this->db->where('id', (int) $id)->delete('provinces');
+        self::$cache = null;
+    }
 }

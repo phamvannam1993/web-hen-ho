@@ -1,10 +1,12 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
 <div class="container">
-    <h1 class="block-title"><?= e($title) ?></h1>
-    <?php if (!empty($keyword)): ?>
-        <p class="result-count">Từ khoá: <b><?= e($keyword) ?></b>
-            &nbsp;<a href="<?= site_url('thanh-vien') ?>">Xoá tìm kiếm</a></p>
-    <?php endif; ?>
+    <nav class="breadcrumb">
+        <a href="<?= site_url() ?>">Trang chủ</a> ›
+        <a href="<?= site_url('khu-vuc') ?>">Khu vực</a> ›
+        <span><?= e($province['name']) ?></span>
+    </nav>
+
+    <h1 class="block-title">Thành viên tại <?= e($province['name']) ?></h1>
 
     <form class="filter-bar" method="get">
         <input type="text" name="q" value="<?= e($this->input->get('q')) ?>" placeholder="Tên hoặc mô tả...">
@@ -12,12 +14,6 @@
             <option value="">Giới tính</option>
             <option value="female" <?= $this->input->get('gender') === 'female' ? 'selected' : '' ?>>Nữ</option>
             <option value="male" <?= $this->input->get('gender') === 'male' ? 'selected' : '' ?>>Nam</option>
-        </select>
-        <select name="province_id">
-            <option value="">Toàn quốc</option>
-            <?php foreach ($provinces as $p): ?>
-                <option value="<?= (int) $p['id'] ?>" <?= $this->input->get('province_id') == $p['id'] ? 'selected' : '' ?>><?= e($p['name']) ?></option>
-            <?php endforeach; ?>
         </select>
         <input type="number" name="age_min" value="<?= e($this->input->get('age_min')) ?>" placeholder="Tuổi từ">
         <input type="number" name="age_max" value="<?= e($this->input->get('age_max')) ?>" placeholder="Đến">
@@ -32,11 +28,11 @@
         <button class="btn btn-primary" type="submit">Lọc</button>
     </form>
 
-    <p class="result-count">Tìm thấy <b><?= number_format($total) ?></b> thành viên.</p>
+    <p class="result-count">Tìm thấy <b><?= number_format($total) ?></b> thành viên tại <?= e($province['name']) ?>.</p>
 
     <?php if (empty($members)): ?>
-        <p class="empty">Không tìm thấy thành viên phù hợp<?= !empty($keyword) ? ' với từ khoá "' . e($keyword) . '"' : '' ?>.
-            Thử bỏ bớt điều kiện lọc hoặc <a href="<?= site_url('thanh-vien') ?>">xem toàn bộ thành viên</a>.</p>
+        <p class="empty">Chưa có thành viên nào phù hợp tại khu vực này.
+            <a href="<?= site_url('thanh-vien') ?>">Xem toàn bộ thành viên →</a></p>
     <?php else: ?>
         <div class="member-grid">
             <?php foreach ($members as $m): ?>

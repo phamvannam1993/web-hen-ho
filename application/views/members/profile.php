@@ -120,7 +120,7 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
 
             <?php if ($user): ?>
                 <form class="comment-form" method="post" enctype="multipart/form-data"
-                      action="<?= site_url('thanh-vien/' . $m['slug'] . '/binh-luan') ?>">
+                      action="<?= site_url('profile/' . $m['slug'] . '/binh-luan') ?>">
                     <img src="<?= avatar_url($user['avatar'], $user['gender']) ?>" alt="">
                     <div>
                         <textarea name="content" rows="3" placeholder="Viết bình luận của bạn..."></textarea>
@@ -158,7 +158,7 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
                         <img src="<?= avatar_url($c['avatar'], $c['gender']) ?>" alt="">
                         <div class="comment-content">
                             <div class="comment-bubble">
-                                <a class="comment-author" href="<?= site_url('thanh-vien/' . $c['user_slug']) ?>"><?= e(display_name($c)) ?></a>
+                                <a class="comment-author" href="<?= site_url('profile/' . $c['user_slug']) ?>"><?= e(display_name($c)) ?></a>
                                 <?php if (trim((string) $c['content']) !== ''): ?>
                                     <p><?= nl2br(e($c['content'])) ?></p>
                                 <?php endif; ?>
@@ -175,7 +175,7 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
                                             data-reply-name="<?= e(display_name($c)) ?>">Trả lời</button>
                                 <?php endif; ?>
                                 <?php if ($can_delete): ?>
-                                    <a class="comment-del" href="<?= site_url('thanh-vien/' . $m['slug'] . '/xoa-binh-luan/' . $c['id']) ?>"
+                                    <a class="comment-del" href="<?= site_url('profile/' . $m['slug'] . '/xoa-binh-luan/' . $c['id']) ?>"
                                        data-confirm="Xoá bình luận này?" data-confirm-danger>Xoá</a>
                                 <?php endif; ?>
                             </div>
@@ -183,7 +183,7 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
                             <?php if ($user): ?>
                                 <form class="comment-form reply-form" id="reply-form-<?= (int) $c['id'] ?>" method="post"
                                       enctype="multipart/form-data"
-                                      action="<?= site_url('thanh-vien/' . $m['slug'] . '/binh-luan') ?>" hidden>
+                                      action="<?= site_url('profile/' . $m['slug'] . '/binh-luan') ?>" hidden>
                                     <img src="<?= avatar_url($user['avatar'], $user['gender']) ?>" alt="">
                                     <div>
                                         <input type="hidden" name="parent_id" value="<?= (int) $c['id'] ?>">
@@ -231,10 +231,10 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
             <p><?= e($settings['site_desc'] ?? '') ?></p>
         </div>
         <div class="sidebar-box">
-            <h3>Liên kết nhanh</h3>
+            <h3>Tìm theo khu vực</h3>
             <ul class="sidebar-list">
                 <?php foreach (array_slice($quick_links, 0, 20) as $link): ?>
-                    <li><a href="<?= site_url('danh-muc/' . $link['slug']) ?>"><?= e($link['name']) ?></a></li>
+                    <li><a href="<?= site_url('khu-vuc/' . $link['slug']) ?>"><?= e($link['name']) ?></a></li>
                 <?php endforeach; ?>
             </ul>
         </div>

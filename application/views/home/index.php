@@ -1,10 +1,14 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
 
+<?php /* Nút "Đăng ký hẹn hò" chỉ hiện khi bật lại tính năng đăng tin
+         (Quản trị -> Cấu hình -> Kiểm duyệt -> Bật tính năng đăng tin hẹn hò). */ ?>
+<?php if (!empty($settings['enable_posts'])): ?>
 <section class="hero">
     <div class="container">
         <a class="hero-cta" href="<?= site_url('dang-tin') ?>">Đăng ký hẹn hò</a>
     </div>
 </section>
+<?php endif; ?>
 
 <section class="search-bar">
     <div class="container">
@@ -13,7 +17,7 @@
             <select name="province_id">
                 <option value="">Toàn quốc</option>
                 <?php foreach ($provinces as $p): ?>
-                    <option value="<?= (int) $p['id'] ?>"><?= e($p['name']) ?></option>
+                    <option value="<?= (int) $p['id'] ?>" <?= $this->input->get('province_id') == $p['id'] ? 'selected' : '' ?>><?= e($p['name']) ?></option>
                 <?php endforeach; ?>
             </select>
             <button type="submit" class="btn btn-search">Tìm kiếm</button>
@@ -91,7 +95,7 @@
         <div class="province-cloud">
             <?php foreach ($top_provinces as $p): ?>
                 <a href="<?= site_url('khu-vuc/' . $p['slug']) ?>">
-                    <?= e($p['name']) ?> <span>(<?= (int) $p['post_count'] ?>)</span>
+                    <?= e($p['name']) ?> <span>(<?= (int) $p['member_count'] ?>)</span>
                 </a>
             <?php endforeach; ?>
         </div>

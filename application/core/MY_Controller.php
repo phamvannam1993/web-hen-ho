@@ -29,6 +29,23 @@ class MY_Controller extends CI_Controller
     }
 
     /** Render layout frontend. */
+    /**
+     * Tính năng đăng tin hẹn hò đang tạm tắt (Cấu hình -> Kiểm duyệt).
+     * Khi tắt, mọi đường dẫn liên quan đưa người dùng về trang khám phá.
+     */
+    protected function posts_enabled()
+    {
+        return !empty($this->data['settings']['enable_posts']);
+    }
+
+    protected function require_posts_enabled()
+    {
+        if (!$this->posts_enabled()) {
+            set_flash('warning', 'Tính năng đăng tin đang tạm ngưng. Bạn hãy kết nối qua hồ sơ thành viên.');
+            redirect('kham-pha');
+        }
+    }
+
     protected function render($view, $data = array())
     {
         $data = array_merge($this->data, $data);

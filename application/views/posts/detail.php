@@ -114,7 +114,7 @@ $place = trim(($post['district'] ? $post['district'] . ', ' : '') . ($post['prov
                         <img src="<?= avatar_url($c['avatar'], $c['gender']) ?>" alt="">
                         <div class="comment-content">
                             <div class="comment-bubble">
-                                <a class="comment-author" href="<?= site_url('thanh-vien/' . $c['user_slug']) ?>"><?= e(display_name($c)) ?></a>
+                                <a class="comment-author" href="<?= site_url('profile/' . $c['user_slug']) ?>"><?= e(display_name($c)) ?></a>
                                 <?php if (trim((string) $c['content']) !== ''): ?>
                                     <p><?= nl2br(e($c['content'])) ?></p>
                                 <?php endif; ?>

@@ -4,13 +4,18 @@ $items = array(
     ''          => 'Tổng quan',
     'ho-so'     => 'Hồ sơ của tôi',
     'anh'       => 'Ảnh của tôi',
-    'tin-dang'  => 'Tin đăng của tôi',
     'quan-tam'  => 'Quan tâm & ghép đôi',
     'tin-nhan'  => 'Tin nhắn',
     'thong-bao' => 'Thông báo',
     'nap-xu'    => 'Nạp xu / VIP',
     'doi-mat-khau' => 'Đổi mật khẩu',
 );
+// Mục tin đăng chỉ xuất hiện khi tính năng được bật lại trong Cấu hình
+if (!empty($settings['enable_posts'])) {
+    $items = array_slice($items, 0, 3, true)
+           + array('tin-dang' => 'Tin đăng của tôi')
+           + array_slice($items, 3, null, true);
+}
 ?>
 <nav class="account-nav">
     <ul>

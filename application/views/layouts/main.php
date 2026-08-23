@@ -1,6 +1,5 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
 $flash = $this->session->flashdata('flash');
-$menu  = $categories ?? array();
 ?><!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -68,12 +67,26 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
             <button type="button" class="drawer-close" id="drawer-close" aria-label="Đóng menu">&times;</button>
         </div>
 
+        <?php
+        // Đánh dấu mục đang xem theo đường dẫn hiện tại.
+        // 'match' liệt kê các nhánh URL cùng thuộc một mục, ví dụ trang cá nhân
+        // /profile/... vẫn tính là đang ở mục Thành viên.
+        $nav_items = array(
+            array('url' => '',              'label' => 'Trang chủ',  'match' => array('')),
+            array('url' => 'kham-pha',      'label' => 'Khám phá',   'match' => array('kham-pha')),
+            array('url' => 'thanh-vien',    'label' => 'Thành viên', 'match' => array('thanh-vien', 'profile', 'tim-kiem')),
+            array('url' => 'khu-vuc',       'label' => 'Khu vực',    'match' => array('khu-vuc')),
+            array('url' => 'tin-tuc',       'label' => 'Cẩm nang',   'match' => array('tin-tuc')),
+            array('url' => 'trang/noi-quy', 'label' => 'Nội quy',    'match' => array('trang')),
+        );
+        $seg1 = (string) $this->uri->segment(1);
+        ?>
         <ul class="nav-list">
-            <li><a class="active" href="<?= site_url() ?>">Trang chủ</a></li>
-            <li><a href="<?= site_url('kham-pha') ?>">Khám phá</a></li>
-            <li><a href="<?= site_url('thanh-vien') ?>">Thành viên</a></li>
-            <li><a href="<?= site_url('tin-tuc') ?>">Cẩm nang</a></li>
-            <li><a href="<?= site_url('trang/noi-quy') ?>">Nội quy</a></li>
+            <?php foreach ($nav_items as $item): ?>
+                <?php $is_active = in_array($seg1, $item['match'], true); ?>
+                <li><a<?= $is_active ? ' class="active" aria-current="page"' : '' ?>
+                       href="<?= site_url($item['url']) ?>"><?= $item['label'] ?></a></li>
+            <?php endforeach; ?>
         </ul>
 
         <div class="header-actions">
@@ -105,36 +118,122 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
 </main>
 
 <footer class="site-footer">
-    <div class="container footer-grid">
-        <div>
-            <h4><?= e($settings['site_name'] ?? 'Saigon Cupid') ?></h4>
-            <p><?= e($settings['site_desc'] ?? 'Nền tảng kết bạn, hẹn hò nghiêm túc dành cho người Việt.') ?></p>
+    <div class="site-footer__container">
+        <div class="site-footer__top">
+            <div class="site-footer__brand"><?= e($settings['site_name'] ?? 'Saigon Cupid') ?></div>
+            <div class="site-footer__top-right">
+                <p class="site-footer__slogan"><?= e($settings['site_slogan'] ?? '') ?></p>
+            </div>
         </div>
-        <div>
-            <h4>Kết nối</h4>
-            <ul>
-                <li><a href="<?= site_url('kham-pha') ?>">Khám phá &amp; ghép đôi</a></li>
-                <li><a href="<?= site_url('thanh-vien') ?>">Danh sách thành viên</a></li>
-                <li><a href="<?= site_url('dang-ky') ?>">Tạo tài khoản</a></li>
-                <li><a href="<?= site_url('tai-khoan/ho-so') ?>">Hồ sơ của tôi</a></li>
-            </ul>
-        </div>
-        <div>
-            <h4>Hỗ trợ</h4>
-            <ul>
-                <li><a href="<?= site_url('trang/noi-quy') ?>">Nội quy</a></li>
-                <li><a href="<?= site_url('trang/dieu-khoan') ?>">Điều khoản</a></li>
-                <li><a href="<?= site_url('trang/lien-he') ?>">Liên hệ</a></li>
-                <li><a href="<?= site_url('tin-tuc') ?>">Cẩm nang hẹn hò</a></li>
-            </ul>
-        </div>
-        <div>
-            <h4>Liên hệ</h4>
-            <p>Hotline: <?= e($settings['hotline'] ?? '') ?></p>
-            <p>Email: <?= e($settings['contact_email'] ?? '') ?></p>
+
+        <nav class="site-footer__policy-nav" aria-label="Liên kết chính sách">
+            <a href="<?= site_url('trang/gioi-thieu') ?>">Về chúng tôi</a>
+            <a href="<?= site_url('trang/noi-quy') ?>">Nội quy</a>
+            <a href="<?= site_url('trang/dieu-khoan') ?>">Điều khoản sử dụng</a>
+            <a href="<?= site_url('trang/bao-mat') ?>">Chính sách bảo mật</a>
+            <a href="<?= site_url('trang/lien-he') ?>">Liên hệ</a>
+        </nav>
+
+        <div class="site-footer__line"></div>
+
+        <div class="site-footer__middle">
+            <div class="site-footer__links">
+                <div class="footer-col">
+                    <h3 class="footer-col__title">Về chúng tôi</h3>
+                    <ul class="footer-col__list">
+                        <li><a href="<?= site_url('trang/gioi-thieu') ?>">Giới thiệu</a></li>
+                        <li><a href="<?= site_url('trang/lien-he') ?>">Liên hệ hợp tác</a></li>
+                        <li><a href="<?= site_url('tin-tuc') ?>">Cẩm nang hẹn hò</a></li>
+                        <li><a href="<?= site_url('trang/bao-mat') ?>">Chính sách bảo mật</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h3 class="footer-col__title">Hướng dẫn chung</h3>
+                    <ul class="footer-col__list">
+                        <li><a href="<?= site_url('dang-ky') ?>">Tạo tài khoản</a></li>
+                        <li><a href="<?= site_url('kham-pha') ?>">Khám phá &amp; ghép đôi</a></li>
+                        <li><a href="<?= site_url('thanh-vien') ?>">Danh sách thành viên</a></li>
+                        <li><a href="<?= site_url('trang/noi-quy') ?>">Nội quy cộng đồng</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h3 class="footer-col__title">Khu vực nổi bật</h3>
+                    <ul class="footer-col__list">
+                        <?php foreach (array_slice($provinces, 0, 5) as $p): ?>
+                            <li><a href="<?= site_url('khu-vuc/' . $p['slug']) ?>">Hẹn hò <?= e($p['name']) ?></a></li>
+                        <?php endforeach; ?>
+                        <li><a href="<?= site_url('khu-vuc') ?>">Xem tất cả khu vực</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h3 class="footer-col__title">Kết nối chúng tôi</h3>
+                    <ul class="footer-col__list footer-col__list--social">
+                        <?php
+                        // Chỉ hiện mạng xã hội đã khai báo trong Quản trị -> Cấu hình
+                        $socials = array(
+                            'facebook_url'  => 'Facebook',
+                            'youtube_url'   => 'YouTube',
+                            'tiktok_url'    => 'TikTok',
+                            'instagram_url' => 'Instagram',
+                        );
+                        $has_social = false;
+                        foreach ($socials as $key => $label):
+                            if (empty($settings[$key])) { continue; }
+                            $has_social = true; ?>
+                            <li><a target="_blank" rel="noopener" href="<?= e($settings[$key]) ?>"><?= $label ?></a></li>
+                        <?php endforeach; ?>
+                        <?php if (!$has_social): ?>
+                            <li><a href="<?= site_url('trang/lien-he') ?>">Gửi liên hệ</a></li>
+                        <?php endif; ?>
+                        <?php if (!empty($settings['contact_email'])): ?>
+                            <li><a href="mailto:<?= e($settings['contact_email']) ?>">Email hỗ trợ</a></li>
+                        <?php endif; ?>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="footer-bottom">© <?= date('Y') ?> <?= e($settings['site_name'] ?? 'Saigon Cupid') ?>. Nội dung do thành viên đăng tải.</div>
+
+    <div class="site-footer__line"></div>
+
+    <div class="site-footer__company">
+        <div class="company-info-block">
+            <address class="site-footer__entity-address">
+                <h3 class="site-footer__company-title"><?= e($settings['company_name'] ?? ($settings['site_name'] ?? 'Saigon Cupid')) ?></h3>
+                <ul class="site-footer__company-list">
+                    <?php if (!empty($settings['tax_code'])): ?>
+                        <li>Mã số thuế: <?= e($settings['tax_code']) ?></li>
+                    <?php endif; ?>
+                    <?php if (!empty($settings['contact_email'])): ?>
+                        <li>Email: <a href="mailto:<?= e($settings['contact_email']) ?>"><?= e($settings['contact_email']) ?></a></li>
+                    <?php endif; ?>
+                    <?php if (!empty($settings['hotline'])): ?>
+                        <li><a href="tel:<?= e(preg_replace('/\s+/', '', $settings['hotline'])) ?>">Hotline: <?= e($settings['hotline']) ?></a></li>
+                    <?php endif; ?>
+                    <?php if (!empty($settings['zalo'])): ?>
+                        <li>Zalo: <?= e($settings['zalo']) ?></li>
+                    <?php endif; ?>
+                    <?php if (!empty($settings['address'])): ?>
+                        <li>Địa chỉ: <?= e($settings['address']) ?></li>
+                    <?php endif; ?>
+                </ul>
+            </address>
+        </div>
+
+        <div class="footer-note">
+            <p class="disclaimer">Nội dung hồ sơ do thành viên tự đăng tải.<br>
+                Vui lòng cẩn trọng khi trao đổi thông tin cá nhân và giao dịch tiền bạc.</p>
+        </div>
+    </div>
+
+    <div class="site-footer__line"></div>
+
+    <div class="site-footer__bottom">
+        <p>Copyright ©<?= date('Y') ?> <?= e(strtoupper($settings['site_name'] ?? 'Saigon Cupid')) ?>. All Rights Reserved.</p>
+    </div>
 </footer>
 
 <!-- Chat nổi: khách xem được phòng chung, muốn gửi thì phải đăng nhập -->

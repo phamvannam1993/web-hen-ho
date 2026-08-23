@@ -9,6 +9,7 @@ class Posts extends MY_Controller
     {
         parent::__construct();
         $this->load->model(array('m_post', 'm_access_code', 'm_article'));
+        $this->require_posts_enabled();
     }
 
     /** Lọc lấy từ query string, dùng chung cho mọi trang danh sách. */

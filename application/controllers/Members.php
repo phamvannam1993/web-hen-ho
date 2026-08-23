@@ -13,6 +13,21 @@ class Members extends MY_Controller
 
     public function index($page = 1)
     {
+        $this->show_list('Thành viên', 'thanh-vien', $page);
+    }
+
+    /**
+     * Ô tìm kiếm ở trang chủ đổ về đây. Trước kia đường dẫn này tìm trong tin đăng,
+     * nhưng từ khi chuyển sang mô hình hồ sơ thì phải tìm trong thành viên.
+     */
+    public function search($page = 1)
+    {
+        $this->show_list('Kết quả tìm kiếm', 'tim-kiem', $page);
+    }
+
+    /** Phần dùng chung của trang danh sách và trang kết quả tìm kiếm. */
+    private function show_list($title, $base_url, $page)
+    {
         $filters = array_filter(array(
             'keyword'     => $this->input->get('q', true),
             'gender'      => $this->input->get('gender'),
@@ -27,11 +42,18 @@ class Members extends MY_Controller
         $total = $this->m_user->count_search($filters);
 
         $this->render('members/index', array(
-            'title'      => 'Thành viên',
+            'title'      => $title,
+            'keyword'    => $this->input->get('q', true),
             'members'    => $this->m_user->search($filters, $this->per_page, ($page - 1) * $this->per_page),
             'total'      => $total,
-            'pagination' => pagination_links('thanh-vien', $page, $total, $this->per_page, $this->input->get()),
+            'pagination' => pagination_links($base_url, $page, $total, $this->per_page, $this->input->get()),
         ));
+    }
+
+    /** Đường dẫn hồ sơ cũ /thanh-vien/{slug}: chuyển hướng vĩnh viễn sang /profile/{slug}. */
+    public function legacy_profile($slug)
+    {
+        redirect('profile/' . $slug, 'location', 301);
     }
 
     public function profile($slug)
@@ -62,7 +84,8 @@ class Members extends MY_Controller
             'liked'      => $me ? $this->m_interaction->has_liked($me['id'], 'user', $member['id']) : false,
             'like_count' => $this->m_interaction->count_likes('user', $member['id']),
             'matched'    => $me ? $this->m_interaction->is_matched($me['id'], $member['id']) : false,
-            'quick_links' => $this->m_category->all('post'),
+            // Liên kết nhanh dẫn sang các khu vực, thay cho danh mục tin đăng đã ngưng
+            'quick_links' => $this->m_province->all(),
         ));
     }
 
@@ -124,7 +147,7 @@ class Members extends MY_Controller
                 $this->input->post('parent_id'), $image);
             set_flash('success', 'Đã gửi bình luận.');
         }
-        redirect('thanh-vien/' . $slug . '#binh-luan');
+        redirect('profile/' . $slug . '#binh-luan');
     }
 
     /** Tải ảnh đính kèm bình luận, trả về đường dẫn tương đối hoặc null. */
@@ -156,6 +179,6 @@ class Members extends MY_Controller
         if ($this->auth->check()) {
             $this->m_user_comment->delete_own($id, $this->auth->id());
         }
-        redirect('thanh-vien/' . $slug . '#binh-luan');
+        redirect('profile/' . $slug . '#binh-luan');
     }
 }

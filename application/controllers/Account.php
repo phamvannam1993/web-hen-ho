@@ -116,6 +116,7 @@ class Account extends Member_Controller
     /** Danh sách tin của tôi. */
     public function posts()
     {
+        $this->require_posts_enabled();
         $this->render('account/posts', array(
             'title' => 'Tin đăng của tôi',
             'posts' => $this->m_post->by_user($this->auth->id(), null, 50),
@@ -124,11 +125,13 @@ class Account extends Member_Controller
 
     public function create_post()
     {
+        $this->require_posts_enabled();
         return $this->edit_post(null);
     }
 
     public function edit_post($id = null)
     {
+        $this->require_posts_enabled();
         $me   = $this->auth->user();
         $post = $id ? $this->m_post->find($id) : null;
         if ($id && (!$post || (int) $post['user_id'] !== (int) $me['id'])) {
@@ -195,6 +198,7 @@ class Account extends Member_Controller
 
     public function delete_post($id)
     {
+        $this->require_posts_enabled();
         $this->m_post->soft_delete($id, $this->auth->id());
         set_flash('success', 'Đã xoá tin.');
         redirect('tai-khoan/tin-dang');
