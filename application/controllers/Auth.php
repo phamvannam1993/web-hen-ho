@@ -124,7 +124,7 @@ class Auth extends MY_Controller
                 $link = site_url('dat-lai-mat-khau/' . $token);
                 $sent = $this->mailer->send(
                     $user['email'],
-                    'Đặt lại mật khẩu - ' . setting('site_name', 'HenHo24'),
+                    'Đặt lại mật khẩu - ' . setting('site_name', 'Saigon Cupid'),
                     'reset_password',
                     array(
                         'name'  => display_name($user),

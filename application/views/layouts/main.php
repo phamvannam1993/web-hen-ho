@@ -6,7 +6,17 @@ $menu  = $categories ?? array();
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title><?= e($title ?? 'Hẹn hò kết bạn') ?> - <?= e($settings['site_name'] ?? 'HenHo24') ?></title>
+<?php
+/*
+ * Tiêu đề trang: nếu controller đặt sẵn $meta_title thì dùng nguyên văn,
+ * ngược lại ghép "Tên trang - Tên website".
+ */
+$site_name = $settings['site_name'] ?? 'Saigon Cupid';
+$page_title = !empty($meta_title)
+    ? $meta_title
+    : (($title ?? 'Hẹn hò kết bạn') . ' - ' . $site_name);
+?>
+<title><?= e($page_title) ?></title>
 <meta name="description" content="<?= e($meta_desc ?? '') ?>">
 <?php
 /*
@@ -42,7 +52,7 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
     <div class="container header-inner">
         <a class="brand" href="<?= site_url() ?>">
             <span class="brand-mark">♥</span>
-            <span class="brand-text"><?= e($settings['site_name'] ?? 'HenHo24') ?></span>
+            <span class="brand-text"><?= e($settings['site_name'] ?? 'Saigon Cupid') ?></span>
         </a>
 
         <button class="nav-toggle" type="button" id="nav-toggle"
@@ -97,7 +107,7 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
 <footer class="site-footer">
     <div class="container footer-grid">
         <div>
-            <h4><?= e($settings['site_name'] ?? 'HenHo24') ?></h4>
+            <h4><?= e($settings['site_name'] ?? 'Saigon Cupid') ?></h4>
             <p><?= e($settings['site_desc'] ?? 'Nền tảng kết bạn, hẹn hò nghiêm túc dành cho người Việt.') ?></p>
         </div>
         <div>
@@ -124,7 +134,7 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
             <p>Email: <?= e($settings['contact_email'] ?? '') ?></p>
         </div>
     </div>
-    <div class="footer-bottom">© <?= date('Y') ?> <?= e($settings['site_name'] ?? 'HenHo24') ?>. Nội dung do thành viên đăng tải.</div>
+    <div class="footer-bottom">© <?= date('Y') ?> <?= e($settings['site_name'] ?? 'Saigon Cupid') ?>. Nội dung do thành viên đăng tải.</div>
 </footer>
 
 <?php if ($user): ?>

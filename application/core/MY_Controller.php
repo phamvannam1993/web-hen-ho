@@ -16,7 +16,7 @@ class MY_Controller extends CI_Controller
         $this->load->library('realtime');
 
         $this->data['settings']   = $this->m_setting->all();
-        $this->data['title']      = $this->data['settings']['site_name'] ?? 'HenHo24';
+        $this->data['title']      = $this->data['settings']['site_name'] ?? 'Saigon Cupid';
         $this->data['meta_desc']  = $this->data['settings']['site_desc'] ?? '';
         $this->data['user']       = $this->auth->user();
         // Thông tin kết nối WebSocket cho khung chat thời gian thực

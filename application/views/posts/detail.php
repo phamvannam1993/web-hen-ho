@@ -193,7 +193,7 @@ $place = trim(($post['district'] ? $post['district'] . ', ' : '') . ($post['prov
 
     <aside>
         <div class="sidebar-box">
-            <h3><?= e($settings['site_name'] ?? 'HenHo24') ?></h3>
+            <h3><?= e($settings['site_name'] ?? 'Saigon Cupid') ?></h3>
             <p><?= e($settings['site_desc'] ?? '') ?></p>
             <p>Nghiêm cấm mọi hành vi đăng ảnh không đúng quy định, vi phạm thuần phong mỹ tục Việt Nam.</p>
         </div>

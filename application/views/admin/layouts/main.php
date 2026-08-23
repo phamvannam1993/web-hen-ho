@@ -28,7 +28,7 @@ $menu  = array(
 <body>
 <div class="admin-shell">
     <aside class="admin-sidebar">
-        <div class="admin-brand"><?= e($settings['site_name'] ?? 'HenHo24') ?></div>
+        <div class="admin-brand"><?= e($settings['site_name'] ?? 'Saigon Cupid') ?></div>
         <nav>
             <ul>
                 <?php foreach ($menu as $key => $item): ?>
