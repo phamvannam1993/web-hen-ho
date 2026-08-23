@@ -1,0 +1,41 @@
+# ---------------------------------------------------------------
+# Thông tin nhạy cảm — tuyệt đối không đưa lên git
+# ---------------------------------------------------------------
+.env
+.env.*
+!.env.example
+
+# Chỉ chặn hai tệp cấu hình chứa bí mật, các tệp còn lại vẫn đẩy lên bình thường
+# để người khác clone về là chạy được ngay.
+application/config/database.php
+application/config/email.php
+
+# ---------------------------------------------------------------
+# Tệp do người dùng tải lên và tệp máy sinh ra
+# ---------------------------------------------------------------
+uploads/*
+!uploads/index.html
+writable/sessions/*
+!writable/sessions/index.html
+application/logs/*.php
+application/cache/*
+!application/cache/index.html
+
+# ---------------------------------------------------------------
+# Thư viện và tệp tạm
+# ---------------------------------------------------------------
+vendor/
+node_modules/
+_backup_ci3/
+anh-loi/
+dev-server.php
+
+# ---------------------------------------------------------------
+# Hệ điều hành và trình soạn thảo
+# ---------------------------------------------------------------
+.DS_Store
+Thumbs.db
+*.log
+*.swp
+.idea/
+.vscode/

@@ -11,15 +11,36 @@
 
 $count = isset($argv[1]) ? max(1, (int) $argv[1]) : 20;
 
+// Nạp .env TRƯỚC khi đọc bất kỳ thông số nào, nếu không sẽ chỉ lấy được giá trị mặc định
+$env = __DIR__ . '/../.env';
+if (is_readable($env)) {
+    foreach (file($env, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        $line = trim($line);
+        if ($line === '' || $line[0] === '#' || strpos($line, '=') === false) {
+            continue;
+        }
+        list($k, $v) = explode('=', $line, 2);
+        if (getenv(trim($k)) === false) {
+            putenv(trim($k) . '=' . trim($v, " \t\n\r\0\x0B\"'"));
+        }
+    }
+}
+
 $host = getenv('DB_HOST') ?: 'localhost';
 $name = getenv('DB_NAME') ?: 'web_hen_ho';
 $user = getenv('DB_USER') ?: 'root';
-$pass = getenv('DB_PASS') !== false ? getenv('DB_PASS') : 'Nam123456';
+$pass = getenv('DB_PASS') !== false ? getenv('DB_PASS') : '';
 
-$pdo = new PDO("mysql:host=$host;dbname=$name;charset=utf8mb4", $user, $pass, array(
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-));
+try {
+
+    $pdo = new PDO("mysql:host=$host;dbname=$name;charset=utf8mb4", $user, $pass, array(
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    ));
+} catch (PDOException $e) {
+    exit("Không kết nối được cơ sở dữ liệu ($user@$host/$name).\n"
+       . "Hãy kiểm tra DB_USER và DB_PASS trong tệp .env.\n");
+}
 
 $ho  = array('Nguyễn', 'Trần', 'Lê', 'Phạm', 'Hoàng', 'Vũ', 'Đặng', 'Bùi', 'Đỗ', 'Ngô');
 $dem = array('Thị', 'Văn', 'Minh', 'Ngọc', 'Thanh', 'Quang', 'Hải', 'Thu');
