@@ -29,6 +29,9 @@ class Home extends MY_Controller
         }
 
         $data = array(
+            // Tiêu đề riêng cho trang chủ, sửa được ở Quản trị -> Cấu hình
+            'meta_title'     => setting('home_title',
+                'Saigon Cupid - Cộng đồng tìm kiếm đối tượng hẹn hò và bạn bè'),
             'sections'       => $sections,
             'online_members' => $this->m_user->search(array('online' => 1, 'sort' => 'active'), 8)
                 ?: $this->m_user->search(array('sort' => 'active'), 8),

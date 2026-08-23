@@ -37,7 +37,7 @@ class Mailer
     public function send($to, $subject, $view, $data = array())
     {
         $from_address = getenv('MAIL_FROM_ADDRESS') ?: getenv('MAIL_USERNAME');
-        $from_name    = trim((string) getenv('MAIL_FROM_NAME'), '"\'') ?: setting('site_name', 'HenHo24');
+        $from_name    = trim((string) getenv('MAIL_FROM_NAME'), '"\'') ?: setting('site_name', 'Saigon Cupid');
 
         if (!$from_address) {
             log_message('error', 'Mailer: chưa cấu hình MAIL_FROM_ADDRESS trong .env');
@@ -45,7 +45,7 @@ class Mailer
         }
 
         // Nội dung được bọc trong khung thư dùng chung
-        $data['site_name'] = setting('site_name', 'HenHo24');
+        $data['site_name'] = setting('site_name', 'Saigon Cupid');
         $body = $this->CI->load->view('emails/layout', array(
             'site_name' => $data['site_name'],
             'content'   => $this->CI->load->view('emails/' . $view, $data, true),

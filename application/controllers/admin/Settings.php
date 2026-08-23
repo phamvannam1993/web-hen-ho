@@ -11,6 +11,7 @@ class Settings extends Admin_Controller
             'site_desc'   => 'Mô tả website (SEO)',
         ),
         'seo'        => array(
+            'home_title'   => 'Tiêu đề trang chủ (thẻ title)',
             'site_noindex' => 'Chặn Google lập chỉ mục (1 = chặn, 0 = cho phép)',
         ),
         'contact'    => array(

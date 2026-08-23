@@ -227,7 +227,7 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
 
     <aside>
         <div class="sidebar-box">
-            <h3><?= e($settings['site_name'] ?? 'HenHo24') ?></h3>
+            <h3><?= e($settings['site_name'] ?? 'Saigon Cupid') ?></h3>
             <p><?= e($settings['site_desc'] ?? '') ?></p>
         </div>
         <div class="sidebar-box">

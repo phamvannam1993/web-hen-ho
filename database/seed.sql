@@ -7,7 +7,7 @@ SET NAMES utf8mb4;
 
 /* ------------------------- Cấu hình ------------------------- */
 INSERT INTO `settings` (`key`,`value`,`group`) VALUES
-('site_name','HenHo24','general'),
+('site_name','Saigon Cupid','general'),
 ('site_slogan','Hẹn hò kết bạn nghiêm túc, chia sẻ buồn vui','general'),
 ('site_desc','Website kết bạn, hẹn hò nghiêm túc dành cho người Việt trên toàn quốc.','general'),
 ('hotline','0900 000 000','contact'),
@@ -18,7 +18,8 @@ INSERT INTO `settings` (`key`,`value`,`group`) VALUES
 ('unlock_cost','20','coin'),
 ('signup_bonus_coin','50','coin'),
 ('bank_info','Vietcombank - 0123456789 - CTY HENHO24','payment'),
-('site_noindex','1','seo')
+('site_noindex','1','seo'),
+('home_title','Saigon Cupid - Cộng đồng tìm kiếm đối tượng hẹn hò và bạn bè','seo')
 ON DUPLICATE KEY UPDATE `value` = VALUES(`value`);
 
 /* ------------------------- Tỉnh thành ------------------------- */
