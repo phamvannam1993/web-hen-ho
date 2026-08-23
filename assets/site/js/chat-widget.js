@@ -11,6 +11,8 @@
     if (!root) { return; }
 
     var base   = root.getAttribute('data-base');
+    // Khách chưa đăng nhập chỉ xem được phòng chat chung, không có tin nhắn riêng
+    var isGuest = root.getAttribute('data-guest') === '1';
     var EMOJI = ['😀','😄','😁','😊','🙂','😉','😍','🥰','😘','😋','😜','🤗','🤔','😐','🙄','😏',
                  '😢','😭','😤','😡','🥺','😳','😱','🤩','🥳','😎','👋','👌','✌️','👍','🙏','💪',
                  '👏','🙌','❤️','💕','💖','💘','💔','🌹','💐','💍','🔥','💯','🎉','☕','🍺','🎁'];
@@ -173,6 +175,7 @@
 
     /* ------------------------- Gửi tin ------------------------- */
 
+    if (formEl) {
     formEl.addEventListener('submit', function (e) {
         e.preventDefault();
         var text = (inputEl.value || '').trim();
@@ -210,6 +213,7 @@
             formEl.dispatchEvent(new Event('submit', { cancelable: true }));
         }
     });
+    }
 
     /* ------------------------- Bảng icon ------------------------- */
 
@@ -217,6 +221,7 @@
     var emojiBtn = document.getElementById('cw-emoji-btn');
     var emojiPanel = document.getElementById('cw-emoji-panel');
 
+    if (emojiBtn && emojiPanel && inputEl) {
     EMOJI.forEach(function (ch) {
         var b = document.createElement('button');
         b.type = 'button';
@@ -237,11 +242,12 @@
         emojiPanel.hidden = !emojiPanel.hidden;
     });
     emojiPanel.addEventListener('click', function (e) { e.stopPropagation(); });
+    }
 
     /* ------------------------- Phòng chat chung ------------------------- */
 
     var roomBody  = document.getElementById('cw-room-body');
-    var roomForm  = document.getElementById('cw-room-form');
+    var roomForm  = document.getElementById('cw-room-form');   // khách: không có
     var roomInput = document.getElementById('cw-room-input');
     var roomFile  = document.getElementById('cw-room-file');
     var roomOnline = document.getElementById('cw-room-online');
@@ -322,6 +328,7 @@
     }
     function stopRoom() { clearInterval(roomTimer); }
 
+    if (roomForm) {
     roomForm.addEventListener('submit', function (e) {
         e.preventDefault();
         var text = (roomInput.value || '').trim();
@@ -359,10 +366,12 @@
             roomForm.dispatchEvent(new Event('submit', { cancelable: true }));
         }
     });
+    }
 
     /* Bảng icon riêng cho phòng chung */
     var roomEmojiBtn = document.getElementById('cw-room-emoji-btn');
     var roomEmojiPanel = document.getElementById('cw-room-emoji-panel');
+    if (roomEmojiBtn && roomEmojiPanel) {
     EMOJI.forEach(function (ch) {
         var b = document.createElement('button');
         b.type = 'button';
@@ -382,6 +391,7 @@
         roomEmojiPanel.hidden = !roomEmojiPanel.hidden;
     });
     roomEmojiPanel.addEventListener('click', function (e) { e.stopPropagation(); });
+    }
 
     /* Chuyển qua lại giữa phòng chung và danh sách chat riêng */
     function showRoom() {
@@ -394,8 +404,28 @@
         roomView.hidden = true; chatView.hidden = true; listView.hidden = false;
         loadList();
     }
-    document.getElementById('cw-to-list').addEventListener('click', showList);
-    document.getElementById('cw-to-room').addEventListener('click', showRoom);
+    var toListBtn = document.getElementById('cw-to-list');
+    var toRoomBtn = document.getElementById('cw-to-room');
+    if (toListBtn) { toListBtn.addEventListener('click', showList); }
+    if (toRoomBtn) { toRoomBtn.addEventListener('click', showRoom); }
+
+    /* Khách bấm vào ô nhập hoặc nút gửi: mời đăng nhập thay vì không phản hồi gì */
+    if (isGuest) {
+        var guestForm = document.getElementById('cw-room-form');
+        if (guestForm) {
+            guestForm.addEventListener('click', function () {
+                if (window.appModal) {
+                    window.appModal({
+                        type: 'info',
+                        title: 'Cần đăng nhập',
+                        message: 'Bạn cần đăng nhập để tham gia trò chuyện. Việc xem thì hoàn toàn tự do.',
+                        confirmText: 'Đăng nhập',
+                        onConfirm: function () { window.location.href = base + 'dang-nhap'; }
+                    });
+                }
+            });
+        }
+    }
 
     /* ------------------------- Đóng / mở ------------------------- */
 
@@ -425,7 +455,8 @@
         });
     });
 
-    document.getElementById('cw-back').addEventListener('click', backToList);
+    var backBtn = document.getElementById('cw-back');
+    if (backBtn) { backBtn.addEventListener('click', backToList); }
     document.addEventListener('click', function () { emojiPanel.hidden = true; });
 
     /* Nút "Nhắn tin" ở trang cá nhân mở thẳng khung chat thay vì chuyển trang */
@@ -535,6 +566,8 @@
     }
 
     /* Đếm tin chưa đọc định kỳ ngay cả khi chưa mở khung chat */
-    loadList();
-    setInterval(function () { if (!current) { loadList(); } }, 20000);
+    if (!isGuest) {
+        loadList();
+        setInterval(function () { if (!current) { loadList(); } }, 20000);
+    }
 })();

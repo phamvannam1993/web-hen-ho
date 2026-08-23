@@ -93,13 +93,14 @@ class Ajax extends MY_Controller
 
     /* ==================== Phòng chat chung ==================== */
 
-    /** Lấy tin nhắn mới trong phòng chat chung (mọi thành viên đều xem được). */
+    /**
+     * Lấy tin nhắn phòng chat chung.
+     * Khách chưa đăng nhập vẫn xem được, nhưng muốn gửi thì phải đăng nhập
+     * (xem room_send bên dưới).
+     */
     public function room_messages()
     {
-        if (!$this->require_login()) {
-            return;
-        }
-        $me    = $this->auth->id();
+        $me    = $this->auth->id();   // null nếu là khách
         $after = (int) $this->input->get('after');
 
         $this->db->select('r.id, r.user_id, r.type, r.content, r.created_at,
@@ -122,7 +123,7 @@ class Ajax extends MY_Controller
         foreach ($rows as $r) {
             $messages[] = array(
                 'id'      => (int) $r['id'],
-                'mine'    => (int) $r['user_id'] === (int) $me,
+                'mine'    => $me && (int) $r['user_id'] === (int) $me,
                 'name'    => display_name($r),
                 'avatar'  => avatar_url($r['avatar'], $r['gender']),
                 'slug'    => $r['slug'],
@@ -134,6 +135,7 @@ class Ajax extends MY_Controller
 
         return $this->json(array(
             'ok'       => true,
+            'guest'    => !$me,
             'messages' => $messages,
             'online'   => (int) $this->db->where('last_active_at >', date('Y-m-d H:i:s', time() - 300))
                 ->where('status', 'active')->count_all_results('users'),

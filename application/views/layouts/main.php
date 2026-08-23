@@ -137,10 +137,10 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
     <div class="footer-bottom">© <?= date('Y') ?> <?= e($settings['site_name'] ?? 'Saigon Cupid') ?>. Nội dung do thành viên đăng tải.</div>
 </footer>
 
-<?php if ($user): ?>
-<!-- Chat nổi: nút bong bóng sát mép phải, bấm xổ ra khung trò chuyện -->
+<!-- Chat nổi: khách xem được phòng chung, muốn gửi thì phải đăng nhập -->
 <div id="chat-widget" class="chat-widget" data-base="<?= site_url() ?>"
-     data-ws-url="<?= e($ws_url ?? '') ?>" data-ws-token="<?= e($ws_token ?? '') ?>">
+     data-ws-url="<?= e($ws_url ?? '') ?>" data-ws-token="<?= e($ws_token ?? '') ?>"
+     data-guest="<?= $user ? '0' : '1' ?>">
     <button type="button" class="cw-bubble" id="cw-bubble" aria-label="Mở tin nhắn">
         <span class="cw-bubble-icon">💬</span>
         <span class="cw-badge" id="cw-badge" hidden>0</span>
@@ -154,26 +154,38 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
                     <b>Phòng chat chung</b>
                     <small id="cw-room-online">Đang tải…</small>
                 </div>
-                <button type="button" class="cw-icon-btn" id="cw-to-list" title="Tin nhắn riêng">✉</button>
+                <?php if ($user): ?>
+                    <button type="button" class="cw-icon-btn" id="cw-to-list" title="Tin nhắn riêng">✉</button>
+                <?php endif; ?>
                 <button type="button" class="cw-close" data-close aria-label="Đóng">&times;</button>
             </header>
 
             <div class="cw-body" id="cw-room-body"></div>
 
             <form class="cw-form" id="cw-room-form">
-                <label class="cw-attach" title="Gửi ảnh">
-                    <input type="file" name="image" accept="image/*" hidden id="cw-room-file">
+                <label class="cw-attach<?= $user ? '' : ' is-disabled' ?>" title="Gửi ảnh">
+                    <input type="file" name="image" accept="image/*" hidden id="cw-room-file"
+                           <?= $user ? '' : 'disabled' ?>>
                     <span>🖼</span>
                 </label>
                 <div class="cw-input-wrap">
-                    <input type="text" name="content" id="cw-room-input" placeholder="Nhắn cho cả phòng…" autocomplete="off">
+                    <input type="text" name="content" id="cw-room-input" autocomplete="off"
+                           placeholder="<?= $user ? 'Nhắn cho cả phòng…' : 'Đăng nhập để trò chuyện…' ?>"
+                           <?= $user ? '' : 'disabled' ?>>
                     <button type="button" class="cw-emoji-btn" id="cw-room-emoji-btn" title="Biểu tượng cảm xúc">☺</button>
                     <div class="cw-emoji-panel" id="cw-room-emoji-panel" hidden></div>
                 </div>
-                <button class="cw-send" type="submit" aria-label="Gửi">➤</button>
+                <button class="cw-send" type="submit" aria-label="Gửi"
+                        <?= $user ? '' : 'disabled' ?>>➤</button>
             </form>
+            <?php if (!$user): ?>
+                <p class="cw-guest-note">
+                    <a href="<?= site_url('dang-nhap') ?>">Đăng nhập</a> để tham gia trò chuyện
+                </p>
+            <?php endif; ?>
         </div>
 
+        <?php if ($user): ?>
         <!-- Danh sách hội thoại riêng -->
         <div class="cw-view" id="cw-list-view" hidden>
             <header class="cw-head">
@@ -223,9 +235,8 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
 
 <script src="<?= base_url('assets/site/js/password-toggle.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/password-toggle.js') ?>"></script>
 <script src="<?= base_url('assets/site/js/app.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/app.js') ?>"></script>
-<?php if ($user): ?>
+<!-- Chat nạp cho cả khách: xem được phòng chung, muốn gửi thì phải đăng nhập -->
 <script src="<?= base_url('assets/site/js/realtime.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/realtime.js') ?>"></script>
 <script src="<?= base_url('assets/site/js/chat-widget.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/chat-widget.js') ?>"></script>
-<?php endif; ?>
 </body>
 </html>

@@ -30,9 +30,14 @@ $score = min(100, (int) ($c['match_score'] ?? 0));
         <?php endif; ?>
 
         <div class="swipe-actions">
-            <button type="button" class="btn-pass-round" data-action="pass" title="Bỏ qua">✕</button>
-            <a class="btn-view-round" href="<?= site_url('thanh-vien/' . $c['slug']) ?>" title="Xem hồ sơ">Hồ sơ</a>
-            <button type="button" class="btn-like-round" data-action="like" title="Thích">♥</button>
+            <?php if ($user): ?>
+                <button type="button" class="btn-pass-round" data-action="pass" title="Bỏ qua">✕</button>
+                <a class="btn-view-round" href="<?= site_url('thanh-vien/' . $c['slug']) ?>" title="Xem hồ sơ">Hồ sơ</a>
+                <button type="button" class="btn-like-round" data-action="like" title="Thích">♥</button>
+            <?php else: ?>
+                <a class="btn-view-round" href="<?= site_url('thanh-vien/' . $c['slug']) ?>">Xem hồ sơ</a>
+                <a class="btn-like-round" href="<?= site_url('dang-nhap') ?>" title="Đăng nhập để thích">♥</a>
+            <?php endif; ?>
         </div>
     </div>
 </article>

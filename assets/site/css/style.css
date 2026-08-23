@@ -1528,3 +1528,59 @@ img { max-width: 100%; height: auto; display: block; }
     .btn-pass-round, .btn-like-round { width: 40px; height: 40px; font-size: 17px; }
     .btn-view-round { padding: 9px; font-size: 13.5px; border-radius: 20px; }
 }
+
+/* ==========================================================================
+   PC: trang chủ gọn lại — nhiều thẻ hơn trên một màn hình, bớt khoảng trống
+   ========================================================================== */
+
+@media (min-width: 1025px) {
+    /* Khối nội dung sát nhau hơn, tiêu đề nhỏ lại */
+    .home-block { padding: 24px 0; }
+    .block-title { font-size: 23px; margin-bottom: 4px; }
+    .block-title::after { width: 80px; margin: 10px auto 18px; }
+    .block-sub { margin: -10px 0 16px; font-size: 14px; }
+    .block-more { margin-top: 14px; }
+    .btn-more { padding: 9px 22px; font-size: 14px; }
+
+    /* Nút kêu gọi và ô tìm kiếm bớt cồng kềnh */
+    .hero { padding: 18px 0; }
+    .hero-cta { padding: 11px 32px; font-size: 20px; border-width: 2px; }
+    .search-bar { padding: 11px 0; }
+    .search-form input[type=text] { flex: 1 1 420px; padding: 10px 13px; }
+    .search-form select, .btn-search { padding: 10px 22px; font-size: 15px; }
+
+    /* Lưới dày hơn: 5 cột thay vì 4, khoảng cách nhỏ lại */
+    .member-grid { grid-template-columns: repeat(5, 1fr); gap: 14px; }
+    .member-card { border-radius: 10px; }
+    .member-card:hover { transform: translateY(-3px); }
+    .member-body { padding: 10px 11px; }
+    .member-name { font-size: 14.5px; margin-bottom: 5px; }
+    .member-name .place-tag { font-size: 12px; padding: 1px 7px; }
+    .member-meta { font-size: 13px; }
+    .member-job { font-size: 12.5px; margin-top: 3px; }
+    .member-thumb .post-date { font-size: 12px; left: 9px; bottom: 7px; }
+    .badge-verified, .member-thumb .badge-vip { font-size: 11.5px; padding: 2px 8px; }
+
+    /* Thẻ bài viết cũng thu gọn theo */
+    .article-grid { gap: 14px; }
+    .article-card h3 { font-size: 15px; }
+    .article-body { padding: 10px 12px 12px; }
+
+    /* Khu vực nổi bật: chữ nhỏ, các thẻ sát nhau */
+    .province-cloud { gap: 7px; }
+    .province-cloud a { padding: 6px 13px; font-size: 14px; border-radius: 16px; }
+}
+
+/* Màn hình rất rộng thì thêm một cột nữa cho đỡ trống hai bên */
+@media (min-width: 1500px) {
+    .member-grid { grid-template-columns: repeat(6, 1fr); }
+}
+
+/* Chat: trạng thái khách chưa đăng nhập */
+.cw-form input:disabled { background: #f2f3f5; color: #9aa0a6; cursor: pointer; }
+.cw-send:disabled, .cw-attach.is-disabled { opacity: .45; cursor: pointer; }
+.cw-guest-note {
+    margin: 0; padding: 9px 12px 12px; text-align: center;
+    font-size: 13px; color: var(--muted); background: #fff;
+}
+.cw-guest-note a { color: var(--pink); font-weight: 700; }
