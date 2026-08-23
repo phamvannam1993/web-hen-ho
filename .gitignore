@@ -7,8 +7,8 @@
 
 # Chỉ chặn hai tệp cấu hình chứa bí mật, các tệp còn lại vẫn đẩy lên bình thường
 # để người khác clone về là chạy được ngay.
-application/config/database.php
-application/config/email.php
+# application/config/database.php
+# application/config/email.php
 
 # ---------------------------------------------------------------
 # Tệp do người dùng tải lên và tệp máy sinh ra
