@@ -35,6 +35,7 @@ class Settings extends Admin_Controller
             'auto_approve_post' => 'Tự động duyệt tin đăng (1/0)',
             'post_expire_days'  => 'Số ngày tin hết hạn',
             'enable_posts'      => 'Bật tính năng đăng tin hẹn hò (1 = bật, 0 = tắt)',
+            'only_online'       => 'Chỉ hiện thành viên đang online ở các trang danh sách (1/0)',
         ),
         'coin'       => array(
             'unlock_cost'       => 'Xu để mở liên hệ',

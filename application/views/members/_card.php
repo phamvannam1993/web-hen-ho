@@ -62,7 +62,7 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
                 <button type="button" class="btn-swipe btn-swipe-like <?= !empty($m['liked']) ? 'is-liked' : '' ?>"
                         data-card-action="like"><?= $ic_heart ?><span class="js-like-text"><?= !empty($m['liked']) ? 'Đã thích' : 'Thích' ?></span></button>
             <?php else: ?>
-                <a class="btn-swipe btn-swipe-pass" href="<?= site_url('profile/' . $m['slug']) ?>">Xem hồ sơ</a>
+                <a class="btn-swipe btn-swipe-pass" href="<?= site_url('profile/' . $m['slug']) ?>">Hồ sơ</a>
                 <a class="btn-swipe btn-swipe-like" href="<?= site_url($me ? 'profile/' . $m['slug'] : 'dang-nhap') ?>"><?= $ic_heart ?>Thích</a>
             <?php endif; ?>
         </div>

@@ -91,8 +91,10 @@ for ($i = 0; $i < $count; $i++) {
     $suffix = substr(md5(uniqid('', true)), 0, 5);
     $slug   = to_slug($name) . '-' . $suffix;
 
-    // Hoạt động cuối rải đều: một số đang online, số còn lại vài giờ / vài ngày trước
-    $minutes_ago = $i < 5 ? rand(0, 4) : rand(30, 60 * 24 * 7);
+    // Hoạt động cuối rải từ 30 phút tới một tuần trước.
+    // Cố ý KHÔNG tạo ai "đang online": nhãn ONLINE phải phản ánh người thật đang
+    // mở trang, nếu không số liệu trong khung chat và trên thẻ sẽ sai lệch.
+    $minutes_ago = rand(30, 60 * 24 * 7);
     $last_active = date('Y-m-d H:i:s', time() - $minutes_ago * 60);
     $created_at  = date('Y-m-d H:i:s', time() - rand(1, 90) * 86400);
     $is_vip      = $i % 5 === 0 ? 1 : 0;

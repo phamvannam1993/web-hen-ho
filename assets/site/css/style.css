@@ -1313,6 +1313,13 @@ img { max-width: 100%; height: auto; display: block; }
     .filter-panel .btn-apply { position: sticky; bottom: 0; }
 }
 
+/* Nhãn trạng thái trên ảnh trang hồ sơ, dùng lại kiểu .tag của thẻ */
+.profile-photo { position: relative; }
+.profile-badges {
+    position: absolute; top: 10px; left: 10px; z-index: 2;
+    display: flex; flex-wrap: wrap; gap: 6px;
+}
+
 /* ------------------- Thẻ hồ sơ dùng chung (trang chủ, tìm kiếm, khu vực) -------------------
    Hai chế độ: lưới (mặc định) và danh sách khi lưới cha có thêm lớp .is-list. */
 
@@ -1538,6 +1545,9 @@ img { max-width: 100%; height: auto; display: block; }
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     padding: 9px 6px; border-radius: 999px; cursor: pointer;
     font-size: 13.5px; font-weight: 700; line-height: 1;
+    /* Nhãn luôn nằm một dòng; thẻ hẹp thì cắt bớt chứ không gãy dòng
+       làm nút cao lệch nhau */
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     transition: background .18s, border-color .18s, color .18s, transform .12s;
 }
 .btn-swipe .ic {
