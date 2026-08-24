@@ -41,7 +41,7 @@ $regions = array('bac' => 'Miền Bắc', 'trung' => 'Miền Trung', 'nam' => 'M
                     <td><?= number_format($p['member_count']) ?></td>
                     <td><?= (int) $p['sort'] ?></td>
                     <td class="actions">
-                        <a class="btn btn-light btn-sm" href="<?= site_url('khu-vuc/' . $p['slug']) ?>" target="_blank">Xem</a>
+                        <a class="btn btn-light btn-sm" href="<?= site_url($p['slug']) ?>" target="_blank">Xem</a>
                         <a class="btn btn-light btn-sm" href="<?= site_url('admin/provinces/edit/' . $p['id']) ?>">Sửa</a>
                         <a class="btn btn-danger btn-sm" href="<?= site_url('admin/provinces/delete/' . $p['id']) ?>"
                            data-confirm="Xoá tỉnh/thành này?<?= $p['member_count'] > 0

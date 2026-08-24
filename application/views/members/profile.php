@@ -234,7 +234,7 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
             <h3>Tìm theo khu vực</h3>
             <ul class="sidebar-list">
                 <?php foreach (array_slice($quick_links, 0, 20) as $link): ?>
-                    <li><a href="<?= site_url('khu-vuc/' . $link['slug']) ?>"><?= e($link['name']) ?></a></li>
+                    <li><a href="<?= site_url($link['slug']) ?>"><?= e($link['name']) ?></a></li>
                 <?php endforeach; ?>
             </ul>
         </div>

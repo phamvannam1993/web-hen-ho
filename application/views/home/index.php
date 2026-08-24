@@ -94,7 +94,7 @@
         <h2 class="block-title">Khu vực nổi bật</h2>
         <div class="province-cloud">
             <?php foreach ($top_provinces as $p): ?>
-                <a href="<?= site_url('khu-vuc/' . $p['slug']) ?>">
+                <a href="<?= site_url($p['slug']) ?>">
                     <?= e($p['name']) ?> <span>(<?= (int) $p['member_count'] ?>)</span>
                 </a>
             <?php endforeach; ?>

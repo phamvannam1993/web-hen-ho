@@ -20,8 +20,9 @@ $route['tin-dang/trang/(:num)']          = 'posts/index/$1';
 $route['danh-muc/(:any)/trang/(:num)']   = 'posts/category/$1/$2';
 $route['danh-muc/(:any)']                = 'posts/category/$1';
 $route['khu-vuc']                        = 'areas/index';
-$route['khu-vuc/(:any)/trang/(:num)']    = 'areas/province/$1/$2';
-$route['khu-vuc/(:any)']                 = 'areas/province/$1';
+// Đường dẫn khu vực cũ /khu-vuc/{tỉnh}: chuyển hướng 301 sang /{tỉnh}
+$route['khu-vuc/(:any)/trang/(:num)']    = 'areas/legacy_province/$1/$2';
+$route['khu-vuc/(:any)']                 = 'areas/legacy_province/$1';
 $route['tim-kiem']                       = 'members/search';
 $route['tim-kiem/trang/(:num)']          = 'members/search/$1';
 $route['tin-dang/lay-pass/(:num)']       = 'posts/get_pass/$1';
@@ -80,3 +81,13 @@ $route['ajax/report']          = 'ajax/report';
 $route['admin']                 = 'admin/dashboard/index';
 $route['admin/dang-nhap']       = 'admin/auth/login';
 $route['admin/dang-xuat']       = 'admin/auth/logout';
+
+/* ------------------------------------------------------------------
+ | TỈNH/THÀNH Ở GỐC — /ha-noi, /tp-ho-chi-minh ...
+ |
+ | Phải nằm CUỐI CÙNG: CodeIgniter so khớp theo thứ tự khai báo, nên mọi
+ | đường dẫn phía trên vẫn được ưu tiên. Chỉ nhận một đoạn gồm chữ thường,
+ | số và gạch ngang; slug không phải tỉnh sẽ ra trang 404.
+ * ---------------------------------------------------------------- */
+$route['([a-z0-9-]+)/trang/(:num)'] = 'areas/province/$1/$2';
+$route['([a-z0-9-]+)']              = 'areas/province/$1';

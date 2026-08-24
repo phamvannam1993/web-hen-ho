@@ -80,6 +80,11 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
             array('url' => 'trang/noi-quy', 'label' => 'Nội quy',    'match' => array('trang')),
         );
         $seg1 = (string) $this->uri->segment(1);
+        // Trang tỉnh nay nằm ở gốc (/ha-noi) nên phải đối chiếu với danh mục tỉnh
+        // để mục "Khu vực" vẫn sáng khi đang xem một tỉnh.
+        if ($seg1 !== '' && in_array($seg1, array_column($provinces, 'slug'), true)) {
+            $seg1 = 'khu-vuc';
+        }
         ?>
         <ul class="nav-list">
             <?php foreach ($nav_items as $item): ?>
@@ -162,7 +167,7 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
                     <h3 class="footer-col__title">Khu vực nổi bật</h3>
                     <ul class="footer-col__list">
                         <?php foreach (array_slice($provinces, 0, 5) as $p): ?>
-                            <li><a href="<?= site_url('khu-vuc/' . $p['slug']) ?>">Hẹn hò <?= e($p['name']) ?></a></li>
+                            <li><a href="<?= site_url($p['slug']) ?>">Hẹn hò <?= e($p['name']) ?></a></li>
                         <?php endforeach; ?>
                         <li><a href="<?= site_url('khu-vuc') ?>">Xem tất cả khu vực</a></li>
                     </ul>
