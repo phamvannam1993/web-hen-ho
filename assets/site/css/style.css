@@ -163,7 +163,7 @@ img { max-width: 100%; height: auto; display: block; }
 
 /* ------------------------------ Khối nội dung ------------------------------ */
 
-.home-block { padding: 34px 0; }
+.home-block { padding: 20px 0; }
 .home-block.alt { background: #e7e7e7; }
 .block-title {
     text-align: center; color: var(--amber); font-size: 30px; font-style: italic;
@@ -173,7 +173,7 @@ img { max-width: 100%; height: auto; display: block; }
     content: ""; display: block; width: 120px; height: 2px;
     background: #555; margin: 14px auto 26px;
 }
-.block-more { text-align: right; margin-top: 22px; }
+.block-more { text-align: right; margin-top: 12px; }
 .btn-more {
     display: inline-block; background: #fff; color: var(--amber); font-weight: 700;
     padding: 14px 34px; border-radius: 40px; box-shadow: 0 2px 6px rgba(0,0,0,.12);
@@ -1129,8 +1129,8 @@ img { max-width: 100%; height: auto; display: block; }
 
 /* ------------------------------ Trang Khám phá ------------------------------ */
 
-.discover-page { padding: 24px 0; }
-.discover-head { text-align: center; margin-bottom: 26px; }
+.discover-page { padding: 16px 0; }
+.discover-head { text-align: center; margin-bottom: 16px; }
 .discover-head h1 { margin: 0 0 8px; font-size: 32px; font-style: italic; color: var(--pink); }
 .discover-head p { margin: 0; color: var(--muted); }
 .discover-count { margin-top: 10px !important; }
@@ -1316,7 +1316,7 @@ img { max-width: 100%; height: auto; display: block; }
 /* ------------------- Thẻ hồ sơ dùng chung (trang chủ, tìm kiếm, khu vực) -------------------
    Hai chế độ: lưới (mặc định) và danh sách khi lưới cha có thêm lớp .is-list. */
 
-.member-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)); gap: 18px; }
+.member-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
 
 .pcard {
     display: flex; flex-direction: column;
@@ -1328,7 +1328,7 @@ img { max-width: 100%; height: auto; display: block; }
 .pcard.card-gone { opacity: 0; transform: scale(.96); }
 
 .pcard-photo { position: relative; display: block; background: #f1f2f4; }
-.pcard-photo img { width: 100%; aspect-ratio: 3 / 4; max-height: 360px; object-fit: cover; display: block; }
+.pcard-photo img { width: 100%; aspect-ratio: 1 / 1; max-height: 230px; object-fit: cover; display: block; }
 
 .pcard-tags { position: absolute; top: 12px; left: 12px; display: flex; flex-wrap: wrap; gap: 7px; z-index: 2; }
 .pcard-tags .tag, .swipe-badges .tag {
@@ -1339,8 +1339,8 @@ img { max-width: 100%; height: auto; display: block; }
 }
 
 .pcard-gender {
-    position: absolute; right: 12px; bottom: 12px; z-index: 2;
-    width: 38px; height: 38px; border-radius: 50%;
+    position: absolute; right: 10px; bottom: 10px; z-index: 2;
+    width: 34px; height: 34px; border-radius: 50%;
     display: inline-flex; align-items: center; justify-content: center;
     color: #fff; box-shadow: 0 3px 10px rgba(0, 0, 0, .22);
 }
@@ -1357,14 +1357,14 @@ img { max-width: 100%; height: auto; display: block; }
     fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round;
 }
 
-.pcard-body { display: flex; flex-direction: column; flex: 1; padding: 16px 18px 18px; }
-.pcard-name { margin: 0 0 9px; font-size: 20px; font-weight: 800; line-height: 1.25; }
+.pcard-body { display: flex; flex-direction: column; flex: 1; padding: 10px 12px 12px; }
+.pcard-name { margin: 0 0 5px; font-size: 16px; font-weight: 800; line-height: 1.25; }
 .pcard-name a { color: #1c2330; }
 .pcard-name a:hover { color: var(--pink); text-decoration: none; }
 
 .pcard-meta {
-    display: flex; align-items: center; flex-wrap: wrap; gap: 5px;
-    margin: 0 0 7px; font-size: 14.5px; color: #6b7280;
+    display: flex; align-items: center; flex-wrap: wrap; gap: 4px;
+    margin: 0 0 4px; font-size: 13px; color: #6b7280;
 }
 .pcard-meta .ic {
     width: 16px; height: 16px; flex: 0 0 16px;
@@ -1374,18 +1374,42 @@ img { max-width: 100%; height: auto; display: block; }
 .pcard-meta .ic + span { margin-right: 9px; }
 
 .pcard-bio {
-    margin: 8px 0 12px; color: #6b7280; font-size: 14.5px; line-height: 1.55;
+    margin: 6px 0 10px; color: #6b7280; font-size: 13px; line-height: 1.5;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-    overflow: hidden; min-height: 45px;
+    overflow: hidden; min-height: 39px;
 }
 
-.pcard-chips { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 14px; min-height: 27px; }
+.pcard-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; min-height: 25px; }
 .pcard-chips span {
-    background: #f3f4f6; color: #4b5563; border-radius: 8px;
-    padding: 5px 11px; font-size: 12.5px; font-weight: 600;
+    background: #f3f4f6; color: #4b5563; border-radius: 7px;
+    padding: 4px 9px; font-size: 11.5px; font-weight: 600;
 }
 
-.pcard-actions { display: flex; gap: 10px; margin-top: auto; }
+.pcard-actions { display: flex; gap: 7px; margin-top: auto; }
+
+/* ---------------- Lưới gọn ở trang chủ ----------------
+   Trang chủ chỉ để lướt nhanh nên xếp 5 thẻ một hàng và lược bớt phần phụ;
+   bấm vào ảnh hoặc tên là sang trang hồ sơ đầy đủ. */
+.member-grid.is-compact { grid-template-columns: repeat(5, 1fr); gap: 12px; }
+/* Ảnh vuông thay vì khổ dọc 3:4 để mỗi thẻ bớt cao */
+.member-grid.is-compact .pcard-photo img { aspect-ratio: 1 / 1; max-height: 230px; }
+.member-grid.is-compact .pcard-body { padding: 10px 12px 12px; }
+.member-grid.is-compact .pcard-name { font-size: 16px; margin-bottom: 5px; }
+.member-grid.is-compact .pcard-meta { font-size: 13px; gap: 4px; margin-bottom: 4px; }
+.member-grid.is-compact .pcard-meta .ic { width: 15px; height: 15px; flex-basis: 15px; }
+.member-grid.is-compact .pcard-meta .ic + span { margin-right: 6px; }
+.member-grid.is-compact .pcard-bio,
+.member-grid.is-compact .pcard-chips { display: none; }
+.member-grid.is-compact .pcard-tags .tag { padding: 5px 10px; font-size: 10.5px; }
+.member-grid.is-compact .pcard-gender { width: 34px; height: 34px; right: 10px; bottom: 10px; }
+.member-grid.is-compact .pcard-gender .ic { width: 18px; height: 18px; }
+.member-grid.is-compact .btn-swipe { padding: 9px 6px; font-size: 13.5px; gap: 6px; }
+.member-grid.is-compact .btn-swipe .ic { width: 17px; height: 17px; flex-basis: 17px; }
+.member-grid.is-compact .pcard-actions { gap: 7px; margin-top: 8px; }
+
+@media (max-width: 1200px) { .member-grid.is-compact { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 992px)  { .member-grid.is-compact { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 720px)  { .member-grid.is-compact { grid-template-columns: repeat(2, 1fr); } }
 
 /* ---------------- Chế độ danh sách ---------------- */
 .member-grid.is-list { grid-template-columns: 1fr; gap: 14px; }
@@ -1407,7 +1431,7 @@ img { max-width: 100%; height: auto; display: block; }
     /* Trang chủ trên điện thoại: giữ thẻ dọc nhưng xếp hai cột cho gọn,
        lược bớt phần phụ để mỗi thẻ không chiếm hết màn hình. */
     .member-grid.is-compact { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    .member-grid.is-compact .pcard-photo img { aspect-ratio: 3 / 4; max-height: none; }
+    .member-grid.is-compact .pcard-photo img { aspect-ratio: 1 / 1; max-height: none; }
     .member-grid.is-compact .pcard-body { padding: 11px 12px 13px; }
     .member-grid.is-compact .pcard-name { font-size: 15.5px; margin-bottom: 6px; }
     .member-grid.is-compact .pcard-meta { font-size: 13px; gap: 4px; margin-bottom: 5px; }
@@ -1435,7 +1459,11 @@ img { max-width: 100%; height: auto; display: block; }
    trắng gồm tên, dòng thông tin có biểu tượng, giới thiệu ngắn và hai nút
    hành động dạng viên thuốc chia đôi bề ngang. */
 
-.swipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 22px; }
+/* Khám phá xếp 5 thẻ một hàng, ảnh vuông cho gọn giống lưới trang chủ */
+.swipe-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+@media (max-width: 1200px) { .swipe-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 992px)  { .swipe-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 720px)  { .swipe-grid { grid-template-columns: repeat(2, 1fr); } }
 
 .swipe-card {
     display: flex; flex-direction: column;
@@ -1449,9 +1477,9 @@ img { max-width: 100%; height: auto; display: block; }
 
 /* ---- Ảnh ---- */
 .swipe-photo { position: relative; background: #f1f2f4; }
-.swipe-photo img { width: 100%; aspect-ratio: 3 / 4; max-height: 420px; object-fit: cover; display: block; }
+.swipe-photo img { width: 100%; aspect-ratio: 1 / 1; max-height: 230px; object-fit: cover; display: block; }
 
-.swipe-badges { position: absolute; top: 14px; left: 14px; display: flex; flex-wrap: wrap; gap: 8px; z-index: 2; }
+.swipe-badges { position: absolute; top: 9px; left: 9px; display: flex; flex-wrap: wrap; gap: 5px; z-index: 2; }
 .swipe-badges .tag {
     padding: 7px 15px; border-radius: 999px;
     font-size: 12.5px; font-weight: 700; letter-spacing: .3px;
@@ -1463,57 +1491,57 @@ img { max-width: 100%; height: auto; display: block; }
 .tag-vip    { background: #f0a020; }
 
 .swipe-score {
-    position: absolute; top: 14px; right: 14px; z-index: 2;
+    position: absolute; top: 9px; right: 9px; z-index: 2;
     background: rgba(255, 255, 255, .95); color: var(--pink);
     font-weight: 800; font-size: 13px; padding: 5px 12px; border-radius: 999px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
 }
 
 .swipe-gender {
-    position: absolute; right: 14px; bottom: 14px; z-index: 2;
-    width: 42px; height: 42px; border-radius: 50%;
+    position: absolute; right: 10px; bottom: 10px; z-index: 2;
+    width: 34px; height: 34px; border-radius: 50%;
     display: inline-flex; align-items: center; justify-content: center;
     color: #fff; box-shadow: 0 3px 10px rgba(0, 0, 0, .22);
 }
 .swipe-gender.is-male   { background: #4a90e2; }
 .swipe-gender.is-female { background: #e9508c; }
-.swipe-gender .ic { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round; }
+.swipe-gender .ic { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round; }
 
 /* ---- Thân thẻ ---- */
-.swipe-body { display: flex; flex-direction: column; flex: 1; padding: 18px 20px 20px; }
+.swipe-body { display: flex; flex-direction: column; flex: 1; padding: 10px 12px 12px; }
 
-.swipe-name { margin: 0 0 10px; font-size: 22px; font-weight: 800; color: #1c2330; line-height: 1.25; }
+.swipe-name { margin: 0 0 5px; font-size: 16px; font-weight: 800; color: #1c2330; line-height: 1.25; }
 
 .swipe-meta {
-    display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
-    margin: 0 0 8px; font-size: 15px; color: #6b7280;
+    display: flex; align-items: center; flex-wrap: wrap; gap: 4px;
+    margin: 0 0 4px; font-size: 13px; color: #6b7280;
 }
 .swipe-meta .ic {
-    width: 17px; height: 17px; flex: 0 0 17px;
+    width: 15px; height: 15px; flex: 0 0 15px;
     fill: none; stroke: currentColor; stroke-width: 1.8;
     stroke-linecap: round; stroke-linejoin: round;
 }
 /* Biểu tượng thứ hai trên cùng dòng cần khoảng thở với cụm trước nó */
-.swipe-meta .ic + span { margin-right: 8px; }
+.swipe-meta .ic + span { margin-right: 6px; }
 .swipe-meta .dot { color: #c4c9d1; }
 
 .swipe-bio {
-    margin: 10px 0 18px; color: #6b7280; font-size: 15px; line-height: 1.55;
+    margin: 6px 0 10px; color: #6b7280; font-size: 13px; line-height: 1.5;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-    overflow: hidden; min-height: 46px;
+    overflow: hidden; min-height: 39px;
 }
 
 /* ---- Hai nút hành động ---- */
-.swipe-actions { display: flex; gap: 12px; margin-top: auto; }
+.swipe-actions { display: flex; gap: 7px; margin-top: auto; }
 .btn-swipe {
     flex: 1 1 0; min-width: 0;
-    display: inline-flex; align-items: center; justify-content: center; gap: 9px;
-    padding: 14px 10px; border-radius: 999px; cursor: pointer;
-    font-size: 16px; font-weight: 700; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 9px 6px; border-radius: 999px; cursor: pointer;
+    font-size: 13.5px; font-weight: 700; line-height: 1;
     transition: background .18s, border-color .18s, color .18s, transform .12s;
 }
 .btn-swipe .ic {
-    width: 20px; height: 20px; flex: 0 0 20px; pointer-events: none;
+    width: 17px; height: 17px; flex: 0 0 17px; pointer-events: none;
     fill: none; stroke: currentColor; stroke-width: 2.1;
     stroke-linecap: round; stroke-linejoin: round;
 }
@@ -1525,15 +1553,15 @@ img { max-width: 100%; height: auto; display: block; }
 .btn-swipe:disabled { opacity: .55; cursor: default; transform: none; }
 
 @media (max-width: 560px) {
-    .swipe-grid { grid-template-columns: 1fr; gap: 16px; }
-    .swipe-photo img { aspect-ratio: 3 / 4; max-height: 460px; }
+    .swipe-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .swipe-photo img { aspect-ratio: 1 / 1; max-height: none; }
     .swipe-body { padding: 16px 16px 18px; }
     .swipe-name { font-size: 20px; }
     .swipe-meta { font-size: 14.5px; }
     .btn-swipe { font-size: 15px; padding: 13px 8px; }
 }
 
-.block-sub { text-align: center; color: var(--muted); margin: -14px 0 22px; }
+.block-sub { text-align: center; color: var(--muted); margin: -8px 0 14px; }
 
 
 

@@ -22,7 +22,7 @@ class Home extends MY_Controller
 
         $sections = array();
         foreach ($purposes as $key => $label) {
-            $members = $this->m_user->by_purpose($key, 8);
+            $members = $this->m_user->by_purpose($key, 10);
             if ($members) {
                 $sections[] = array('key' => $key, 'label' => $label, 'members' => $members);
             }
@@ -32,9 +32,9 @@ class Home extends MY_Controller
             // Tiêu đề riêng cho trang chủ, sửa được ở Quản trị -> Cấu hình
             'meta_title'     => 'Saigon Cupid - Cộng đồng tìm kiếm đối tượng hẹn hò và bạn bè',
             'sections'       => $sections,
-            'online_members' => $this->m_user->search(array('online' => 1, 'sort' => 'active'), 8)
-                ?: $this->m_user->search(array('sort' => 'active'), 8),
-            'new_members'    => $this->m_user->search(array('sort' => 'new'), 8),
+            'online_members' => $this->m_user->search(array('online' => 1, 'sort' => 'active'), 10)
+                ?: $this->m_user->search(array('sort' => 'active'), 10),
+            'new_members'    => $this->m_user->search(array('sort' => 'new'), 10),
             'top_provinces'  => array_slice($this->m_province->with_member_count(), 0, 12),
             'articles'       => $this->m_article->published(4),
             'stats'          => $this->m_user->stats(),
@@ -42,7 +42,7 @@ class Home extends MY_Controller
 
         // Người đã đăng nhập thấy gợi ý ghép đôi tính theo hồ sơ của chính họ
         if ($this->auth->check()) {
-            $data['suggestions'] = $this->m_user->suggestions($this->auth->user(), 8);
+            $data['suggestions'] = $this->m_user->suggestions($this->auth->user(), 10);
         }
 
         $this->render('home/index', $data);
