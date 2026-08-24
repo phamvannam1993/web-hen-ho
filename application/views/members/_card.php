@@ -6,7 +6,7 @@ $marital = array(
 );
 ?>
 <article class="member-card">
-    <a class="member-thumb" href="<?= site_url('thanh-vien/' . $m['slug']) ?>">
+    <a class="member-thumb" href="<?= site_url('profile/' . $m['slug']) ?>">
         <img src="<?= avatar_url($m['avatar'], $m['gender']) ?>" alt="<?= e(display_name($m)) ?>" loading="lazy">
         <?php if (($m['kyc_status'] ?? '') === 'verified'): ?>
             <span class="badge-verified">Kiểm định</span>
@@ -21,7 +21,7 @@ $marital = array(
             <?php if (!empty($m['province_name'])): ?>
                 <span class="place-tag"><?= e($m['province_name']) ?></span>
             <?php endif; ?>
-            <a href="<?= site_url('thanh-vien/' . $m['slug']) ?>"><?= e(display_name($m)) ?></a>
+            <a href="<?= site_url('profile/' . $m['slug']) ?>"><?= e(display_name($m)) ?></a>
         </h3>
 
         <p class="member-meta">

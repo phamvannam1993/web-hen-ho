@@ -277,7 +277,7 @@
         if (!m.mine) {
             var who = document.createElement('a');
             who.className = 'cw-room-name';
-            who.href = base + 'thanh-vien/' + m.slug;
+            who.href = base + 'profile/' + m.slug;
             who.textContent = m.name;
             col.appendChild(who);
         }

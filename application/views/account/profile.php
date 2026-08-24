@@ -128,7 +128,7 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
 
             <div class="auth-actions">
                 <button class="btn btn-primary" type="submit">Lưu hồ sơ</button>
-                <a class="btn btn-ghost" href="<?= site_url('thanh-vien/' . $me['slug']) ?>">Xem trang cá nhân</a>
+                <a class="btn btn-ghost" href="<?= site_url('profile/' . $me['slug']) ?>">Xem trang cá nhân</a>
             </div>
         </form>
     </div>

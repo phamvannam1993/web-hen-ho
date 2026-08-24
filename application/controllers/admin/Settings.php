@@ -17,11 +17,24 @@ class Settings extends Admin_Controller
         'contact'    => array(
             'hotline'       => 'Hotline',
             'contact_email' => 'Email hỗ trợ',
+            'zalo'          => 'Zalo',
+        ),
+        'company'    => array(
+            'company_name' => 'Tên công ty (hiển thị cuối trang)',
+            'tax_code'     => 'Mã số thuế',
+            'address'      => 'Địa chỉ',
+        ),
+        'social'     => array(
+            'facebook_url'  => 'Facebook',
+            'youtube_url'   => 'YouTube',
+            'tiktok_url'    => 'TikTok',
+            'instagram_url' => 'Instagram',
         ),
         'moderation' => array(
             'auto_approve_user' => 'Tự động kích hoạt thành viên mới (1/0)',
             'auto_approve_post' => 'Tự động duyệt tin đăng (1/0)',
             'post_expire_days'  => 'Số ngày tin hết hạn',
+            'enable_posts'      => 'Bật tính năng đăng tin hẹn hò (1 = bật, 0 = tắt)',
         ),
         'coin'       => array(
             'unlock_cost'       => 'Xu để mở liên hệ',

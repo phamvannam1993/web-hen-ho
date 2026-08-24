@@ -6,6 +6,7 @@ $menu  = array(
     'posts'        => array('Tin đăng', 'admin/posts'),
     'users'        => array('Thành viên', 'admin/users'),
     'categories'   => array('Danh mục', 'admin/categories'),
+    'provinces'    => array('Tỉnh/thành', 'admin/provinces'),
     'reports'      => array('Báo cáo vi phạm', 'admin/reports'),
     'orders'       => array('Đơn nạp / VIP', 'admin/orders'),
     'packages'     => array('Gói dịch vụ', 'admin/packages'),

@@ -35,7 +35,7 @@ class Home extends MY_Controller
             'online_members' => $this->m_user->search(array('online' => 1, 'sort' => 'active'), 8)
                 ?: $this->m_user->search(array('sort' => 'active'), 8),
             'new_members'    => $this->m_user->search(array('sort' => 'new'), 8),
-            'top_provinces'  => $this->m_province->with_post_count(12),
+            'top_provinces'  => array_slice($this->m_province->with_member_count(), 0, 12),
             'articles'       => $this->m_article->published(4),
             'stats'          => $this->m_user->stats(),
         );

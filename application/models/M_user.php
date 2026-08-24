@@ -124,10 +124,14 @@ class M_user extends CI_Model
         if (!empty($f['age_min']))     $this->db->where('u.birthday <=', date('Y-m-d', strtotime('-' . (int) $f['age_min'] . ' years')));
         if (!empty($f['age_max']))     $this->db->where('u.birthday >=', date('Y-m-d', strtotime('-' . ((int) $f['age_max'] + 1) . ' years')));
         if (!empty($f['keyword'])) {
+            // Ô tìm kiếm ngoài trang chủ ghi "tên, khu vực hoặc mô tả" nên phải
+            // tìm cả nghề nghiệp và tên tỉnh, không chỉ tên và giới thiệu.
             $this->db->group_start()
                 ->like('u.display_name', $f['keyword'])
                 ->or_like('u.nickname', $f['keyword'])
                 ->or_like('u.bio', $f['keyword'])
+                ->or_like('u.job', $f['keyword'])
+                ->or_like('p.name', $f['keyword'])
                 ->group_end();
         }
     }

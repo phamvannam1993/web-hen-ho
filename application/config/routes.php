@@ -19,9 +19,11 @@ $route['tin-dang']                       = 'posts/index';
 $route['tin-dang/trang/(:num)']          = 'posts/index/$1';
 $route['danh-muc/(:any)/trang/(:num)']   = 'posts/category/$1/$2';
 $route['danh-muc/(:any)']                = 'posts/category/$1';
-$route['khu-vuc/(:any)/trang/(:num)']    = 'posts/province/$1/$2';
-$route['khu-vuc/(:any)']                 = 'posts/province/$1';
-$route['tim-kiem']                       = 'posts/search';
+$route['khu-vuc']                        = 'areas/index';
+$route['khu-vuc/(:any)/trang/(:num)']    = 'areas/province/$1/$2';
+$route['khu-vuc/(:any)']                 = 'areas/province/$1';
+$route['tim-kiem']                       = 'members/search';
+$route['tim-kiem/trang/(:num)']          = 'members/search/$1';
 $route['tin-dang/lay-pass/(:num)']       = 'posts/get_pass/$1';
 $route['tin-dang/mo-lien-he/(:num)']     = 'posts/reveal/$1';
 $route['tin/(:any)']                     = 'posts/detail/$1';
@@ -33,11 +35,14 @@ $route['kham-pha/bo-qua/(:num)']  = 'discover/pass/$1';
 
 $route['thanh-vien']              = 'members/index';
 $route['thanh-vien/trang/(:num)'] = 'members/index/$1';
-$route['thanh-vien/(:any)/lay-pass']             = 'members/get_pass/$1';
-$route['thanh-vien/(:any)/mo-lien-he']           = 'members/reveal/$1';
-$route['thanh-vien/(:any)/binh-luan']            = 'members/comment/$1';
-$route['thanh-vien/(:any)/xoa-binh-luan/(:num)'] = 'members/delete_comment/$1/$2';
-$route['thanh-vien/(:any)']       = 'members/profile/$1';
+$route['profile/(:any)/lay-pass']             = 'members/get_pass/$1';
+$route['profile/(:any)/mo-lien-he']           = 'members/reveal/$1';
+$route['profile/(:any)/binh-luan']            = 'members/comment/$1';
+$route['profile/(:any)/xoa-binh-luan/(:num)'] = 'members/delete_comment/$1/$2';
+$route['profile/(:any)']           = 'members/profile/$1';
+
+// Đường dẫn hồ sơ cũ: chuyển hướng 301 sang /profile/... để không mất link đã chia sẻ
+$route['thanh-vien/(:any)']       = 'members/legacy_profile/$1';
 
 $route['tai-khoan']               = 'account/index';
 $route['tai-khoan/ho-so']         = 'account/profile';
