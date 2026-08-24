@@ -184,7 +184,7 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
             <li><a target="_blank" href="#"><span><img src="/assets/images/facebook.png" alt="Facebook" /></span> Facebook</a></li>
           </ul>
                         
-                        <li><a href="<?= site_url('trang/lien-he') ?>">Gửi liên hệ</a></li>
+                        
                     </ul>
                 </div>
             </div>
