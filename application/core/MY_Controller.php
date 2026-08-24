@@ -26,6 +26,13 @@ class MY_Controller extends CI_Controller
             : '';
         $this->data['categories'] = $this->m_category->tree('post');
         $this->data['provinces']  = $this->m_province->all();
+
+        // Ghi nhận hoạt động ở MỌI trang, không chỉ khu vực tài khoản. Trước đây
+        // chỉ các trang bắt buộc đăng nhập mới gọi, nên người đang duyệt trang chủ
+        // hay khám phá không được tính là đang online.
+        if ($this->auth->check()) {
+            $this->auth->touch_active();
+        }
     }
 
     /** Render layout frontend. */

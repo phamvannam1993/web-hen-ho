@@ -131,7 +131,9 @@ class Userauth
         if (!$user) {
             return;
         }
-        if (!$user['last_active_at'] || strtotime($user['last_active_at']) < time() - 300) {
+        // Ghi lại mỗi 60 giây. Ngưỡng cũ là 300 giây, đúng bằng cửa sổ tính online,
+        // nên người đang duyệt vẫn có lúc bị coi là ngoại tuyến.
+        if (!$user['last_active_at'] || strtotime($user['last_active_at']) < time() - 60) {
             $this->CI->db->where('id', $user['id'])
                 ->update('users', array('last_active_at' => date('Y-m-d H:i:s')));
         }

@@ -137,8 +137,10 @@ class Ajax extends MY_Controller
             'ok'       => true,
             'guest'    => !$me,
             'messages' => $messages,
+            // Không tính tài khoản đã xoá mềm
             'online'   => (int) $this->db->where('last_active_at >', date('Y-m-d H:i:s', time() - 300))
-                ->where('status', 'active')->count_all_results('users'),
+                ->where('status', 'active')->where('deleted_at', null)
+                ->count_all_results('users'),
         ));
     }
 
