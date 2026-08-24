@@ -47,7 +47,12 @@ class Account extends Member_Controller
                     'weight_kg'      => $this->input->post('weight_kg') ?: null,
                     'education'      => $this->input->post('education') ?: null,
                     'marital_status' => $this->input->post('marital_status') ?: null,
+                    'smoking'        => $this->input->post('smoking') ?: null,
+                    'drinking'       => $this->input->post('drinking') ?: null,
                 );
+                if ($this->input->post('has_children') !== null && $this->input->post('has_children') !== '') {
+                    $data['has_children'] = (int) $this->input->post('has_children');
+                }
 
                 $avatar = $this->upload_image('avatar');
                 if ($avatar) {
@@ -64,6 +69,15 @@ class Account extends Member_Controller
                     'allow_message'  => $this->input->post('allow_message'),
                     'show_online'    => (int) (bool) $this->input->post('show_online'),
                 );
+                // Sở thích: ghi lại toàn bộ lựa chọn hiện tại
+                $this->db->where('user_id', $me['id'])->delete('user_interests');
+                foreach ((array) $this->input->post('interests') as $iid) {
+                    $iid = (int) $iid;
+                    if ($iid > 0) {
+                        $this->db->replace('user_interests', array('user_id' => $me['id'], 'interest_id' => $iid));
+                    }
+                }
+
                 $exists = $this->db->where('user_id', $me['id'])->count_all_results('user_preferences') > 0;
                 if ($exists) {
                     $this->db->where('user_id', $me['id'])->update('user_preferences', $pref);
@@ -78,9 +92,13 @@ class Account extends Member_Controller
         }
 
         $this->render('account/profile', array(
-            'title' => 'Hồ sơ của tôi',
-            'me'    => $this->m_user->find($me['id']),
-            'pref'  => $this->db->where('user_id', $me['id'])->get('user_preferences')->row_array(),
+            'title'         => 'Hồ sơ của tôi',
+            'me'            => $this->m_user->find($me['id']),
+            'pref'          => $this->db->where('user_id', $me['id'])->get('user_preferences')->row_array(),
+            'all_interests' => $this->db->order_by('name')->get('interests')->result_array(),
+            'my_interests'  => array_map('intval', array_column(
+                $this->db->select('interest_id')->where('user_id', $me['id'])
+                    ->get('user_interests')->result_array(), 'interest_id')),
         ));
     }
 

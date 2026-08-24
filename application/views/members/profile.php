@@ -75,6 +75,14 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
                             <?= $m['weight_kg'] ? ' · Nặng ' . (int) $m['weight_kg'] . ' kg' : '' ?>
                         </dd></div>
                     <?php endif; ?>
+                    <?php $freq = array('khong' => 'Không', 'thinh_thoang' => 'Thỉnh thoảng', 'thuong_xuyen' => 'Thường xuyên'); ?>
+                    <div><dt>Con cái</dt><dd><?= (int) $m['has_children'] === 1 ? 'Đã có con' : 'Chưa có con' ?></dd></div>
+                    <?php if ($m['smoking']): ?>
+                        <div><dt>Hút thuốc</dt><dd><?= e($freq[$m['smoking']] ?? '') ?></dd></div>
+                    <?php endif; ?>
+                    <?php if ($m['drinking']): ?>
+                        <div><dt>Uống rượu bia</dt><dd><?= e($freq[$m['drinking']] ?? '') ?></dd></div>
+                    <?php endif; ?>
                     <?php if ($interests): ?>
                         <div><dt>Sở thích</dt><dd><?= e(implode(', ', array_column($interests, 'name'))) ?></dd></div>
                     <?php endif; ?>

@@ -58,6 +58,7 @@ $gioi_thieu = array(
 );
 $hoc_van = array('thpt', 'trung_cap', 'cao_dang', 'dai_hoc', 'sau_dai_hoc');
 $hon_nhan = array('doc_than', 'doc_than', 'doc_than', 'ly_hon', 'goa');
+$muc_do   = array('khong', 'khong', 'thinh_thoang', 'thuong_xuyen');
 
 $provinces = $pdo->query("SELECT id FROM provinces")->fetchAll(PDO::FETCH_COLUMN);
 $interests = $pdo->query("SELECT id FROM interests")->fetchAll(PDO::FETCH_COLUMN);
@@ -98,9 +99,9 @@ for ($i = 0; $i < $count; $i++) {
 
     $pdo->prepare("INSERT INTO users
         (uuid, email, phone, password_hash, display_name, slug, gender, birthday, province_id,
-         bio, height_cm, weight_kg, job, education, marital_status, role, status,
-         is_vip, vip_expired_at, coin_balance, profile_score, last_active_at, created_at)
-        VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'member', 'active',
+         bio, height_cm, weight_kg, job, education, marital_status, has_children, smoking, drinking,
+         role, status, is_vip, vip_expired_at, coin_balance, profile_score, last_active_at, created_at)
+        VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'member', 'active',
                 ?, ?, ?, ?, ?, ?)")
         ->execute(array(
             'user' . $suffix . '@demo.local',
@@ -117,6 +118,9 @@ for ($i = 0; $i < $count; $i++) {
             $nghe[array_rand($nghe)],
             $hoc_van[array_rand($hoc_van)],
             $hon_nhan[array_rand($hon_nhan)],
+            rand(0, 3) === 0 ? 1 : 0,
+            $gender === 'female' ? 'khong' : $muc_do[array_rand($muc_do)],
+            $muc_do[array_rand($muc_do)],
             $is_vip,
             $is_vip ? date('Y-m-d H:i:s', strtotime('+' . rand(10, 300) . ' days')) : null,
             rand(0, 500),

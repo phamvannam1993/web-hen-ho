@@ -363,6 +363,19 @@
         });
     });
 
+    /* --- Nút chọn dạng viên thuốc (sở thích, lối sống): bật/tắt trạng thái --- */
+    document.querySelectorAll('.pick input').forEach(function (input) {
+        input.addEventListener('change', function () {
+            var box = input.closest('.pick');
+            if (input.type === 'radio' && input.name) {
+                document.querySelectorAll('input[name="' + input.name + '"]').forEach(function (other) {
+                    if (other.closest('.pick')) { other.closest('.pick').classList.remove('on'); }
+                });
+            }
+            box.classList.toggle('on', input.checked);
+        });
+    });
+
     /* --- Bộ lọc tìm kiếm: nút mở/đóng trên màn hình hẹp --- */
     var filterToggle = document.getElementById('filter-toggle');
     if (filterToggle) {

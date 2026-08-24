@@ -40,7 +40,9 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
 
         <?php if (!empty($m['height_cm']) || !empty($m['job']) || !empty($m['marital_status'])): ?>
             <p class="pcard-meta">
-                <?php if (!empty($m['height_cm'])): ?><?= $ic_ruler ?><span><?= (int) $m['height_cm'] ?> cm</span><?php endif; ?>
+                <?php if (!empty($m['height_cm'])): ?>
+                    <?= $ic_ruler ?><span><?= (int) $m['height_cm'] ?> cm<?= !empty($m['weight_kg']) ? ' · ' . (int) $m['weight_kg'] . ' kg' : '' ?></span>
+                <?php endif; ?>
                 <?php if (!empty($m['job'])): ?><?= $ic_case ?><span><?= e($m['job']) ?></span><?php endif; ?>
                 <?php if (!empty($m['marital_status'])): ?><?= $ic_heart ?><span><?= e($marital[$m['marital_status']] ?? '') ?></span><?php endif; ?>
             </p>

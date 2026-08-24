@@ -83,6 +83,43 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
                         <?php endforeach; ?>
                     </select>
                 </div>
+                <div>
+                    <label for="has_children">Con cái</label>
+                    <select id="has_children" name="has_children">
+                        <option value="">-- Chọn --</option>
+                        <option value="0" <?= (string) $me['has_children'] === '0' ? 'selected' : '' ?>>Chưa có con</option>
+                        <option value="1" <?= (string) $me['has_children'] === '1' ? 'selected' : '' ?>>Đã có con</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="smoking">Hút thuốc</label>
+                    <select id="smoking" name="smoking">
+                        <option value="">-- Chọn --</option>
+                        <?php foreach (array('khong' => 'Không', 'thinh_thoang' => 'Thỉnh thoảng', 'thuong_xuyen' => 'Thường xuyên') as $k => $t): ?>
+                            <option value="<?= $k ?>" <?= $me['smoking'] === $k ? 'selected' : '' ?>><?= $t ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div>
+                    <label for="drinking">Uống rượu bia</label>
+                    <select id="drinking" name="drinking">
+                        <option value="">-- Chọn --</option>
+                        <?php foreach (array('khong' => 'Không', 'thinh_thoang' => 'Thỉnh thoảng', 'thuong_xuyen' => 'Thường xuyên') as $k => $t): ?>
+                            <option value="<?= $k ?>" <?= $me['drinking'] === $k ? 'selected' : '' ?>><?= $t ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+
+            <label>Sở thích <small>(chọn để được gợi ý và tìm thấy chính xác hơn)</small></label>
+            <div class="pick-row interest-pick">
+                <?php foreach ($all_interests as $it): ?>
+                    <?php $on = in_array((int) $it['id'], $my_interests, true); ?>
+                    <label class="pick <?= $on ? 'on' : '' ?>">
+                        <input type="checkbox" name="interests[]" value="<?= (int) $it['id'] ?>" <?= $on ? 'checked' : '' ?>>
+                        <?= e($it['name']) ?>
+                    </label>
+                <?php endforeach; ?>
             </div>
 
             <label for="bio">Giới thiệu bản thân</label>
