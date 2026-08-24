@@ -39,7 +39,7 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
 <!-- Dải mảnh trên cùng: khẩu hiệu + hotline -->
 <div class="topbar">
     <div class="container topbar-inner">
-        <span class="topbar-slogan"><?= e($settings['site_slogan'] ?? 'Hẹn hò kết bạn nghiêm túc, chia sẻ buồn vui') ?></span>
+        
         <?php if (!empty($settings['hotline'])): ?>
             <span class="topbar-hotline">Hỗ trợ: <b><?= e($settings['hotline']) ?></b></span>
         <?php endif; ?>
@@ -133,8 +133,8 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
 
         <nav class="site-footer__policy-nav" aria-label="Liên kết chính sách">
             <a href="<?= site_url('trang/gioi-thieu') ?>">Về chúng tôi</a>
-            <a href="<?= site_url('trang/noi-quy') ?>">Nội quy</a>
-            <a href="<?= site_url('trang/dieu-khoan') ?>">Điều khoản sử dụng</a>
+            <a href="<?= site_url('trang/noi-quy') ?>">Người điều hành</a>
+            <a href="<?= site_url('trang/dieu-khoan') ?>">Faqs</a>
             <a href="<?= site_url('trang/bao-mat') ?>">Chính sách bảo mật</a>
             <a href="<?= site_url('trang/lien-he') ?>">Liên hệ</a>
         </nav>
@@ -147,9 +147,10 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
                     <h3 class="footer-col__title">Về chúng tôi</h3>
                     <ul class="footer-col__list">
                         <li><a href="<?= site_url('trang/gioi-thieu') ?>">Giới thiệu</a></li>
-                        <li><a href="<?= site_url('trang/lien-he') ?>">Liên hệ hợp tác</a></li>
-                        <li><a href="<?= site_url('tin-tuc') ?>">Cẩm nang hẹn hò</a></li>
-                        <li><a href="<?= site_url('trang/bao-mat') ?>">Chính sách bảo mật</a></li>
+                        <li><a href="#">Văn hóa doanh nghiệp</a></li>
+                        <li><a href="#">Đội ngũ phát triển</a></li>
+                        <li><a href="#">Phần thưởng</a></li>
+                        <li><a href="#">Quảng cáo</a></li>
                     </ul>
                 </div>
 
@@ -167,41 +168,28 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
                     <h3 class="footer-col__title">Khu vực nổi bật</h3>
                     <ul class="footer-col__list">
                         <?php foreach (array_slice($provinces, 0, 5) as $p): ?>
-                            <li><a href="<?= site_url($p['slug']) ?>">Hẹn hò <?= e($p['name']) ?></a></li>
+                            <li><a href="<?= site_url($p['slug']) ?>"><?= e($p['name']) ?></a></li>
                         <?php endforeach; ?>
-                        <li><a href="<?= site_url('khu-vuc') ?>">Xem tất cả khu vực</a></li>
+                        
                     </ul>
                 </div>
 
                 <div class="footer-col">
                     <h3 class="footer-col__title">Kết nối chúng tôi</h3>
                     <ul class="footer-col__list footer-col__list--social">
-                        <?php
-                        // Chỉ hiện mạng xã hội đã khai báo trong Quản trị -> Cấu hình
-                        $socials = array(
-                            'facebook_url'  => 'Facebook',
-                            'youtube_url'   => 'YouTube',
-                            'tiktok_url'    => 'TikTok',
-                            'instagram_url' => 'Instagram',
-                        );
-                        $has_social = false;
-                        foreach ($socials as $key => $label):
-                            if (empty($settings[$key])) { continue; }
-                            $has_social = true; ?>
-                            <li><a target="_blank" rel="noopener" href="<?= e($settings[$key]) ?>"><?= $label ?></a></li>
-                        <?php endforeach; ?>
-                        <?php if (!$has_social): ?>
-                            <li><a href="<?= site_url('trang/lien-he') ?>">Gửi liên hệ</a></li>
-                        <?php endif; ?>
-                        <?php if (!empty($settings['contact_email'])): ?>
-                            <li><a href="mailto:<?= e($settings['contact_email']) ?>">Email hỗ trợ</a></li>
-                        <?php endif; ?>
+                        <ul class="footer-col__list footer-col__list--social">
+            <li><a target="_blank" href="#"><span><img src="/assets/images/tiktok.png" alt="Tiktok" /></span> Tiktok</a></li>
+            <li><a target="_blank" href="#"><span><img src="/assets/images/youtube.png" alt="Youtube" /></span> Youtube</a></li>
+            <li><a target="_blank" href="#"><span><img src="/assets/images/insta.png" alt="Instagram" /></span> Instagram</a></li>
+            <li><a target="_blank" href="#"><span><img src="/assets/images/facebook.png" alt="Facebook" /></span> Facebook</a></li>
+          </ul>
+                        
+                        <li><a href="<?= site_url('trang/lien-he') ?>">Gửi liên hệ</a></li>
                     </ul>
                 </div>
             </div>
         </div>
     </div>
-
     <div class="site-footer__line"></div>
 
     <div class="site-footer__company">
@@ -228,16 +216,13 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
             </address>
         </div>
 
-        <div class="footer-note">
-            <p class="disclaimer">Nội dung hồ sơ do thành viên tự đăng tải.<br>
-                Vui lòng cẩn trọng khi trao đổi thông tin cá nhân và giao dịch tiền bạc.</p>
-        </div>
+        
     </div>
 
     <div class="site-footer__line"></div>
 
     <div class="site-footer__bottom">
-        <p>Copyright ©<?= date('Y') ?> <?= e(strtoupper($settings['site_name'] ?? 'Saigon Cupid')) ?>. All Rights Reserved.</p>
+        <p>Copyright ©<?= date('Y') ?> <?= e(($settings['site_name'] ?? 'Saigon Cupid')) ?>. All Rights Reserved.</p>
     </div>
 </footer>
 
