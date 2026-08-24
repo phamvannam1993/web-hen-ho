@@ -99,6 +99,25 @@ img { max-width: 100%; height: auto; display: block; }
     font-weight: 600; font-size: 15px; white-space: nowrap; text-decoration: none;
     transition: background .15s, color .15s;
 }
+.filter-panel {
+  scrollbar-width: none; /* Dành cho Firefox */
+  -ms-overflow-style: none; /* Dành cho IE/Edge */
+}
+
+/* Dành cho Chrome, Safari, Edge, Opera */
+.filter-panel::-webkit-scrollbar {
+  display: none;
+}
+.filter-panel {
+  /* Thu nhỏ còn 85% kích thước ban đầu */
+  transform: scale(0.85); 
+  
+  /* Cố định tâm thu nhỏ ở góc trên bên trái */
+  transform-origin: top left; 
+  
+  /* Chỉnh lại chiều rộng nếu bị hẫng khoảng trống */
+  width: 115%; 
+}
 .nav-list > li > a:hover { background: #fdf0f7; color: var(--pink); }
 .nav-list > li > a.active { color: var(--pink); }
 .nav-list > li > a.active::after {
@@ -154,7 +173,25 @@ img { max-width: 100%; height: auto; display: block; }
     border: 3px solid var(--pink-dark); text-decoration: none;
 }
 .hero-cta:hover { background: var(--pink-dark); text-decoration: none; }
+select {
+  /* 1. Xóa giao diện mặc định của iOS/WebKit */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 
+  /* 2. Đặt lại style theo ý bạn */
+  background-color: #ffffff; /* Màu nền */
+  border-radius: 4px; /* Bo góc mong muốn */
+  border: 1px solid #ccc;
+  padding: 10px 15px;
+  color: #333333; /* Màu chữ */
+  
+  /* 3. Thêm mũi tên tùy chỉnh (vì bước 1 sẽ xóa luôn mũi tên mặc định) */
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22293%22%20height%3D%22293%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M236%20129L146.5%20218.5%2057%20129z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px;
+}
 .search-bar { background: var(--pink); padding: 14px 0; }
 .search-form { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 .search-form input[type=text] { flex: 1 1 480px; padding: 12px 14px; border: 0; }
@@ -1320,7 +1357,7 @@ img { max-width: 100%; height: auto; display: block; }
 
 .pcard {
     display: flex; flex-direction: column;
-    background: #fff; border-radius: 16px; overflow: hidden;
+    background: #fff; border-radius: 7px; overflow: hidden;
     box-shadow: 0 3px 16px rgba(17, 24, 39, .09);
     transition: box-shadow .2s ease, opacity .28s ease, transform .28s ease;
 }
