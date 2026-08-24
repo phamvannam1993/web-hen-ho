@@ -806,6 +806,13 @@ img { max-width: 100%; height: auto; display: block; }
     top: 0;
     color: rgba(255, 255, 255, .72);
 }
+.footer-col__list--social li:before {
+    content: "";
+}
+.footer-col__list--social li{
+    padding-left: 0px!important;
+
+}
 .footer-col__list a {
     display: inline-flex;
     align-items: center;
