@@ -14,7 +14,7 @@ foreach ($list as $p) {
             <h2 class="area-region"><?= e($regions[$region] ?? 'Khu vực khác') ?></h2>
             <div class="area-grid">
                 <?php foreach ($items as $p): ?>
-                    <a class="area-item" href="<?= site_url('khu-vuc/' . $p['slug']) ?>">
+                    <a class="area-item" href="<?= site_url($p['slug']) ?>">
                         <span class="area-name"><?= e($p['name']) ?></span>
                         <span class="area-count"><?= number_format($p['member_count']) ?> thành viên</span>
                     </a>

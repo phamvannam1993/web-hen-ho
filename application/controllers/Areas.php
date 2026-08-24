@@ -25,6 +25,13 @@ class Areas extends MY_Controller
         ));
     }
 
+    /** Đường dẫn cũ /khu-vuc/{slug}: chuyển hướng vĩnh viễn sang /{slug}. */
+    public function legacy_province($slug, $page = 1)
+    {
+        $url = $slug . ($page > 1 ? '/trang/' . (int) $page : '');
+        redirect($url, 'location', 301);
+    }
+
     /** /khu-vuc/{slug} — thành viên thuộc một tỉnh. */
     public function province($slug, $page = 1)
     {
@@ -53,7 +60,7 @@ class Areas extends MY_Controller
             'province'   => $province,
             'members'    => $this->m_user->search($filters, $this->per_page, ($page - 1) * $this->per_page),
             'total'      => $total,
-            'pagination' => pagination_links('khu-vuc/' . $province['slug'], $page, $total,
+            'pagination' => pagination_links($province['slug'], $page, $total,
                 $this->per_page, $this->input->get()),
         ));
     }
