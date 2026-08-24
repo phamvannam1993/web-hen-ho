@@ -63,7 +63,8 @@ $ic_female = '<svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="9" r="5.2"
         <div class="swipe-actions">
             <?php if ($user): ?>
                 <button type="button" class="btn-swipe btn-swipe-pass" data-action="pass"><?= $ic_close ?>Bỏ qua</button>
-                <button type="button" class="btn-swipe btn-swipe-like" data-action="like"><?= $ic_heart ?><span class="js-like-text">Thích</span></button>
+                <button type="button" class="btn-swipe btn-swipe-like <?= !empty($c['liked']) ? 'is-liked' : '' ?>"
+                        data-action="like"><?= $ic_heart ?><span class="js-like-text"><?= !empty($c['liked']) ? 'Đã thích' : 'Thích' ?></span></button>
             <?php else: ?>
                 <a class="btn-swipe btn-swipe-pass" href="<?= site_url('profile/' . $c['slug']) ?>">Xem hồ sơ</a>
                 <a class="btn-swipe btn-swipe-like" href="<?= site_url('dang-nhap') ?>"><?= $ic_heart ?>Thích</a>

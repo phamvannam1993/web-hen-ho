@@ -95,10 +95,20 @@ class M_user extends CI_Model
     public function search(array $filters, $limit = 12, $offset = 0)
     {
         $this->build_search($filters);
-        $this->db->select('u.*, p.name AS province_name,
+        $select = 'u.*, p.name AS province_name,
             (SELECT GROUP_CONCAT(i.name ORDER BY i.name SEPARATOR "|")
                FROM user_interests ui JOIN interests i ON i.id = ui.interest_id
-              WHERE ui.user_id = u.id) AS interest_names', false);
+              WHERE ui.user_id = u.id) AS interest_names';
+
+        // Người đang đăng nhập cần biết mình đã thích ai, nếu không thì sau khi
+        // tải lại trang nút sẽ quay về "Thích" dù lượt thích đã được ghi nhận.
+        $viewer = $this->auth->check() ? (int) $this->auth->id() : 0;
+        if ($viewer) {
+            $select .= ", (SELECT COUNT(*) FROM likes l
+                            WHERE l.user_id = $viewer AND l.target_type = 'user'
+                              AND l.target_id = u.id) AS liked";
+        }
+        $this->db->select($select, false);
 
         switch ($filters['sort'] ?? 'active') {
             case 'new':   $this->db->order_by('u.created_at', 'DESC'); break;
@@ -200,7 +210,9 @@ class M_user extends CI_Model
                        ))
                      + IF(u.last_active_at > NOW() - INTERVAL 5 MINUTE, 10, 0)
                      + ROUND(u.profile_score / 10)
-                   ) AS match_score
+                   ) AS match_score,
+                   (SELECT COUNT(*) FROM likes l
+                     WHERE l.user_id = ? AND l.target_type = 'user' AND l.target_id = u.id) AS liked
               FROM users u
          LEFT JOIN provinces p  ON p.id = u.province_id
          LEFT JOIN user_preferences pr ON pr.user_id = u.id
@@ -208,18 +220,21 @@ class M_user extends CI_Model
                AND u.status = 'active' AND u.role = 'member' AND u.deleted_at IS NULL
                AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE user_id = ?)
                AND u.id NOT IN (SELECT user_id     FROM blocks WHERE blocked_id = ?)
-               AND u.id NOT IN (
-                     SELECT target_id FROM likes
-                      WHERE user_id = ? AND target_type = 'user'
-                   )
                AND u.id NOT IN (SELECT passed_id FROM user_passes WHERE user_id = ?)
-          ORDER BY match_score DESC, u.last_active_at DESC
+          -- Người đã thích vẫn nằm trong danh sách, chỉ xếp xuống sau, để họ không
+          -- biến mất ngay sau khi bấm. Ai bị bỏ qua thì mới loại hẳn.
+          ORDER BY liked ASC, match_score DESC, u.last_active_at DESC
              LIMIT ? OFFSET ?";
 
         return $this->db->query($sql, array(
             $seeking, $seeking, $age_min, $age_max, $my_age,
-            (int) $user['province_id'], $purpose, $me,
-            $me, $me, $me, $me, $me, (int) $limit, (int) $offset,
+            (int) $user['province_id'], $purpose,
+            $me,                                    // sở thích chung trong match_score
+            $me,                                    // cột liked
+            $me,                                    // u.id <> ?
+            $me, $me,                               // hai bảng chặn
+            $me,                                    // đã bỏ qua
+            (int) $limit, (int) $offset,
         ))->result_array();
     }
 
@@ -232,16 +247,24 @@ class M_user extends CI_Model
               WHERE u.id <> ? AND u.status = 'active' AND u.role = 'member' AND u.deleted_at IS NULL
                 AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE user_id = ?)
                 AND u.id NOT IN (SELECT user_id FROM blocks WHERE blocked_id = ?)
-                AND u.id NOT IN (SELECT target_id FROM likes WHERE user_id = ? AND target_type = 'user')
                 AND u.id NOT IN (SELECT passed_id FROM user_passes WHERE user_id = ?)",
-            array($me, $me, $me, $me, $me)
+            array($me, $me, $me, $me)
         )->row('c');
     }
 
     /** Nhóm thành viên theo mục đích hẹn hò, dùng dựng khối trên trang chủ. */
     public function by_purpose($purpose, $limit = 8)
     {
-        return $this->db->select('u.*, p.name AS province_name')
+        // Kèm cờ đã thích để nút trên thẻ giữ đúng trạng thái sau khi tải lại trang
+        $viewer = $this->auth->check() ? (int) $this->auth->id() : 0;
+        $select = 'u.*, p.name AS province_name';
+        if ($viewer) {
+            $select .= ", (SELECT COUNT(*) FROM likes l
+                            WHERE l.user_id = $viewer AND l.target_type = 'user'
+                              AND l.target_id = u.id) AS liked";
+        }
+
+        return $this->db->select($select, false)
             ->from('users u')
             ->join('provinces p', 'p.id = u.province_id', 'left')
             ->join('user_preferences pr', 'pr.user_id = u.id')

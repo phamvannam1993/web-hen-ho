@@ -59,7 +59,8 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
         <div class="pcard-actions">
             <?php if ($me && (int) $me['id'] !== (int) $m['id']): ?>
                 <button type="button" class="btn-swipe btn-swipe-pass" data-card-action="pass"><?= $ic_close ?>Bỏ qua</button>
-                <button type="button" class="btn-swipe btn-swipe-like" data-card-action="like"><?= $ic_heart ?><span class="js-like-text">Thích</span></button>
+                <button type="button" class="btn-swipe btn-swipe-like <?= !empty($m['liked']) ? 'is-liked' : '' ?>"
+                        data-card-action="like"><?= $ic_heart ?><span class="js-like-text"><?= !empty($m['liked']) ? 'Đã thích' : 'Thích' ?></span></button>
             <?php else: ?>
                 <a class="btn-swipe btn-swipe-pass" href="<?= site_url('profile/' . $m['slug']) ?>">Xem hồ sơ</a>
                 <a class="btn-swipe btn-swipe-like" href="<?= site_url($me ? 'profile/' . $m['slug'] : 'dang-nhap') ?>"><?= $ic_heart ?>Thích</a>
