@@ -1984,3 +1984,13 @@ img { max-width: 100%; height: auto; display: block; }
     .area-grid { grid-template-columns: repeat(2, 1fr); }
     .area-item { padding: 10px 12px; }
 }
+
+/* ------------------------------------------------------------------
+ | Giới thiệu ngắn trên thẻ ở các trang danh sách đang TẠM ẨN
+ |
+ | Lý do: câu giới thiệu hay bị cắt giữa chừng nên nhìn rối. Đặt ở cuối
+ | tệp để chắc chắn ghi đè các khai báo phía trên. Xoá khối này là hiện
+ | lại; nội dung đầy đủ vẫn xem được ở trang hồ sơ.
+ * ---------------------------------------------------------------- */
+.pcard-bio,
+.swipe-bio { display: none; }
