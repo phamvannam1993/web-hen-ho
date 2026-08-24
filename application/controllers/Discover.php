@@ -65,13 +65,16 @@ class Discover extends MY_Controller
             return $this->json(array('ok' => false, 'message' => 'Không thể tự thích hồ sơ của mình.'));
         }
 
+        // toggle_like bật/tắt: bấm lần nữa là bỏ thích. Trả trạng thái về cho
+        // giao diện, nếu không nút sẽ luôn hiện "Đã thích" dù đã bỏ.
         $result = $this->m_interaction->toggle_like($me['id'], 'user', $target_id);
         return $this->json(array(
             'ok'      => true,
+            'liked'   => (bool) $result['liked'],
             'matched' => $result['matched'],
             'message' => $result['matched']
                 ? 'Ghép đôi thành công! Hai bạn đã thích nhau.'
-                : 'Đã gửi lượt thích.',
+                : ($result['liked'] ? 'Đã gửi lượt thích.' : 'Đã bỏ thích.'),
         ));
     }
 

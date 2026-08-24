@@ -221,9 +221,10 @@ class M_user extends CI_Model
                AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE user_id = ?)
                AND u.id NOT IN (SELECT user_id     FROM blocks WHERE blocked_id = ?)
                AND u.id NOT IN (SELECT passed_id FROM user_passes WHERE user_id = ?)
-          -- Người đã thích vẫn nằm trong danh sách, chỉ xếp xuống sau, để họ không
-          -- biến mất ngay sau khi bấm. Ai bị bỏ qua thì mới loại hẳn.
-          ORDER BY liked ASC, match_score DESC, u.last_active_at DESC
+          -- Người đã thích vẫn giữ nguyên vị trí trong danh sách để sau khi bấm
+          -- (và cả khi tải lại trang) họ không biến mất hay nhảy sang trang khác.
+          -- Chỉ người bị bỏ qua mới loại khỏi gợi ý.
+          ORDER BY match_score DESC, u.last_active_at DESC
              LIMIT ? OFFSET ?";
 
         return $this->db->query($sql, array(

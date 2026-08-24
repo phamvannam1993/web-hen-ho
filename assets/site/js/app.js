@@ -286,10 +286,11 @@
                 }
 
                 if (action === 'like') {
-                    // Giữ thẻ lại, chỉ đổi trạng thái nút để còn xem tiếp thông tin
+                    // Giữ thẻ lại, chỉ đổi trạng thái nút. Bấm lần nữa là bỏ thích
+                    // nên phải theo đúng trạng thái máy chủ trả về.
                     var lbl = btn.querySelector('.js-like-text');
-                    if (lbl) { lbl.textContent = 'Đã thích'; }
-                    btn.classList.add('is-liked');
+                    if (lbl) { lbl.textContent = res.liked ? 'Đã thích' : 'Thích'; }
+                    btn.classList.toggle('is-liked', !!res.liked);
                     btn.disabled = false;
                 } else {
                     // Bỏ qua thì cho thẻ bay ra rồi gỡ; hết thẻ trên trang thì
@@ -363,8 +364,9 @@
             }
 
             var lbl = btn.querySelector('.js-like-text');
-            if (lbl) { lbl.textContent = 'Đã thích'; }
-            btn.classList.add('is-liked');
+            if (lbl) { lbl.textContent = res.liked ? 'Đã thích' : 'Thích'; }
+            btn.classList.toggle('is-liked', !!res.liked);
+            btn.disabled = false;
             if (res.matched) {
                 showModal({
                     type: 'success', title: 'Ghép đôi thành công!',
