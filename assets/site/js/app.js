@@ -311,15 +311,82 @@
                     if (!res.ok) {
                         return showModal({ type: 'error', title: 'Không thực hiện được', message: res.message });
                     }
-                    btn.textContent = res.liked ? '♥ Đã thích' : '♥ Thích';
-                    btn.classList.toggle('btn-primary', !res.liked);
-                    btn.classList.toggle('btn-ghost', res.liked);
+                    var lbl = btn.querySelector('.js-like-text');
+                    if (lbl) { lbl.textContent = res.liked ? 'Đã thích' : 'Thích'; }
+                    else { btn.textContent = res.liked ? 'Đã thích' : 'Thích'; }
+                    btn.classList.toggle('is-liked', !!res.liked);
                     showModal({
                         type: res.matched ? 'success' : 'info',
                         title: res.matched ? 'Ghép đôi thành công!' : 'Đã cập nhật',
                         message: res.message
                     });
                 });
+        });
+    });
+
+    /* --- Thẻ hồ sơ: nút Bỏ qua / Thích (trang chủ, tìm kiếm, khu vực) --- */
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-card-action]');
+        if (!btn) { return; }
+
+        var card = btn.closest('.pcard');
+        var id = card.getAttribute('data-user');
+        var action = btn.getAttribute('data-card-action');
+        btn.disabled = true;
+
+        var url = action === 'like'
+            ? base + 'kham-pha/thich/' + id
+            : base + 'kham-pha/bo-qua/' + id;
+
+        post(url, {}).then(function (res) {
+            if (!res.ok) {
+                btn.disabled = false;
+                return showModal({ type: 'error', title: 'Không thực hiện được', message: res.message });
+            }
+
+            if (action === 'pass') {
+                // Bỏ qua thì ẩn hẳn thẻ khỏi danh sách
+                card.classList.add('card-gone');
+                setTimeout(function () { card.remove(); }, 280);
+                return;
+            }
+
+            var lbl = btn.querySelector('.js-like-text');
+            if (lbl) { lbl.textContent = 'Đã thích'; }
+            btn.classList.add('is-liked');
+            if (res.matched) {
+                showModal({
+                    type: 'success', title: 'Ghép đôi thành công!',
+                    message: 'Hai bạn đã thích nhau. Vào mục Tin nhắn để bắt đầu trò chuyện.'
+                });
+            }
+        });
+    });
+
+    /* --- Bộ lọc tìm kiếm: nút mở/đóng trên màn hình hẹp --- */
+    var filterToggle = document.getElementById('filter-toggle');
+    if (filterToggle) {
+        var layout = document.querySelector('.search-layout');
+        // Mở sẵn nếu người dùng vừa lọc xong, để họ thấy điều kiện đang đặt
+        if (location.search.replace(/[?&](view|sort|page)=[^&]*/g, '').replace(/^[?&]/, '')) {
+            layout.classList.add('filters-open');
+            filterToggle.setAttribute('aria-expanded', 'true');
+        }
+        filterToggle.addEventListener('click', function () {
+            var open = layout.classList.toggle('filters-open');
+            filterToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            if (open) {
+                layout.querySelector('.filter-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        });
+    }
+
+    /* --- Bộ lọc tìm kiếm: gập/mở từng nhóm --- */
+    document.querySelectorAll('[data-toggle-group]').forEach(function (head) {
+        head.addEventListener('click', function () {
+            var body = head.nextElementSibling;
+            var closed = head.classList.toggle('is-closed');
+            if (body) { body.hidden = closed; }
         });
     });
 

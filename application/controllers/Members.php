@@ -34,16 +34,31 @@ class Members extends MY_Controller
             'province_id' => $this->input->get('province_id'),
             'age_min'     => $this->input->get('age_min'),
             'age_max'     => $this->input->get('age_max'),
+            'height_min'  => $this->input->get('height_min'),
+            'height_max'  => $this->input->get('height_max'),
+            'marital'     => $this->input->get('marital'),
+            'education'   => $this->input->get('education'),
+            'smoking'     => $this->input->get('smoking'),
+            'drinking'    => $this->input->get('drinking'),
+            'interests'   => $this->input->get('interests'),
             'online'      => $this->input->get('online'),
             'vip'         => $this->input->get('vip'),
             'sort'        => $this->input->get('sort'),
         ));
+        // has_children nhận giá trị 0 nên không đi qua array_filter được
+        if ($this->input->get('has_children') !== null && $this->input->get('has_children') !== '') {
+            $filters['has_children'] = $this->input->get('has_children');
+        }
         $page  = max(1, (int) $page);
         $total = $this->m_user->count_search($filters);
 
         $this->render('members/index', array(
             'title'      => $title,
             'keyword'    => $this->input->get('q', true),
+            'filters'    => $filters,
+            'base_url'   => $base_url,
+            'view_mode'  => $this->input->get('view') === 'list' ? 'list' : 'grid',
+            'interests'  => $this->db->order_by('name')->get('interests')->result_array(),
             'members'    => $this->m_user->search($filters, $this->per_page, ($page - 1) * $this->per_page),
             'total'      => $total,
             'pagination' => pagination_links($base_url, $page, $total, $this->per_page, $this->input->get()),

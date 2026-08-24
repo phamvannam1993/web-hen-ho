@@ -95,7 +95,10 @@ class M_user extends CI_Model
     public function search(array $filters, $limit = 12, $offset = 0)
     {
         $this->build_search($filters);
-        $this->db->select('u.*, p.name AS province_name');
+        $this->db->select('u.*, p.name AS province_name,
+            (SELECT GROUP_CONCAT(i.name ORDER BY i.name SEPARATOR "|")
+               FROM user_interests ui JOIN interests i ON i.id = ui.interest_id
+              WHERE ui.user_id = u.id) AS interest_names', false);
 
         switch ($filters['sort'] ?? 'active') {
             case 'new':   $this->db->order_by('u.created_at', 'DESC'); break;
@@ -123,6 +126,25 @@ class M_user extends CI_Model
         if (!empty($f['online']))      $this->db->where('u.last_active_at >', date('Y-m-d H:i:s', time() - 300));
         if (!empty($f['age_min']))     $this->db->where('u.birthday <=', date('Y-m-d', strtotime('-' . (int) $f['age_min'] . ' years')));
         if (!empty($f['age_max']))     $this->db->where('u.birthday >=', date('Y-m-d', strtotime('-' . ((int) $f['age_max'] + 1) . ' years')));
+        if (!empty($f['marital']))   $this->db->where('u.marital_status', $f['marital']);
+        if (!empty($f['education']))  $this->db->where('u.education', $f['education']);
+        if (!empty($f['smoking']))    $this->db->where('u.smoking', $f['smoking']);
+        if (!empty($f['drinking']))   $this->db->where('u.drinking', $f['drinking']);
+        if (!empty($f['height_min'])) $this->db->where('u.height_cm >=', (int) $f['height_min']);
+        if (!empty($f['height_max'])) $this->db->where('u.height_cm <=', (int) $f['height_max']);
+        if (isset($f['has_children']) && $f['has_children'] !== '') {
+            $this->db->where('u.has_children', (int) $f['has_children']);
+        }
+        // Lọc theo sở thích: chỉ giữ người có đủ mọi sở thích được chọn
+        if (!empty($f['interests']) && is_array($f['interests'])) {
+            $ids = array_filter(array_map('intval', $f['interests']));
+            if ($ids) {
+                $this->db->where('(SELECT COUNT(*) FROM user_interests ui
+                                    WHERE ui.user_id = u.id AND ui.interest_id IN (' . implode(',', $ids) . ')) = '
+                                 . count($ids), null, false);
+            }
+        }
+
         if (!empty($f['keyword'])) {
             // Ô tìm kiếm ngoài trang chủ ghi "tên, khu vực hoặc mô tả" nên phải
             // tìm cả nghề nghiệp và tên tỉnh, không chỉ tên và giới thiệu.

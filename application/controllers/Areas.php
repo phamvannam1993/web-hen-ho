@@ -40,24 +40,40 @@ class Areas extends MY_Controller
             show_404();
         }
 
-        // Giữ nguyên các bộ lọc phụ trên thanh lọc, riêng tỉnh thì cố định theo đường dẫn
+        // Dùng chung giao diện lọc với trang tìm kiếm, riêng tỉnh cố định theo đường dẫn
         $filters = array_filter(array(
-            'keyword' => $this->input->get('q', true),
-            'gender'  => $this->input->get('gender'),
-            'age_min' => $this->input->get('age_min'),
-            'age_max' => $this->input->get('age_max'),
-            'online'  => $this->input->get('online'),
-            'sort'    => $this->input->get('sort'),
+            'keyword'    => $this->input->get('q', true),
+            'gender'     => $this->input->get('gender'),
+            'age_min'    => $this->input->get('age_min'),
+            'age_max'    => $this->input->get('age_max'),
+            'height_min' => $this->input->get('height_min'),
+            'height_max' => $this->input->get('height_max'),
+            'marital'    => $this->input->get('marital'),
+            'education'  => $this->input->get('education'),
+            'smoking'    => $this->input->get('smoking'),
+            'drinking'   => $this->input->get('drinking'),
+            'interests'  => $this->input->get('interests'),
+            'online'     => $this->input->get('online'),
+            'vip'        => $this->input->get('vip'),
+            'sort'       => $this->input->get('sort'),
         ));
+        if ($this->input->get('has_children') !== null && $this->input->get('has_children') !== '') {
+            $filters['has_children'] = $this->input->get('has_children');
+        }
         $filters['province_id'] = $province['id'];
 
         $page  = max(1, (int) $page);
         $total = $this->m_user->count_search($filters);
 
-        $this->render('areas/province', array(
+        $this->render('members/index', array(
             'title'      => 'Thành viên tại ' . $province['name'],
             'meta_desc'  => 'Danh sách thành viên đang tìm bạn hẹn hò tại ' . $province['name'] . '.',
+            'keyword'    => $this->input->get('q', true),
+            'filters'    => $filters,
+            'base_url'   => $province['slug'],
             'province'   => $province,
+            'view_mode'  => $this->input->get('view') === 'list' ? 'list' : 'grid',
+            'interests'  => $this->db->order_by('name')->get('interests')->result_array(),
             'members'    => $this->m_user->search($filters, $this->per_page, ($page - 1) * $this->per_page),
             'total'      => $total,
             'pagination' => pagination_links($province['slug'], $page, $total,

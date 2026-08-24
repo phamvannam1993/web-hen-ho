@@ -30,7 +30,7 @@
     <div class="container">
         <h2 class="block-title">Gợi ý ghép đôi cho bạn</h2>
         <p class="block-sub">Sắp xếp theo mức tương hợp với hồ sơ và tiêu chí của bạn.</p>
-        <div class="member-grid">
+        <div class="member-grid is-compact">
             <?php foreach ($suggestions as $m): ?>
                 <?php $this->load->view('members/_card', array('m' => $m)); ?>
             <?php endforeach; ?>
@@ -46,7 +46,7 @@
     <section class="home-block">
         <div class="container">
             <h2 class="block-title"><?= e($section['label']) ?></h2>
-            <div class="member-grid">
+            <div class="member-grid is-compact">
                 <?php foreach ($section['members'] as $m): ?>
                     <?php $this->load->view('members/_card', array('m' => $m)); ?>
                 <?php endforeach; ?>
@@ -64,7 +64,7 @@
         <?php if (empty($online_members)): ?>
             <p class="empty">Chưa có thành viên nào.</p>
         <?php else: ?>
-            <div class="member-grid">
+            <div class="member-grid is-compact">
                 <?php foreach ($online_members as $m): ?>
                     <?php $this->load->view('members/_card', array('m' => $m)); ?>
                 <?php endforeach; ?>
@@ -80,7 +80,7 @@
 <section class="home-block alt">
     <div class="container">
         <h2 class="block-title">Thành viên mới tham gia</h2>
-        <div class="member-grid">
+        <div class="member-grid is-compact">
             <?php foreach ($new_members as $m): ?>
                 <?php $this->load->view('members/_card', array('m' => $m)); ?>
             <?php endforeach; ?>
