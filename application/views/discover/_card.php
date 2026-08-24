@@ -5,6 +5,9 @@ $score   = min(100, (int) ($c['match_score'] ?? 0));
 $online  = is_online($c['last_active_at']);
 // "Mới tham gia": đăng ký trong vòng 7 ngày
 $is_new  = !empty($c['created_at']) && strtotime($c['created_at']) > strtotime('-7 days');
+// View này có khi được nạp thẳng từ controller (nạp thêm thẻ qua AJAX) nên
+// không chắc có sẵn $user như các trang render qua bố cục chung.
+$user    = isset($user) ? $user : null;
 
 // Biểu tượng vẽ bằng SVG để kích thước không phụ thuộc font hệ thống
 $ic_pin    = '<svg viewBox="0 0 24 24" class="ic"><path d="M12 21s7-6.1 7-11a7 7 0 1 0-14 0c0 4.9 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>';
@@ -60,7 +63,7 @@ $ic_female = '<svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="9" r="5.2"
         <div class="swipe-actions">
             <?php if ($user): ?>
                 <button type="button" class="btn-swipe btn-swipe-pass" data-action="pass"><?= $ic_close ?>Bỏ qua</button>
-                <button type="button" class="btn-swipe btn-swipe-like" data-action="like"><?= $ic_heart ?>Thích</button>
+                <button type="button" class="btn-swipe btn-swipe-like" data-action="like"><?= $ic_heart ?><span class="js-like-text">Thích</span></button>
             <?php else: ?>
                 <a class="btn-swipe btn-swipe-pass" href="<?= site_url('profile/' . $c['slug']) ?>">Xem hồ sơ</a>
                 <a class="btn-swipe btn-swipe-like" href="<?= site_url('dang-nhap') ?>"><?= $ic_heart ?>Thích</a>

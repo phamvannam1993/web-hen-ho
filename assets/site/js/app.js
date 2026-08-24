@@ -285,13 +285,21 @@
                     return showModal({ type: 'error', title: 'Không thực hiện được', message: res.message });
                 }
 
-                // Bay thẻ ra khỏi lưới rồi mới gỡ, đồng thời nạp hồ sơ kế tiếp
-                card.classList.add(action === 'like' ? 'card-liked' : 'card-passed');
-                setTimeout(function () {
-                    card.remove();
-                    if (res.next) { grid.insertAdjacentHTML('beforeend', res.next); }
-                    if (!grid.querySelector('.swipe-card')) { window.location.reload(); }
-                }, 280);
+                if (action === 'like') {
+                    // Giữ thẻ lại, chỉ đổi trạng thái nút để còn xem tiếp thông tin
+                    var lbl = btn.querySelector('.js-like-text');
+                    if (lbl) { lbl.textContent = 'Đã thích'; }
+                    btn.classList.add('is-liked');
+                    btn.disabled = false;
+                } else {
+                    // Bỏ qua thì cho thẻ bay ra rồi gỡ; hết thẻ trên trang thì
+                    // tải lại để lấy nhóm tiếp theo.
+                    card.classList.add('card-passed');
+                    setTimeout(function () {
+                        card.remove();
+                        if (!grid.querySelector('.swipe-card')) { window.location.reload(); }
+                    }, 280);
+                }
 
                 if (res.matched) {
                     showModal({
@@ -315,11 +323,14 @@
                     if (lbl) { lbl.textContent = res.liked ? 'Đã thích' : 'Thích'; }
                     else { btn.textContent = res.liked ? 'Đã thích' : 'Thích'; }
                     btn.classList.toggle('is-liked', !!res.liked);
-                    showModal({
-                        type: res.matched ? 'success' : 'info',
-                        title: res.matched ? 'Ghép đôi thành công!' : 'Đã cập nhật',
-                        message: res.message
-                    });
+                    // Thích / bỏ thích không cần báo gì thêm, trạng thái nút đã đủ rõ.
+                    // Riêng ghép đôi thì vẫn báo vì đó là việc đáng chú ý.
+                    if (res.matched) {
+                        showModal({
+                            type: 'success', title: 'Ghép đôi thành công!',
+                            message: 'Hai bạn đã thích nhau. Vào mục Tin nhắn để bắt đầu trò chuyện.'
+                        });
+                    }
                 });
         });
     });

@@ -46,6 +46,9 @@ $gioi_thieu = array(
 );
 
 $users     = $pdo->query("SELECT * FROM users WHERE role = 'member' AND deleted_at IS NULL")->fetchAll();
+// Nếu đã có người khai "đã có con" thì thôi không gán ngẫu nhiên nữa,
+// nếu không mỗi lần chạy lại sẽ đảo dữ liệu của tài khoản mẫu.
+$da_gan_con = (int) $pdo->query("SELECT COUNT(*) FROM users WHERE role='member' AND has_children = 1")->fetchColumn() > 0;
 $interests = $pdo->query("SELECT id FROM interests")->fetchAll(PDO::FETCH_COLUMN);
 $provinces = $pdo->query("SELECT id FROM provinces")->fetchAll(PDO::FETCH_COLUMN);
 
@@ -64,7 +67,7 @@ foreach ($users as $u) {
     if ($u['drinking'] === null)       $set['drinking']       = $muc_do[array_rand($muc_do)];
     // has_children mặc định là 0 nên không thể dựa vào NULL để biết đã khai hay chưa.
     // Với tài khoản mẫu thì gán ngẫu nhiên để bộ lọc có cả hai nhóm mà thử.
-    if (strpos($u['email'], '@demo.local') !== false && (int) $u['has_children'] === 0) {
+    if (!$da_gan_con && strpos($u['email'], '@demo.local') !== false && (int) $u['has_children'] === 0) {
         $set['has_children'] = rand(0, 3) === 0 ? 1 : 0;
     }
     if (!$u['bio'])                    $set['bio']            = $gioi_thieu[array_rand($gioi_thieu)];

@@ -1549,6 +1549,23 @@ img { max-width: 100%; height: auto; display: block; }
 .btn-swipe-pass:hover { border-color: #b9c0c9; background: #f7f8fa; color: #46505f; text-decoration: none; }
 .btn-swipe-like { background: #4a90e2; border: 1.5px solid #4a90e2; color: #fff; }
 .btn-swipe-like:hover { background: #3a7fd0; border-color: #3a7fd0; color: #fff; text-decoration: none; }
+/* Nút thích ở trang hồ sơ: cùng dạng với nút trên thẻ, có biểu tượng trái tim */
+.btn-like-toggle {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-like-toggle .ic {
+    width: 18px; height: 18px; flex: 0 0 18px; pointer-events: none;
+    fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round;
+}
+/* Đã thích: nền nhạt, viền giữ nguyên — giống hệt trạng thái sau khi tải lại trang */
+.btn-like-toggle.is-liked { background: #eee; color: #444; }
+.btn-like-toggle.is-liked:hover { background: #e4e4e4; color: #444; }
+.btn-like-toggle.is-liked .ic { fill: currentColor; }
+
+/* Đã gửi lượt thích: nút chuyển sang nền nhạt để phân biệt với chưa thích */
+.btn-swipe-like.is-liked { background: #eaf1fb; border-color: #cddffa; color: #2f6fc4; }
+.btn-swipe-like.is-liked:hover { background: #dfeafb; border-color: #b9d2f7; color: #2f6fc4; }
+.btn-swipe-like.is-liked .ic { fill: currentColor; }
 .btn-swipe:active { transform: scale(.97); }
 .btn-swipe:disabled { opacity: .55; cursor: default; transform: none; }
 

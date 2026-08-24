@@ -30,9 +30,12 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
                     <?php if (!$is_me): ?>
                         <div class="profile-actions">
                             <?php if ($user): ?>
-                                <button class="btn <?= $liked ? 'btn-ghost' : 'btn-primary' ?>" type="button"
-                                        data-like-user="<?= (int) $m['id'] ?>">
-                                    <?= $liked ? '♥ Đã thích' : '♥ Thích' ?>
+                                <?php // Cùng cấu trúc với thứ JS dựng lại sau khi bấm,
+                                      // để trạng thái trước và sau khi tải lại trang giống nhau ?>
+                                <button class="btn btn-primary btn-like-toggle <?= $liked ? 'is-liked' : '' ?>"
+                                        type="button" data-like-user="<?= (int) $m['id'] ?>">
+                                    <svg viewBox="0 0 24 24" class="ic"><path d="M12 20.5s-7-4.3-7-9.1A4.4 4.4 0 0 1 12 8a4.4 4.4 0 0 1 7 3.4c0 4.8-7 9.1-7 9.1z"/></svg>
+                                    <span class="js-like-text"><?= $liked ? 'Đã thích' : 'Thích' ?></span>
                                 </button>
                                 <button class="btn btn-blue-outline" type="button" data-chat-with="<?= (int) $m['id'] ?>">Nhắn tin</button>
                                 <button class="btn btn-ghost" type="button" data-report-user="<?= (int) $m['id'] ?>">Báo cáo</button>

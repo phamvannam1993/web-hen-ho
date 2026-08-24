@@ -31,6 +31,7 @@ $route['tin/(:any)']                     = 'posts/detail/$1';
 $route['dang-tin']                       = 'account/create_post';
 
 $route['kham-pha']                = 'discover/index';
+$route['kham-pha/trang/(:num)']   = 'discover/index/$1';
 $route['kham-pha/thich/(:num)']   = 'discover/like/$1';
 $route['kham-pha/bo-qua/(:num)']  = 'discover/pass/$1';
 

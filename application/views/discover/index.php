@@ -19,6 +19,7 @@
                 <?php $this->load->view('discover/_card', array('c' => $c)); ?>
             <?php endforeach; ?>
         </div>
+        <?= $pagination ?>
     <?php endif; ?>
 
     <?php if ($matches): ?>

@@ -13,26 +13,33 @@ class Discover extends MY_Controller
         $this->load->model(array('m_user', 'm_interaction'));
     }
 
-    public function index()
+    private $per_page = 20;
+
+    public function index($page = 1)
     {
-        $me = $this->auth->user();
+        $me     = $this->auth->user();
+        $page   = max(1, (int) $page);
+        $offset = ($page - 1) * $this->per_page;
 
         if ($me) {
             // Đã đăng nhập: gợi ý theo hồ sơ và tiêu chí của chính họ
-            $data = array(
-                'candidates' => $this->m_user->suggestions($me, 10),
-                'remaining'  => $this->m_user->count_suggestions($me),
+            $total = $this->m_user->count_suggestions($me);
+            $data  = array(
+                'candidates' => $this->m_user->suggestions($me, $this->per_page, $offset),
+                'remaining'  => $total,
                 'matches'    => $this->m_interaction->matches($me['id'], 6),
             );
         } else {
             // Khách: xem thành viên hoạt động gần đây, chưa tính được độ tương hợp
-            $list = $this->m_user->search(array('sort' => 'active'), 10);
-            $data = array(
-                'candidates' => $list,
-                'remaining'  => $this->m_user->count_search(array()),
+            $total = $this->m_user->count_search(array());
+            $data  = array(
+                'candidates' => $this->m_user->search(array('sort' => 'active'), $this->per_page, $offset),
+                'remaining'  => $total,
                 'matches'    => array(),
             );
         }
+
+        $data['pagination'] = pagination_links('kham-pha', $page, $total, $this->per_page);
 
         $this->render('discover/index', array_merge(array('title' => 'Khám phá'), $data));
     }
@@ -65,7 +72,6 @@ class Discover extends MY_Controller
             'message' => $result['matched']
                 ? 'Ghép đôi thành công! Hai bạn đã thích nhau.'
                 : 'Đã gửi lượt thích.',
-            'next'    => $this->next_card($me),
         ));
     }
 
@@ -84,19 +90,7 @@ class Discover extends MY_Controller
             'passed_id' => (int) $target_id,
         ));
 
-        return $this->json(array(
-            'ok'   => true,
-            'next' => $this->next_card($me),
-        ));
+        return $this->json(array('ok' => true));
     }
 
-    /** Lấy hồ sơ kế tiếp để nạp thêm vào cuối danh sách đang lướt. */
-    private function next_card($me)
-    {
-        $list = $this->m_user->suggestions($me, 1, 9);
-        if (empty($list)) {
-            return null;
-        }
-        return $this->load->view('discover/_card', array('c' => $list[0]), true);
-    }
 }
