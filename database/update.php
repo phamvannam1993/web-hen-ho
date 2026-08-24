@@ -7,8 +7,9 @@
  * Gồm ba việc, đều chạy lại được nhiều lần mà không hỏng gì:
  *   1. Thêm các khoá cấu hình mới (thông tin công ty, mạng xã hội, công tắc đăng tin)
  *   2. Cập nhật danh mục tỉnh/thành theo 34 đơn vị hành chính hiện hành
- *   3. Điền các trường hồ sơ còn trống để bộ lọc tìm kiếm có dữ liệu mà lọc
- *   4. (tuỳ chọn) Sinh thêm thành viên mẫu:  php database/update.php 30
+ *   3. Dọn trạng thái "đang online" giả của tài khoản mẫu
+ *   4. Điền các trường hồ sơ còn trống để bộ lọc tìm kiếm có dữ liệu mà lọc
+ *   5. (tuỳ chọn) Sinh thêm thành viên mẫu:  php database/update.php 30
  *
  * Thành viên mẫu có email dạng @demo.local nên gỡ lại rất dễ:
  *   DELETE FROM users WHERE email LIKE '%@demo.local';
@@ -47,6 +48,7 @@ echo "== 1. Khoá cấu hình mới ==\n";
 $settings = array(
     // key                 giá trị mặc định            nhóm
     array('enable_posts',  '0',                        'moderation'),
+    array('only_online',   '0',                        'moderation'),
     array('company_name',  'CÔNG TY TNHH SAIGON CUPID', 'company'),
     array('tax_code',      '',                         'company'),
     array('address',       '',                         'company'),
@@ -73,11 +75,21 @@ echo $added ? "  Đã thêm $added khoá.\n" : "  Đã có đủ, không thêm g
 echo "\n== 2. Danh mục tỉnh/thành ==\n";
 require $root . '/database/migrate_provinces_2025.php';
 
-echo "\n== 3. Hồ sơ thành viên ==\n";
+echo "\n== 3. Dọn trạng thái online giả ==\n";
+// Tài khoản mẫu từng được sinh với thời điểm hoạt động sát giờ tạo nên luôn
+// hiện nhãn ONLINE dù không ai dùng. Đẩy chúng về quá khứ; tài khoản thật
+// không bị đụng tới.
+$st = $pdo->prepare("UPDATE users SET last_active_at = NOW() - INTERVAL (30 + FLOOR(RAND()*10000)) MINUTE
+                      WHERE email LIKE '%@demo.local'
+                        AND last_active_at > NOW() - INTERVAL 5 MINUTE");
+$st->execute();
+echo '  Đã chỉnh ' . $st->rowCount() . " tài khoản mẫu.\n";
+
+echo "\n== 4. Hồ sơ thành viên ==\n";
 require $root . '/database/fill_member_profiles.php';
 
 if ($demo > 0) {
-    echo "\n== 4. Thành viên mẫu ==\n";
+    echo "\n== 5. Thành viên mẫu ==\n";
     // seed_demo_users.php đọc số lượng từ $argv[1] nên truyền thẳng tham số qua
     $argv[1] = $demo;
     require $root . '/database/seed_demo_users.php';

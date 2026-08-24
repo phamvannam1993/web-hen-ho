@@ -124,6 +124,18 @@ class M_user extends CI_Model
         return $this->db->count_all_results();
     }
 
+    /** Cấu hình "chỉ hiện thành viên đang online" (Quản trị -> Cấu hình). */
+    private function only_online()
+    {
+        static $on = null;
+        if ($on === null) {
+            $this->load->model('m_setting');
+            $all = $this->m_setting->all();
+            $on  = !empty($all['only_online']);
+        }
+        return $on;
+    }
+
     private function build_search(array $f)
     {
         $this->db->from('users u')->join('provinces p', 'p.id = u.province_id', 'left')
@@ -133,7 +145,11 @@ class M_user extends CI_Model
         if (!empty($f['gender']))      $this->db->where('u.gender', $f['gender']);
         if (!empty($f['province_id'])) $this->db->where('u.province_id', (int) $f['province_id']);
         if (!empty($f['vip']))         $this->db->where('u.is_vip', 1);
-        if (!empty($f['online']))      $this->db->where('u.last_active_at >', date('Y-m-d H:i:s', time() - 300));
+        // Chỉ hiện người đang online: bật/tắt ở Quản trị -> Cấu hình -> Kiểm duyệt.
+        // Bộ lọc "đang online" của người dùng cũng dẫn tới cùng điều kiện này.
+        if (!empty($f['online']) || $this->only_online()) {
+            $this->db->where('u.last_active_at >', date('Y-m-d H:i:s', time() - 300));
+        }
         if (!empty($f['age_min']))     $this->db->where('u.birthday <=', date('Y-m-d', strtotime('-' . (int) $f['age_min'] . ' years')));
         if (!empty($f['age_max']))     $this->db->where('u.birthday >=', date('Y-m-d', strtotime('-' . ((int) $f['age_max'] + 1) . ' years')));
         if (!empty($f['marital']))   $this->db->where('u.marital_status', $f['marital']);
@@ -192,6 +208,8 @@ class M_user extends CI_Model
         $age_max = (int) ($pref['age_max'] ?? 60);
         $purpose = $pref['purpose'] ?? 'hen_ho';
         $my_age  = age_from($user['birthday']) ?: 0;
+        $online_cond = $this->only_online()
+            ? "AND u.last_active_at > '" . date('Y-m-d H:i:s', time() - 300) . "'" : '';
 
         $sql = "
             SELECT u.*, p.name AS province_name,
@@ -221,6 +239,7 @@ class M_user extends CI_Model
                AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE user_id = ?)
                AND u.id NOT IN (SELECT user_id     FROM blocks WHERE blocked_id = ?)
                AND u.id NOT IN (SELECT passed_id FROM user_passes WHERE user_id = ?)
+               $online_cond
           -- Người đã thích vẫn giữ nguyên vị trí trong danh sách để sau khi bấm
           -- (và cả khi tải lại trang) họ không biến mất hay nhảy sang trang khác.
           -- Chỉ người bị bỏ qua mới loại khỏi gợi ý.
@@ -243,12 +262,15 @@ class M_user extends CI_Model
     public function count_suggestions($user)
     {
         $me = (int) $user['id'];
+        $online_cond = $this->only_online()
+            ? "AND u.last_active_at > '" . date('Y-m-d H:i:s', time() - 300) . "'" : '';
         return (int) $this->db->query(
             "SELECT COUNT(*) c FROM users u
               WHERE u.id <> ? AND u.status = 'active' AND u.role = 'member' AND u.deleted_at IS NULL
                 AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE user_id = ?)
                 AND u.id NOT IN (SELECT user_id FROM blocks WHERE blocked_id = ?)
-                AND u.id NOT IN (SELECT passed_id FROM user_passes WHERE user_id = ?)",
+                AND u.id NOT IN (SELECT passed_id FROM user_passes WHERE user_id = ?)
+                $online_cond",
             array($me, $me, $me, $me)
         )->row('c');
     }
@@ -265,13 +287,18 @@ class M_user extends CI_Model
                               AND l.target_id = u.id) AS liked";
         }
 
-        return $this->db->select($select, false)
+        $this->db->select($select, false)
             ->from('users u')
             ->join('provinces p', 'p.id = u.province_id', 'left')
             ->join('user_preferences pr', 'pr.user_id = u.id')
             ->where('pr.purpose', $purpose)
-            ->where('u.status', 'active')->where('u.role', 'member')->where('u.deleted_at', null)
-            ->order_by('u.is_vip', 'DESC')->order_by('u.last_active_at', 'DESC')
+            ->where('u.status', 'active')->where('u.role', 'member')->where('u.deleted_at', null);
+
+        if ($this->only_online()) {
+            $this->db->where('u.last_active_at >', date('Y-m-d H:i:s', time() - 300));
+        }
+
+        return $this->db->order_by('u.is_vip', 'DESC')->order_by('u.last_active_at', 'DESC')
             ->limit($limit)->get()->result_array();
     }
 

@@ -9,9 +9,18 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
     <div>
         <article class="content-box profile-page">
             <header class="profile-head">
+                <?php
+                $p_online = is_online($m['last_active_at']);
+                $p_new    = !empty($m['created_at']) && strtotime($m['created_at']) > strtotime('-7 days');
+                ?>
                 <div class="profile-photo">
                     <img src="<?= avatar_url($m['avatar'], $m['gender']) ?>" alt="<?= e(display_name($m)) ?>">
-                    <?php if (is_online($m['last_active_at'])): ?><span class="dot-online"></span><?php endif; ?>
+                    <?php /* Nhãn trạng thái đặt trên ảnh, giống thẻ ở các trang danh sách */ ?>
+                    <span class="profile-badges">
+                        <?php if ($p_online): ?><span class="tag tag-online">Online</span><?php endif; ?>
+                        <?php if ($p_new): ?><span class="tag tag-new">Mới tham gia</span><?php endif; ?>
+                    </span>
+                    <?php if ($p_online): ?><span class="dot-online"></span><?php endif; ?>
                 </div>
                 <div class="profile-headline">
                     <h1><?= e(display_name($m)) ?></h1>
