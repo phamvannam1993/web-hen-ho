@@ -157,10 +157,11 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
                 <div class="footer-col">
                     <h3 class="footer-col__title">Hướng dẫn chung</h3>
                     <ul class="footer-col__list">
-                        <li><a href="<?= site_url('dang-ky') ?>">Tạo tài khoản</a></li>
-                        <li><a href="<?= site_url('kham-pha') ?>">Khám phá &amp; ghép đôi</a></li>
-                        <li><a href="<?= site_url('thanh-vien') ?>">Danh sách thành viên</a></li>
-                        <li><a href="<?= site_url('trang/noi-quy') ?>">Nội quy cộng đồng</a></li>
+                        <li><a href="<?= site_url('dang-ky') ?>">Cách tạo tài khoản</a></li>
+                        <li><a href="<?= site_url('kham-pha') ?>">Hướng dẫn ghép đôi</a></li>
+                        <li><a href="<?= site_url('thanh-vien') ?>">Cộng đồng thành viên</a></li>
+                        <li><a href="<?= site_url('trang/noi-quy') ?>">Thông báo cộng đồng</a></li>
+                        <li><a href="#">Download Apps</a></li>
                     </ul>
                 </div>
 
