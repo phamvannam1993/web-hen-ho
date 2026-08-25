@@ -54,6 +54,16 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
             <span class="brand-text"><?= e($settings['site_name'] ?? 'Saigon Cupid') ?></span>
         </a>
 
+        <?php /* Ô tìm kiếm gọn ở giữa hàng trên, lấp khoảng trống giữa logo và nhóm nút.
+                 Chỉ hiện trên màn rộng; màn hẹp dùng bộ lọc trong trang Thành viên. */ ?>
+        <form class="header-search" method="get" action="<?= site_url('tim-kiem') ?>" role="search">
+            <svg viewBox="0 0 24 24" class="ic" aria-hidden="true">
+                <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/>
+            </svg>
+            <input type="text" name="q" value="<?= e($this->input->get('q')) ?>"
+                   placeholder="Tìm theo tên, khu vực hoặc nghề nghiệp..." aria-label="Tìm thành viên">
+        </form>
+
         <button class="nav-toggle" type="button" id="nav-toggle"
                 aria-label="Mở menu" aria-expanded="false" aria-controls="nav-drawer">
             <span class="nav-toggle-bar"></span>

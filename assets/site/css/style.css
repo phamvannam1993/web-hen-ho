@@ -441,10 +441,16 @@ select {
 .profile-headline h1 { margin: 0 0 10px; font-size: 30px; }
 .profile-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
 .profile-tags span {
-    background: #f4f4f6; color: #444; padding: 4px 14px; border-radius: 20px; font-size: 14px;
+    display: inline-flex; align-items: center;
+    background: #f4f4f6; color: #444; padding: 4px 14px; border-radius: 20px;
+    font-size: 14px; line-height: 1.4;
 }
 .profile-tags .tag-vip { background: var(--amber); color: #fff; }
 .profile-tags .tag-verified { background: #2fa84f; color: #fff; }
+/* Phải nêu rõ nền ở đây, nếu không luật .profile-tags span phía trên
+   sẽ đè mất nền màu và chữ trắng thành ra không đọc được */
+.profile-tags .tag-online { background: #22a35a; color: #fff; }
+.profile-tags .tag-new    { background: var(--pink); color: #fff; }
 .profile-active { color: var(--muted); margin: 0 0 16px; font-size: 14px; }
 .profile-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .profile-actions .btn { padding: 11px 26px; border-radius: 30px; }
@@ -1501,11 +1507,15 @@ main { display: block; padding-top: 14px; }
     .filter-panel .btn-apply { position: sticky; bottom: 0; }
 }
 
-/* Nhãn trạng thái trên ảnh trang hồ sơ, dùng lại kiểu .tag của thẻ */
 .profile-photo { position: relative; }
-.profile-badges {
-    position: absolute; top: 10px; left: 10px; z-index: 2;
-    display: flex; flex-wrap: wrap; gap: 6px;
+/* Nhãn trạng thái nằm cùng hàng với giới tính / tuổi / khu vực */
+/* Căn giữa chữ theo chiều dọc: hàng thẻ kéo mọi ô cao bằng nhau nên nếu để
+   khối thường, chữ cỡ nhỏ sẽ dồn lên sát mép trên */
+.profile-tags .tag {
+    display: inline-flex; align-items: center;
+    padding: 5px 13px; border-radius: 999px;
+    font-size: 11.5px; font-weight: 700; letter-spacing: .3px;
+    text-transform: uppercase; color: #fff; line-height: 1;
 }
 
 /* ------------------- Thẻ hồ sơ dùng chung (trang chủ, tìm kiếm, khu vực) -------------------
@@ -2220,15 +2230,39 @@ main { display: block; padding-top: 14px; }
 /* Màn rộng: logo và nút tài khoản ở hàng trên, menu chính xuống hàng dưới.
    Chỉ đổi chỗ bằng CSS — thứ tự thẻ trong HTML giữ nguyên, nhờ .nav-drawer
    dùng display: contents nên menu và nhóm nút là con trực tiếp của hàng này. */
+/* Ô tìm kiếm trên thanh điều hướng */
+.header-search { display: none; }
+
 @media (min-width: 901px) {
     .header-inner {
         flex-wrap: wrap; column-gap: 18px; row-gap: 0;
         min-height: 0; padding: 12px 0 0;
     }
     .brand          { order: 1; }
-    .header-actions { order: 2; margin-left: auto; gap: 12px; }
+    .header-actions { order: 3; margin-left: 0; gap: 12px; }
+
+    .header-search {
+        order: 2; display: flex; align-items: center; gap: 9px;
+        flex: 0 1 420px; margin-left: auto;
+        padding: 0 16px; height: 42px;
+        background: #f4f5f7; border: 1.5px solid transparent; border-radius: 21px;
+        transition: border-color .15s, background .15s;
+    }
+    .header-search:focus-within { background: #fff; border-color: var(--pink); }
+    .header-search .ic {
+        width: 18px; height: 18px; flex: 0 0 18px;
+        fill: none; stroke: #9aa0a8; stroke-width: 2; stroke-linecap: round;
+    }
+    .header-search input {
+        flex: 1 1 auto; min-width: 0;
+        border: 0; background: none; outline: none;
+        font-size: 14.5px; color: var(--ink);
+    }
+    .header-search input::placeholder { color: #9aa0a8; }
+    /* Hàng trên: logo (1) - ô tìm kiếm (2) - nhóm nút (3).
+       Menu để số 4 nên luôn nằm hàng dưới cùng. */
     .nav-list {
-        order: 3; flex: 1 0 100%;
+        order: 4; flex: 1 0 100%;
         gap: 4px; margin: 12px 0 0;
         border-top: 1px solid #eef0f3;
     }

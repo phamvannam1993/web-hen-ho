@@ -15,16 +15,15 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
                 ?>
                 <div class="profile-photo">
                     <img src="<?= avatar_url($m['avatar'], $m['gender']) ?>" alt="<?= e(display_name($m)) ?>">
-                    <?php /* Nhãn trạng thái đặt trên ảnh, giống thẻ ở các trang danh sách */ ?>
-                    <span class="profile-badges">
-                        <?php if ($p_online): ?><span class="tag tag-online">Online</span><?php endif; ?>
-                        <?php if ($p_new): ?><span class="tag tag-new">Mới tham gia</span><?php endif; ?>
-                    </span>
+                    <?php /* Ảnh đại diện nhỏ nên chỉ giữ chấm báo online; các nhãn
+                             trạng thái chuyển xuống hàng thẻ thông tin cho khỏi che mặt */ ?>
                     <?php if ($p_online): ?><span class="dot-online"></span><?php endif; ?>
                 </div>
                 <div class="profile-headline">
                     <h1><?= e(display_name($m)) ?></h1>
                     <p class="profile-tags">
+                        <?php if ($p_online): ?><span class="tag tag-online">Online</span><?php endif; ?>
+                        <?php if ($p_new): ?><span class="tag tag-new">Mới tham gia</span><?php endif; ?>
                         <span><?= gender_label($m['gender']) ?></span>
                         <?php if ($age): ?><span><?= $age ?> tuổi</span><?php endif; ?>
                         <?php if ($m['province_name']): ?><span><?= e($m['province_name']) ?></span><?php endif; ?>
