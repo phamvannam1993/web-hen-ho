@@ -389,6 +389,17 @@
         });
     });
 
+    /* --- Trang Hẹn hò: mở rộng / thu gọn đoạn giới thiệu --- */
+    var seoToggle = document.getElementById('seo-toggle');
+    if (seoToggle) {
+        var seoText = document.getElementById('seo-text');
+        seoToggle.addEventListener('click', function () {
+            var open = seoText.classList.toggle('open');
+            seoToggle.textContent = open ? 'Thu gọn' : 'Xem thêm';
+            seoToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+    }
+
     /* --- Bộ lọc tìm kiếm: nút mở/đóng trên màn hình hẹp --- */
     var filterToggle = document.getElementById('filter-toggle');
     if (filterToggle) {

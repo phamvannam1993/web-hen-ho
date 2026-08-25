@@ -14,6 +14,7 @@ $ic_pin    = '<svg viewBox="0 0 24 24" class="ic"><path d="M12 21s7-6.1 7-11a7 7
 $ic_ruler  = '<svg viewBox="0 0 24 24" class="ic"><path d="M3.6 14.4 14.4 3.6l6 6L9.6 20.4z"/><path d="M7 11l2 2M10 8l2 2M13 5l2 2"/></svg>';
 $ic_heart  = '<svg viewBox="0 0 24 24" class="ic"><path d="M12 20.5s-7-4.3-7-9.1A4.4 4.4 0 0 1 12 8a4.4 4.4 0 0 1 7 3.4c0 4.8-7 9.1-7 9.1z"/></svg>';
 $ic_close  = '<svg viewBox="0 0 24 24" class="ic"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+$ic_case   = '<svg viewBox="0 0 24 24" class="ic"><rect x="3" y="7.5" width="18" height="12" rx="2"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5"/></svg>';
 $ic_male   = '<svg viewBox="0 0 24 24" class="ic"><circle cx="10" cy="14" r="5.2"/><path d="M14.2 9.8 20 4m-4.8 0H20v4.8"/></svg>';
 $ic_female = '<svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="9" r="5.2"/><path d="M12 14.2V21m-3 -3.2h6"/></svg>';
 ?>
@@ -40,19 +41,18 @@ $ic_female = '<svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="9" r="5.2"
         <h3 class="swipe-name"><?= e(display_name($c)) ?><?= !empty($c['age']) ? ', ' . (int) $c['age'] : '' ?></h3>
 
         <p class="swipe-meta">
-            <?= $ic_pin ?><span><?= !empty($c['province_name']) ? e($c['province_name']) : 'Chưa rõ khu vực' ?></span>
-            <?php if (!empty($c['job'])): ?>
-                <span class="dot">•</span><span><?= e($c['job']) ?></span>
-            <?php endif; ?>
+            <?php /* Bọc từng cặp biểu tượng + chữ để chúng không tách nhau khi xuống dòng */ ?>
+            <span class="mi"><?= $ic_pin ?><?= !empty($c['province_name']) ? e($c['province_name']) : 'Chưa rõ khu vực' ?></span>
+            <?php if (!empty($c['job'])): ?><span class="mi"><?= $ic_case ?><?= e($c['job']) ?></span><?php endif; ?>
         </p>
 
         <?php if (!empty($c['height_cm']) || !empty($c['marital_status'])): ?>
             <p class="swipe-meta">
                 <?php if (!empty($c['height_cm'])): ?>
-                    <?= $ic_ruler ?><span><?= (int) $c['height_cm'] ?> cm</span>
+                    <span class="mi"><?= $ic_ruler ?><?= (int) $c['height_cm'] ?> cm</span>
                 <?php endif; ?>
                 <?php if (!empty($c['marital_status'])): ?>
-                    <?= $ic_heart ?><span><?= e($marital[$c['marital_status']] ?? '') ?></span>
+                    <span class="mi"><?= $ic_heart ?><?= e($marital[$c['marital_status']] ?? '') ?></span>
                 <?php endif; ?>
             </p>
         <?php endif; ?>

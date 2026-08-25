@@ -24,6 +24,12 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
             <?php if ($online): ?><span class="tag tag-online">Online</span><?php endif; ?>
             <?php if ($is_new): ?><span class="tag tag-new">Mới tham gia</span><?php endif; ?>
             <?php if (!empty($m['is_vip'])): ?><span class="tag tag-vip">VIP</span><?php endif; ?>
+            <?php if (($m['kyc_status'] ?? '') === 'verified'): ?>
+                <span class="tag tag-verified" title="Hồ sơ đã xác thực">
+                    <svg viewBox="0 0 24 24" class="ic"><path d="M12 3l7 3v6c0 4.4-3 8-7 9-4-1-7-4.6-7-9V6z"/><path d="M9.2 12.2l2 2 3.6-3.9"/></svg>
+                    Đã xác thực
+                </span>
+            <?php endif; ?>
         </span>
         <span class="pcard-gender <?= $gclass ?>"><?= $ic_gender ?></span>
     </a>
@@ -35,16 +41,18 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
         </h3>
 
         <p class="pcard-meta">
-            <?= $ic_pin ?><span><?= !empty($m['province_name']) ? e($m['province_name']) : 'Chưa rõ khu vực' ?></span>
+            <?php /* Mỗi cặp biểu tượng + chữ bọc chung một khối để khi xuống dòng
+                     chúng không bị tách rời nhau */ ?>
+            <span class="mi"><?= $ic_pin ?><?= !empty($m['province_name']) ? e($m['province_name']) : 'Chưa rõ khu vực' ?></span>
         </p>
 
         <?php if (!empty($m['height_cm']) || !empty($m['job']) || !empty($m['marital_status'])): ?>
             <p class="pcard-meta">
                 <?php if (!empty($m['height_cm'])): ?>
-                    <?= $ic_ruler ?><span><?= (int) $m['height_cm'] ?> cm<?= !empty($m['weight_kg']) ? ' · ' . (int) $m['weight_kg'] . ' kg' : '' ?></span>
+                    <span class="mi"><?= $ic_ruler ?><?= (int) $m['height_cm'] ?> cm<?= !empty($m['weight_kg']) ? ' · ' . (int) $m['weight_kg'] . ' kg' : '' ?></span>
                 <?php endif; ?>
-                <?php if (!empty($m['job'])): ?><?= $ic_case ?><span><?= e($m['job']) ?></span><?php endif; ?>
-                <?php if (!empty($m['marital_status'])): ?><?= $ic_heart ?><span><?= e($marital[$m['marital_status']] ?? '') ?></span><?php endif; ?>
+                <?php if (!empty($m['job'])): ?><span class="mi"><?= $ic_case ?><?= e($m['job']) ?></span><?php endif; ?>
+                <?php if (!empty($m['marital_status'])): ?><span class="mi"><?= $ic_heart ?><?= e($marital[$m['marital_status']] ?? '') ?></span><?php endif; ?>
             </p>
         <?php endif; ?>
 

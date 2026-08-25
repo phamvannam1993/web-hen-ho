@@ -10,6 +10,9 @@
 </section>
 <?php endif; ?>
 
+<?php /* Thanh tìm kiếm ở đầu trang chủ đang TẠM ẨN.
+         Bỏ dấu chú thích của khối dưới đây là hiện lại.
+
 <section class="search-bar">
     <div class="container">
         <form method="get" action="<?= site_url('tim-kiem') ?>" class="search-form">
@@ -24,6 +27,8 @@
         </form>
     </div>
 </section>
+
+*/ ?>
 
 <?php if (!empty($suggestions)): ?>
 <section class="home-block alt">

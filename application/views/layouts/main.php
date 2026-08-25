@@ -73,6 +73,7 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
         // /profile/... vẫn tính là đang ở mục Thành viên.
         $nav_items = array(
             array('url' => '',              'label' => 'Trang chủ',  'match' => array('')),
+            array('url' => 'hen-ho',        'label' => 'Hẹn hò',     'match' => array('hen-ho')),
             array('url' => 'thanh-vien',    'label' => 'Thành viên', 'match' => array('thanh-vien', 'profile', 'tim-kiem')),
             array('url' => 'kham-pha',      'label' => 'Cộng đồng',   'match' => array('kham-pha')),
             array('url' => 'khu-vuc',       'label' => 'Khu vực',    'match' => array('khu-vuc')),

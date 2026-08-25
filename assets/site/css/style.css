@@ -1173,6 +1173,160 @@ select {
 
 /* Lưới tự chia cột theo bề rộng còn lại: tránh cảnh chỉ 1 cột khiến thẻ
    phình to gần hết màn hình ở khoảng 560-1024px. */
+/* Khoảng thở giữa thanh điều hướng dính trên đỉnh và nội dung bên dưới */
+main { display: block; padding-top: 14px; }
+
+/* Đường dẫn phân cấp (Trang chủ › Hẹn hò › ...) */
+.breadcrumb {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 7px;
+    margin: 0 0 14px; font-size: 13.5px; color: #9aa0a8;
+}
+.breadcrumb a { color: var(--muted); }
+.breadcrumb a:hover { color: var(--pink); text-decoration: none; }
+.breadcrumb span { color: var(--ink); font-weight: 600; }
+
+/* ---------------------------- Trang Hẹn hò ----------------------------
+   Bố cục theo khối trắng bo tròn trên nền xám của site: phần đầu, dải tab,
+   thanh sắp xếp, lưới hồ sơ, rồi tới mẹo an toàn và bài giới thiệu. */
+
+.dating-page { padding: 6px 0 36px; }
+
+.dating-head { margin: 0 0 20px; }
+.dating-head h1 {
+    margin: 0 0 8px; font-size: 28px; font-weight: 800;
+    line-height: 1.25; color: var(--ink); letter-spacing: -.2px;
+}
+.dating-head p { margin: 0; max-width: 780px; color: var(--muted); font-size: 15px; line-height: 1.6; }
+
+/* Khối trắng bọc tab + thanh sắp xếp cho gọn mắt */
+.dating-tabs {
+    display: flex; gap: 26px; flex-wrap: wrap;
+    background: var(--card); border-radius: 14px 14px 0 0;
+    padding: 4px 20px 0; margin: 0;
+    box-shadow: 0 2px 12px rgba(17, 24, 39, .06);
+}
+.dating-tabs a {
+    position: relative; padding: 14px 2px 13px;
+    color: var(--muted); font-size: 15px; font-weight: 700;
+    border-bottom: 2px solid transparent; transition: color .15s;
+}
+.dating-tabs a:hover { color: var(--ink); text-decoration: none; }
+.dating-tabs a.on { color: var(--pink); border-bottom-color: var(--pink); }
+
+.dating-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+    background: var(--card); border-top: 1px solid #f0f1f4;
+    border-radius: 0 0 14px 14px; padding: 12px 20px; margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(17, 24, 39, .06);
+}
+.dating-bar .result-total { margin: 0; font-size: 14.5px; color: var(--muted); }
+.dating-bar .result-total b { color: var(--ink); font-weight: 800; }
+
+.sort-tabs { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 14px; }
+.sort-tabs span { color: #9aa0a8; margin-right: 2px; }
+.sort-tabs a {
+    padding: 7px 14px; border-radius: 8px;
+    color: var(--muted); font-weight: 600; transition: .15s;
+}
+.sort-tabs a:hover { background: #f4f5f7; color: var(--ink); text-decoration: none; }
+.sort-tabs a.on { background: #fdeef6; color: var(--pink); }
+
+/* Nhãn tích xanh trên thẻ */
+.tag-verified { display: inline-flex; align-items: center; gap: 5px; background: #2f80ed; }
+.tag-verified .ic {
+    width: 13px; height: 13px; fill: none; stroke: currentColor;
+    stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+}
+
+/* Mẹo an toàn */
+.safety-box {
+    margin-top: 30px; padding: 24px;
+    background: var(--card); border-radius: 16px;
+    box-shadow: 0 2px 14px rgba(17, 24, 39, .07);
+}
+.safety-box h2 {
+    display: flex; align-items: center; gap: 9px;
+    margin: 0 0 18px; font-size: 19px; font-weight: 800; color: var(--ink);
+}
+.safety-box h2::before {
+    content: ""; width: 4px; height: 18px; border-radius: 3px; background: var(--pink);
+}
+.safety-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.safety-item {
+    padding: 16px; border-radius: 12px;
+    background: #fbfbfc; border: 1px solid #f0f1f4;
+}
+.safety-item .ic {
+    width: 22px; height: 22px; padding: 8px; margin-bottom: 10px;
+    border-radius: 50%; background: #fdeef6; box-sizing: content-box;
+    fill: none; stroke: var(--pink); stroke-width: 1.8;
+    stroke-linecap: round; stroke-linejoin: round; display: block;
+}
+.safety-item h3 { margin: 0 0 6px; font-size: 15px; font-weight: 700; color: var(--ink); }
+.safety-item p { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--muted); }
+
+/* Bài giới thiệu, mặc định thu gọn */
+.seo-box {
+    margin-top: 20px; padding: 24px;
+    background: var(--card); border-radius: 16px;
+    box-shadow: 0 2px 14px rgba(17, 24, 39, .07);
+}
+.seo-box h2 {
+    display: flex; align-items: center; gap: 9px;
+    margin: 0 0 14px; font-size: 19px; font-weight: 800; color: var(--ink);
+}
+.seo-box h2::before {
+    content: ""; width: 4px; height: 18px; border-radius: 3px; background: var(--pink);
+}
+.seo-text {
+    position: relative; overflow: hidden;
+    transition: max-height .35s ease;
+    color: var(--muted); font-size: 15px; line-height: 1.75;
+}
+/* Chỉ giới hạn chiều cao khi CHƯA mở — cách này không phụ thuộc thứ tự khai báo */
+.seo-text:not(.open) { max-height: 92px; }
+.seo-text::after {
+    content: ""; position: absolute; inset: auto 0 0 0; height: 52px;
+    background: linear-gradient(to top, #fff, rgba(255, 255, 255, 0));
+}
+.seo-text.open::after { opacity: 0; }
+.seo-text p { margin: 0 0 13px; }
+.seo-text p:last-child { margin-bottom: 0; }
+.seo-toggle {
+    margin-top: 12px; padding: 9px 20px; border-radius: 8px; cursor: pointer;
+    background: #fdeef6; border: 0; color: var(--pink);
+    font-size: 14.5px; font-weight: 700; transition: background .15s;
+}
+.seo-toggle:hover { background: #fbe0ee; }
+
+@media (max-width: 900px) {
+    .safety-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+    .dating-page { padding: 12px 0 28px; }
+    .dating-head h1 { font-size: 22px; }
+    .dating-head p { font-size: 14.5px; }
+
+    /* Dải tab cuộn ngang thay vì xuống nhiều dòng */
+    .dating-tabs {
+        gap: 18px; padding: 2px 14px 0;
+        flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .dating-tabs::-webkit-scrollbar { display: none; }
+    .dating-tabs a { padding: 12px 2px 11px; font-size: 14.5px; white-space: nowrap; }
+
+    .dating-bar { padding: 10px 14px; gap: 8px; }
+    .sort-tabs { font-size: 13.5px; gap: 4px; }
+    .sort-tabs a { padding: 6px 11px; }
+
+    .safety-box, .seo-box { padding: 16px 14px; }
+    .safety-grid { grid-template-columns: 1fr; gap: 12px; }
+    .safety-item { padding: 13px; }
+    .seo-box h2, .safety-box h2 { font-size: 17px; }
+}
+
 /* ------------------------- Trang tìm kiếm hai cột ------------------------- */
 
 .search-head { padding: 26px 0 20px; }
@@ -1412,7 +1566,14 @@ select {
     fill: none; stroke: currentColor; stroke-width: 1.8;
     stroke-linecap: round; stroke-linejoin: round;
 }
-.pcard-meta .ic + span { margin-right: 9px; }
+/* Mỗi cặp biểu tượng + chữ là một khối, xuống dòng thì đi cùng nhau */
+.pcard-meta .mi, .swipe-meta .mi {
+    display: inline-flex; align-items: center; gap: 5px;
+    white-space: nowrap; max-width: 100%;
+}
+.pcard-meta .mi { margin-right: 9px; }
+.swipe-meta .mi { margin-right: 8px; }
+.pcard-meta .mi:last-child, .swipe-meta .mi:last-child { margin-right: 0; }
 
 .pcard-bio {
     margin: 6px 0 10px; color: #6b7280; font-size: 13px; line-height: 1.5;
@@ -1563,7 +1724,7 @@ select {
     stroke-linecap: round; stroke-linejoin: round;
 }
 /* Biểu tượng thứ hai trên cùng dòng cần khoảng thở với cụm trước nó */
-.swipe-meta .ic + span { margin-right: 6px; }
+
 .swipe-meta .dot { color: #c4c9d1; }
 
 .swipe-bio {
@@ -2055,3 +2216,32 @@ select {
  * ---------------------------------------------------------------- */
 .pcard-bio,
 .swipe-bio { display: none; }
+
+/* Màn rộng: logo và nút tài khoản ở hàng trên, menu chính xuống hàng dưới.
+   Chỉ đổi chỗ bằng CSS — thứ tự thẻ trong HTML giữ nguyên, nhờ .nav-drawer
+   dùng display: contents nên menu và nhóm nút là con trực tiếp của hàng này. */
+@media (min-width: 901px) {
+    .header-inner {
+        flex-wrap: wrap; column-gap: 18px; row-gap: 0;
+        min-height: 0; padding: 12px 0 0;
+    }
+    .brand          { order: 1; }
+    .header-actions { order: 2; margin-left: auto; gap: 12px; }
+    .nav-list {
+        order: 3; flex: 1 0 100%;
+        gap: 4px; margin: 12px 0 0;
+        border-top: 1px solid #eef0f3;
+    }
+    /* Mục menu: chữ thoáng hai bên, gạch chân nằm sát mép dưới header */
+    .nav-list > li > a {
+        position: relative; padding: 14px 16px 13px;
+        border-radius: 8px 8px 0 0; font-size: 15px;
+    }
+    .nav-list > li > a:hover { background: #fdf3f8; }
+    .nav-list > li > a.active { background: transparent; }
+    .nav-list > li > a.active::after {
+        content: ""; display: block; position: absolute;
+        left: 16px; right: 16px; bottom: 0; height: 3px;
+        border-radius: 3px 3px 0 0; background: var(--pink);
+    }
+}

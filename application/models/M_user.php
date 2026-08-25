@@ -113,6 +113,10 @@ class M_user extends CI_Model
         switch ($filters['sort'] ?? 'active') {
             case 'new':   $this->db->order_by('u.created_at', 'DESC'); break;
             case 'vip':   $this->db->order_by('u.is_vip', 'DESC')->order_by('u.last_active_at', 'DESC'); break;
+            case 'verified':
+                $this->db->order_by("u.kyc_status = 'verified'", 'DESC', false)
+                         ->order_by('u.last_active_at', 'DESC');
+                break;
             default:      $this->db->order_by('u.last_active_at', 'DESC');
         }
         return $this->db->limit($limit, $offset)->get()->result_array();
@@ -152,6 +156,13 @@ class M_user extends CI_Model
         }
         if (!empty($f['age_min']))     $this->db->where('u.birthday <=', date('Y-m-d', strtotime('-' . (int) $f['age_min'] . ' years')));
         if (!empty($f['age_max']))     $this->db->where('u.birthday >=', date('Y-m-d', strtotime('-' . ((int) $f['age_max'] + 1) . ' years')));
+        // Trang Hẹn hò: lọc theo xu hướng tìm kiếm (tab Gay / Les) và tích xanh
+        if (!empty($f['seeking'])) {
+            $this->db->join('user_preferences sp', 'sp.user_id = u.id', 'left')
+                     ->where('sp.seeking_gender', $f['seeking']);
+        }
+        if (!empty($f['verified'])) $this->db->where('u.kyc_status', 'verified');
+
         if (!empty($f['marital']))   $this->db->where('u.marital_status', $f['marital']);
         if (!empty($f['education']))  $this->db->where('u.education', $f['education']);
         if (!empty($f['smoking']))    $this->db->where('u.smoking', $f['smoking']);
