@@ -120,10 +120,7 @@ img { max-width: 100%; height: auto; display: block; }
 }
 .nav-list > li > a:hover { background: #fdf0f7; color: var(--pink); }
 .nav-list > li > a.active { color: var(--pink); }
-.nav-list > li > a.active::after {
-    content: ""; display: block; height: 2px; margin-top: 6px;
-    background: var(--pink); border-radius: 2px;
-}
+
 .caret { font-size: 10px; opacity: .6; }
 
 /* Nút hành động bên phải */
@@ -1210,7 +1207,7 @@ select {
     background: #fff; border-radius: 16px; padding: 20px;
     box-shadow: 0 3px 16px rgba(17, 24, 39, .08);
     position: sticky; top: 78px;
-    max-height: calc(100vh - 96px); overflow-y: auto;
+    max-height: calc(100vh); overflow-y: auto;
 }
 .filter-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .filter-head h2 {
@@ -1511,7 +1508,7 @@ select {
 
 .swipe-card {
     display: flex; flex-direction: column;
-    background: #fff; border-radius: 18px; overflow: hidden;
+    background: #fff; border-radius: 7px; overflow: hidden;
     box-shadow: 0 4px 20px rgba(17, 24, 39, .10);
     transition: transform .28s ease, opacity .28s ease, box-shadow .2s ease;
 }

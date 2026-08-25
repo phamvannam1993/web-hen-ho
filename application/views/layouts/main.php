@@ -73,11 +73,11 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
         // /profile/... vẫn tính là đang ở mục Thành viên.
         $nav_items = array(
             array('url' => '',              'label' => 'Trang chủ',  'match' => array('')),
-            array('url' => 'kham-pha',      'label' => 'Khám phá',   'match' => array('kham-pha')),
             array('url' => 'thanh-vien',    'label' => 'Thành viên', 'match' => array('thanh-vien', 'profile', 'tim-kiem')),
+            array('url' => 'kham-pha',      'label' => 'Cộng đồng',   'match' => array('kham-pha')),
             array('url' => 'khu-vuc',       'label' => 'Khu vực',    'match' => array('khu-vuc')),
-            array('url' => 'tin-tuc',       'label' => 'Cẩm nang',   'match' => array('tin-tuc')),
-            array('url' => 'trang/noi-quy', 'label' => 'Nội quy',    'match' => array('trang')),
+            array('url' => 'tin-tuc',       'label' => 'Sforum',   'match' => array('tin-tuc')),
+            array('url' => 'trang/noi-quy', 'label' => 'Thông báo',    'match' => array('trang')),
         );
         $seg1 = (string) $this->uri->segment(1);
         // Trang tỉnh nay nằm ở gốc (/ha-noi) nên phải đối chiếu với danh mục tỉnh
