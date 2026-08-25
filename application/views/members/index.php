@@ -6,6 +6,12 @@ $view_mode = $view_mode ?? 'grid';
 // Trang một tỉnh (/ha-noi) dùng chung giao diện này, khác ở chỗ khu vực đã cố định
 $province = $province ?? null;
 
+// Nhóm nào đang có điều kiện lọc thì mở sẵn, còn lại đóng cho gọn
+$open_shape     = $g('height_min') || $g('height_max') || $g('marital');
+$open_lifestyle = $g('smoking') || $g('drinking') || $chosen_interests;
+$open_advanced  = $g('education') || $g('has_children') !== '' && $g('has_children') !== null
+                  || $g('online') || $g('vip');
+
 // Các điều kiện đang áp dụng, hiển thị thành chip phía trên kết quả
 $chips = array();
 $labels_gender  = array('male' => 'Nam', 'female' => 'Nữ');
@@ -108,11 +114,11 @@ $with = function ($key, $value) use ($base_url) {
                 </section>
 
                 <section class="filter-group">
-                    <button type="button" class="filter-group-head" data-toggle-group>
+                    <button type="button" class="filter-group-head <?= $open_shape ? '' : 'is-closed' ?>" data-toggle-group>
                         <span>Ngoại hình</span>
                         <svg viewBox="0 0 24 24" class="ic caret"><path d="M6 15l6-6 6 6"/></svg>
                     </button>
-                    <div class="filter-group-body">
+                    <div class="filter-group-body" <?= $open_shape ? '' : 'hidden' ?>>
                         <label class="filter-label">Chiều cao (cm)</label>
                         <div class="range-row">
                             <input type="number" name="height_min" min="130" max="220" placeholder="Từ 140" value="<?= e($g('height_min')) ?>">
@@ -131,11 +137,11 @@ $with = function ($key, $value) use ($base_url) {
                 </section>
 
                 <section class="filter-group">
-                    <button type="button" class="filter-group-head" data-toggle-group>
+                    <button type="button" class="filter-group-head <?= $open_lifestyle ? '' : 'is-closed' ?>" data-toggle-group>
                         <span>Lối sống</span>
                         <svg viewBox="0 0 24 24" class="ic caret"><path d="M6 15l6-6 6 6"/></svg>
                     </button>
-                    <div class="filter-group-body">
+                    <div class="filter-group-body" <?= $open_lifestyle ? '' : 'hidden' ?>>
                         <?php foreach (array('smoking' => 'Hút thuốc', 'drinking' => 'Uống rượu') as $field => $label): ?>
                             <label class="filter-label"><?= $label ?></label>
                             <div class="pick-row">
@@ -165,11 +171,11 @@ $with = function ($key, $value) use ($base_url) {
                 </section>
 
                 <section class="filter-group">
-                    <button type="button" class="filter-group-head is-closed" data-toggle-group>
+                    <button type="button" class="filter-group-head <?= $open_advanced ? '' : 'is-closed' ?>" data-toggle-group>
                         <span>Nâng cao</span>
                         <svg viewBox="0 0 24 24" class="ic caret"><path d="M6 15l6-6 6 6"/></svg>
                     </button>
-                    <div class="filter-group-body" hidden>
+                    <div class="filter-group-body" <?= $open_advanced ? '' : 'hidden' ?>>
                         <label class="filter-label">Học vấn</label>
                         <select name="education">
                             <option value="">Tất cả</option>
