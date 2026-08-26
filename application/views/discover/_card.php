@@ -1,53 +1,111 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
-/** @var array $c hồ sơ ứng viên; thẻ lớn dùng cho khung vuốt */
+/** @var array $c hồ sơ ứng viên — thẻ lớn, cuộn được bên trong */
 $marital = array('doc_than' => 'Độc thân', 'ly_hon' => 'Ly hôn', 'goa' => 'Goá', 'phuc_tap' => 'Phức tạp');
-$score   = min(100, (int) ($c['match_score'] ?? 0));
-$online  = is_online($c['last_active_at']);
-$is_new  = !empty($c['created_at']) && strtotime($c['created_at']) > strtotime('-7 days');
-$user    = isset($user) ? $user : null;
-$topics  = class_exists('Confide') ? Confide::topics() : array();
+$edu     = array('thpt' => 'THPT', 'trung_cap' => 'Trung cấp', 'cao_dang' => 'Cao đẳng',
+                 'dai_hoc' => 'Đại học', 'sau_dai_hoc' => 'Sau đại học');
+$freq    = array('khong' => 'Không', 'thinh_thoang' => 'Thỉnh thoảng', 'thuong_xuyen' => 'Thường xuyên');
+$purpose = array('ket_ban' => 'Tìm bạn', 'hen_ho' => 'Hẹn hò', 'nghiem_tuc' => 'Nghiêm túc', 'ket_hon' => 'Tiến tới hôn nhân');
 
-$ic_pin   = '<svg viewBox="0 0 24 24" class="ic"><path d="M12 21s7-6.1 7-11a7 7 0 1 0-14 0c0 4.9 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>';
-$ic_ruler = '<svg viewBox="0 0 24 24" class="ic"><path d="M3.6 14.4 14.4 3.6l6 6L9.6 20.4z"/><path d="M7 11l2 2M10 8l2 2M13 5l2 2"/></svg>';
-$ic_case  = '<svg viewBox="0 0 24 24" class="ic"><rect x="3" y="7.5" width="18" height="12" rx="2"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5"/></svg>';
-$ic_heart = '<svg viewBox="0 0 24 24" class="ic"><path d="M12 20.5s-7-4.3-7-9.1A4.4 4.4 0 0 1 12 8a4.4 4.4 0 0 1 7 3.4c0 4.8-7 9.1-7 9.1z"/></svg>';
+$age    = age_from($c['birthday']);
+$online = is_online($c['last_active_at']);
+$cung   = zodiac($c['birthday']);
+$anh    = !empty($c['photo_paths']) ? array_slice(explode('|', $c['photo_paths']), 0, 4) : array();
+$sothich= !empty($c['interest_names']) ? array_slice(explode('|', $c['interest_names']), 0, 6) : array();
+$muc    = !empty($c['purpose']) ? ($purpose[$c['purpose']] ?? '') : '';
+
+$ic = function ($d, $extra = '') { return '<svg viewBox="0 0 24 24" class="ic">' . $d . '</svg>'; };
+$ic_pin   = $ic('<path d="M12 21s7-6.1 7-11a7 7 0 1 0-14 0c0 4.9 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/>');
+$ic_ruler = $ic('<path d="M3.6 14.4 14.4 3.6l6 6L9.6 20.4z"/><path d="M7 11l2 2M10 8l2 2M13 5l2 2"/>');
+$ic_case  = $ic('<rect x="3" y="7.5" width="18" height="12" rx="2"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5"/>');
+$ic_heart = $ic('<path d="M12 20.5s-7-4.3-7-9.1A4.4 4.4 0 0 1 12 8a4.4 4.4 0 0 1 7 3.4c0 4.8-7 9.1-7 9.1z"/>');
+$ic_book  = $ic('<path d="M4 5.5h6a2 2 0 0 1 2 2v11a2 2 0 0 0-2-2H4z"/><path d="M20 5.5h-6a2 2 0 0 0-2 2v11a2 2 0 0 1 2-2h6z"/>');
+$ic_star  = $ic('<path d="M12 4l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 9.7l5.4-.8z"/>');
 ?>
 <article class="sw-card" data-user="<?= (int) $c['id'] ?>">
-    <div class="sw-photo">
-        <img src="<?= avatar_url($c['avatar'], $c['gender']) ?>" alt="<?= e(display_name($c)) ?>" draggable="false">
+    <!-- Vùng cuộn: ảnh chiếm hết khung, kéo lên để xem chi tiết -->
+    <div class="sw-scroll">
+        <div class="sw-photo">
+            <img src="<?= avatar_url($c['avatar'], $c['gender']) ?>" alt="<?= e(display_name($c)) ?>" draggable="false">
 
-        <span class="sw-badges">
-            <?php if ($online): ?><span class="tag tag-online">Online</span><?php endif; ?>
-            <?php if ($is_new): ?><span class="tag tag-new">Mới tham gia</span><?php endif; ?>
-            <?php if (($c['kyc_status'] ?? '') === 'verified'): ?><span class="tag tag-verified">Xác thực</span><?php endif; ?>
-        </span>
+            <span class="sw-badges">
+                <?php if ($online): ?><span class="tag tag-online">Online</span><?php endif; ?>
+                <?php if (($c['kyc_status'] ?? '') === 'verified'): ?><span class="tag tag-verified">Xác thực</span><?php endif; ?>
+            </span>
 
-        <?php if ($score > 0): ?>
-            <span class="sw-score" title="Mức độ tương hợp"><?= $score ?>% hợp</span>
-        <?php endif; ?>
+            <?php
+            // Có toạ độ hai bên thì hiện khoảng cách, không thì hiện tên tỉnh
+            $vitri = !empty($c['province_name']) ? e($c['province_name']) : 'Chưa rõ khu vực';
+            if (isset($c['khoang_cach']) && $c['khoang_cach'] !== null) {
+                $km = (float) $c['khoang_cach'];
+                $vitri = $km < 1
+                    ? 'Cách bạn dưới 1 km'
+                    : 'Cách bạn ' . ($km < 10 ? number_format($km, 1) : number_format(round($km))) . ' km';
+            }
+            ?>
+            <span class="sw-place"><?= $ic_pin ?><?= $vitri ?></span>
 
-        <?php /* Hai con dấu hiện dần khi kéo thẻ sang trái hoặc phải */ ?>
-        <span class="sw-stamp sw-stamp-like">THÍCH</span>
-        <span class="sw-stamp sw-stamp-nope">BỎ QUA</span>
+            <span class="sw-stamp sw-stamp-like">THÍCH</span>
+            <span class="sw-stamp sw-stamp-nope">BỎ QUA</span>
 
-        <div class="sw-info">
-            <h3><?= e(display_name($c)) ?><?= !empty($c['age']) ? ', ' . (int) $c['age'] : '' ?></h3>
-            <p class="sw-meta">
-                <span class="mi"><?= $ic_pin ?><?= !empty($c['province_name']) ? e($c['province_name']) : 'Chưa rõ khu vực' ?></span>
-                <?php if (!empty($c['job'])): ?><span class="mi"><?= $ic_case ?><?= e($c['job']) ?></span><?php endif; ?>
-            </p>
-            <p class="sw-meta">
-                <?php if (!empty($c['height_cm'])): ?>
-                    <span class="mi"><?= $ic_ruler ?><?= (int) $c['height_cm'] ?> cm</span>
-                <?php endif; ?>
-                <?php if (!empty($c['marital_status'])): ?>
-                    <span class="mi"><?= $ic_heart ?><?= e($marital[$c['marital_status']] ?? '') ?></span>
-                <?php endif; ?>
-            </p>
+            <div class="sw-caption">
+                <h3><?= e(display_name($c)) ?><?= $age ? ', ' . $age : '' ?></h3>
+                <p class="sw-quick">
+                    <?php if ($muc): ?><span>#<?= e($muc) ?></span><?php endif; ?>
+                    <?php if (!empty($c['marital_status'])): ?><span>#<?= e($marital[$c['marital_status']] ?? '') ?></span><?php endif; ?>
+                </p>
+                <button type="button" class="sw-down" data-scroll-more aria-label="Xem thêm thông tin">
+                    <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                    <span>Xem thêm</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Phần chi tiết, hiện ra khi cuộn xuống trong thẻ -->
+        <div class="sw-detail">
             <?php if (!empty($c['bio'])): ?>
-                <p class="sw-bio"><?= e(excerpt($c['bio'], 120)) ?></p>
+                <section>
+                    <h4>Giới thiệu</h4>
+                    <p class="sw-bio"><?= nl2br(e($c['bio'])) ?></p>
+                </section>
             <?php endif; ?>
-            <a class="sw-more" href="<?= site_url('profile/' . $c['slug']) ?>">Xem hồ sơ đầy đủ →</a>
+
+            <section>
+                <h4>Thông tin</h4>
+                <ul class="sw-facts">
+                    <?php if (!empty($c['province_name'])): ?>
+                        <li><?= $ic_pin ?><span><?= e($c['province_name']) ?></span></li>
+                    <?php endif; ?>
+                    <?php if (!empty($c['height_cm'])): ?>
+                        <li><?= $ic_ruler ?><span><?= (int) $c['height_cm'] ?> cm<?= !empty($c['weight_kg']) ? ' · ' . (int) $c['weight_kg'] . ' kg' : '' ?></span></li>
+                    <?php endif; ?>
+                    <?php if (!empty($c['job'])): ?><li><?= $ic_case ?><span><?= e($c['job']) ?></span></li><?php endif; ?>
+                    <?php if (!empty($c['education'])): ?><li><?= $ic_book ?><span><?= e($edu[$c['education']] ?? '') ?></span></li><?php endif; ?>
+                    <?php if (!empty($c['marital_status'])): ?><li><?= $ic_heart ?><span><?= e($marital[$c['marital_status']] ?? '') ?></span></li><?php endif; ?>
+                    <?php if ($cung): ?><li><?= $ic_star ?><span><?= e($cung) ?></span></li><?php endif; ?>
+                    <?php if (!empty($c['smoking'])): ?><li><span class="lbl">Hút thuốc</span><span><?= e($freq[$c['smoking']] ?? '') ?></span></li><?php endif; ?>
+                    <?php if (!empty($c['drinking'])): ?><li><span class="lbl">Uống rượu</span><span><?= e($freq[$c['drinking']] ?? '') ?></span></li><?php endif; ?>
+                </ul>
+            </section>
+
+            <?php if ($sothich): ?>
+                <section>
+                    <h4>Sở thích</h4>
+                    <p class="sw-chips"><?php foreach ($sothich as $t): ?><span><?= e($t) ?></span><?php endforeach; ?></p>
+                </section>
+            <?php endif; ?>
+
+            <?php if ($anh): ?>
+                <section>
+                    <h4>Ảnh khác</h4>
+                    <div class="sw-album">
+                        <?php foreach ($anh as $a): ?>
+                            <img src="<?= base_url(ltrim($a, '/')) ?>" alt="" loading="lazy" draggable="false">
+                        <?php endforeach; ?>
+                    </div>
+                </section>
+            <?php endif; ?>
+
+            <a class="sw-more" href="<?= site_url('profile/' . $c['slug']) ?>">Xem trang cá nhân đầy đủ →</a>
         </div>
     </div>
 </article>

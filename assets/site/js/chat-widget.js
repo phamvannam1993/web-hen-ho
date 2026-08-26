@@ -457,7 +457,10 @@
 
     var backBtn = document.getElementById('cw-back');
     if (backBtn) { backBtn.addEventListener('click', backToList); }
-    document.addEventListener('click', function () { emojiPanel.hidden = true; });
+    // Khách chưa đăng nhập không có khung chat riêng nên các phần tử này vắng mặt
+    document.addEventListener('click', function () {
+        if (emojiPanel) { emojiPanel.hidden = true; }
+    });
 
     /* Nút "Nhắn tin" ở trang cá nhân mở thẳng khung chat thay vì chuyển trang */
     document.querySelectorAll('[data-chat-with]').forEach(function (btn) {

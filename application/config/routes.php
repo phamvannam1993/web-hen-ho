@@ -44,6 +44,7 @@ $route['kham-pha']                = 'discover/index';
 $route['kham-pha/trang/(:num)']   = 'discover/index/$1';
 $route['kham-pha/thich/(:num)']   = 'discover/like/$1';
 $route['kham-pha/bo-qua/(:num)']  = 'discover/pass/$1';
+$route['kham-pha/xem-lai']        = 'discover/undo';
 
 $route['thanh-vien']              = 'members/index';
 $route['thanh-vien/trang/(:num)'] = 'members/index/$1';

@@ -262,3 +262,29 @@ if (!function_exists('mask_email')) {
         return mb_substr($name, 0, $keep) . str_repeat('*', 3) . $domain;
     }
 }
+
+if (!function_exists('zodiac')) {
+    /** Cung hoàng đạo theo ngày sinh, dùng trên thẻ Khám phá. */
+    function zodiac($birthday)
+    {
+        if (!$birthday) {
+            return '';
+        }
+        $t = strtotime($birthday);
+        $md = (int) date('nd', $t);   // tháng*100 + ngày
+
+        $cung = array(
+            array(120, 'Ma Kết'), array(218, 'Bảo Bình'), array(320, 'Song Ngư'),
+            array(419, 'Bạch Dương'), array(520, 'Kim Ngưu'), array(620, 'Song Tử'),
+            array(722, 'Cự Giải'), array(822, 'Sư Tử'), array(922, 'Xử Nữ'),
+            array(1022, 'Thiên Bình'), array(1121, 'Bọ Cạp'), array(1221, 'Nhân Mã'),
+            array(1231, 'Ma Kết'),
+        );
+        foreach ($cung as $c) {
+            if ($md <= $c[0]) {
+                return $c[1];
+            }
+        }
+        return '';
+    }
+}

@@ -21,8 +21,9 @@ Lệnh ở bước 4 in ra tiến trình theo từng phần:
     == 1. Khoá cấu hình mới ==
     == 2. Danh mục tỉnh/thành ==
     == 3. Cột dữ liệu mới ==
-    == 4. Dọn trạng thái online giả ==
-    == 5. Hồ sơ thành viên ==
+    == 4. Toạ độ để tính khoảng cách ==
+    == 5. Dọn trạng thái online giả ==
+    == 6. Hồ sơ thành viên ==
 
 Chạy lại nhiều lần vẫn an toàn: lần thứ hai trở đi mọi mục sẽ báo `0`,
 nghĩa là không có gì phải làm thêm.

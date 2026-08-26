@@ -290,143 +290,288 @@
         });
     });
 
-    /* --- Trang Khám phá: chồng thẻ vuốt như các ứng dụng hẹn hò --- */
-    var deck = document.getElementById('sw-deck');
-    if (deck) {
-        var NGUONG = 110;          // kéo quá bao nhiêu điểm ảnh thì tính là đã chọn
-        var dangBan = false;       // đang chờ máy chủ trả lời
-        var keo = null;            // trạng thái lần kéo hiện tại
+    /* --- Trang Khám phá: chồng thẻ vuốt --- */
+    var stage = document.getElementById('sw-stage');
+    var deck  = document.getElementById('sw-deck');
 
-        var demEl = document.getElementById('sw-count');
-        var trongEl = document.getElementById('sw-empty');
-        var dieuKhien = document.getElementById('sw-controls');
+    if (stage) {
+        var laKhach = stage.getAttribute('data-guest') === '1';
 
-        function theTrenCung() { return deck.querySelector('.sw-card:last-child'); }
-
-        function datViTri(card, dx, dy) {
-            var xoay = dx / 18;                       // kéo càng xa nghiêng càng nhiều
-            card.style.transform = 'translate(' + dx + 'px,' + dy + 'px) rotate(' + xoay + 'deg)';
-            var muc = Math.min(Math.abs(dx) / NGUONG, 1);
-            var like = card.querySelector('.sw-stamp-like');
-            var nope = card.querySelector('.sw-stamp-nope');
-            if (like) { like.style.opacity = dx > 0 ? muc : 0; }
-            if (nope) { nope.style.opacity = dx < 0 ? muc : 0; }
-        }
-
-        function traVeChoCu(card) {
-            card.classList.remove('is-dragging');
-            card.classList.add('is-animating');
-            card.style.transform = '';
-            var like = card.querySelector('.sw-stamp-like');
-            var nope = card.querySelector('.sw-stamp-nope');
-            if (like) { like.style.opacity = 0; }
-            if (nope) { nope.style.opacity = 0; }
-            setTimeout(function () { card.classList.remove('is-animating'); }, 320);
-        }
-
-        function capNhatDem(delta) {
-            if (!demEl) { return; }
-            var n = parseInt(demEl.textContent.replace(/\D/g, ''), 10) || 0;
-            demEl.textContent = Math.max(0, n + delta).toLocaleString('vi-VN');
-        }
-
-        function kiemTraHet() {
-            if (deck.querySelector('.sw-card')) { return; }
-            if (trongEl) { trongEl.hidden = false; }
-            if (dieuKhien) { dieuKhien.hidden = true; }
-        }
-
-        /** Cho thẻ bay ra rồi gọi máy chủ ghi nhận lựa chọn. */
-        function chon(card, huong) {
-            if (!card || dangBan) { return; }
-            dangBan = true;
-
-            var id = card.getAttribute('data-user');
-            var xa = (huong === 'right' ? 1 : -1) * (window.innerWidth + 320);
-
-            card.classList.remove('is-dragging');
-            card.classList.add('is-animating', 'is-gone');
-            card.style.transform = 'translate(' + xa + 'px,-40px) rotate(' + (xa / 26) + 'deg)';
-
-            var url = base + (huong === 'right' ? 'kham-pha/thich/' : 'kham-pha/bo-qua/') + id;
-            post(url, {}).then(function (res) {
-                if (!res.ok) {
-                    dangBan = false;
-                    card.classList.remove('is-gone');
-                    traVeChoCu(card);
-                    return showModal({ type: 'error', title: 'Không thực hiện được', message: res.message });
-                }
-                if (res.matched) {
-                    showModal({
-                        type: 'success', title: 'Ghép đôi thành công!',
-                        message: 'Hai bạn đã thích nhau. Vào mục Tin nhắn để bắt đầu trò chuyện.'
-                    });
-                }
-            }).catch(function () { /* mất mạng thì thôi, thẻ vẫn đi tiếp */ });
-
-            setTimeout(function () {
-                card.remove();
-                capNhatDem(-1);
-                dangBan = false;
-                kiemTraHet();
-            }, 330);
-        }
-
-        /* ---- Kéo bằng chuột hoặc ngón tay ---- */
-        deck.addEventListener('pointerdown', function (e) {
-            if (e.target.closest('a')) { return; }   // bấm "Xem hồ sơ đầy đủ" thì không kéo
-            var card = theTrenCung();
-            if (!card || dangBan) { return; }
-
-            keo = { card: card, x0: e.clientX, y0: e.clientY, id: e.pointerId };
-            card.classList.add('is-dragging');
-            card.setPointerCapture(e.pointerId);
-        });
-
-        deck.addEventListener('pointermove', function (e) {
-            if (!keo || e.pointerId !== keo.id) { return; }
-            datViTri(keo.card, e.clientX - keo.x0, (e.clientY - keo.y0) * 0.35);
-        });
-
-        function thaTay(e) {
-            if (!keo || (e && e.pointerId !== keo.id)) { return; }
-            var card = keo.card;
-            var dx = e ? e.clientX - keo.x0 : 0;
-            keo = null;
-
-            if (dx > NGUONG)       { chon(card, 'right'); }
-            else if (dx < -NGUONG) { chon(card, 'left'); }
-            else                   { traVeChoCu(card); }
-        }
-        deck.addEventListener('pointerup', thaTay);
-        deck.addEventListener('pointercancel', thaTay);
-
-        /* ---- Nút bấm ---- */
-        if (dieuKhien) {
-            dieuKhien.addEventListener('click', function (e) {
-                var btn = e.target.closest('[data-swipe]');
-                if (!btn) { return; }
-                var huong = btn.getAttribute('data-swipe');
-                var card = theTrenCung();
-                if (!card) { return; }
-
-                if (huong === 'info') {
-                    var link = card.querySelector('.sw-more');
-                    if (link) { window.location.href = link.href; }
-                    return;
-                }
-                chon(card, huong);
+        /* Bộ lọc nhanh */
+        var hopLoc = document.getElementById('sw-filter');
+        function moLoc()  { if (hopLoc) { hopLoc.hidden = false; } }
+        function dongLoc() { if (hopLoc) { hopLoc.hidden = true; } }
+        var nutLoc = document.getElementById('sw-filter-btn');
+        if (nutLoc) { nutLoc.addEventListener('click', moLoc); }
+        var nutLoc2 = document.getElementById('sw-open-filter');
+        if (nutLoc2) { nutLoc2.addEventListener('click', moLoc); }
+        if (hopLoc) {
+            hopLoc.addEventListener('click', function (e) {
+                if (e.target === hopLoc || e.target.closest('[data-close-filter]')) { dongLoc(); }
             });
         }
 
-        /* ---- Phím mũi tên cho người dùng máy tính ---- */
-        document.addEventListener('keydown', function (e) {
-            if (e.target.matches('input, textarea, select')) { return; }
-            if (e.key === 'ArrowRight') { chon(theTrenCung(), 'right'); }
-            if (e.key === 'ArrowLeft')  { chon(theTrenCung(), 'left'); }
-        });
+        /* Hộp chúc mừng ghép đôi */
+        var hopMatch = document.getElementById('sw-match');
+        if (hopMatch) {
+            hopMatch.addEventListener('click', function (e) {
+                if (e.target.closest('[data-close-match]')) { hopMatch.hidden = true; }
+            });
+        }
+        function khoeMatch(res) {
+            if (!hopMatch || !res.partner) { return; }
+            document.getElementById('sw-match-me').src  = res.me_avatar || '';
+            document.getElementById('sw-match-you').src = res.partner.avatar || '';
+            document.getElementById('sw-match-name').textContent = res.partner.name || '';
+            hopMatch.hidden = false;
+        }
 
-        kiemTraHet();
+        /* Xé đôi thẻ khi bỏ qua: dựng hai nửa từ chính ảnh của thẻ đó */
+        function xeThe(card) {
+            var img = card.querySelector('.sw-photo img');
+            if (!img) { return; }
+            var r = card.getBoundingClientRect();
+
+            var lop = document.createElement('div');
+            lop.className = 'sw-tear';
+            lop.style.left   = r.left + 'px';
+            lop.style.top    = r.top + 'px';
+            lop.style.width  = r.width + 'px';
+            lop.style.height = r.height + 'px';
+            lop.innerHTML = '<div class="sw-tear-half tren"></div><div class="sw-tear-half duoi"></div>';
+
+            var nen = 'url("' + img.currentSrc + '")';
+            lop.querySelectorAll('.sw-tear-half').forEach(function (n) { n.style.backgroundImage = nen; });
+
+            document.body.appendChild(lop);
+            setTimeout(function () { lop.remove(); }, 700);
+        }
+
+        /* Trái tim bung ra giữa màn hình khi bấm thích */
+        function timBung() {
+            var el = document.createElement('div');
+            el.className = 'sw-burst';
+            el.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 20.5s-7-4.3-7-9.1A4.4 4.4 0 0 1 12 8a4.4 4.4 0 0 1 7 3.4c0 4.8-7 9.1-7 9.1z"/></svg>';
+            var r = deck ? deck.getBoundingClientRect() : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+            el.style.left = (r.left + r.width / 2 - 21) + 'px';
+            el.style.top  = (r.top + r.height / 2 - 21) + 'px';
+            document.body.appendChild(el);
+            setTimeout(function () { el.remove(); }, 900);
+        }
+
+        /* Khách bấm thích: mời đăng nhập thay vì gọi máy chủ */
+        function moiDangNhap() {
+            showModal({
+                type: 'info',
+                title: 'Cần đăng nhập',
+                message: 'Đăng nhập hoặc tạo tài khoản để gửi lượt thích và nhắn tin.',
+                confirmText: 'Đăng nhập',
+                onConfirm: function () { window.location.href = stage.getAttribute('data-login'); }
+            });
+        }
+
+        if (deck) {
+            /* Chiều cao khung thẻ = chỗ trống còn lại của màn hình, trừ cụm nút.
+               Nhờ vậy cả thẻ lẫn nút nằm gọn trong một màn, không phải cuộn trang
+               và đỉnh thẻ không bị thanh điều hướng che. */
+            function chinhChieuCao() {
+                if (window.innerWidth <= 560) { return; }   // mobile đã có công thức riêng
+                var dinh = deck.getBoundingClientRect().top + window.scrollY;
+                var nut  = document.getElementById('sw-controls');
+                var caoNut = nut ? nut.offsetHeight + 34 : 96;
+                var con = window.innerHeight - dinh - caoNut - 40;
+                deck.style.height = Math.max(340, Math.min(con, 680)) + 'px';
+            }
+            chinhChieuCao();
+            window.addEventListener('resize', chinhChieuCao);
+
+            var NGUONG = 110;
+            var dangBan = false;
+            var keo = null;
+
+            var demEl    = document.getElementById('sw-count');
+            var trongEl  = document.getElementById('sw-empty');
+            var dieuKhien = document.getElementById('sw-controls');
+
+            function theTrenCung() { return deck.querySelector('.sw-card:last-child'); }
+
+            /* Cuộn tới vị trí; hiệu ứng mượt do CSS lo (scroll-behavior),
+               nhờ vậy vẫn chạy cả khi trình duyệt tạm dừng khung hình. */
+            function cuonToi(vung, dich) {
+                vung.scrollTop = dich;
+            }
+
+            function datViTri(card, dx, dy) {
+                card.style.transform = 'translate(' + dx + 'px,' + dy + 'px) rotate(' + (dx / 18) + 'deg)';
+                var muc  = Math.min(Math.abs(dx) / NGUONG, 1);
+                var like = card.querySelector('.sw-stamp-like');
+                var nope = card.querySelector('.sw-stamp-nope');
+                if (like) { like.style.opacity = dx > 0 ? muc : 0; }
+                if (nope) { nope.style.opacity = dx < 0 ? muc : 0; }
+            }
+
+            function traVe(card) {
+                card.classList.remove('is-dragging');
+                card.classList.add('is-animating');
+                card.style.transform = '';
+                var like = card.querySelector('.sw-stamp-like');
+                var nope = card.querySelector('.sw-stamp-nope');
+                if (like) { like.style.opacity = 0; }
+                if (nope) { nope.style.opacity = 0; }
+                setTimeout(function () { card.classList.remove('is-animating'); }, 340);
+            }
+
+            function doiDem(delta) {
+                if (!demEl) { return; }
+                var n = parseInt(demEl.textContent.replace(/\D/g, ''), 10) || 0;
+                demEl.textContent = Math.max(0, n + delta).toLocaleString('vi-VN');
+            }
+
+            function kiemTraHet() {
+                if (deck.querySelector('.sw-card')) { return; }
+                if (trongEl)   { trongEl.hidden = false; }
+                if (dieuKhien) { dieuKhien.hidden = true; }
+                deck.hidden = true;
+            }
+
+            function chon(card, huong) {
+                if (!card || dangBan) { return; }
+                if (laKhach) { return moiDangNhap(); }
+                dangBan = true;
+
+                var id = card.getAttribute('data-user');
+                var xa = (huong === 'right' ? 1 : -1) * (window.innerWidth + 340);
+
+                if (huong === 'right') {
+                    timBung();
+                    card.classList.remove('is-dragging');
+                    card.classList.add('is-animating', 'is-gone');
+                    card.style.transform = 'translate(' + xa + 'px,-40px) rotate(' + (xa / 26) + 'deg)';
+                } else {
+                    // Bỏ qua: thẻ biến mất ngay, thay bằng hai nửa bị xé trượt đi
+                    xeThe(card);
+                    card.style.visibility = 'hidden';
+                }
+
+                var url = base + (huong === 'right' ? 'kham-pha/thich/' : 'kham-pha/bo-qua/') + id;
+                post(url, {}).then(function (res) {
+                    if (!res.ok) {
+                        dangBan = false;
+                        card.classList.remove('is-gone');
+                        traVe(card);
+                        if (res.need_login) { return moiDangNhap(); }
+                        return showModal({ type: 'error', title: 'Không thực hiện được', message: res.message });
+                    }
+                    if (res.matched) { khoeMatch(res); }
+                }).catch(function () {});
+
+                setTimeout(function () {
+                    card.remove();
+                    doiDem(-1);
+                    dangBan = false;
+                    kiemTraHet();
+                }, huong === 'right' ? 340 : 200);
+            }
+
+            /* ---- Kéo bằng chuột / ngón tay ---- */
+            deck.addEventListener('pointerdown', function (e) {
+                if (e.target.closest('a, button, .sw-album')) { return; }
+                var card = theTrenCung();
+                if (!card || dangBan) { return; }
+                keo = { card: card, x0: e.clientX, y0: e.clientY, id: e.pointerId, ngang: null };
+            });
+
+            deck.addEventListener('pointermove', function (e) {
+                if (!keo || e.pointerId !== keo.id) { return; }
+                var dx = e.clientX - keo.x0, dy = e.clientY - keo.y0;
+
+                // Quyết định một lần: kéo ngang là chọn, kéo dọc là cuộn xem chi tiết
+                if (keo.ngang === null) {
+                    if (Math.abs(dx) < 8 && Math.abs(dy) < 8) { return; }
+                    keo.ngang = Math.abs(dx) > Math.abs(dy);
+                    if (keo.ngang) {
+                        keo.card.classList.add('is-dragging');
+                        keo.card.setPointerCapture(e.pointerId);
+                    } else {
+                        keo = null;   // nhường cho vùng cuộn bên trong thẻ
+                        return;
+                    }
+                }
+                datViTri(keo.card, dx, dy * 0.3);
+            });
+
+            function thaTay(e) {
+                if (!keo || (e && e.pointerId !== keo.id)) { return; }
+                var card = keo.card, ngang = keo.ngang;
+                var dx = e ? e.clientX - keo.x0 : 0;
+                keo = null;
+                if (!ngang) { return; }
+                if (dx > NGUONG)       { chon(card, 'right'); }
+                else if (dx < -NGUONG) { chon(card, 'left'); }
+                else                   { traVe(card); }
+            }
+            deck.addEventListener('pointerup', thaTay);
+            deck.addEventListener('pointercancel', thaTay);
+
+            /* ---- Nút "Xem thêm" trong thẻ ---- */
+            deck.addEventListener('click', function (e) {
+                var nut = e.target.closest('[data-scroll-more]');
+                if (!nut) { return; }
+                var vung = nut.closest('.sw-scroll');
+                cuonToi(vung, vung.querySelector('.sw-photo').offsetHeight);
+            });
+
+            /* ---- Nút điều khiển ---- */
+            if (dieuKhien) {
+                dieuKhien.addEventListener('click', function (e) {
+                    var btn = e.target.closest('[data-swipe]');
+                    if (!btn) { return; }
+                    var huong = btn.getAttribute('data-swipe');
+                    var card  = theTrenCung();
+
+                    if (huong === 'info') {
+                        if (!card) { return; }
+                        var vung = card.querySelector('.sw-scroll');
+                        var anh  = card.querySelector('.sw-photo');
+                        cuonToi(vung, vung.scrollTop > 10 ? 0 : anh.offsetHeight);
+                        return;
+                    }
+
+                    if (huong === 'undo') {
+                        if (laKhach) { return moiDangNhap(); }
+                        post(base + 'kham-pha/xem-lai', {}).then(function (res) {
+                            if (!res.ok) {
+                                return showModal({ type: 'info', title: 'Chưa có gì để xem lại', message: res.message });
+                            }
+                            deck.hidden = false;
+                            if (trongEl)   { trongEl.hidden = true; }
+                            if (dieuKhien) { dieuKhien.hidden = false; }
+                            deck.insertAdjacentHTML('beforeend', res.html);
+                            doiDem(1);
+                        });
+                        return;
+                    }
+
+                    chon(card, huong);
+                });
+            }
+
+            /* ---- Phím tắt ---- */
+            document.addEventListener('keydown', function (e) {
+                if (e.target.matches('input, textarea, select')) { return; }
+                if (hopMatch && !hopMatch.hidden) { return; }
+                var card = theTrenCung();
+                if (e.key === 'ArrowRight') { chon(card, 'right'); }
+                if (e.key === 'ArrowLeft')  { chon(card, 'left'); }
+                if (e.key === 'ArrowUp' && card) {
+                    e.preventDefault();
+                    var vung = card.querySelector('.sw-scroll');
+                    cuonToi(vung, card.querySelector('.sw-photo').offsetHeight);
+                }
+            });
+
+            kiemTraHet();
+        }
     }
 
     /* --- Thẻ hồ sơ: nút Bỏ qua / Thích (trang chủ, tìm kiếm, khu vực) --- */

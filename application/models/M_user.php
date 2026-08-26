@@ -207,6 +207,107 @@ class M_user extends CI_Model
     }
 
     /**
+     * Danh sách hồ sơ để vuốt ở trang Khám phá.
+     *
+     * Lọc nghiêm ngặt theo cặp (giới tính của tôi, giới tính tôi đang tìm):
+     *   nam tìm nữ  -> chỉ nữ đang tìm nam
+     *   nữ tìm nam  -> chỉ nam đang tìm nữ
+     *   nam tìm nam -> chỉ nam đang tìm nam   (gay)
+     *   nữ tìm nữ   -> chỉ nữ đang tìm nữ     (les)
+     * Người chưa khai nhu cầu vẫn được tính, vì mặc định họ tìm giới tính đối lập.
+     *
+     * $view: 'male' | 'female' | 'gay' | 'les' — dùng cho khách chưa đăng nhập.
+     */
+    public function deck($me, $view = null, $filters = array(), $limit = 20)
+    {
+        list($gioi_ung_vien, $ung_vien_tim) = $this->cap_doi_phu_hop($me, $view);
+
+        // Khoảng cách theo đường chim bay (công thức Haversine, bán kính Trái Đất 6371 km)
+        $km = 'NULL';
+        if ($me && !empty($me['lat']) && !empty($me['lng'])) {
+            $lat = (float) $me['lat'];
+            $lng = (float) $me['lng'];
+            $km  = "ROUND(6371 * ACOS(LEAST(1,
+                        COS(RADIANS($lat)) * COS(RADIANS(u.lat)) * COS(RADIANS(u.lng) - RADIANS($lng))
+                      + SIN(RADIANS($lat)) * SIN(RADIANS(u.lat)))), 1)";
+        }
+
+        $this->db->select("u.*, p.name AS province_name, $km AS khoang_cach,
+            (SELECT GROUP_CONCAT(ph.path ORDER BY ph.sort SEPARATOR '|')
+               FROM user_photos ph
+              WHERE ph.user_id = u.id AND ph.status = 'approved') AS photo_paths,
+            (SELECT GROUP_CONCAT(i.name ORDER BY i.name SEPARATOR '|')
+               FROM user_interests ui JOIN interests i ON i.id = ui.interest_id
+              WHERE ui.user_id = u.id) AS interest_names", false)
+            ->from('users u')
+            ->join('provinces p', 'p.id = u.province_id', 'left')
+            ->join('user_preferences pr', 'pr.user_id = u.id', 'left')
+            ->where('u.status', 'active')->where('u.role', 'member')->where('u.deleted_at', null)
+            ->where('u.gender', $gioi_ung_vien);
+
+        // Nhu cầu của ứng viên phải khớp; chưa khai thì coi như tìm giới tính đối lập
+        $mac_dinh = $ung_vien_tim === 'male' ? 'female' : 'male';
+        $this->db->group_start()
+                 ->where('pr.seeking_gender', $ung_vien_tim)
+                 ->or_where('pr.seeking_gender', 'all')
+                 ->or_group_start()
+                     ->where('pr.seeking_gender', null)
+                     ->where('u.gender <>', $mac_dinh)
+                 ->group_end()
+                 ->group_end();
+
+        if ($me) {
+            $id = (int) $me['id'];
+            $this->db->where('u.id <>', $id)
+                ->where("u.id NOT IN (SELECT blocked_id FROM blocks WHERE user_id = $id)", null, false)
+                ->where("u.id NOT IN (SELECT user_id FROM blocks WHERE blocked_id = $id)", null, false)
+                ->where("u.id NOT IN (SELECT passed_id FROM user_passes WHERE user_id = $id)", null, false)
+                ->where("u.id NOT IN (SELECT target_id FROM likes
+                                       WHERE user_id = $id AND target_type = 'user')", null, false);
+        }
+
+        if (!empty($filters['province_id'])) $this->db->where('u.province_id', (int) $filters['province_id']);
+        if (!empty($filters['age_min']))
+            $this->db->where('u.birthday <=', date('Y-m-d', strtotime('-' . (int) $filters['age_min'] . ' years')));
+        if (!empty($filters['age_max']))
+            $this->db->where('u.birthday >=', date('Y-m-d', strtotime('-' . ((int) $filters['age_max'] + 1) . ' years')));
+
+        return $this->db->order_by('u.last_active_at', 'DESC')->limit($limit)->get()->result_array();
+    }
+
+    /** Đếm tổng số hồ sơ còn lại cho khung vuốt. */
+    public function count_deck($me, $view = null, $filters = array())
+    {
+        $ds = $this->deck($me, $view, $filters, 500);
+        return count($ds);
+    }
+
+    /**
+     * Từ hồ sơ người xem (hoặc lựa chọn của khách) suy ra cần tìm ai.
+     * Trả về [giới tính ứng viên, giới tính mà ứng viên phải đang tìm].
+     */
+    private function cap_doi_phu_hop($me, $view = null)
+    {
+        if (!$me) {
+            switch ($view) {
+                case 'male':   return array('male', 'female');    // khách muốn xem bạn trai
+                case 'female': return array('female', 'male');
+                case 'gay':    return array('male', 'male');
+                case 'les':    return array('female', 'female');
+                default:       return array('female', 'male');
+            }
+        }
+
+        $pref = $this->db->where('user_id', $me['id'])->get('user_preferences')->row_array();
+        $toi_tim = $pref['seeking_gender'] ?? null;
+        if (!$toi_tim || $toi_tim === 'all') {
+            $toi_tim = $me['gender'] === 'male' ? 'female' : 'male';
+        }
+        // Ứng viên phải là giới tính tôi tìm, và họ phải đang tìm giới tính của tôi
+        return array($toi_tim, $me['gender']);
+    }
+
+    /**
      * Gợi ý ghép đôi dựa trên hồ sơ hai bên.
      *
      * Điểm tương hợp được tính ngay trong SQL để sắp xếp chính xác trên toàn bộ
