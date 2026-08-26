@@ -92,6 +92,17 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
                     </select>
                 </div>
                 <div>
+                    <label for="confide_topic">Chủ đề muốn tâm sự</label>
+                    <select id="confide_topic" name="confide_topic">
+                        <option value="">-- Chọn --</option>
+                        <?php foreach (array('lang_nghe' => 'Cần người lắng nghe', 'tro_chuyen' => 'Trò chuyện phiếm',
+                                             'cong_viec' => 'Chia sẻ công việc', 'gia_dinh' => 'Chuyện gia đình',
+                                             'tinh_cam' => 'Chuyện tình cảm', 'dem_khuya' => 'Trò chuyện đêm khuya') as $k => $t): ?>
+                            <option value="<?= $k ?>" <?= ($me['confide_topic'] ?? '') === $k ? 'selected' : '' ?>><?= $t ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div>
                     <label for="smoking">Hút thuốc</label>
                     <select id="smoking" name="smoking">
                         <option value="">-- Chọn --</option>

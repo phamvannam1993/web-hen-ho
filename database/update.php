@@ -75,7 +75,25 @@ echo $added ? "  Đã thêm $added khoá.\n" : "  Đã có đủ, không thêm g
 echo "\n== 2. Danh mục tỉnh/thành ==\n";
 require $root . '/database/migrate_provinces_2025.php';
 
-echo "\n== 3. Dọn trạng thái online giả ==\n";
+echo "\n== 3. Cột dữ liệu mới ==\n";
+// Chủ đề tâm sự, phục vụ trang /tam-su
+$co = $pdo->query("SHOW COLUMNS FROM users LIKE 'confide_topic'")->fetch();
+if (!$co) {
+    $pdo->exec("ALTER TABLE users
+        ADD COLUMN confide_topic ENUM('lang_nghe','tro_chuyen','cong_viec','gia_dinh','tinh_cam','dem_khuya')
+        NULL COMMENT 'Chủ đề tâm sự mong muốn' AFTER bio");
+    echo "  + thêm cột confide_topic\n";
+} else {
+    echo "  Đã có cột confide_topic.\n";
+}
+// Gán chủ đề cho hồ sơ còn trống để trang Tâm sự có nội dung
+$st = $pdo->prepare("UPDATE users SET confide_topic = ELT(1 + FLOOR(RAND()*6),
+        'lang_nghe','tro_chuyen','cong_viec','gia_dinh','tinh_cam','dem_khuya')
+      WHERE role = 'member' AND confide_topic IS NULL");
+$st->execute();
+echo '  Gán chủ đề cho ' . $st->rowCount() . " hồ sơ.\n";
+
+echo "\n== 4. Dọn trạng thái online giả ==\n";
 // Tài khoản mẫu từng được sinh với thời điểm hoạt động sát giờ tạo nên luôn
 // hiện nhãn ONLINE dù không ai dùng. Đẩy chúng về quá khứ; tài khoản thật
 // không bị đụng tới.
@@ -85,11 +103,11 @@ $st = $pdo->prepare("UPDATE users SET last_active_at = NOW() - INTERVAL (30 + FL
 $st->execute();
 echo '  Đã chỉnh ' . $st->rowCount() . " tài khoản mẫu.\n";
 
-echo "\n== 4. Hồ sơ thành viên ==\n";
+echo "\n== 5. Hồ sơ thành viên ==\n";
 require $root . '/database/fill_member_profiles.php';
 
 if ($demo > 0) {
-    echo "\n== 5. Thành viên mẫu ==\n";
+    echo "\n== 6. Thành viên mẫu ==\n";
     // seed_demo_users.php đọc số lượng từ $argv[1] nên truyền thẳng tham số qua
     $argv[1] = $demo;
     require $root . '/database/seed_demo_users.php';

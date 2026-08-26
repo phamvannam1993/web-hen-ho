@@ -30,6 +30,11 @@ $route['tin-dang/mo-lien-he/(:num)']     = 'posts/reveal/$1';
 $route['tin/(:any)']                     = 'posts/detail/$1';
 $route['dang-tin']                       = 'account/create_post';
 
+$route['tam-su']                                    = 'confide/index';
+$route['tam-su/trang/(:num)']                       = 'confide/index//$1';
+$route['tam-su/(nam|nu|gay|les|tuoi-gia)']          = 'confide/index/$1';
+$route['tam-su/(nam|nu|gay|les|tuoi-gia)/trang/(:num)'] = 'confide/index/$1/$2';
+
 $route['hen-ho']                          = 'dating/index';
 $route['hen-ho/trang/(:num)']             = 'dating/index//$1';
 $route['hen-ho/(nam|nu|gay|les)']         = 'dating/index/$1';
