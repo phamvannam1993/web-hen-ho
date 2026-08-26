@@ -70,14 +70,6 @@ class Confide extends MY_Controller
                            . 'chia sẻ và tôn trọng lẫn nhau.',
                 'heading' => 'Tâm sự cùng cộng đồng les',
             ),
-            'tuoi-gia' => array(
-                'label'   => 'Tuổi già',
-                'filters' => array('age_min' => 50),
-                'title'   => 'Tâm Sự Tuổi Già - Bạn Già Trò Chuyện - ' . $site,
-                'desc'    => 'Nơi các cô chú, ông bà tìm bạn trò chuyện, chia sẻ chuyện đời, '
-                           . 'chuyện con cháu và vơi đi những ngày dài.',
-                'heading' => 'Tâm sự tuổi già',
-            ),
         );
     }
 

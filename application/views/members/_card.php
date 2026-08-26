@@ -27,7 +27,7 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
             <?php if (($m['kyc_status'] ?? '') === 'verified'): ?>
                 <span class="tag tag-verified" title="Hồ sơ đã xác thực">
                     <svg viewBox="0 0 24 24" class="ic"><path d="M12 3l7 3v6c0 4.4-3 8-7 9-4-1-7-4.6-7-9V6z"/><path d="M9.2 12.2l2 2 3.6-3.9"/></svg>
-                    Đã xác thực
+                    Xác thực
                 </span>
             <?php endif; ?>
         </span>

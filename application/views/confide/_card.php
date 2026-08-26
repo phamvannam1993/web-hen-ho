@@ -17,7 +17,7 @@ $ic_verified = '<svg viewBox="0 0 24 24" class="ic"><path d="M12 3l7 3v6c0 4.4-3
         <span class="ccard-tags">
             <?php if ($online): ?><span class="tag tag-online">Online</span><?php endif; ?>
             <?php if (($m['kyc_status'] ?? '') === 'verified'): ?>
-                <span class="tag tag-verified"><?= $ic_verified ?>Đã xác thực</span>
+                <span class="tag tag-verified"><?= $ic_verified ?>Xác thực</span>
             <?php endif; ?>
         </span>
     </a>
