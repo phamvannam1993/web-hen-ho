@@ -1191,6 +1191,124 @@ main { display: block; padding-top: 14px; }
 .breadcrumb a:hover { color: var(--pink); text-decoration: none; }
 .breadcrumb span { color: var(--ink); font-weight: 600; }
 
+/* ---------------------------- Trang Tâm sự ----------------------------
+   Dùng chung dải tab và thanh sắp xếp với trang Hẹn hò; thẻ riêng vì có
+   thêm chủ đề muốn chia sẻ và lời nhắn ngắn. */
+
+.confide-page { padding: 6px 0 36px; }
+.confide-head { margin: 0 0 20px; }
+.confide-head h1 {
+    margin: 0 0 8px; font-size: 28px; font-weight: 800;
+    line-height: 1.25; color: var(--ink); letter-spacing: -.2px;
+}
+.confide-head p { margin: 0; max-width: 800px; color: var(--muted); font-size: 15px; line-height: 1.6; }
+
+/* Hàng lọc theo chủ đề — nối liền bên dưới thanh sắp xếp thành một khối trắng */
+.confide-page .dating-bar { border-radius: 0; margin-bottom: 0; }
+.topic-row {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    background: var(--card); border-top: 1px solid #f0f1f4;
+    border-radius: 0 0 14px 14px; padding: 13px 20px 15px; margin: 0 0 20px;
+    box-shadow: 0 2px 12px rgba(17, 24, 39, .06);
+}
+.topic-row a {
+    padding: 8px 15px; border-radius: 999px;
+    background: #f4f5f7; border: 1.5px solid transparent;
+    color: var(--muted); font-size: 14px; font-weight: 600; transition: .15s;
+}
+.topic-row a:hover { background: #eceef1; color: var(--ink); text-decoration: none; }
+.topic-row a.on { background: #fdeef6; border-color: #f6c8de; color: var(--pink); }
+
+.confide-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+.ccard {
+    display: flex; flex-direction: column;
+    background: var(--card); border-radius: 16px; overflow: hidden;
+    box-shadow: 0 3px 14px rgba(17, 24, 39, .08);
+    transition: box-shadow .2s ease, opacity .28s ease, transform .28s ease;
+}
+.ccard:hover { box-shadow: 0 8px 24px rgba(17, 24, 39, .14); }
+.ccard.card-gone { opacity: 0; transform: scale(.96); }
+
+.ccard-photo { position: relative; display: block; background: #f1f2f4; }
+.ccard-photo img { width: 100%; aspect-ratio: 1 / 1; max-height: 240px; object-fit: cover; display: block; }
+.ccard-tags { position: absolute; top: 9px; left: 9px; display: flex; flex-wrap: wrap; gap: 5px; z-index: 2; }
+
+.ccard-body { display: flex; flex-direction: column; flex: 1; padding: 12px 14px 14px; }
+.ccard-name {
+    margin: 0 0 5px; font-size: 16px; font-weight: 800; line-height: 1.3;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ccard-name a { color: var(--ink); }
+.ccard-name a:hover { color: var(--pink); text-decoration: none; }
+
+.ccard-place { display: flex; margin: 0 0 8px; font-size: 13px; color: var(--muted); }
+.ccard-place .mi { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.ccard-place .ic {
+    width: 15px; height: 15px; flex: 0 0 15px;
+    fill: none; stroke: currentColor; stroke-width: 1.8;
+    stroke-linecap: round; stroke-linejoin: round;
+}
+
+/* Chủ đề muốn chia sẻ — điểm nhấn riêng của trang này */
+.ccard-topic { margin: 0 0 8px; min-height: 26px; }
+.ccard-topic span {
+    display: inline-flex; align-items: center; max-width: 100%;
+    padding: 5px 11px; border-radius: 8px;
+    background: #f3f0ff; color: #6246c8;
+    font-size: 12.5px; font-weight: 600; line-height: 1.3;
+    /* Giữ một dòng để mọi thẻ cùng chiều cao, chủ đề dài thì cắt bớt */
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.ccard-note {
+    margin: 0 0 12px; min-height: 38px;
+    color: var(--muted); font-size: 13px; line-height: 1.5;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+.ccard-actions { display: flex; gap: 7px; margin-top: auto; }
+.btn-confide {
+    flex: 1 1 0; min-width: 0;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 9px 6px; border-radius: 999px; cursor: pointer;
+    font-size: 13px; font-weight: 700; line-height: 1;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: background .18s, border-color .18s, color .18s, transform .12s;
+}
+.btn-confide .ic {
+    width: 16px; height: 16px; flex: 0 0 16px; pointer-events: none;
+    fill: none; stroke: currentColor; stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round;
+}
+.btn-confide-chat { background: #6246c8; border: 1.5px solid #6246c8; color: #fff; }
+.btn-confide-chat:hover { background: #5238b4; border-color: #5238b4; color: #fff; text-decoration: none; }
+.btn-confide-like { background: var(--card); border: 1.5px solid #e3e6ea; color: #46505f; }
+.btn-confide-like:hover { border-color: #c9ced5; background: #f7f8fa; color: #46505f; text-decoration: none; }
+.btn-confide-like.is-liked { background: #fdeef6; border-color: #f6c8de; color: var(--pink); }
+.btn-confide-like.is-liked .ic { fill: currentColor; }
+.btn-confide:active { transform: scale(.97); }
+.btn-confide:disabled { opacity: .55; cursor: default; transform: none; }
+
+@media (max-width: 1200px) { .confide-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 900px)  { .confide-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) {
+    .confide-page { padding: 4px 0 28px; }
+    .confide-head h1 { font-size: 22px; }
+    .confide-head p { font-size: 14.5px; }
+    .topic-row {
+        gap: 6px; overflow-x: auto; flex-wrap: nowrap;
+        scrollbar-width: none; padding: 11px 14px 13px;
+    }
+    .topic-row::-webkit-scrollbar { display: none; }
+    .topic-row a { white-space: nowrap; padding: 7px 13px; font-size: 13.5px; }
+    .confide-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .ccard-body { padding: 10px 12px 12px; }
+    .ccard-name { font-size: 15px; }
+    .ccard-note { display: none; }
+    .btn-confide { font-size: 12.5px; padding: 8px 5px; }
+}
+
 /* ---------------------------- Trang Hẹn hò ----------------------------
    Bố cục theo khối trắng bo tròn trên nền xám của site: phần đầu, dải tab,
    thanh sắp xếp, lưới hồ sơ, rồi tới mẹo an toàn và bài giới thiệu. */
@@ -1239,9 +1357,13 @@ main { display: block; padding-top: 14px; }
 .sort-tabs a.on { background: #fdeef6; color: var(--pink); }
 
 /* Nhãn tích xanh trên thẻ */
-.tag-verified { display: inline-flex; align-items: center; gap: 5px; background: #2f80ed; }
+.tag-verified {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #2f80ed; padding-left: 9px;
+}
 .tag-verified .ic {
-    width: 13px; height: 13px; fill: none; stroke: currentColor;
+    width: 13px; height: 13px; flex: 0 0 13px;
+    fill: none; stroke: currentColor;
     stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
 }
 
@@ -1536,7 +1658,7 @@ main { display: block; padding-top: 14px; }
 .pcard-photo img { width: 100%; aspect-ratio: 1 / 1; max-height: 230px; object-fit: cover; display: block; }
 
 .pcard-tags { position: absolute; top: 12px; left: 12px; display: flex; flex-wrap: wrap; gap: 7px; z-index: 2; }
-.pcard-tags .tag, .swipe-badges .tag {
+.pcard-tags .tag, .swipe-badges .tag, .ccard-tags .tag {
     padding: 6px 13px; border-radius: 999px; line-height: 1;
     font-size: 11.5px; font-weight: 700; letter-spacing: .3px;
     text-transform: uppercase; color: #fff;

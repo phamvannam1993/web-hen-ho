@@ -100,6 +100,9 @@ class M_user extends CI_Model
                FROM user_interests ui JOIN interests i ON i.id = ui.interest_id
               WHERE ui.user_id = u.id) AS interest_names';
 
+        $select .= ", (SELECT COUNT(*) FROM likes lk
+                        WHERE lk.target_type = 'user' AND lk.target_id = u.id) AS like_count";
+
         // Người đang đăng nhập cần biết mình đã thích ai, nếu không thì sau khi
         // tải lại trang nút sẽ quay về "Thích" dù lượt thích đã được ghi nhận.
         $viewer = $this->auth->check() ? (int) $this->auth->id() : 0;
@@ -113,6 +116,12 @@ class M_user extends CI_Model
         switch ($filters['sort'] ?? 'active') {
             case 'new':   $this->db->order_by('u.created_at', 'DESC'); break;
             case 'vip':   $this->db->order_by('u.is_vip', 'DESC')->order_by('u.last_active_at', 'DESC'); break;
+            case 'listened':
+                // Người nhận nhiều lượt quan tâm nhất, tức được nhiều người tìm đến
+                $this->db->order_by("(SELECT COUNT(*) FROM likes lk
+                                       WHERE lk.target_type = 'user' AND lk.target_id = u.id)", 'DESC', false)
+                         ->order_by('u.last_active_at', 'DESC');
+                break;
             case 'verified':
                 $this->db->order_by("u.kyc_status = 'verified'", 'DESC', false)
                          ->order_by('u.last_active_at', 'DESC');
@@ -162,6 +171,8 @@ class M_user extends CI_Model
                      ->where('sp.seeking_gender', $f['seeking']);
         }
         if (!empty($f['verified'])) $this->db->where('u.kyc_status', 'verified');
+        // Trang Tâm sự: lọc theo chủ đề mong muốn
+        if (!empty($f['topic'])) $this->db->where('u.confide_topic', $f['topic']);
 
         if (!empty($f['marital']))   $this->db->where('u.marital_status', $f['marital']);
         if (!empty($f['education']))  $this->db->where('u.education', $f['education']);

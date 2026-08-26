@@ -49,6 +49,7 @@ class Account extends Member_Controller
                     'marital_status' => $this->input->post('marital_status') ?: null,
                     'smoking'        => $this->input->post('smoking') ?: null,
                     'drinking'       => $this->input->post('drinking') ?: null,
+                    'confide_topic'  => $this->input->post('confide_topic') ?: null,
                 );
                 if ($this->input->post('has_children') !== null && $this->input->post('has_children') !== '') {
                     $data['has_children'] = (int) $this->input->post('has_children');
