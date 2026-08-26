@@ -39,8 +39,6 @@ class Discover extends MY_Controller
             );
         }
 
-        $data['pagination'] = pagination_links('kham-pha', $page, $total, $this->per_page);
-
         $this->render('discover/index', array_merge(array('title' => 'Khám phá'), $data));
     }
 

@@ -266,52 +266,6 @@
         }).then(function (r) { return r.json(); });
     }
 
-    /* --- Trang Khám phá: thích / bỏ qua từng hồ sơ --- */
-    var grid = document.getElementById('swipe-grid');
-    if (grid) {
-        grid.addEventListener('click', function (e) {
-            var btn = e.target.closest('[data-action]');
-            if (!btn) { return; }
-
-            var card = btn.closest('.swipe-card');
-            var id = card.getAttribute('data-user');
-            var action = btn.getAttribute('data-action');
-            var url = base + 'kham-pha/' + (action === 'like' ? 'thich/' : 'bo-qua/') + id;
-
-            btn.disabled = true;
-            post(url, {}).then(function (res) {
-                if (!res.ok) {
-                    btn.disabled = false;
-                    return showModal({ type: 'error', title: 'Không thực hiện được', message: res.message });
-                }
-
-                if (action === 'like') {
-                    // Giữ thẻ lại, chỉ đổi trạng thái nút. Bấm lần nữa là bỏ thích
-                    // nên phải theo đúng trạng thái máy chủ trả về.
-                    var lbl = btn.querySelector('.js-like-text');
-                    if (lbl) { lbl.textContent = res.liked ? 'Đã thích' : 'Thích'; }
-                    btn.classList.toggle('is-liked', !!res.liked);
-                    btn.disabled = false;
-                } else {
-                    // Bỏ qua thì cho thẻ bay ra rồi gỡ; hết thẻ trên trang thì
-                    // tải lại để lấy nhóm tiếp theo.
-                    card.classList.add('card-passed');
-                    setTimeout(function () {
-                        card.remove();
-                        if (!grid.querySelector('.swipe-card')) { window.location.reload(); }
-                    }, 280);
-                }
-
-                if (res.matched) {
-                    showModal({
-                        type: 'success', title: 'Ghép đôi thành công!',
-                        message: 'Hai bạn đã thích nhau. Vào mục Tin nhắn để bắt đầu trò chuyện.'
-                    });
-                }
-            });
-        });
-    }
-
     /* --- Thích thành viên --- */
     document.querySelectorAll('[data-like-user]').forEach(function (btn) {
         btn.addEventListener('click', function () {
@@ -335,6 +289,145 @@
                 });
         });
     });
+
+    /* --- Trang Khám phá: chồng thẻ vuốt như các ứng dụng hẹn hò --- */
+    var deck = document.getElementById('sw-deck');
+    if (deck) {
+        var NGUONG = 110;          // kéo quá bao nhiêu điểm ảnh thì tính là đã chọn
+        var dangBan = false;       // đang chờ máy chủ trả lời
+        var keo = null;            // trạng thái lần kéo hiện tại
+
+        var demEl = document.getElementById('sw-count');
+        var trongEl = document.getElementById('sw-empty');
+        var dieuKhien = document.getElementById('sw-controls');
+
+        function theTrenCung() { return deck.querySelector('.sw-card:last-child'); }
+
+        function datViTri(card, dx, dy) {
+            var xoay = dx / 18;                       // kéo càng xa nghiêng càng nhiều
+            card.style.transform = 'translate(' + dx + 'px,' + dy + 'px) rotate(' + xoay + 'deg)';
+            var muc = Math.min(Math.abs(dx) / NGUONG, 1);
+            var like = card.querySelector('.sw-stamp-like');
+            var nope = card.querySelector('.sw-stamp-nope');
+            if (like) { like.style.opacity = dx > 0 ? muc : 0; }
+            if (nope) { nope.style.opacity = dx < 0 ? muc : 0; }
+        }
+
+        function traVeChoCu(card) {
+            card.classList.remove('is-dragging');
+            card.classList.add('is-animating');
+            card.style.transform = '';
+            var like = card.querySelector('.sw-stamp-like');
+            var nope = card.querySelector('.sw-stamp-nope');
+            if (like) { like.style.opacity = 0; }
+            if (nope) { nope.style.opacity = 0; }
+            setTimeout(function () { card.classList.remove('is-animating'); }, 320);
+        }
+
+        function capNhatDem(delta) {
+            if (!demEl) { return; }
+            var n = parseInt(demEl.textContent.replace(/\D/g, ''), 10) || 0;
+            demEl.textContent = Math.max(0, n + delta).toLocaleString('vi-VN');
+        }
+
+        function kiemTraHet() {
+            if (deck.querySelector('.sw-card')) { return; }
+            if (trongEl) { trongEl.hidden = false; }
+            if (dieuKhien) { dieuKhien.hidden = true; }
+        }
+
+        /** Cho thẻ bay ra rồi gọi máy chủ ghi nhận lựa chọn. */
+        function chon(card, huong) {
+            if (!card || dangBan) { return; }
+            dangBan = true;
+
+            var id = card.getAttribute('data-user');
+            var xa = (huong === 'right' ? 1 : -1) * (window.innerWidth + 320);
+
+            card.classList.remove('is-dragging');
+            card.classList.add('is-animating', 'is-gone');
+            card.style.transform = 'translate(' + xa + 'px,-40px) rotate(' + (xa / 26) + 'deg)';
+
+            var url = base + (huong === 'right' ? 'kham-pha/thich/' : 'kham-pha/bo-qua/') + id;
+            post(url, {}).then(function (res) {
+                if (!res.ok) {
+                    dangBan = false;
+                    card.classList.remove('is-gone');
+                    traVeChoCu(card);
+                    return showModal({ type: 'error', title: 'Không thực hiện được', message: res.message });
+                }
+                if (res.matched) {
+                    showModal({
+                        type: 'success', title: 'Ghép đôi thành công!',
+                        message: 'Hai bạn đã thích nhau. Vào mục Tin nhắn để bắt đầu trò chuyện.'
+                    });
+                }
+            }).catch(function () { /* mất mạng thì thôi, thẻ vẫn đi tiếp */ });
+
+            setTimeout(function () {
+                card.remove();
+                capNhatDem(-1);
+                dangBan = false;
+                kiemTraHet();
+            }, 330);
+        }
+
+        /* ---- Kéo bằng chuột hoặc ngón tay ---- */
+        deck.addEventListener('pointerdown', function (e) {
+            if (e.target.closest('a')) { return; }   // bấm "Xem hồ sơ đầy đủ" thì không kéo
+            var card = theTrenCung();
+            if (!card || dangBan) { return; }
+
+            keo = { card: card, x0: e.clientX, y0: e.clientY, id: e.pointerId };
+            card.classList.add('is-dragging');
+            card.setPointerCapture(e.pointerId);
+        });
+
+        deck.addEventListener('pointermove', function (e) {
+            if (!keo || e.pointerId !== keo.id) { return; }
+            datViTri(keo.card, e.clientX - keo.x0, (e.clientY - keo.y0) * 0.35);
+        });
+
+        function thaTay(e) {
+            if (!keo || (e && e.pointerId !== keo.id)) { return; }
+            var card = keo.card;
+            var dx = e ? e.clientX - keo.x0 : 0;
+            keo = null;
+
+            if (dx > NGUONG)       { chon(card, 'right'); }
+            else if (dx < -NGUONG) { chon(card, 'left'); }
+            else                   { traVeChoCu(card); }
+        }
+        deck.addEventListener('pointerup', thaTay);
+        deck.addEventListener('pointercancel', thaTay);
+
+        /* ---- Nút bấm ---- */
+        if (dieuKhien) {
+            dieuKhien.addEventListener('click', function (e) {
+                var btn = e.target.closest('[data-swipe]');
+                if (!btn) { return; }
+                var huong = btn.getAttribute('data-swipe');
+                var card = theTrenCung();
+                if (!card) { return; }
+
+                if (huong === 'info') {
+                    var link = card.querySelector('.sw-more');
+                    if (link) { window.location.href = link.href; }
+                    return;
+                }
+                chon(card, huong);
+            });
+        }
+
+        /* ---- Phím mũi tên cho người dùng máy tính ---- */
+        document.addEventListener('keydown', function (e) {
+            if (e.target.matches('input, textarea, select')) { return; }
+            if (e.key === 'ArrowRight') { chon(theTrenCung(), 'right'); }
+            if (e.key === 'ArrowLeft')  { chon(theTrenCung(), 'left'); }
+        });
+
+        kiemTraHet();
+    }
 
     /* --- Thẻ hồ sơ: nút Bỏ qua / Thích (trang chủ, tìm kiếm, khu vực) --- */
     document.addEventListener('click', function (e) {
