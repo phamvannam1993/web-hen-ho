@@ -96,7 +96,7 @@ img { max-width: 100%; height: auto; display: block; }
 .nav-list > li { position: static; min-width: 0; }
 .nav-list > li > a {
     display: block; padding: 10px 13px; border-radius: 8px; color: #40404a;
-    font-weight: 600; font-size: 15px; white-space: nowrap; text-decoration: none;
+    font-weight: 600; font-size: 13px; white-space: nowrap; text-decoration: none;
     transition: background .15s, color .15s;
 }
 .filter-panel {
@@ -735,7 +735,7 @@ select {
    4 cột liên kết -> thông tin công ty -> dòng bản quyền, ngăn nhau bằng đường kẻ mờ. */
 
 .site-footer {
-    background: #172838;
+    background: black;
     color: rgba(255, 255, 255, .88);
     margin-top: 40px;
     padding: 56px 0 15px;
@@ -949,7 +949,7 @@ select {
         padding: 8px 0; flex: 1 1 auto;
     }
     .nav-list > li > a {
-        border-radius: 0; padding: 14px 18px; font-size: 15.5px;
+        border-radius: 0; padding: 14px 18px; font-size: 13.5px;
         border-bottom: 1px solid #f1f1f4; white-space: normal;
         display: flex; align-items: center; justify-content: space-between;
     }
@@ -2391,7 +2391,7 @@ main { display: block; padding-top: 14px; }
     /* Mục menu: chữ thoáng hai bên, gạch chân nằm sát mép dưới header */
     .nav-list > li > a {
         position: relative; padding: 14px 16px 13px;
-        border-radius: 8px 8px 0 0; font-size: 15px;
+        border-radius: 8px 8px 0 0; font-size: 13px;
     }
     .nav-list > li > a:hover { background: #fdf3f8; }
     .nav-list > li > a.active { background: transparent; }
