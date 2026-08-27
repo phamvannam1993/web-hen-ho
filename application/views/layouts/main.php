@@ -92,7 +92,7 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
             array('url' => 'hen-ho',        'label' => 'Hẹn hò',     'match' => array('hen-ho')),
             array('url' => 'tam-su',        'label' => 'Tâm sự',     'match' => array('tam-su')),
             array('url' => 'thanh-vien',    'label' => 'Thành viên', 'match' => array('thanh-vien', 'profile', 'tim-kiem')),
-            array('url' => 'kham-pha',      'label' => 'Khám phá',   'match' => array('kham-pha')),
+            array('url' => 'swipe-match',      'label' => 'Khám phá',   'match' => array('swipe-match')),
             array('url' => 'khu-vuc',       'label' => 'Khu vực',    'match' => array('khu-vuc')),
             array('url' => 'tin-tuc',       'label' => 'Sforum',   'match' => array('tin-tuc')),
             array('url' => 'trang/noi-quy', 'label' => 'Thông báo',    'match' => array('trang')),

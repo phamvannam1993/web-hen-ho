@@ -40,11 +40,11 @@ $route['hen-ho/trang/(:num)']             = 'dating/index//$1';
 $route['hen-ho/(nam|nu|gay|les)']         = 'dating/index/$1';
 $route['hen-ho/(nam|nu|gay|les)/trang/(:num)'] = 'dating/index/$1/$2';
 
-$route['kham-pha']                = 'discover/index';
-$route['kham-pha/trang/(:num)']   = 'discover/index/$1';
-$route['kham-pha/thich/(:num)']   = 'discover/like/$1';
-$route['kham-pha/bo-qua/(:num)']  = 'discover/pass/$1';
-$route['kham-pha/xem-lai']        = 'discover/undo';
+$route['swipe-match']                = 'discover/index';
+$route['swipe-match/trang/(:num)']   = 'discover/index/$1';
+$route['swipe-match/thich/(:num)']   = 'discover/like/$1';
+$route['swipe-match/bo-qua/(:num)']  = 'discover/pass/$1';
+$route['swipe-match/xem-lai']        = 'discover/undo';
 
 $route['thanh-vien']              = 'members/index';
 $route['thanh-vien/trang/(:num)'] = 'members/index/$1';

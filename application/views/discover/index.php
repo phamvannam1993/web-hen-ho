@@ -78,7 +78,7 @@ $nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai', 'gay' => 'Gay', 
     <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
     <span>Trang chủ</span>
 </a>
-    <a class="on" href="<?= site_url('kham-pha') ?>">
+    <a class="on" href="<?= site_url('swipe-match') ?>">
         <svg viewBox="0 0 24 24"><path d="M12 20.5s-7-4.3-7-9.1A4.4 4.4 0 0 1 12 8a4.4 4.4 0 0 1 7 3.4c0 4.8-7 9.1-7 9.1z"/></svg>
         <span>Khám phá</span>
     </a>
