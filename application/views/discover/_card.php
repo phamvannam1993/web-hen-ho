@@ -12,6 +12,8 @@ $cung   = zodiac($c['birthday']);
 $anh    = !empty($c['photo_paths']) ? array_slice(explode('|', $c['photo_paths']), 0, 4) : array();
 $sothich= !empty($c['interest_names']) ? array_slice(explode('|', $c['interest_names']), 0, 6) : array();
 $muc    = !empty($c['purpose']) ? ($purpose[$c['purpose']] ?? '') : '';
+// Điểm tương hợp chỉ có khi người xem đã đăng nhập; khách thì không tính được
+$score  = min(100, (int) ($c['match_score'] ?? 0));
 
 // Có toạ độ hai bên thì hiện khoảng cách, không thì hiện tên tỉnh
 $vitri = !empty($c['province_name']) ? e($c['province_name']) : 'Chưa rõ khu vực';
@@ -29,6 +31,8 @@ $ic_case  = $ic('<rect x="3" y="7.5" width="18" height="12" rx="2"/><path d="M9 
 $ic_heart = $ic('<path d="M12 20.5s-7-4.3-7-9.1A4.4 4.4 0 0 1 12 8a4.4 4.4 0 0 1 7 3.4c0 4.8-7 9.1-7 9.1z"/>');
 $ic_book  = $ic('<path d="M4 5.5h6a2 2 0 0 1 2 2v11a2 2 0 0 0-2-2H4z"/><path d="M20 5.5h-6a2 2 0 0 0-2 2v11a2 2 0 0 1 2-2h6z"/>');
 $ic_star  = $ic('<path d="M12 4l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 9.7l5.4-.8z"/>');
+$ic_child = $ic('<circle cx="9" cy="7" r="3"/><circle cx="17" cy="9" r="2.2"/><path d="M3.5 20c.8-3 3-4.6 5.5-4.6S13.7 17 14.5 20"/><path d="M15 20c.5-1.9 1.8-3 3.2-3"/>');
+$ic_flag  = $ic('<path d="M5 21V4"/><path d="M5 5h11l-1.6 3.2L16 12H5z"/>');
 ?>
 <article class="sw-card" data-user="<?= (int) $c['id'] ?>">
     <div class="sw-scroll">
@@ -72,6 +76,14 @@ $ic_star  = $ic('<path d="M12 4l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.
                 </section>
             <?php endif; ?>
 
+            <?php if ($score > 0): ?>
+                <section>
+                    <h4>Mức tương hợp</h4>
+                    <div class="sw-score-bar"><span style="width: <?= $score ?>%"></span></div>
+                    <p class="sw-score-txt"><b><?= $score ?>%</b> phù hợp với tiêu chí của bạn</p>
+                </section>
+            <?php endif; ?>
+
             <section>
                 <h4>Thông tin</h4>
                 <ul class="sw-facts">
@@ -85,8 +97,18 @@ $ic_star  = $ic('<path d="M12 4l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.
                     <?php if (!empty($c['education'])): ?><li><?= $ic_book ?><span><?= e($edu[$c['education']] ?? '') ?></span></li><?php endif; ?>
                     <?php if (!empty($c['marital_status'])): ?><li><?= $ic_heart ?><span><?= e($marital[$c['marital_status']] ?? '') ?></span></li><?php endif; ?>
                     <?php if ($cung): ?><li><?= $ic_star ?><span><?= e($cung) ?></span></li><?php endif; ?>
+                    <?php if (isset($c['has_children'])): ?>
+                        <li><?= $ic_child ?><span><?= (int) $c['has_children'] === 1 ? 'Đã có con' : 'Chưa có con' ?></span></li>
+                    <?php endif; ?>
+                    <?php if ($muc): ?><li><?= $ic_flag ?><span><?= e($muc) ?></span></li><?php endif; ?>
                     <?php if (!empty($c['smoking'])): ?><li><span class="lbl">Hút thuốc</span><span><?= e($freq[$c['smoking']] ?? '') ?></span></li><?php endif; ?>
                     <?php if (!empty($c['drinking'])): ?><li><span class="lbl">Uống rượu</span><span><?= e($freq[$c['drinking']] ?? '') ?></span></li><?php endif; ?>
+                    <?php if (!empty($c['created_at'])): ?>
+                        <li><span class="lbl">Tham gia</span><span><?= date('m/Y', strtotime($c['created_at'])) ?></span></li>
+                    <?php endif; ?>
+                    <?php if (!empty($c['last_active_at'])): ?>
+                        <li><span class="lbl">Hoạt động</span><span><?= $online ? 'Đang online' : time_ago($c['last_active_at']) ?></span></li>
+                    <?php endif; ?>
                 </ul>
             </section>
 
