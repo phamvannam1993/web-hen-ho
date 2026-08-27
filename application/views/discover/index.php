@@ -1,30 +1,26 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
 $nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai', 'gay' => 'Gay', 'les' => 'Les');
 ?>
-<div class="container discover-page">
-    <nav class="breadcrumb">
-        <a href="<?= site_url() ?>">Trang chủ</a> › <span>Khám phá</span>
-    </nav>
-
-    <header class="discover-head">
-        <h1>Khám phá &amp; kết nối tức thì</h1>
-        <p>Vuốt sang phải nếu thấy hợp, sang trái để bỏ qua. Kéo thẻ lên để xem thêm thông tin.</p>
-    </header>
+<div class="discover-page">
+    <?php /* Trang chạy toàn màn hình nên tự có thanh trên gọn để còn lối quay ra */ ?>
+    <div class="sw-topbar">
+        <a class="sw-back" href="<?= site_url() ?>" aria-label="Về trang chủ">
+            <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+        </a>
+        <h1>Khám phá</h1>
+        <button type="button" class="sw-filter-btn" id="sw-filter-btn" aria-label="Bộ lọc nhanh">
+            <svg viewBox="0 0 24 24"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>
+        </button>
+    </div>
 
     <div class="sw-stage" id="sw-stage"
          data-guest="<?= $user ? '0' : '1' ?>"
          data-login="<?= site_url('dang-nhap') ?>"
          data-register="<?= site_url('dang-ky') ?>">
 
-        <div class="sw-toolbar">
-            <?php if (!$user && $view): ?>
-                <span class="sw-viewing">Đang xem: <b><?= e($nhom[$view] ?? '') ?></b></span>
-            <?php endif; ?>
-            <button type="button" class="sw-filter-btn" id="sw-filter-btn" aria-label="Bộ lọc nhanh">
-                <svg viewBox="0 0 24 24"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>
-                Bộ lọc
-            </button>
-        </div>
+        <?php if (!$user && $view): ?>
+            <p class="sw-viewing">Đang xem: <b><?= e($nhom[$view] ?? '') ?></b></p>
+        <?php endif; ?>
 
         <?php if (empty($candidates)): ?>
             <!-- Hết hồ sơ -->
@@ -35,8 +31,9 @@ $nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai', 'gay' => 'Gay', 
                 <button type="button" class="btn btn-primary" id="sw-open-filter">Cài đặt lại bộ lọc</button>
             </div>
         <?php else: ?>
+            <?php /* Cuộn dọc để sang người tiếp theo, mỗi lần một hồ sơ */ ?>
             <div class="sw-deck" id="sw-deck">
-                <?php foreach (array_reverse($candidates) as $c): ?>
+                <?php foreach ($candidates as $c): ?>
                     <?php $this->load->view('discover/_card', array('c' => $c, 'user' => $user)); ?>
                 <?php endforeach; ?>
             </div>

@@ -54,6 +54,8 @@ class Discover extends MY_Controller
             'view'       => $view,
             'need_pick'  => !$me && !$view,          // khách chưa chọn nhóm -> hỏi ngay
             'filters'    => $filters,
+            // Trang này chạy toàn màn hình như một ứng dụng: bỏ thanh trên và chân trang
+            'bare'       => true,
         );
 
         $this->render('discover/index', $data);

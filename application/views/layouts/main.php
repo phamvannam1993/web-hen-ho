@@ -38,9 +38,11 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
 
 <link rel="stylesheet" href="<?= base_url('assets/site/css/style.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/style.css') ?>">
 </head>
-<body>
+<body class="<?= !empty($bare) ? 'is-bare' : '' ?>">
 
 <!-- Dải mảnh trên cùng: khẩu hiệu + hotline -->
+<?php /* Chế độ toàn màn hình (trang Khám phá): bỏ thanh trên, menu và chân trang */ ?>
+<?php if (empty($bare)): ?>
 <div class="topbar">
     <div class="container topbar-inner">
         
@@ -127,6 +129,7 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
         <div class="nav-overlay" id="nav-overlay" hidden></div>
     </div>
 </header>
+<?php endif; ?>
 
 <div class="container">
     <?php if ($flash): ?>
@@ -138,6 +141,7 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
     <?php $this->load->view($content_view); ?>
 </main>
 
+<?php if (empty($bare)): ?>
 <footer class="site-footer">
     <div class="site-footer__container">
         <div class="site-footer__top">
@@ -242,6 +246,7 @@ $noindex = ($settings['site_noindex'] ?? '1') === '1';
         <p>Copyright ©<?= date('Y') ?> <?= e(($settings['site_name'] ?? 'Saigon Cupid')) ?>. All Rights Reserved.</p>
     </div>
 </footer>
+<?php endif; ?>
 
 <!-- Chat nổi: khách xem được phòng chung, muốn gửi thì phải đăng nhập -->
 <div id="chat-widget" class="chat-widget" data-base="<?= site_url() ?>"
