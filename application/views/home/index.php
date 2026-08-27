@@ -41,7 +41,7 @@
             <?php endforeach; ?>
         </div>
         <div class="block-more">
-            <a class="btn btn-more" href="<?= site_url('kham-pha') ?>">Khám phá thêm →</a>
+            <a class="btn btn-more" href="<?= site_url('swipe-match') ?>">Khám phá thêm →</a>
         </div>
     </div>
 </section>

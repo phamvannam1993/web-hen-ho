@@ -442,7 +442,7 @@
                     card.style.visibility = 'hidden';
                 }
 
-                var url = base + (huong === 'right' ? 'kham-pha/thich/' : 'kham-pha/bo-qua/') + id;
+                var url = base + (huong === 'right' ? 'swipe-match/thich/' : 'swipe-match/bo-qua/') + id;
                 post(url, {}).then(function (res) {
                     if (!res.ok) {
                         dangBan = false;
@@ -534,7 +534,7 @@
 
                     if (huong === 'undo') {
                         if (laKhach) { return moiDangNhap(); }
-                        post(base + 'kham-pha/xem-lai', {}).then(function (res) {
+                        post(base + 'swipe-match/xem-lai', {}).then(function (res) {
                             if (!res.ok) {
                                 return showModal({ type: 'info', title: 'Chưa có gì để xem lại', message: res.message });
                             }
@@ -585,8 +585,8 @@
         btn.disabled = true;
 
         var url = action === 'like'
-            ? base + 'kham-pha/thich/' + id
-            : base + 'kham-pha/bo-qua/' + id;
+            ? base + 'swipe-match/thich/' + id
+            : base + 'swipe-match/bo-qua/' + id;
 
         post(url, {}).then(function (res) {
             if (!res.ok) {
