@@ -74,6 +74,10 @@ $nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai', 'gay' => 'Gay', 
 
 <?php /* Thanh điều hướng nằm luôn trong khung */ ?>
 <nav class="sw-tabbar">
+    <a href="<?= site_url() ?>">
+    <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
+    <span>Trang chủ</span>
+</a>
     <a class="on" href="<?= site_url('kham-pha') ?>">
         <svg viewBox="0 0 24 24"><path d="M12 20.5s-7-4.3-7-9.1A4.4 4.4 0 0 1 12 8a4.4 4.4 0 0 1 7 3.4c0 4.8-7 9.1-7 9.1z"/></svg>
         <span>Khám phá</span>
@@ -86,10 +90,7 @@ $nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai', 'gay' => 'Gay', 
         <svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 3z"/></svg>
         <span>Tâm sự</span>
     </a>
-    <a href="<?= site_url($user ? 'tai-khoan/quan-tam' : 'dang-nhap') ?>">
-        <svg viewBox="0 0 24 24"><path d="M12 4l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 9.7l5.4-.8z"/></svg>
-        <span>Quan tâm</span>
-    </a>
+
     <a href="<?= site_url($user ? 'tai-khoan' : 'dang-nhap') ?>">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5"/></svg>
         <span><?= $user ? 'Tôi' : 'Đăng nhập' ?></span>

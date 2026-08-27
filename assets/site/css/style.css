@@ -409,7 +409,7 @@ select {
 .auth-actions { display: flex; gap: 14px; margin-top: 24px; }
 .auth-foot { text-align: center; margin-top: 20px; color: var(--muted); }
 
-.btn { display: inline-block; border: 0; padding: 14px 30px; font-size: 16px; cursor: pointer; text-align: center; }
+.btn { display: inline-block; border: 0; padding: 14px 30px; font-size: 14px; cursor: pointer; text-align: center; }
 .btn-primary { background: var(--pink); color: #fff; }
 .btn-primary:hover { background: var(--pink-dark); text-decoration: none; }
 .btn-ghost { background: #eee; color: #444; }
@@ -1252,8 +1252,11 @@ body.is-bare main { padding-top: 0; height: calc(100vh - 0px); }
 .sw-card { display: none; }
 .sw-card:first-child { display: block; }
 .sw-card {
-    position: relative; height: auto;
-    border-radius: 22px; overflow: hidden; background: #12141a;
+    position: relative;
+    height: auto;
+    border-radius: 22px;
+    overflow: hidden;
+    background: transparent;  /* ← ĐỔI THÀNH transparent */
     will-change: transform;
 }
 .sw-card.is-dragging { transition: none; cursor: grabbing; }
@@ -1267,6 +1270,7 @@ body.is-bare main { padding-top: 0; height: calc(100vh - 0px); }
 .sw-photo {
     position: relative;
     height: calc(100vh - var(--sw-tab, 63px) - var(--sw-bar, 73px) - 12px);
+    overflow: hidden;
 }
 
 /* Phần chi tiết trượt lên che ảnh khi bấm "Xem thêm" */
@@ -1279,9 +1283,15 @@ body.is-bare main { padding-top: 0; height: calc(100vh - 0px); }
     border-bottom: 1px solid #f0f1f4;
 }
 .sw-detail-close svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-.sw-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sw-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 22px;  /* ← THÊM DÒNG NÀY */
+}
 .sw-photo::after {
-    content: ""; position: absolute; inset: auto 0 0 0; height: 34%;
+    content: ""; position: absolute; inset: auto 0 0 0; height: 34%;border-radius: 22px;
     background: linear-gradient(to top, rgba(0,0,0,.55), transparent);
 }
 
@@ -1316,7 +1326,6 @@ body.is-bare main { padding-top: 0; height: calc(100vh - 0px); }
     position: sticky; bottom: 0; z-index: 4;
     display: flex; align-items: center; gap: 12px;
     padding: 10px 14px; background: #fff;
-    border-top: 1px solid #eef0f3;
 }
 .sw-bar-main { flex: 1 1 auto; min-width: 0; }
 .sw-bar h3 {
