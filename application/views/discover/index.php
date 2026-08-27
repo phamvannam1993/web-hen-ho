@@ -27,8 +27,16 @@ $nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai', 'gay' => 'Gay', 
             <div class="sw-none">
                 <div class="sw-radar"><span></span><span></span><span></span></div>
                 <h2>Đã xem hết hồ sơ phù hợp</h2>
-                <p>Không còn ai quanh bạn theo tiêu chí hiện tại. Hãy thử mở rộng bộ lọc tìm kiếm.</p>
-                <button type="button" class="btn btn-primary" id="sw-open-filter">Cài đặt lại bộ lọc</button>
+                <p>Không còn ai quanh bạn theo tiêu chí hiện tại. Hãy nới rộng bộ lọc,
+                    hoặc cập nhật hồ sơ để hệ thống gợi ý chính xác hơn.</p>
+                <div class="sw-none-actions">
+                    <button type="button" class="btn btn-primary" id="sw-open-filter">Cài đặt lại bộ lọc</button>
+                    <?php if ($user): ?>
+                        <a class="btn btn-ghost" href="<?= site_url('tai-khoan/ho-so') ?>">Sửa hồ sơ của tôi</a>
+                    <?php else: ?>
+                        <a class="btn btn-ghost" href="<?= site_url('dang-ky') ?>">Tạo hồ sơ</a>
+                    <?php endif; ?>
+                </div>
             </div>
         <?php else: ?>
             <?php /* Cuộn dọc để sang người tiếp theo, mỗi lần một hồ sơ */ ?>
@@ -41,8 +49,16 @@ $nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai', 'gay' => 'Gay', 
             <div class="sw-none" id="sw-empty" hidden>
                 <div class="sw-radar"><span></span><span></span><span></span></div>
                 <h2>Đã xem hết lượt này</h2>
-                <p>Tải thêm hồ sơ mới hoặc mở rộng bộ lọc để gặp thêm nhiều người.</p>
-                <a class="btn btn-primary" href="<?= site_url('kham-pha') ?>">Tải thêm hồ sơ</a>
+                <p>Tải thêm hồ sơ mới, nới bộ lọc, hoặc bổ sung hồ sơ của bạn
+                    để được gợi ý đúng người hơn.</p>
+                <div class="sw-none-actions">
+                    <a class="btn btn-primary" href="<?= site_url('kham-pha') ?>">Tải thêm hồ sơ</a>
+                    <?php if ($user): ?>
+                        <a class="btn btn-ghost" href="<?= site_url('tai-khoan/ho-so') ?>">Sửa hồ sơ của tôi</a>
+                    <?php else: ?>
+                        <a class="btn btn-ghost" href="<?= site_url('dang-ky') ?>">Tạo hồ sơ</a>
+                    <?php endif; ?>
+                </div>
             </div>
 
             <div class="sw-controls" id="sw-controls">

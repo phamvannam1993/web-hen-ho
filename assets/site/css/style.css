@@ -1383,7 +1383,9 @@ body.is-bare main { padding-top: 0; }
 /* ---- Hết hồ sơ ---- */
 .sw-none { text-align: center; padding: 50px 24px; background: #fff; border-radius: 18px; box-shadow: 0 3px 16px rgba(17,24,39,.08); }
 .sw-none h2 { margin: 0 0 8px; font-size: 20px; font-weight: 800; color: var(--ink); }
-.sw-none p { margin: 0 0 18px; color: var(--muted); font-size: 14.5px; }
+.sw-none p { margin: 0 auto 18px; max-width: 340px; color: var(--muted); font-size: 14.5px; line-height: 1.6; }
+.sw-none-actions { display: flex; flex-direction: column; gap: 10px; max-width: 260px; margin: 0 auto; }
+.sw-none-actions .btn { padding: 12px 20px; border-radius: 999px; text-align: center; }
 .sw-radar { position: relative; width: 90px; height: 90px; margin: 0 auto 20px; }
 .sw-radar span {
     position: absolute; inset: 0; margin: auto;
