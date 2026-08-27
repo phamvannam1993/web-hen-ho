@@ -383,12 +383,13 @@
             /* Thẻ đang xem là thẻ nằm ngay giữa khung cuộn */
             function theTrenCung() {
                 var cac = deck.querySelectorAll('.sw-card');
-                var giua = deck.getBoundingClientRect().top + deck.clientHeight / 2;
+                var moc = deck.getBoundingClientRect().top + 60;   // gần mép trên khung
+                var chon = null;
                 for (var i = 0; i < cac.length; i++) {
                     var r = cac[i].getBoundingClientRect();
-                    if (r.top <= giua && r.bottom >= giua) { return cac[i]; }
+                    if (r.top <= moc && r.bottom > moc) { chon = cac[i]; }
                 }
-                return cac[cac.length - 1] || null;
+                return chon || cac[0] || null;
             }
 
             /* Sau khi bỏ một thẻ, đưa khung về đúng thẻ kế tiếp */
@@ -511,16 +512,15 @@
             deck.addEventListener('pointerup', thaTay);
             deck.addEventListener('pointercancel', thaTay);
 
-            /* ---- Mở / đóng phần chi tiết ---- */
+            /* ---- Nút mũi tên: cuộn tới phần chi tiết và ngược lại ---- */
             deck.addEventListener('click', function (e) {
+                var card = e.target.closest('.sw-card');
+                if (!card) { return; }
+
                 if (e.target.closest('[data-scroll-more]')) {
-                    e.target.closest('.sw-card').classList.add('is-open');
-                    return;
-                }
-                if (e.target.closest('[data-close-detail]')) {
-                    var card = e.target.closest('.sw-card');
-                    card.classList.remove('is-open');
-                    card.querySelector('.sw-detail').scrollTop = 0;
+                    deck.scrollTop = card.offsetTop + card.querySelector('.sw-photo').offsetHeight;
+                } else if (e.target.closest('[data-close-detail]')) {
+                    deck.scrollTop = card.offsetTop;
                 }
             });
 
@@ -534,7 +534,9 @@
 
                     if (huong === 'info') {
                         if (!card) { return; }
-                        card.classList.toggle('is-open');
+                        var anh = card.querySelector('.sw-photo');
+                        var daXem = deck.scrollTop > card.offsetTop + 10;
+                        deck.scrollTop = daXem ? card.offsetTop : card.offsetTop + anh.offsetHeight;
                         return;
                     }
 
@@ -566,11 +568,11 @@
                 if (e.key === 'ArrowLeft')  { chon(card, 'left'); }
                 if (e.key === 'ArrowUp' && card) {
                     e.preventDefault();
-                    card.classList.add('is-open');
+                    deck.scrollTop = card.offsetTop + card.querySelector('.sw-photo').offsetHeight;
                 }
                 if (e.key === 'ArrowDown' && card) {
                     e.preventDefault();
-                    if (card.classList.contains('is-open')) { card.classList.remove('is-open'); }
+                    if (deck.scrollTop > card.offsetTop + 10) { deck.scrollTop = card.offsetTop; }
                     else { veTheKeTiep(card); }
                 }
             });
