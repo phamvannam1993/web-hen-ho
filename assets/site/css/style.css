@@ -1195,54 +1195,61 @@ main { display: block; padding-top: 14px; }
    Một chồng thẻ giữa màn hình. Kéo ngang để chọn, kéo dọc trong thẻ để
    xem chi tiết. Máy tính dùng thêm phím mũi tên. */
 
-/* Trang chạy toàn màn hình: nền tối nhẹ, mọi thứ nằm gọn trong một màn */
-body.is-bare { background: #dce4f8; }
-body.is-bare main { padding-top: 0; }
+/* Trang chạy toàn màn hình: chiếm trọn chiều cao, không cuộn trang */
+body.is-bare { background: #dce4f8; height: 100%; overflow: hidden; }
+html:has(body.is-bare) { height: 100%; }
+body.is-bare main { padding-top: 0; height: calc(100vh - 0px); }
 
-.discover-page { padding: 0 0 24px; }
-
-.sw-topbar {
-    position: sticky; top: 0; z-index: 20;
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 14px; margin-bottom: 12px;
-    background: rgba(255, 255, 255, .92); backdrop-filter: blur(8px);
-    box-shadow: 0 1px 10px rgba(17, 24, 39, .08);
+.discover-page {
+    display: flex; flex-direction: column;
+    height: 100vh; padding: 0;
 }
-.sw-topbar h1 { flex: 1; margin: 0; text-align: center; font-size: 17px; font-weight: 800; color: var(--ink); }
-.sw-back, .sw-topbar .sw-filter-btn {
+
+
+/* Chiều cao dải thông tin và thanh điều hướng — cụm nút neo theo hai giá trị này */
+.discover-page { --sw-bar: 73px; --sw-tab: 63px; }
+
+/* Nút lọc nổi ở góc trên khung */
+.sw-filter-btn {
+    position: absolute; top: 30px; right: 30px; z-index: 14;
     display: inline-flex; align-items: center; justify-content: center;
-    width: 40px; height: 40px; flex: 0 0 40px; padding: 0;
-    border-radius: 50%; background: #f4f5f7; border: 0; cursor: pointer;
+    width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+    background: rgba(255, 255, 255, .92); backdrop-filter: blur(6px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .18);
 }
-.sw-back svg, .sw-topbar .sw-filter-btn svg {
-    width: 20px; height: 20px; fill: none; stroke: var(--ink);
-    stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+.sw-filter-btn svg {
+    width: 19px; height: 19px; fill: none; stroke: var(--pink);
+    stroke-width: 1.9; stroke-linejoin: round; stroke-linecap: round;
 }
-.sw-topbar .sw-filter-btn svg { stroke: var(--pink); stroke-width: 1.9; }
-.sw-back:hover, .sw-topbar .sw-filter-btn:hover { background: #e9ebef; }
+.sw-filter-btn:hover { background: #fff; }
 
-.sw-viewing { text-align: center; margin: 0 0 10px; font-size: 13.5px; color: var(--muted); }
-.sw-viewing b { color: var(--ink); }
-.sw-stage { max-width: 560px; margin: 0 auto; position: relative; padding: 0 14px; }
+/* Khung trắng theo tỉ lệ như bản mẫu: viền 16px, ảnh gần vuông */
+/* Khung dính sát trên dưới, chỉ bo góc hai bên cho gọn */
+.sw-stage {
+    position: relative; flex: 1 1 auto; min-height: 0;
+    display: flex; flex-direction: column;
+    width: 100%; max-width: 560px; margin: 0 auto;
+    background: #fff; border-radius: 0; padding: 12px 12px 0;
+    box-shadow: 0 0 40px rgba(17, 24, 39, .12);
+}
 
 /* ---- Chồng thẻ ---- */
 /* Khung cuộn dọc: mỗi lần cuộn dừng đúng một hồ sơ (scroll-snap).
    Chiều cao do JS tính theo chỗ trống còn lại của màn hình. */
 .sw-deck {
-    position: relative;
-    height: clamp(400px, calc(100vh - 200px), 720px);
+    position: relative; flex: 0 1 auto; min-height: 0;
+    flex: 1 1 auto;
     overflow-y: auto; overscroll-behavior: contain;
     scroll-snap-type: y mandatory; scroll-behavior: smooth;
     scrollbar-width: none; -webkit-overflow-scrolling: touch;
-    border-radius: 32px;
+    border-radius: 22px;
 }
 .sw-deck::-webkit-scrollbar { display: none; }
 
 .sw-card {
     position: relative; height: 100%; flex: 0 0 100%;
     scroll-snap-align: start; scroll-snap-stop: always;
-    border-radius: 32px; overflow: hidden; background: #12141a;
-    box-shadow: 0 12px 34px rgba(17, 24, 39, .18);
+    border-radius: 22px; overflow: hidden; background: #12141a;
     will-change: transform;
 }
 .sw-card.is-dragging { transition: none; cursor: grabbing; }
@@ -1250,14 +1257,14 @@ body.is-bare main { padding-top: 0; }
 .sw-card.is-gone { opacity: 0; }
 
 /* Vùng cuộn bên trong thẻ: ảnh chiếm trọn, chi tiết nằm dưới */
-/* Thẻ chia hai phần: ảnh phía trên, dải thông tin trắng phía dưới */
+/* Thẻ gồm ảnh phía trên và dải thông tin phía dưới */
 .sw-scroll { position: relative; height: 100%; display: flex; flex-direction: column; }
 
 .sw-photo { position: relative; flex: 1 1 auto; min-height: 0; }
 
 /* Phần chi tiết trượt lên che ảnh khi bấm "Xem thêm" */
 .sw-detail {
-    position: absolute; inset: 0; z-index: 5; border-radius: 32px;
+    position: absolute; inset: 0; z-index: 5; border-radius: 22px;
     overflow-y: auto; overscroll-behavior: contain;
     transform: translateY(100%); transition: transform .32s ease;
     scrollbar-width: none;
@@ -1274,8 +1281,8 @@ body.is-bare main { padding-top: 0; }
 .sw-detail-close svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .sw-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .sw-photo::after {
-    content: ""; position: absolute; inset: auto 0 0 0; height: 26%;
-    background: linear-gradient(to top, rgba(0,0,0,.45), transparent);
+    content: ""; position: absolute; inset: auto 0 0 0; height: 34%;
+    background: linear-gradient(to top, rgba(0,0,0,.55), transparent);
 }
 
 .sw-badges { position: absolute; top: 11px; left: 11px; display: flex; flex-wrap: wrap; gap: 5px; z-index: 2; }
@@ -1304,10 +1311,11 @@ body.is-bare main { padding-top: 0; }
 
 @keyframes sw-nhac { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
 
-/* Dải thông tin dưới ảnh */
+/* Dải thông tin trắng dưới ảnh, nằm trong khung */
 .sw-bar {
     flex: 0 0 auto; display: flex; align-items: center; gap: 12px;
-    padding: 10px 16px; background: #fff;
+    padding: 10px 14px; background: #fff;
+    border-top: 1px solid #eef0f3;
 }
 .sw-bar-main { flex: 1 1 auto; min-width: 0; }
 .sw-bar h3 {
@@ -1355,11 +1363,20 @@ body.is-bare main { padding-top: 0; }
 .sw-more { display: inline-block; font-size: 14px; font-weight: 700; color: var(--pink); }
 
 /* ---- Nút điều khiển ---- */
-.sw-controls { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 16px; }
+/* Cụm nút nổi đè lên đáy ảnh, ngay phía trên dải thông tin */
+.sw-controls {
+    /* Neo trên đáy ảnh: cộng chiều cao dải thông tin và thanh điều hướng bên dưới */
+    position: absolute; left: 0; right: 0; z-index: 12;
+    bottom: calc(var(--sw-bar, 73px) + var(--sw-tab, 63px) + 14px);
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    pointer-events: none;
+}
+.sw-controls > * { pointer-events: auto; }
 .sw-btn {
     display: inline-flex; align-items: center; justify-content: center;
     width: 54px; height: 54px; border-radius: 50%; cursor: pointer;
-    background: #fff; border: 0; box-shadow: 0 4px 16px rgba(17, 24, 39, .16);
+    background: #fff; border: 0;
+    box-shadow: 0 4px 16px rgba(17, 24, 39, .22);
     transition: transform .15s, box-shadow .15s;
 }
 .sw-btn svg { width: 23px; height: 23px; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
@@ -1368,11 +1385,12 @@ body.is-bare main { padding-top: 0; }
 .sw-btn-undo, .sw-btn-info { width: 42px; height: 42px; }
 .sw-btn-undo svg { width: 20px; height: 20px; stroke: #f0a020; }
 .sw-btn-info svg { width: 20px; height: 20px; stroke: #4a90e2; }
-.sw-btn:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 8px 22px rgba(17, 24, 39, .22); }
+.sw-btn:hover { transform: translateY(-2px) scale(1.06); box-shadow: 0 8px 22px rgba(17, 24, 39, .3); }
 .sw-btn:active { transform: scale(.94); }
 .sw-btn:disabled { opacity: .45; cursor: default; transform: none; }
 
-.sw-hint { margin: 14px 0 0; text-align: center; font-size: 13.5px; color: var(--muted); }
+/* Dòng gợi ý phím: ẩn để cụm nút neo đúng đáy ảnh */
+.sw-hint { display: none; }
 .sw-hint b { color: var(--ink); }
 .sw-key {
     display: inline-block; margin: 0 1px; padding: 1px 7px;
@@ -1380,8 +1398,27 @@ body.is-bare main { padding-top: 0; }
     font-size: 12px; color: var(--ink);
 }
 
+/* Thanh điều hướng nằm trong khung, ngay dưới cụm nút */
+.sw-tabbar {
+    flex: 0 0 auto; display: flex; align-items: stretch;
+    margin: 10px -12px 0; padding: 0 4px calc(2px + env(safe-area-inset-bottom));
+    border-top: 1px solid #e7e9ee; background: #fff;
+}
+.sw-tabbar a {
+    flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; padding: 9px 4px 8px; color: #9aa0a8; font-size: 11px; font-weight: 600;
+    transition: color .15s;
+}
+.sw-tabbar a svg {
+    width: 22px; height: 22px; fill: none; stroke: currentColor;
+    stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+}
+.sw-tabbar a:hover { color: var(--ink); text-decoration: none; }
+.sw-tabbar a.on { color: var(--pink); }
+.sw-tabbar a.on svg { fill: currentColor; stroke: none; }
+
 /* ---- Hết hồ sơ ---- */
-.sw-none { text-align: center; padding: 50px 24px; background: #fff; border-radius: 18px; box-shadow: 0 3px 16px rgba(17,24,39,.08); }
+.sw-none { text-align: center; padding: 44px 20px; }
 .sw-none h2 { margin: 0 0 8px; font-size: 20px; font-weight: 800; color: var(--ink); }
 .sw-none p { margin: 0 auto 18px; max-width: 340px; color: var(--muted); font-size: 14.5px; line-height: 1.6; }
 .sw-none-actions { display: flex; flex-direction: column; gap: 10px; max-width: 260px; margin: 0 auto; }
@@ -1509,8 +1546,10 @@ body.is-bare main { padding-top: 0; }
 }
 
 @media (max-width: 560px) {
-    .discover-page { padding: 4px 0 96px; }
-    .sw-deck, .sw-card, .sw-detail { border-radius: 26px; }
+    .discover-page { padding: 0; }
+    .sw-stage { border-radius: 0; padding: 10px 10px 0; }
+    .sw-tabbar { margin: 8px -10px 0; }
+    .sw-deck, .sw-card, .sw-detail { border-radius: 18px; }
     .discover-head { margin-bottom: 10px; }
     .discover-head h1 { font-size: 21px; }
     .discover-head p { display: none; }
@@ -1518,13 +1557,7 @@ body.is-bare main { padding-top: 0; }
     .sw-deck { height: clamp(360px, calc(100vh - 250px), 620px); }
             .sw-facts { grid-template-columns: 1fr; }
 
-    /* Nút ghim đáy màn hình cho dễ với ngón tay */
-    .sw-controls {
-        position: fixed; inset: auto 0 0 0; z-index: 80;
-        margin: 0; padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
-        background: rgba(255,255,255,.96); backdrop-filter: blur(8px);
-        box-shadow: 0 -3px 16px rgba(17,24,39,.1);
-    }
+    .sw-controls { padding: 12px 0 4px; gap: 12px; }
     .sw-hint { display: none; }
     .sw-match-avatars img { width: 88px; height: 88px; }
     .sw-match-title { font-size: 28px; }

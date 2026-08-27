@@ -2,25 +2,16 @@
 $nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai', 'gay' => 'Gay', 'les' => 'Les');
 ?>
 <div class="discover-page">
-    <?php /* Trang chạy toàn màn hình nên tự có thanh trên gọn để còn lối quay ra */ ?>
-    <div class="sw-topbar">
-        <a class="sw-back" href="<?= site_url() ?>" aria-label="Về trang chủ">
-            <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
-        </a>
-        <h1>Khám phá</h1>
-        <button type="button" class="sw-filter-btn" id="sw-filter-btn" aria-label="Bộ lọc nhanh">
-            <svg viewBox="0 0 24 24"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>
-        </button>
-    </div>
 
     <div class="sw-stage" id="sw-stage"
          data-guest="<?= $user ? '0' : '1' ?>"
          data-login="<?= site_url('dang-nhap') ?>"
          data-register="<?= site_url('dang-ky') ?>">
 
-        <?php if (!$user && $view): ?>
-            <p class="sw-viewing">Đang xem: <b><?= e($nhom[$view] ?? '') ?></b></p>
-        <?php endif; ?>
+        <?php /* Nút lọc nổi ở góc trên khung, thay cho thanh trên đã bỏ */ ?>
+        <button type="button" class="sw-filter-btn" id="sw-filter-btn" aria-label="Bộ lọc nhanh">
+            <svg viewBox="0 0 24 24"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>
+        </button>
 
         <?php if (empty($candidates)): ?>
             <!-- Hết hồ sơ -->
@@ -80,6 +71,30 @@ $nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai', 'gay' => 'Gay', 
                 · <span class="sw-key">←</span> bỏ qua <span class="sw-key">→</span> thích
                 <span class="sw-key">↑</span> xem thêm</p>
         <?php endif; ?>
+
+<?php /* Thanh điều hướng nằm luôn trong khung */ ?>
+<nav class="sw-tabbar">
+    <a class="on" href="<?= site_url('kham-pha') ?>">
+        <svg viewBox="0 0 24 24"><path d="M12 20.5s-7-4.3-7-9.1A4.4 4.4 0 0 1 12 8a4.4 4.4 0 0 1 7 3.4c0 4.8-7 9.1-7 9.1z"/></svg>
+        <span>Khám phá</span>
+    </a>
+    <a href="<?= site_url('hen-ho') ?>">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+        <span>Hẹn hò</span>
+    </a>
+    <a href="<?= site_url('tam-su') ?>">
+        <svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 3z"/></svg>
+        <span>Tâm sự</span>
+    </a>
+    <a href="<?= site_url($user ? 'tai-khoan/quan-tam' : 'dang-nhap') ?>">
+        <svg viewBox="0 0 24 24"><path d="M12 4l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 9.7l5.4-.8z"/></svg>
+        <span>Quan tâm</span>
+    </a>
+    <a href="<?= site_url($user ? 'tai-khoan' : 'dang-nhap') ?>">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5"/></svg>
+        <span><?= $user ? 'Tôi' : 'Đăng nhập' ?></span>
+    </a>
+</nav>
     </div>
 
     <?php if ($matches): ?>

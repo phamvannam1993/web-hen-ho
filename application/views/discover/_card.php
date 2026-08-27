@@ -47,7 +47,7 @@ $ic_star  = $ic('<path d="M12 4l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.
 
         </div>
 
-        <?php /* Thông tin nằm trên nền trắng dưới ảnh, không đè lên mặt người */ ?>
+        <?php /* Dải thông tin trắng dưới ảnh, nằm trong khung */ ?>
         <div class="sw-bar">
             <div class="sw-bar-main">
                 <h3><?= e(display_name($c)) ?><?= $age ? ', ' . $age : '' ?></h3>

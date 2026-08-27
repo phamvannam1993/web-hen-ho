@@ -371,23 +371,6 @@
         }
 
         if (deck) {
-            /* Chiều cao khung thẻ = chỗ trống còn lại của màn hình, trừ cụm nút.
-               Nhờ vậy cả thẻ lẫn nút nằm gọn trong một màn, không phải cuộn trang
-               và đỉnh thẻ không bị thanh điều hướng che. */
-            function chinhChieuCao() {
-                var dinh = deck.getBoundingClientRect().top + window.scrollY;
-                var nut  = document.getElementById('sw-controls');
-                var goiY   = document.querySelector('.sw-hint');
-                var caoGoiY = (goiY && goiY.offsetParent) ? goiY.offsetHeight + 14 : 0;
-                var caoNut = (nut && window.innerWidth > 560) ? nut.offsetHeight + 24 + caoGoiY : 16;
-                // Trừ cả phần đệm dưới của trang, nếu không trang vẫn thừa vài chục điểm ảnh
-                var trang = document.querySelector('.discover-page');
-                var dem   = trang ? parseInt(getComputedStyle(trang).paddingBottom, 10) || 0 : 0;
-                var con = window.innerHeight - dinh - caoNut - dem - 12;
-                deck.style.height = Math.max(340, Math.min(con, 600)) + 'px';
-            }
-            chinhChieuCao();
-            window.addEventListener('resize', chinhChieuCao);
 
             var NGUONG = 110;
             var dangBan = false;
