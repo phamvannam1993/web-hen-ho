@@ -1,4 +1,4 @@
-/* Tương tác frontend: modal thông báo, lấy mã pass, hiện số điện thoại. */
+/* Tương tác frontend: modal thông báo, lấy mã pass, hiện số điện thoại. */console.log('🔴 DEBUG: app.js đã được load - Phiên bản mới nhất!');
 (function () {
     'use strict';
 

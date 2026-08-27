@@ -1294,7 +1294,7 @@ body.is-bare main { padding-top: 0; height: calc(100vh - 0px); }
     text-transform: uppercase; color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.25);
 }
 .sw-place {
-    position: absolute; top: 11px; right: 11px; z-index: 2;
+    position: absolute; top: 11px; left: 11px; z-index: 2;
     display: inline-flex; align-items: center; gap: 5px;
     padding: 5px 11px; border-radius: 999px;
     background: rgba(0,0,0,.42); color: #fff; font-size: 12.5px; font-weight: 600;
