@@ -198,7 +198,7 @@ select {
 /* ------------------------------ Khối nội dung ------------------------------ */
 
 .home-block { padding: 20px 0; }
-.home-block.alt { background: #e7e7e7; }
+
 .block-title {
     text-align: center; color: var(--amber); font-size: 30px; font-style: italic;
     margin: 0 0 8px;
