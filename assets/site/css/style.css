@@ -1241,16 +1241,18 @@ body.is-bare main { padding-top: 0; height: calc(100vh - 0px); }
        cứng để tránh chỏi với thanh điều hướng và dải thông tin bên dưới. */
     position: relative; flex: 1 1 auto; min-height: 0; box-sizing: border-box;
     overflow-y: auto; overscroll-behavior: contain;
-    scroll-snap-type: y proximity; scroll-behavior: smooth;
+    scroll-behavior: smooth;
     scrollbar-width: none; -webkit-overflow-scrolling: touch;
     border-radius: 22px;
 }
 
 .sw-deck::-webkit-scrollbar { display: none; }
 
+/* Chỉ hồ sơ đầu tiên hiện ra; xong người này mới tới người kế */
+.sw-card { display: none; }
+.sw-card:first-child { display: block; }
 .sw-card {
     position: relative; height: auto;
-    scroll-snap-align: start;
     border-radius: 22px; overflow: hidden; background: #12141a;
     will-change: transform;
 }
