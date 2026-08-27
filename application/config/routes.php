@@ -90,6 +90,9 @@ $route['ajax/report']          = 'ajax/report';
 /* ------------------------------------------------------------------
  | ADMIN
  * ---------------------------------------------------------------- */
+// Phân trang khu quản trị: /admin/{muc}/trang/{n}
+$route['admin/(users|posts|articles|orders|reports|codes)/trang/(:num)'] = 'admin/$1/index/$2';
+
 $route['admin']                 = 'admin/dashboard/index';
 $route['admin/dang-nhap']       = 'admin/auth/login';
 $route['admin/dang-xuat']       = 'admin/auth/logout';
