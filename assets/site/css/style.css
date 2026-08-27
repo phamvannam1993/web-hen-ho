@@ -1230,12 +1230,19 @@ body.is-bare main { padding-top: 0; }
    Chiều cao do JS tính theo chỗ trống còn lại của màn hình. */
 .sw-deck {
     position: relative;
-    height: clamp(400px, calc(100vh - 200px), 720px);
-    overflow-y: auto; overscroll-behavior: contain;
-    scroll-snap-type: y mandatory; scroll-behavior: smooth;
-    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    height: calc(100vh - 200px) !important;
+    min-height: calc(100vh - 200px) !important;
+    max-height: 100vh !important;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
     border-radius: 32px;
+    box-sizing: border-box;
 }
+
 .sw-deck::-webkit-scrollbar { display: none; }
 
 .sw-card {

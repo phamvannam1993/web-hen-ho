@@ -24,7 +24,7 @@ class Dating extends MY_Controller
             '' => array(
                 'label'   => 'Tất cả',
                 'filters' => array(),
-                'title'   => 'Hẹn Hò & Tìm Bạn Đời Nghiêm Túc Tại ' . $site,
+                'title'   => 'Hẹn Hò & Tìm Bạn Đời Nghiêm Túc',
                 'desc'    => 'Cộng đồng hẹn hò và kết đôi uy tín. Tìm bạn đời, bạn gái, bạn trai '
                            . 'nghiêm túc, ly hôn hay Việt kiều nhanh chóng. Đăng ký kết nối an toàn ngay!',
                 'heading' => 'Hẹn hò & tìm bạn đời nghiêm túc',
@@ -32,7 +32,7 @@ class Dating extends MY_Controller
             'nam' => array(
                 'label'   => 'Tìm bạn trai',
                 'filters' => array('gender' => 'male'),
-                'title'   => 'Tìm Bạn Trai Hẹn Hò Nghiêm Túc Tại ' . $site,
+                'title'   => 'Tìm Bạn Trai Hẹn Hò Nghiêm Túc',
                 'desc'    => 'Danh sách bạn trai độc thân đang tìm người yêu nghiêm túc. '
                            . 'Xem hồ sơ, kết nối và trò chuyện an toàn ngay hôm nay.',
                 'heading' => 'Tìm bạn trai hẹn hò nghiêm túc',
@@ -40,7 +40,7 @@ class Dating extends MY_Controller
             'nu' => array(
                 'label'   => 'Tìm bạn gái',
                 'filters' => array('gender' => 'female'),
-                'title'   => 'Tìm Bạn Gái Hẹn Hò Nghiêm Túc Tại ' . $site,
+                'title'   => 'Tìm Bạn Gái Hẹn Hò Nghiêm Túc',
                 'desc'    => 'Danh sách bạn gái độc thân đang tìm người yêu nghiêm túc. '
                            . 'Xem hồ sơ, kết nối và trò chuyện an toàn ngay hôm nay.',
                 'heading' => 'Tìm bạn gái hẹn hò nghiêm túc',
@@ -48,7 +48,7 @@ class Dating extends MY_Controller
             'gay' => array(
                 'label'   => 'Gay',
                 'filters' => array('gender' => 'male', 'seeking' => 'male'),
-                'title'   => 'Tìm Bạn Gay Hẹn Hò Nghiêm Túc Tại ' . $site,
+                'title'   => 'Tìm Bạn Gay Hẹn Hò Nghiêm Túc Tại',
                 'desc'    => 'Cộng đồng hẹn hò dành cho người đồng tính nam, kết bạn và '
                            . 'tìm mối quan hệ nghiêm túc trong môi trường tôn trọng, an toàn.',
                 'heading' => 'Tìm bạn gay hẹn hò nghiêm túc',
@@ -56,7 +56,7 @@ class Dating extends MY_Controller
             'les' => array(
                 'label'   => 'Les',
                 'filters' => array('gender' => 'female', 'seeking' => 'female'),
-                'title'   => 'Tìm Bạn Les Hẹn Hò Nghiêm Túc Tại ' . $site,
+                'title'   => 'Tìm Bạn Les Hẹn Hò Nghiêm Túc Tại',
                 'desc'    => 'Cộng đồng hẹn hò dành cho người đồng tính nữ, kết bạn và '
                            . 'tìm mối quan hệ nghiêm túc trong môi trường tôn trọng, an toàn.',
                 'heading' => 'Tìm bạn les hẹn hò nghiêm túc',
