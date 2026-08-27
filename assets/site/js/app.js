@@ -372,51 +372,18 @@
 
         if (deck) {
 
-            var NGUONG = 110;
             var dangBan = false;
-            var keo = null;
 
             var demEl    = document.getElementById('sw-count');
             var trongEl  = document.getElementById('sw-empty');
             var dieuKhien = document.getElementById('sw-controls');
 
             /* Thẻ đang xem là thẻ nằm ngay giữa khung cuộn */
-            function theTrenCung() {
-                var cac = deck.querySelectorAll('.sw-card');
-                var moc = deck.getBoundingClientRect().top + 60;   // gần mép trên khung
-                var chon = null;
-                for (var i = 0; i < cac.length; i++) {
-                    var r = cac[i].getBoundingClientRect();
-                    if (r.top <= moc && r.bottom > moc) { chon = cac[i]; }
-                }
-                return chon || cac[0] || null;
-            }
+            /* Chỉ hiện một hồ sơ, nên hồ sơ đang xem luôn là thẻ đầu tiên */
+            function theTrenCung() { return deck.querySelector('.sw-card'); }
 
-            /* Sau khi bỏ một thẻ, đưa khung về đúng thẻ kế tiếp */
-            function veTheKeTiep(sau) {
-                var ke = sau && sau.nextElementSibling ? sau.nextElementSibling : deck.querySelector('.sw-card');
-                if (ke) { deck.scrollTop = ke.offsetTop; }
-            }
-
-            function datViTri(card, dx, dy) {
-                card.style.transform = 'translate(' + dx + 'px,' + dy + 'px) rotate(' + (dx / 18) + 'deg)';
-                var muc  = Math.min(Math.abs(dx) / NGUONG, 1);
-                var like = card.querySelector('.sw-stamp-like');
-                var nope = card.querySelector('.sw-stamp-nope');
-                if (like) { like.style.opacity = dx > 0 ? muc : 0; }
-                if (nope) { nope.style.opacity = dx < 0 ? muc : 0; }
-            }
-
-            function traVe(card) {
-                card.classList.remove('is-dragging');
-                card.classList.add('is-animating');
-                card.style.transform = '';
-                var like = card.querySelector('.sw-stamp-like');
-                var nope = card.querySelector('.sw-stamp-nope');
-                if (like) { like.style.opacity = 0; }
-                if (nope) { nope.style.opacity = 0; }
-                setTimeout(function () { card.classList.remove('is-animating'); }, 340);
-            }
+            /* Xong một người thì cuộn về đầu để xem người kế từ trên xuống */
+            function veTheKeTiep() { deck.scrollTop = 0; }
 
             function doiDem(delta) {
                 if (!demEl) { return; }
@@ -454,8 +421,9 @@
                 post(url, {}).then(function (res) {
                     if (!res.ok) {
                         dangBan = false;
-                        card.classList.remove('is-gone');
-                        traVe(card);
+                        card.classList.remove('is-gone', 'is-animating');
+                        card.style.transform = '';
+                        card.style.visibility = '';
                         if (res.need_login) { return moiDangNhap(); }
                         return showModal({ type: 'error', title: 'Không thực hiện được', message: res.message });
                     }
@@ -463,54 +431,14 @@
                 }).catch(function () {});
 
                 setTimeout(function () {
-                    var ke = card.nextElementSibling;
                     card.remove();
-                    if (ke) { deck.scrollTop = ke.offsetTop; }
+                    deck.scrollTop = 0;
                     doiDem(-1);
                     dangBan = false;
                     kiemTraHet();
                 }, huong === 'right' ? 340 : 200);
             }
 
-            /* ---- Kéo bằng chuột / ngón tay ---- */
-            deck.addEventListener('pointerdown', function (e) {
-                if (e.target.closest('a, button, .sw-album, .sw-detail')) { return; }
-                var card = theTrenCung();
-                if (!card || dangBan) { return; }
-                keo = { card: card, x0: e.clientX, y0: e.clientY, id: e.pointerId, ngang: null };
-            });
-
-            deck.addEventListener('pointermove', function (e) {
-                if (!keo || e.pointerId !== keo.id) { return; }
-                var dx = e.clientX - keo.x0, dy = e.clientY - keo.y0;
-
-                // Quyết định một lần: kéo ngang là chọn, kéo dọc là cuộn xem chi tiết
-                if (keo.ngang === null) {
-                    if (Math.abs(dx) < 8 && Math.abs(dy) < 8) { return; }
-                    keo.ngang = Math.abs(dx) > Math.abs(dy);
-                    if (keo.ngang) {
-                        keo.card.classList.add('is-dragging');
-                        keo.card.setPointerCapture(e.pointerId);
-                    } else {
-                        keo = null;   // nhường cho vùng cuộn bên trong thẻ
-                        return;
-                    }
-                }
-                datViTri(keo.card, dx, dy * 0.3);
-            });
-
-            function thaTay(e) {
-                if (!keo || (e && e.pointerId !== keo.id)) { return; }
-                var card = keo.card, ngang = keo.ngang;
-                var dx = e ? e.clientX - keo.x0 : 0;
-                keo = null;
-                if (!ngang) { return; }
-                if (dx > NGUONG)       { chon(card, 'right'); }
-                else if (dx < -NGUONG) { chon(card, 'left'); }
-                else                   { traVe(card); }
-            }
-            deck.addEventListener('pointerup', thaTay);
-            deck.addEventListener('pointercancel', thaTay);
 
             /* ---- Nút mũi tên: cuộn tới phần chi tiết và ngược lại ---- */
             deck.addEventListener('click', function (e) {
@@ -518,9 +446,9 @@
                 if (!card) { return; }
 
                 if (e.target.closest('[data-scroll-more]')) {
-                    deck.scrollTop = card.offsetTop + card.querySelector('.sw-photo').offsetHeight;
+                    deck.scrollTop = card.querySelector('.sw-photo').offsetHeight;
                 } else if (e.target.closest('[data-close-detail]')) {
-                    deck.scrollTop = card.offsetTop;
+                    deck.scrollTop = 0;
                 }
             });
 
@@ -535,8 +463,7 @@
                     if (huong === 'info') {
                         if (!card) { return; }
                         var anh = card.querySelector('.sw-photo');
-                        var daXem = deck.scrollTop > card.offsetTop + 10;
-                        deck.scrollTop = daXem ? card.offsetTop : card.offsetTop + anh.offsetHeight;
+                        deck.scrollTop = deck.scrollTop > 10 ? 0 : anh.offsetHeight;
                         return;
                     }
 
@@ -549,7 +476,8 @@
                             deck.hidden = false;
                             if (trongEl)   { trongEl.hidden = true; }
                             if (dieuKhien) { dieuKhien.hidden = false; }
-                            deck.insertAdjacentHTML('beforeend', res.html);
+                            deck.insertAdjacentHTML('afterbegin', res.html);
+                            deck.scrollTop = 0;
                             doiDem(1);
                         });
                         return;
@@ -568,12 +496,12 @@
                 if (e.key === 'ArrowLeft')  { chon(card, 'left'); }
                 if (e.key === 'ArrowUp' && card) {
                     e.preventDefault();
-                    deck.scrollTop = card.offsetTop + card.querySelector('.sw-photo').offsetHeight;
+                    deck.scrollTop = card.querySelector('.sw-photo').offsetHeight;
                 }
                 if (e.key === 'ArrowDown' && card) {
                     e.preventDefault();
-                    if (deck.scrollTop > card.offsetTop + 10) { deck.scrollTop = card.offsetTop; }
-                    else { veTheKeTiep(card); }
+                    if (deck.scrollTop > 10) { deck.scrollTop = 0; }
+                    else { chon(card, 'left'); }
                 }
             });
 
