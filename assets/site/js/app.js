@@ -379,8 +379,33 @@
             var dieuKhien = document.getElementById('sw-controls');
 
             /* Thẻ đang xem là thẻ nằm ngay giữa khung cuộn */
+            var NGUONG = 110;   // kéo ngang quá bao nhiêu điểm ảnh thì tính là đã chọn
+            var keo = null;
+
             /* Chỉ hiện một hồ sơ, nên hồ sơ đang xem luôn là thẻ đầu tiên */
             function theTrenCung() { return deck.querySelector('.sw-card'); }
+
+            /* Đặt thẻ theo lực kéo ngang, kèm hai con dấu hiện dần */
+            function datViTri(card, dx) {
+                card.style.transform = 'translate(' + dx + 'px, 0) rotate(' + (dx / 20) + 'deg)';
+                var muc  = Math.min(Math.abs(dx) / NGUONG, 1);
+                var like = card.querySelector('.sw-stamp-like');
+                var nope = card.querySelector('.sw-stamp-nope');
+                if (like) { like.style.opacity = dx > 0 ? muc : 0; }
+                if (nope) { nope.style.opacity = dx < 0 ? muc : 0; }
+            }
+
+            /* Thả tay giữa chừng thì thẻ bật về chỗ cũ */
+            function traVe(card) {
+                card.classList.remove('is-dragging');
+                card.classList.add('is-animating');
+                card.style.transform = '';
+                var like = card.querySelector('.sw-stamp-like');
+                var nope = card.querySelector('.sw-stamp-nope');
+                if (like) { like.style.opacity = 0; }
+                if (nope) { nope.style.opacity = 0; }
+                setTimeout(function () { card.classList.remove('is-animating'); }, 340);
+            }
 
             /* Xong một người thì cuộn về đầu để xem người kế từ trên xuống */
             function veTheKeTiep() { deck.scrollTop = 0; }
@@ -421,9 +446,9 @@
                 post(url, {}).then(function (res) {
                     if (!res.ok) {
                         dangBan = false;
-                        card.classList.remove('is-gone', 'is-animating');
-                        card.style.transform = '';
+                        card.classList.remove('is-gone');
                         card.style.visibility = '';
+                        traVe(card);
                         if (res.need_login) { return moiDangNhap(); }
                         return showModal({ type: 'error', title: 'Không thực hiện được', message: res.message });
                     }
@@ -451,6 +476,46 @@
                     deck.scrollTop = 0;
                 }
             });
+
+            /* ---- Vuốt ngang để thích / bỏ qua ---- */
+            deck.addEventListener('pointerdown', function (e) {
+                if (e.target.closest('a, button, .sw-album, .sw-detail')) { return; }
+                var card = theTrenCung();
+                if (!card || dangBan) { return; }
+                keo = { card: card, x0: e.clientX, y0: e.clientY, id: e.pointerId, ngang: null };
+            });
+
+            deck.addEventListener('pointermove', function (e) {
+                if (!keo || e.pointerId !== keo.id) { return; }
+                var dx = e.clientX - keo.x0, dy = e.clientY - keo.y0;
+
+                // Quyết định một lần: kéo ngang là chọn, kéo dọc là cuộn xem thông tin
+                if (keo.ngang === null) {
+                    if (Math.abs(dx) < 8 && Math.abs(dy) < 8) { return; }
+                    keo.ngang = Math.abs(dx) > Math.abs(dy);
+                    if (keo.ngang) {
+                        keo.card.classList.add('is-dragging');
+                        keo.card.setPointerCapture(e.pointerId);
+                    } else {
+                        keo = null;   // nhường cho cuộn dọc
+                        return;
+                    }
+                }
+                datViTri(keo.card, dx);
+            });
+
+            function thaTay(e) {
+                if (!keo || (e && e.pointerId !== keo.id)) { return; }
+                var card = keo.card, ngang = keo.ngang;
+                var dx = e ? e.clientX - keo.x0 : 0;
+                keo = null;
+                if (!ngang) { return; }
+                if (dx > NGUONG)       { chon(card, 'right'); }
+                else if (dx < -NGUONG) { chon(card, 'left'); }
+                else                   { traVe(card); }
+            }
+            deck.addEventListener('pointerup', thaTay);
+            deck.addEventListener('pointercancel', thaTay);
 
             /* ---- Nút điều khiển ---- */
             if (dieuKhien) {
