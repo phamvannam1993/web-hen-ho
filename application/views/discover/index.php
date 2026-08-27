@@ -43,7 +43,7 @@ $nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai', 'gay' => 'Gay', 
                 <p>Tải thêm hồ sơ mới, nới bộ lọc, hoặc bổ sung hồ sơ của bạn
                     để được gợi ý đúng người hơn.</p>
                 <div class="sw-none-actions">
-                    <a class="btn btn-primary" href="<?= site_url('kham-pha') ?>">Tải thêm hồ sơ</a>
+                    <a class="btn btn-primary" href="<?= site_url('swipe-match') ?>">Tải thêm hồ sơ</a>
                     <?php if ($user): ?>
                         <a class="btn btn-ghost" href="<?= site_url('tai-khoan/ho-so') ?>">Sửa hồ sơ của tôi</a>
                     <?php else: ?>
@@ -119,7 +119,7 @@ $nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai', 'gay' => 'Gay', 
         <p>Chọn nhóm bạn quan tâm để chúng tôi hiển thị đúng người.</p>
         <div class="sw-onboard-opts">
             <?php foreach (array('male' => 'Bạn trai', 'female' => 'Bạn gái', 'gay' => 'Gay', 'les' => 'Les') as $k => $t): ?>
-                <a href="<?= site_url('kham-pha') ?>?xem=<?= $k ?>"><?= $t ?></a>
+                <a href="<?= site_url('swipe-match') ?>?xem=<?= $k ?>"><?= $t ?></a>
             <?php endforeach; ?>
         </div>
         <p class="sw-onboard-note">Đã có tài khoản? <a href="<?= site_url('dang-nhap') ?>">Đăng nhập</a>
@@ -135,7 +135,7 @@ $nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai', 'gay' => 'Gay', 
             <h2>Bộ lọc nhanh</h2>
             <button type="button" class="sw-modal-close" data-close-filter aria-label="Đóng">&times;</button>
         </div>
-        <form method="get" action="<?= site_url('kham-pha') ?>">
+        <form method="get" action="<?= site_url('swipe-match') ?>">
             <?php if (!$user && $view): ?><input type="hidden" name="xem" value="<?= e($view) ?>"><?php endif; ?>
             <label class="filter-label">Khoảng tuổi</label>
             <div class="range-row">
@@ -151,7 +151,7 @@ $nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai', 'gay' => 'Gay', 
                 <?php endforeach; ?>
             </select>
             <div class="sw-modal-foot">
-                <a class="btn btn-ghost" href="<?= site_url('kham-pha') ?><?= (!$user && $view) ? '?xem=' . e($view) : '' ?>">Xoá lọc</a>
+                <a class="btn btn-ghost" href="<?= site_url('swipe-match') ?><?= (!$user && $view) ? '?xem=' . e($view) : '' ?>">Xoá lọc</a>
                 <button class="btn btn-primary" type="submit">Áp dụng</button>
             </div>
         </form>
