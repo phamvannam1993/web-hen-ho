@@ -13,6 +13,15 @@ $anh    = !empty($c['photo_paths']) ? array_slice(explode('|', $c['photo_paths']
 $sothich= !empty($c['interest_names']) ? array_slice(explode('|', $c['interest_names']), 0, 6) : array();
 $muc    = !empty($c['purpose']) ? ($purpose[$c['purpose']] ?? '') : '';
 
+// Có toạ độ hai bên thì hiện khoảng cách, không thì hiện tên tỉnh
+$vitri = !empty($c['province_name']) ? e($c['province_name']) : 'Chưa rõ khu vực';
+if (isset($c['khoang_cach']) && $c['khoang_cach'] !== null) {
+    $km = (float) $c['khoang_cach'];
+    $vitri = $km < 1
+        ? 'Cách bạn dưới 1 km'
+        : 'Cách bạn ' . ($km < 10 ? number_format($km, 1) : number_format(round($km))) . ' km';
+}
+
 $ic = function ($d, $extra = '') { return '<svg viewBox="0 0 24 24" class="ic">' . $d . '</svg>'; };
 $ic_pin   = $ic('<path d="M12 21s7-6.1 7-11a7 7 0 1 0-14 0c0 4.9 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/>');
 $ic_ruler = $ic('<path d="M3.6 14.4 14.4 3.6l6 6L9.6 20.4z"/><path d="M7 11l2 2M10 8l2 2M13 5l2 2"/>');
@@ -22,7 +31,6 @@ $ic_book  = $ic('<path d="M4 5.5h6a2 2 0 0 1 2 2v11a2 2 0 0 0-2-2H4z"/><path d="
 $ic_star  = $ic('<path d="M12 4l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 9.7l5.4-.8z"/>');
 ?>
 <article class="sw-card" data-user="<?= (int) $c['id'] ?>">
-    <!-- Vùng cuộn: ảnh chiếm hết khung, kéo lên để xem chi tiết -->
     <div class="sw-scroll">
         <div class="sw-photo">
             <img src="<?= avatar_url($c['avatar'], $c['gender']) ?>" alt="<?= e(display_name($c)) ?>" draggable="false">
@@ -32,36 +40,31 @@ $ic_star  = $ic('<path d="M12 4l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.
                 <?php if (($c['kyc_status'] ?? '') === 'verified'): ?><span class="tag tag-verified">Xác thực</span><?php endif; ?>
             </span>
 
-            <?php
-            // Có toạ độ hai bên thì hiện khoảng cách, không thì hiện tên tỉnh
-            $vitri = !empty($c['province_name']) ? e($c['province_name']) : 'Chưa rõ khu vực';
-            if (isset($c['khoang_cach']) && $c['khoang_cach'] !== null) {
-                $km = (float) $c['khoang_cach'];
-                $vitri = $km < 1
-                    ? 'Cách bạn dưới 1 km'
-                    : 'Cách bạn ' . ($km < 10 ? number_format($km, 1) : number_format(round($km))) . ' km';
-            }
-            ?>
             <span class="sw-place"><?= $ic_pin ?><?= $vitri ?></span>
 
             <span class="sw-stamp sw-stamp-like">THÍCH</span>
             <span class="sw-stamp sw-stamp-nope">BỎ QUA</span>
 
-            <div class="sw-caption">
-                <h3><?= e(display_name($c)) ?><?= $age ? ', ' . $age : '' ?></h3>
-                <p class="sw-quick">
-                    <?php if ($muc): ?><span>#<?= e($muc) ?></span><?php endif; ?>
-                    <?php if (!empty($c['marital_status'])): ?><span>#<?= e($marital[$c['marital_status']] ?? '') ?></span><?php endif; ?>
-                </p>
-                <button type="button" class="sw-down" data-scroll-more aria-label="Xem thêm thông tin">
-                    <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
-                    <span>Xem thêm</span>
-                </button>
-            </div>
         </div>
 
-        <!-- Phần chi tiết, hiện ra khi cuộn xuống trong thẻ -->
+        <?php /* Thông tin nằm trên nền trắng dưới ảnh, không đè lên mặt người */ ?>
+        <div class="sw-bar">
+            <div class="sw-bar-main">
+                <h3><?= e(display_name($c)) ?><?= $age ? ', ' . $age : '' ?></h3>
+                <p><?= $vitri ?><?= $muc ? ' · ' . e($muc) : '' ?></p>
+            </div>
+            <button type="button" class="sw-down" data-scroll-more aria-label="Xem thêm thông tin">
+                <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+        </div>
+
+        <!-- Phần chi tiết trượt lên khi bấm "Xem thêm" -->
         <div class="sw-detail">
+            <button type="button" class="sw-detail-close" data-close-detail>
+                <svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg>
+                Thu gọn
+            </button>
+            <div class="sw-detail-body">
             <?php if (!empty($c['bio'])): ?>
                 <section>
                     <h4>Giới thiệu</h4>
@@ -105,7 +108,8 @@ $ic_star  = $ic('<path d="M12 4l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.
                 </section>
             <?php endif; ?>
 
-            <a class="sw-more" href="<?= site_url('profile/' . $c['slug']) ?>">Xem trang cá nhân đầy đủ →</a>
+                <a class="sw-more" href="<?= site_url('profile/' . $c['slug']) ?>">Xem trang cá nhân đầy đủ →</a>
+            </div>
         </div>
     </div>
 </article>

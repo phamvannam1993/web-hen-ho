@@ -375,12 +375,16 @@
                Nhờ vậy cả thẻ lẫn nút nằm gọn trong một màn, không phải cuộn trang
                và đỉnh thẻ không bị thanh điều hướng che. */
             function chinhChieuCao() {
-                if (window.innerWidth <= 560) { return; }   // mobile đã có công thức riêng
                 var dinh = deck.getBoundingClientRect().top + window.scrollY;
                 var nut  = document.getElementById('sw-controls');
-                var caoNut = nut ? nut.offsetHeight + 34 : 96;
-                var con = window.innerHeight - dinh - caoNut - 40;
-                deck.style.height = Math.max(340, Math.min(con, 680)) + 'px';
+                var goiY   = document.querySelector('.sw-hint');
+                var caoGoiY = (goiY && goiY.offsetParent) ? goiY.offsetHeight + 14 : 0;
+                var caoNut = (nut && window.innerWidth > 560) ? nut.offsetHeight + 24 + caoGoiY : 16;
+                // Trừ cả phần đệm dưới của trang, nếu không trang vẫn thừa vài chục điểm ảnh
+                var trang = document.querySelector('.discover-page');
+                var dem   = trang ? parseInt(getComputedStyle(trang).paddingBottom, 10) || 0 : 0;
+                var con = window.innerHeight - dinh - caoNut - dem - 12;
+                deck.style.height = Math.max(340, Math.min(con, 600)) + 'px';
             }
             chinhChieuCao();
             window.addEventListener('resize', chinhChieuCao);
@@ -393,12 +397,21 @@
             var trongEl  = document.getElementById('sw-empty');
             var dieuKhien = document.getElementById('sw-controls');
 
-            function theTrenCung() { return deck.querySelector('.sw-card:last-child'); }
+            /* Thẻ đang xem là thẻ nằm ngay giữa khung cuộn */
+            function theTrenCung() {
+                var cac = deck.querySelectorAll('.sw-card');
+                var giua = deck.getBoundingClientRect().top + deck.clientHeight / 2;
+                for (var i = 0; i < cac.length; i++) {
+                    var r = cac[i].getBoundingClientRect();
+                    if (r.top <= giua && r.bottom >= giua) { return cac[i]; }
+                }
+                return cac[cac.length - 1] || null;
+            }
 
-            /* Cuộn tới vị trí; hiệu ứng mượt do CSS lo (scroll-behavior),
-               nhờ vậy vẫn chạy cả khi trình duyệt tạm dừng khung hình. */
-            function cuonToi(vung, dich) {
-                vung.scrollTop = dich;
+            /* Sau khi bỏ một thẻ, đưa khung về đúng thẻ kế tiếp */
+            function veTheKeTiep(sau) {
+                var ke = sau && sau.nextElementSibling ? sau.nextElementSibling : deck.querySelector('.sw-card');
+                if (ke) { deck.scrollTop = ke.offsetTop; }
             }
 
             function datViTri(card, dx, dy) {
@@ -466,7 +479,9 @@
                 }).catch(function () {});
 
                 setTimeout(function () {
+                    var ke = card.nextElementSibling;
                     card.remove();
+                    if (ke) { deck.scrollTop = ke.offsetTop; }
                     doiDem(-1);
                     dangBan = false;
                     kiemTraHet();
@@ -475,7 +490,7 @@
 
             /* ---- Kéo bằng chuột / ngón tay ---- */
             deck.addEventListener('pointerdown', function (e) {
-                if (e.target.closest('a, button, .sw-album')) { return; }
+                if (e.target.closest('a, button, .sw-album, .sw-detail')) { return; }
                 var card = theTrenCung();
                 if (!card || dangBan) { return; }
                 keo = { card: card, x0: e.clientX, y0: e.clientY, id: e.pointerId, ngang: null };
@@ -513,12 +528,17 @@
             deck.addEventListener('pointerup', thaTay);
             deck.addEventListener('pointercancel', thaTay);
 
-            /* ---- Nút "Xem thêm" trong thẻ ---- */
+            /* ---- Mở / đóng phần chi tiết ---- */
             deck.addEventListener('click', function (e) {
-                var nut = e.target.closest('[data-scroll-more]');
-                if (!nut) { return; }
-                var vung = nut.closest('.sw-scroll');
-                cuonToi(vung, vung.querySelector('.sw-photo').offsetHeight);
+                if (e.target.closest('[data-scroll-more]')) {
+                    e.target.closest('.sw-card').classList.add('is-open');
+                    return;
+                }
+                if (e.target.closest('[data-close-detail]')) {
+                    var card = e.target.closest('.sw-card');
+                    card.classList.remove('is-open');
+                    card.querySelector('.sw-detail').scrollTop = 0;
+                }
             });
 
             /* ---- Nút điều khiển ---- */
@@ -531,9 +551,7 @@
 
                     if (huong === 'info') {
                         if (!card) { return; }
-                        var vung = card.querySelector('.sw-scroll');
-                        var anh  = card.querySelector('.sw-photo');
-                        cuonToi(vung, vung.scrollTop > 10 ? 0 : anh.offsetHeight);
+                        card.classList.toggle('is-open');
                         return;
                     }
 
@@ -565,8 +583,12 @@
                 if (e.key === 'ArrowLeft')  { chon(card, 'left'); }
                 if (e.key === 'ArrowUp' && card) {
                     e.preventDefault();
-                    var vung = card.querySelector('.sw-scroll');
-                    cuonToi(vung, card.querySelector('.sw-photo').offsetHeight);
+                    card.classList.add('is-open');
+                }
+                if (e.key === 'ArrowDown' && card) {
+                    e.preventDefault();
+                    if (card.classList.contains('is-open')) { card.classList.remove('is-open'); }
+                    else { veTheKeTiep(card); }
                 }
             });
 

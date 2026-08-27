@@ -1195,72 +1195,99 @@ main { display: block; padding-top: 14px; }
    Một chồng thẻ giữa màn hình. Kéo ngang để chọn, kéo dọc trong thẻ để
    xem chi tiết. Máy tính dùng thêm phím mũi tên. */
 
-.discover-page { padding: 4px 0 30px; }
-.discover-head { text-align: center; margin-bottom: 10px; }
-.discover-head h1 { margin: 0 0 4px; font-size: 23px; font-weight: 800; color: var(--ink); }
-.discover-head p { margin: 0; color: var(--muted); font-size: 14px; }
+/* Trang chạy toàn màn hình: nền tối nhẹ, mọi thứ nằm gọn trong một màn */
+body.is-bare { background: #dce4f8; }
+body.is-bare main { padding-top: 0; }
 
-.sw-stage { max-width: 420px; margin: 0 auto; position: relative; }
+.discover-page { padding: 0 0 24px; }
 
-.sw-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
-.sw-viewing { font-size: 14px; color: var(--muted); }
-.sw-viewing b { color: var(--ink); }
-.sw-filter-btn {
-    display: inline-flex; align-items: center; gap: 7px; margin-left: auto;
-    padding: 8px 15px; border-radius: 999px; cursor: pointer;
-    background: #fff; border: 1.5px solid #e3e6ea;
-    font-size: 14px; font-weight: 700; color: var(--ink);
+.sw-topbar {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; margin-bottom: 12px;
+    background: rgba(255, 255, 255, .92); backdrop-filter: blur(8px);
+    box-shadow: 0 1px 10px rgba(17, 24, 39, .08);
 }
-.sw-filter-btn svg { width: 16px; height: 16px; fill: none; stroke: var(--pink); stroke-width: 1.9; stroke-linejoin: round; }
-.sw-filter-btn:hover { border-color: #cfd4da; }
+.sw-topbar h1 { flex: 1; margin: 0; text-align: center; font-size: 17px; font-weight: 800; color: var(--ink); }
+.sw-back, .sw-topbar .sw-filter-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; flex: 0 0 40px; padding: 0;
+    border-radius: 50%; background: #f4f5f7; border: 0; cursor: pointer;
+}
+.sw-back svg, .sw-topbar .sw-filter-btn svg {
+    width: 20px; height: 20px; fill: none; stroke: var(--ink);
+    stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+}
+.sw-topbar .sw-filter-btn svg { stroke: var(--pink); stroke-width: 1.9; }
+.sw-back:hover, .sw-topbar .sw-filter-btn:hover { background: #e9ebef; }
+
+.sw-viewing { text-align: center; margin: 0 0 10px; font-size: 13.5px; color: var(--muted); }
+.sw-viewing b { color: var(--ink); }
+.sw-stage { max-width: 560px; margin: 0 auto; position: relative; padding: 0 14px; }
 
 /* ---- Chồng thẻ ---- */
-/* Chiều cao do JS tính theo chỗ trống thực tế còn lại của màn hình
-   (xem app.js), giá trị dưới chỉ là mặc định trước khi JS chạy. */
+/* Khung cuộn dọc: mỗi lần cuộn dừng đúng một hồ sơ (scroll-snap).
+   Chiều cao do JS tính theo chỗ trống còn lại của màn hình. */
 .sw-deck {
-    position: relative; touch-action: pan-y;
-    height: clamp(400px, calc(100vh - 340px), 680px);
+    position: relative;
+    height: clamp(400px, calc(100vh - 200px), 720px);
+    overflow-y: auto; overscroll-behavior: contain;
+    scroll-snap-type: y mandatory; scroll-behavior: smooth;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    border-radius: 32px;
 }
+.sw-deck::-webkit-scrollbar { display: none; }
 
 .sw-card {
-    position: absolute; inset: 0;
-    border-radius: 20px; overflow: hidden; background: #12141a;
-    box-shadow: 0 14px 40px rgba(17, 24, 39, .26);
+    position: relative; height: 100%; flex: 0 0 100%;
+    scroll-snap-align: start; scroll-snap-stop: always;
+    border-radius: 32px; overflow: hidden; background: #12141a;
+    box-shadow: 0 12px 34px rgba(17, 24, 39, .18);
     will-change: transform;
 }
-.sw-card:nth-last-child(1) { z-index: 3; }
-.sw-card:nth-last-child(2) { transform: scale(.965) translateY(10px); z-index: 2; }
-.sw-card:nth-last-child(3) { transform: scale(.93)  translateY(20px); z-index: 1; }
-.sw-card:nth-last-child(n+4) { opacity: 0; pointer-events: none; }
 .sw-card.is-dragging { transition: none; cursor: grabbing; }
 .sw-card.is-animating { transition: transform .34s ease, opacity .34s ease; }
 .sw-card.is-gone { opacity: 0; }
 
 /* Vùng cuộn bên trong thẻ: ảnh chiếm trọn, chi tiết nằm dưới */
-.sw-scroll {
-    height: 100%; overflow-y: auto; overscroll-behavior: contain;
-    scroll-behavior: smooth;
-    scrollbar-width: none; -webkit-overflow-scrolling: touch;
-}
-.sw-scroll::-webkit-scrollbar { display: none; }
+/* Thẻ chia hai phần: ảnh phía trên, dải thông tin trắng phía dưới */
+.sw-scroll { position: relative; height: 100%; display: flex; flex-direction: column; }
 
-.sw-photo { position: relative; height: 100%; }
+.sw-photo { position: relative; flex: 1 1 auto; min-height: 0; }
+
+/* Phần chi tiết trượt lên che ảnh khi bấm "Xem thêm" */
+.sw-detail {
+    position: absolute; inset: 0; z-index: 5; border-radius: 32px;
+    overflow-y: auto; overscroll-behavior: contain;
+    transform: translateY(100%); transition: transform .32s ease;
+    scrollbar-width: none;
+}
+.sw-detail::-webkit-scrollbar { display: none; }
+.sw-card.is-open .sw-detail { transform: translateY(0); }
+.sw-detail-close {
+    position: sticky; top: 0; z-index: 2;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    width: 100%; padding: 12px; border: 0; cursor: pointer;
+    background: #fff; color: var(--muted); font-size: 13.5px; font-weight: 700;
+    border-bottom: 1px solid #f0f1f4;
+}
+.sw-detail-close svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .sw-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .sw-photo::after {
-    content: ""; position: absolute; inset: auto 0 0 0; height: 55%;
-    background: linear-gradient(to top, rgba(0,0,0,.9), rgba(0,0,0,.42) 45%, transparent);
+    content: ""; position: absolute; inset: auto 0 0 0; height: 26%;
+    background: linear-gradient(to top, rgba(0,0,0,.45), transparent);
 }
 
-.sw-badges { position: absolute; top: 14px; left: 14px; display: flex; flex-wrap: wrap; gap: 6px; z-index: 2; }
+.sw-badges { position: absolute; top: 11px; left: 11px; display: flex; flex-wrap: wrap; gap: 5px; z-index: 2; }
 .sw-badges .tag {
     padding: 6px 13px; border-radius: 999px; line-height: 1;
     font-size: 11.5px; font-weight: 700; letter-spacing: .3px;
     text-transform: uppercase; color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.25);
 }
 .sw-place {
-    position: absolute; top: 14px; right: 14px; z-index: 2;
+    position: absolute; top: 11px; right: 11px; z-index: 2;
     display: inline-flex; align-items: center; gap: 5px;
-    padding: 6px 12px; border-radius: 999px;
+    padding: 5px 11px; border-radius: 999px;
     background: rgba(0,0,0,.42); color: #fff; font-size: 12.5px; font-weight: 600;
     backdrop-filter: blur(4px);
 }
@@ -1275,25 +1302,34 @@ main { display: block; padding-top: 14px; }
 .sw-stamp-like { left: 22px; color: #1fbf75; border: 4px solid #1fbf75; transform: rotate(-16deg); }
 .sw-stamp-nope { right: 22px; color: #ff4d67; border: 4px solid #ff4d67; transform: rotate(16deg); }
 
-.sw-caption { position: absolute; inset: auto 0 0 0; z-index: 3; padding: 20px 20px 18px; color: #fff; }
-.sw-caption h3 { margin: 0 0 8px; font-size: 27px; font-weight: 800; line-height: 1.2; }
-.sw-quick { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 12px; }
-.sw-quick span {
-    padding: 5px 12px; border-radius: 999px;
-    background: rgba(255,255,255,.18); color: #fff;
-    font-size: 12.5px; font-weight: 600; backdrop-filter: blur(4px);
-}
-.sw-down {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 7px 14px 7px 10px; border: 0; border-radius: 999px; cursor: pointer;
-    background: rgba(255,255,255,.2); color: #fff; font-size: 13px; font-weight: 700;
-    backdrop-filter: blur(4px); animation: sw-nhac 1.8s ease-in-out infinite;
-}
-.sw-down svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 @keyframes sw-nhac { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
 
+/* Dải thông tin dưới ảnh */
+.sw-bar {
+    flex: 0 0 auto; display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px; background: #fff;
+}
+.sw-bar-main { flex: 1 1 auto; min-width: 0; }
+.sw-bar h3 {
+    margin: 0 0 2px; font-size: 18px; font-weight: 800; color: var(--ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sw-bar p {
+    margin: 0; font-size: 13.5px; color: var(--muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sw-down {
+    flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+    background: #f2f4f7; color: var(--ink);
+    animation: sw-nhac 1.8s ease-in-out infinite;
+}
+.sw-down svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.sw-down:hover { background: #e6e9ee; }
+
 /* ---- Phần chi tiết ---- */
-.sw-detail { background: #fff; padding: 20px; }
+.sw-detail { background: #fff; }
+.sw-detail-body { padding: 18px 20px 26px; }
 .sw-detail section { margin-bottom: 20px; }
 .sw-detail h4 {
     margin: 0 0 10px; font-size: 15px; font-weight: 800; color: var(--ink);
@@ -1319,17 +1355,17 @@ main { display: block; padding-top: 14px; }
 .sw-more { display: inline-block; font-size: 14px; font-weight: 700; color: var(--pink); }
 
 /* ---- Nút điều khiển ---- */
-.sw-controls { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 20px; }
+.sw-controls { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 16px; }
 .sw-btn {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 62px; height: 62px; border-radius: 50%; cursor: pointer;
+    width: 54px; height: 54px; border-radius: 50%; cursor: pointer;
     background: #fff; border: 0; box-shadow: 0 4px 16px rgba(17, 24, 39, .16);
     transition: transform .15s, box-shadow .15s;
 }
-.sw-btn svg { width: 26px; height: 26px; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.sw-btn svg { width: 23px; height: 23px; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .sw-btn-nope svg { stroke: #ff4d67; }
 .sw-btn-like svg { stroke: #ff3b7f; }
-.sw-btn-undo, .sw-btn-info { width: 48px; height: 48px; }
+.sw-btn-undo, .sw-btn-info { width: 42px; height: 42px; }
 .sw-btn-undo svg { width: 20px; height: 20px; stroke: #f0a020; }
 .sw-btn-info svg { width: 20px; height: 20px; stroke: #4a90e2; }
 .sw-btn:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 8px 22px rgba(17, 24, 39, .22); }
@@ -1472,14 +1508,13 @@ main { display: block; padding-top: 14px; }
 
 @media (max-width: 560px) {
     .discover-page { padding: 4px 0 96px; }
+    .sw-deck, .sw-card, .sw-detail { border-radius: 26px; }
     .discover-head { margin-bottom: 10px; }
     .discover-head h1 { font-size: 21px; }
     .discover-head p { display: none; }
     .sw-stage { max-width: 100%; }
     .sw-deck { height: clamp(360px, calc(100vh - 250px), 620px); }
-    .sw-caption { padding: 16px 16px 14px; }
-    .sw-caption h3 { font-size: 23px; }
-    .sw-facts { grid-template-columns: 1fr; }
+            .sw-facts { grid-template-columns: 1fr; }
 
     /* Nút ghim đáy màn hình cho dễ với ngón tay */
     .sw-controls {
