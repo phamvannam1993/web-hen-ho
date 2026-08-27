@@ -70,7 +70,7 @@
 
             if (!res.items.length) {
                 listEl.innerHTML = '<p class="cw-empty">Chưa có cuộc trò chuyện nào.<br>'
-                    + 'Hãy vào <a href="' + base + 'kham-pha">Khám phá</a> để kết nối.</p>';
+                    + 'Hãy vào <a href="' + base + 'swipe-match">Khám phá</a> để kết nối.</p>';
                 return;
             }
 

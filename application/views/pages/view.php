@@ -27,7 +27,7 @@
             <h3>Cần hỗ trợ?</h3>
             <p>Hotline: <?= e($settings['hotline'] ?? '') ?></p>
             <p>Email: <?= e($settings['contact_email'] ?? '') ?></p>
-            <p><a class="btn btn-primary" href="<?= site_url('kham-pha') ?>">Khám phá &amp; ghép đôi</a></p>
+            <p><a class="btn btn-primary" href="<?= site_url('swipe-match') ?>">Khám phá &amp; ghép đôi</a></p>
         </div>
     </aside>
 </div>

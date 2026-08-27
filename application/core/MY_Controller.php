@@ -49,7 +49,7 @@ class MY_Controller extends CI_Controller
     {
         if (!$this->posts_enabled()) {
             set_flash('warning', 'Tính năng đăng tin đang tạm ngưng. Bạn hãy kết nối qua hồ sơ thành viên.');
-            redirect('kham-pha');
+            redirect('swipe-match');
         }
     }
 
