@@ -1237,27 +1237,13 @@ body.is-bare main { padding-top: 0; height: calc(100vh - 0px); }
 /* Khung cuộn dọc: mỗi lần cuộn dừng đúng một hồ sơ (scroll-snap).
    Chiều cao do JS tính theo chỗ trống còn lại của màn hình. */
 .sw-deck {
-<<<<<<< HEAD
-    position: relative;
-    height: calc(100vh - 200px) !important;
-    min-height: calc(100vh - 200px) !important;
-    max-height: 100vh !important;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scroll-snap-type: y mandatory;
-    scroll-behavior: smooth;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    border-radius: 32px;
-    box-sizing: border-box;
-=======
-    position: relative; flex: 0 1 auto; min-height: 0;
-    flex: 1 1 auto;
+    /* Chiếm hết chỗ trống trong khung (khung đã cao 100vh), không đặt chiều cao
+       cứng để tránh chỏi với thanh điều hướng và dải thông tin bên dưới. */
+    position: relative; flex: 1 1 auto; min-height: 0; box-sizing: border-box;
     overflow-y: auto; overscroll-behavior: contain;
     scroll-snap-type: y mandatory; scroll-behavior: smooth;
     scrollbar-width: none; -webkit-overflow-scrolling: touch;
     border-radius: 22px;
->>>>>>> 6bd8b969ab55fb015f7848bb3f35440c84adb7be
 }
 
 .sw-deck::-webkit-scrollbar { display: none; }
