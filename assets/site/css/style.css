@@ -278,6 +278,21 @@ select {
 .page-layout { display: grid; grid-template-columns: 1fr 320px; gap: 24px; padding: 24px 0; }
 .content-box { background: #fff; padding: 28px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
 .sidebar-box { background: #fff; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+
+/* Khu vực dạng thẻ nhiều cột: gọn hơn danh sách dọc, cột bên khỏi dài quá */
+.area-chips { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 14px; }
+.area-chips a {
+    padding: 6px 12px; border-radius: 999px;
+    background: #f4f5f7; color: var(--muted);
+    font-size: 13px; font-weight: 600; transition: .15s;
+}
+.area-chips a:hover { background: #fdeef6; color: var(--pink); text-decoration: none; }
+.sidebar-more { font-size: 13.5px; font-weight: 700; color: var(--pink); }
+
+/* Cột bên bám theo khi cuộn để không bỏ trống nửa dưới */
+@media (min-width: 901px) {
+    .page-layout > aside { position: sticky; top: 130px; align-self: start; }
+}
 .sidebar-box h3 { color: var(--pink); text-align: center; margin: 0 0 6px; }
 .sidebar-box h3::after { content: ""; display: block; height: 1px; background: var(--pink); margin: 10px 0 14px; }
 .sidebar-list { list-style: none; margin: 0; padding: 0; }
@@ -452,8 +467,14 @@ select {
 .profile-tags .tag-online { background: #22a35a; color: #fff; }
 .profile-tags .tag-new    { background: var(--pink); color: #fff; }
 .profile-active { color: var(--muted); margin: 0 0 16px; font-size: 14px; }
-.profile-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-.profile-actions .btn { padding: 11px 26px; border-radius: 30px; }
+/* Căn giữa theo chiều dọc, nếu không các nút bị kéo cao bằng nhau tới 80px */
+.profile-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.profile-actions .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    height: 40px; padding: 0 20px; border-radius: 999px;
+    font-size: 14px; font-weight: 700; line-height: 1;
+}
+.profile-actions .btn .ic { width: 17px; height: 17px; flex: 0 0 17px; }
 .btn-blue-outline { background: #fff; color: var(--blue); border: 2px solid var(--blue); }
 .btn-blue-outline:hover { background: var(--blue); color: #fff; text-decoration: none; }
 .matched-note { color: #158a3b; font-weight: 600; margin: 14px 0 0; }

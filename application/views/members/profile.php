@@ -251,11 +251,13 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
         </div>
         <div class="sidebar-box">
             <h3>Tìm theo khu vực</h3>
-            <ul class="sidebar-list">
-                <?php foreach (array_slice($quick_links, 0, 20) as $link): ?>
-                    <li><a href="<?= site_url($link['slug']) ?>"><?= e($link['name']) ?></a></li>
+            <?php /* Dạng thẻ nhiều cột cho gọn, thay vì danh sách dọc dài lê thê */ ?>
+            <p class="area-chips">
+                <?php foreach (array_slice($quick_links, 0, 14) as $link): ?>
+                    <a href="<?= site_url($link['slug']) ?>"><?= e($link['name']) ?></a>
                 <?php endforeach; ?>
-            </ul>
+            </p>
+            <a class="sidebar-more" href="<?= site_url('khu-vuc') ?>">Xem tất cả khu vực →</a>
         </div>
     </aside>
 </div>
