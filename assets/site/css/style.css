@@ -1219,16 +1219,24 @@ main { display: block; padding-top: 14px; }
 /* Trang chạy toàn màn hình: chiếm trọn chiều cao, không cuộn trang */
 body.is-bare { background: #dce4f8; height: 100%; overflow: hidden; }
 html:has(body.is-bare) { height: 100%; }
-body.is-bare main { padding-top: 0; height: calc(100vh - 0px); }
+body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
 
 .discover-page {
     display: flex; flex-direction: column;
-    height: 100vh; padding: 0;
+    height: 100vh;      /* dự phòng cho trình duyệt cũ */
+    height: 100dvh;     /* trừ luôn thanh địa chỉ di động, tránh che thanh dưới */
+    padding: 0;
 }
 
 
-/* Chiều cao dải thông tin và thanh điều hướng — cụm nút neo theo hai giá trị này */
-.discover-page { --sw-bar: 73px; --sw-tab: 63px; }
+/* Chiều cao dải thông tin và thanh điều hướng — cụm nút neo theo hai giá trị này.
+   --sw-pad: đệm trên của khung, --sw-gap: khoảng cách trên thanh điều hướng.
+   --sw-view: chỗ trống thật sự còn lại cho một hồ sơ. */
+.discover-page {
+    --sw-bar: 73px; --sw-tab: 63px; --sw-pad: 12px; --sw-gap: 10px;
+    --sw-view: calc(100vh - var(--sw-pad) - var(--sw-gap) - var(--sw-tab));
+    --sw-view: calc(100dvh - var(--sw-pad) - var(--sw-gap) - var(--sw-tab));
+}
 
 /* Nút lọc nổi ở góc trên khung */
 .sw-filter-btn {
@@ -1260,7 +1268,7 @@ body.is-bare main { padding-top: 0; height: calc(100vh - 0px); }
 .sw-deck {
     /* Chiếm hết chỗ trống trong khung (khung đã cao 100vh), không đặt chiều cao
        cứng để tránh chỏi với thanh điều hướng và dải thông tin bên dưới. */
-    position: relative; flex: 1 1 auto; min-height: 0; box-sizing: border-box;
+    position: relative; flex: 0 0 auto; height: var(--sw-view); box-sizing: border-box;
     overflow-y: auto; overscroll-behavior: contain;
     scroll-behavior: smooth;
     scrollbar-width: none; -webkit-overflow-scrolling: touch;
@@ -1290,7 +1298,7 @@ body.is-bare main { padding-top: 0; height: calc(100vh - 0px); }
 /* Ảnh cao đúng một khung nhìn; cuộn tiếp là tới phần chi tiết, rồi tới người kế */
 .sw-photo {
     position: relative;
-    height: calc(100vh - var(--sw-tab, 63px) - var(--sw-bar, 73px) - 12px);
+    height: calc(var(--sw-view) - var(--sw-bar));
     overflow: hidden;
 }
 
@@ -1404,7 +1412,7 @@ body.is-bare main { padding-top: 0; height: calc(100vh - 0px); }
 .sw-controls {
     /* Neo trên đáy ảnh: cộng chiều cao dải thông tin và thanh điều hướng bên dưới */
     position: absolute; left: 0; right: 0; z-index: 12;
-    bottom: calc(var(--sw-bar, 73px) + var(--sw-tab, 63px) + 14px);
+    bottom: calc(var(--sw-bar) + var(--sw-tab) + var(--sw-gap) + 14px);
     display: flex; align-items: center; justify-content: center; gap: 14px;
     pointer-events: none;
 }
@@ -1438,7 +1446,7 @@ body.is-bare main { padding-top: 0; height: calc(100vh - 0px); }
 /* Thanh điều hướng nằm trong khung, ngay dưới cụm nút */
 .sw-tabbar {
     flex: 0 0 auto; display: flex; align-items: stretch;
-    margin: 10px -12px 0; padding: 0 4px calc(2px + env(safe-area-inset-bottom));
+    margin: 10px -12px 0; padding: 0 4px calc(2px + env(safe-area-inset-bottom, 0px));
     border-top: 1px solid #e7e9ee; background: #fff;
 }
 .sw-tabbar a {
@@ -1584,14 +1592,14 @@ body.is-bare main { padding-top: 0; height: calc(100vh - 0px); }
 
 @media (max-width: 560px) {
     .discover-page { padding: 0; }
-    .sw-stage { border-radius: 0; padding: 10px 10px 0; }
-    .sw-tabbar { margin: 8px -10px 0; }
+    .sw-stage { border-radius: 0; padding: var(--sw-pad) 10px 0; }
+    .sw-tabbar { margin: var(--sw-gap) -10px 0; }
+    .discover-page { --sw-pad: 10px; --sw-gap: 8px; }
     .sw-deck, .sw-card, .sw-detail { border-radius: 18px; }
     .discover-head { margin-bottom: 10px; }
     .discover-head h1 { font-size: 21px; }
     .discover-head p { display: none; }
     .sw-stage { max-width: 100%; }
-    .sw-deck { height: clamp(360px, calc(100vh - 250px), 620px); }
             .sw-facts { grid-template-columns: 1fr; }
 
     .sw-controls { padding: 12px 0 4px; gap: 12px; }
