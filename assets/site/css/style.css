@@ -1217,7 +1217,8 @@ main { display: block; padding-top: 14px; }
    xem chi tiết. Máy tính dùng thêm phím mũi tên. */
 
 /* Trang chạy toàn màn hình: chiếm trọn chiều cao, không cuộn trang */
-body.is-bare { background: #dce4f8; height: 100%; overflow: hidden; }
+body.is-bare { background: #dce4f8; height: 100%; overflow: hidden;
+    --sw-bar: 73px; --sw-tab: 63px; --sw-gap: 10px; }
 html:has(body.is-bare) { height: 100%; }
 body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
 
@@ -1594,7 +1595,7 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
     .discover-page { padding: 0; }
     .sw-stage { border-radius: 0; padding: var(--sw-pad) 10px 0; }
     .sw-tabbar { margin: var(--sw-gap) -10px 0; }
-    .discover-page { --sw-pad: 10px; --sw-gap: 8px; }
+    .discover-page, body.is-bare { --sw-pad: 10px; --sw-gap: 8px; }
     .sw-deck, .sw-card, .sw-detail { border-radius: 18px; }
     .discover-head { margin-bottom: 10px; }
     .discover-head h1 { font-size: 21px; }
@@ -2300,6 +2301,18 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
 /* ============================== Chat nổi ============================== */
 
 .chat-widget { position: fixed; right: 22px; bottom: 22px; z-index: 90; }
+/* Trang toàn màn hình: nâng bong bóng lên ngang hàng cụm nút, nép mép phải khung
+   ảnh, để không đè lên dải thông tin lẫn thanh điều hướng ở đáy. */
+body.is-bare .chat-widget {
+    bottom: calc(var(--sw-bar, 73px) + var(--sw-tab, 63px) + var(--sw-gap, 10px) + 17px);
+    right: 22px;
+    /* Màn rộng: khung chỉ 560px ở giữa, bám theo mép phải khung thay vì mép màn */
+    right: max(22px, calc(50vw - 280px + 14px));
+}
+body.is-bare .cw-bubble { width: 48px; height: 48px; font-size: 21px; }
+body.is-bare .cw-badge { min-width: 20px; height: 20px; font-size: 11px; border-width: 2px; }
+/* Khi xổ khung chat ra thì trả bong bóng về đáy cho khung chat có chỗ */
+body.is-bare .chat-widget.open { bottom: 22px; right: 22px; }
 
 /* Bong bóng sát mép phải, có vòng sáng nhẹ khi có tin chưa đọc */
 .cw-bubble {
@@ -2322,6 +2335,8 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
     border: 2.5px solid #fff; box-shadow: 0 2px 6px rgba(255,59,48,.5);
     animation: cw-pulse 2s ease-in-out infinite;
 }
+/* display: grid ở trên đè mất thuộc tính hidden, nên số 0 vẫn hiện — chặn lại */
+.cw-badge[hidden] { display: none; }
 @keyframes cw-pulse {
     0%, 100% { transform: scale(1); }
     50%      { transform: scale(1.12); }
