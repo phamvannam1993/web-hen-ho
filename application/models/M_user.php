@@ -241,13 +241,18 @@ class M_user extends CI_Model
 
         $binds = array();
 
-        // Điểm giới tính: khách chưa đăng nhập chỉ có hai vế đầu
+        // Điểm giới tính, hai vế:
+        //   +40 họ đúng giới tính tôi đang tìm      (nam tìm nữ -> nữ được cộng)
+        //   +25 họ cũng đang tìm giới tính của tôi  (nữ ấy tìm nam -> hợp hai chiều)
+        // Người chưa khai nhu cầu thì mặc định coi như tìm giới tính đối lập, nên
+        // chỉ cộng khi giới tính của họ khác giới tính tôi ($ung_vien_tim là giới
+        // tính của chính tôi). Trước đây so với giới tính đối lập nên bị ngược:
+        // người cùng giới với tôi lại được cộng điểm "hợp nhau".
         $diem = "IF(u.gender = ?, 40, 0) + IF(pr.seeking_gender = ? OR pr.seeking_gender = 'all'
                     OR (pr.seeking_gender IS NULL AND u.gender <> ?), 25, 0)";
-        $mac_dinh = $ung_vien_tim === 'male' ? 'female' : 'male';
         $binds[]  = $gioi_ung_vien;
         $binds[]  = $ung_vien_tim;
-        $binds[]  = $mac_dinh;
+        $binds[]  = $ung_vien_tim;
 
         if ($me) {
             $pref    = $this->db->where('user_id', $me['id'])->get('user_preferences')->row_array();
