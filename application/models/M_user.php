@@ -209,9 +209,13 @@ class M_user extends CI_Model
     /**
      * Danh sách hồ sơ để vuốt ở trang Khám phá.
      *
-     * Không lọc cứng theo giới tính nữa: hiện hết thành viên, chỉ xếp người hợp
-     * nhất lên trước. Điểm tương hợp tính ngay trong SQL để sắp đúng trên toàn bộ
-     * dữ liệu chứ không riêng trang đang xem:
+     * Chỉ lọc cứng đúng một điều kiện: giới tính phải khớp hướng tìm kiếm
+     *   nam  -> chỉ hiện nữ
+     *   nữ   -> chỉ hiện nam
+     *   gay  -> chỉ hiện nam,  les -> chỉ hiện nữ
+     * Không đòi hỏi người ta cũng phải đang tìm mình nữa, nên trong nhóm giới tính
+     * đó thì hiện hết, chỉ xếp người hợp nhất lên trước. Điểm tương hợp tính ngay
+     * trong SQL để sắp đúng trên toàn bộ dữ liệu chứ không riêng trang đang xem:
      *   +40  đúng giới tính tôi đang tìm
      *   +25  họ cũng đang tìm giới tính của tôi   (hợp nhau hai chiều)
      *   +15  tuổi họ nằm trong khoảng tôi tìm
@@ -223,11 +227,12 @@ class M_user extends CI_Model
      * Chỉ loại trừ: chính mình, người đã chặn/bị chặn, người đã thích hoặc bỏ qua.
      *
      * $view: 'male' | 'female' | 'gay' | 'les' — khách chưa đăng nhập chọn nhóm
-     * muốn ưu tiên; nay chỉ dùng để xếp thứ tự chứ không cắt bớt danh sách.
+     * giới tính muốn xem.
      */
     public function deck($me, $view = null, $filters = array(), $limit = 20, $offset = 0)
     {
         list($gioi_ung_vien, $ung_vien_tim) = $this->cap_doi_phu_hop($me, $view);
+        $where = $this->dieu_kien_deck($me, $gioi_ung_vien, $filters);
 
         // Khoảng cách theo đường chim bay (công thức Haversine, bán kính Trái Đất 6371 km)
         $km = 'NULL';
@@ -281,30 +286,6 @@ class M_user extends CI_Model
              + IF(u.last_active_at > NOW() - INTERVAL 5 MINUTE, 10, 0)
              + ROUND(u.profile_score / 10)";
 
-        $where = "u.status = 'active' AND u.role = 'member' AND u.deleted_at IS NULL";
-        if ($me) {
-            $id = (int) $me['id'];
-            $where .= "
-                AND u.id <> $id
-                AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE user_id = $id)
-                AND u.id NOT IN (SELECT user_id    FROM blocks WHERE blocked_id = $id)
-                AND u.id NOT IN (SELECT passed_id  FROM user_passes WHERE user_id = $id)
-                AND u.id NOT IN (SELECT target_id  FROM likes
-                                  WHERE user_id = $id AND target_type = 'user')";
-        }
-
-        if (!empty($filters['province_id'])) {
-            $where .= ' AND u.province_id = ' . (int) $filters['province_id'];
-        }
-        if (!empty($filters['age_min'])) {
-            $where .= " AND u.birthday <= '"
-                . date('Y-m-d', strtotime('-' . (int) $filters['age_min'] . ' years')) . "'";
-        }
-        if (!empty($filters['age_max'])) {
-            $where .= " AND u.birthday >= '"
-                . date('Y-m-d', strtotime('-' . ((int) $filters['age_max'] + 1) . ' years')) . "'";
-        }
-
         $sql = "
             SELECT u.*, p.name AS province_name, $km AS khoang_cach,
                    ($diem) AS match_score,
@@ -330,7 +311,22 @@ class M_user extends CI_Model
     /** Đếm tổng số hồ sơ còn lại cho khung vuốt. */
     public function count_deck($me, $view = null, $filters = array())
     {
+        list($gioi_ung_vien) = $this->cap_doi_phu_hop($me, $view);
+        $where = $this->dieu_kien_deck($me, $gioi_ung_vien, $filters);
+
+        return (int) $this->db->query("SELECT COUNT(*) c FROM users u WHERE $where")->row('c');
+    }
+
+    /**
+     * Điều kiện lọc dùng chung cho khung vuốt: giới tính đúng hướng tìm kiếm,
+     * bỏ những người không thể hiện được (chính mình, đã chặn, đã thích, đã bỏ qua),
+     * cộng thêm bộ lọc tỉnh/tuổi người dùng tự chọn.
+     */
+    private function dieu_kien_deck($me, $gioi_ung_vien, $filters = array())
+    {
         $where = "u.status = 'active' AND u.role = 'member' AND u.deleted_at IS NULL";
+        $where .= " AND u.gender = " . $this->db->escape($gioi_ung_vien);
+
         if ($me) {
             $id = (int) $me['id'];
             $where .= "
@@ -341,6 +337,7 @@ class M_user extends CI_Model
                 AND u.id NOT IN (SELECT target_id  FROM likes
                                   WHERE user_id = $id AND target_type = 'user')";
         }
+
         if (!empty($filters['province_id'])) {
             $where .= ' AND u.province_id = ' . (int) $filters['province_id'];
         }
@@ -353,7 +350,7 @@ class M_user extends CI_Model
                 . date('Y-m-d', strtotime('-' . ((int) $filters['age_max'] + 1) . ' years')) . "'";
         }
 
-        return (int) $this->db->query("SELECT COUNT(*) c FROM users u WHERE $where")->row('c');
+        return $where;
     }
 
     /**
@@ -362,6 +359,7 @@ class M_user extends CI_Model
      */
     private function cap_doi_phu_hop($me, $view = null)
     {
+        // Khách chưa đăng nhập: tự chọn nhóm muốn xem ở màn hình chào
         if (!$me) {
             switch ($view) {
                 case 'male':   return array('male', 'female');    // khách muốn xem bạn trai
@@ -372,12 +370,10 @@ class M_user extends CI_Model
             }
         }
 
-        $pref = $this->db->where('user_id', $me['id'])->get('user_preferences')->row_array();
-        $toi_tim = $pref['seeking_gender'] ?? null;
-        if (!$toi_tim || $toi_tim === 'all') {
-            $toi_tim = $me['gender'] === 'male' ? 'female' : 'male';
-        }
-        return array($toi_tim, $me['gender']);
+        // Thành viên đã đăng nhập: luôn hiện giới tính đối lập.
+        // Nam -> chỉ nữ, nữ -> chỉ nam, không phụ thuộc mục "đang tìm" trong hồ sơ.
+        $toi_la = $me['gender'] === 'male' ? 'male' : 'female';
+        return array($toi_la === 'male' ? 'female' : 'male', $toi_la);
     }
 
     /**
