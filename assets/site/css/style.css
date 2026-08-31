@@ -275,7 +275,7 @@ select {
 
 /* ------------------------------ Trang trong ------------------------------ */
 
-.page-layout { display: grid; grid-template-columns: 1fr 320px; gap: 24px; padding: 24px 0; }
+.page-layout { gap: 24px; padding: 24px 0; width: 65vh; font-size: 12px;}
 .content-box { background: #fff; padding: 28px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
 .sidebar-box { background: #fff; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
 
@@ -354,6 +354,9 @@ select {
     .post-form .form-row.three { grid-template-columns: 1fr; }
     .form-head, .form-card, .form-actions { padding-left: 18px; padding-right: 18px; }
     .form-actions-note { margin-left: 0; }
+    .page-layout {
+        width: 100%;
+    }
 }
 
 /* Trang tĩnh: nội quy, điều khoản, liên hệ */
@@ -382,7 +385,7 @@ select {
 .detail-info .info-row { margin-bottom: 8px; }
 .detail-info .info-row b { font-weight: 700; }
 
-.contact-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 22px 0; }
+.contact-row { display: none; align-items: center; gap: 10px; flex-wrap: wrap; margin: 22px 0; }
 .contact-row .btn-pass { background: #e8380d; color: #fff; border: 0; padding: 12px 22px; cursor: pointer; }
 .contact-row input { border: 2px solid #e8380d; padding: 11px 14px; flex: 1 1 260px; color: var(--blue); font-style: italic; }
 .contact-row .btn-confirm { background: var(--blue); color: #fff; border: 0; padding: 12px 30px; cursor: pointer; }
@@ -469,10 +472,49 @@ select {
 .profile-active { color: var(--muted); margin: 0 0 16px; font-size: 14px; }
 /* Căn giữa theo chiều dọc, nếu không các nút bị kéo cao bằng nhau tới 80px */
 .profile-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+/* Sửa chung border-radius cho tất cả các nút */
 .profile-actions .btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-    height: 40px; padding: 0 20px; border-radius: 999px;
-    font-size: 14px; font-weight: 700; line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 10px; /* Bo góc nhẹ 8px - 10px */
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* Nút Thích (Nền hồng) */
+.btn-primary {
+  background: var(--pink, #e91e63);
+  color: #fff;
+  border: none;
+}
+
+/* Kiểu 1: Nút Nhắn tin VIỀN XANH (giống viền ban đầu của bạn nhưng bo vuông nhẹ) */
+.btn-blue {
+  background: #fff;
+  color: #0066ff;             /* Màu chữ/icon xanh */
+  border: 1.5px solid #0066ff; /* Viền xanh */
+}
+
+/* Kiểu 2: Nếu bạn muốn nút Nhắn tin nền xám nhạt có viền nhẹ kiểu ảnh 2 */
+/* 
+.btn-blue {
+  background: #f0f2f5;
+  color: #050505;
+  border: 1px solid #d8dadf;
+} 
+*/
+
+/* Nút Báo cáo (Nền xám nhạt không viền hoặc viền ẩn) */
+.btn-ghost {
+  background: #e4e6eb;
+  color: #050505;
+  border: none;
 }
 .profile-actions .btn .ic { width: 17px; height: 17px; flex: 0 0 17px; }
 .btn-blue-outline { background: #fff; color: var(--blue); border: 2px solid var(--blue); }
@@ -1019,7 +1061,7 @@ select {
     .card-grid, .article-grid { grid-template-columns: 1fr 1fr; }
     .auth-card { padding: 22px; }
     .auth-form .form-row { grid-template-columns: 1fr; }
-    .post-nav { grid-template-columns: 1fr; }
+    .post-nav { grid-template-columns: 1fr; } .profile-headline { flex: 1 1 20px; }
 }
 
 @media (max-width: 420px) {
@@ -1762,7 +1804,7 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
     border-radius: 0 0 14px 14px; padding: 12px 20px; margin-bottom: 20px;
     box-shadow: 0 2px 12px rgba(17, 24, 39, .06);
 }
-.dating-bar .result-total { margin: 0; font-size: 14.5px; color: var(--muted); }
+.dating-bar .result-total { display:none; margin: 0; font-size: 14.5px; color: var(--muted); }
 .dating-bar .result-total b { color: var(--ink); font-weight: 800; }
 
 .sort-tabs { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 14px; }
@@ -1977,8 +2019,8 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
     background: #fff; border-radius: 0 0 16px 16px; padding: 4px 20px 20px;
     box-shadow: 0 3px 16px rgba(17, 24, 39, .08); clip-path: inset(0 -16px -16px -16px);
 }
-.result-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
-.result-total { margin: 0; font-size: 16px; color: #6b7280; }
+.result-top { display: flex; align-items: center; justify-content: right; gap: 14px; flex-wrap: wrap; }
+.result-total { display:none; margin: 0; font-size: 16px; color: #6b7280; }
 .result-total b { color: #1c2330; font-weight: 800; }
 
 .result-tools { display: flex; align-items: center; gap: 10px; }
@@ -2075,7 +2117,7 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
 .pcard-photo { position: relative; display: block; background: #f1f2f4; }
 .pcard-photo img { width: 100%; aspect-ratio: 1 / 1; max-height: 230px; object-fit: cover; display: block; }
 
-.pcard-tags { position: absolute; top: 12px; left: 12px; display: flex; flex-wrap: wrap; gap: 7px; z-index: 2; }
+.pcard-tags { position: absolute; top: 12px; left: 12px; display: none; flex-wrap: wrap; gap: 7px; z-index: 2; }
 .pcard-tags .tag, .swipe-badges .tag, .ccard-tags .tag {
     padding: 6px 13px; border-radius: 999px; line-height: 1;
     font-size: 11.5px; font-weight: 700; letter-spacing: .3px;
@@ -2131,7 +2173,7 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
     overflow: hidden; min-height: 39px;
 }
 
-.pcard-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; min-height: 25px; }
+.pcard-chips { display: none; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; min-height: 25px; }
 .pcard-chips span {
     background: #f3f4f6; color: #4b5563; border-radius: 7px;
     padding: 4px 9px; font-size: 11.5px; font-weight: 600;
@@ -2144,7 +2186,7 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
     flex: 1 1 0; min-width: 0;
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     padding: 9px 6px; border-radius: 999px; cursor: pointer;
-    font-size: 13.5px; font-weight: 700; line-height: 1;
+    font-size: 12px; font-weight: 700; line-height: 1;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     transition: background .18s, border-color .18s, color .18s, transform .12s;
 }
@@ -2180,9 +2222,9 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
 .member-grid.is-compact .pcard-tags .tag { padding: 5px 10px; font-size: 10.5px; }
 .member-grid.is-compact .pcard-gender { width: 34px; height: 34px; right: 10px; bottom: 10px; }
 .member-grid.is-compact .pcard-gender .ic { width: 18px; height: 18px; }
-.member-grid.is-compact .btn-swipe { padding: 9px 6px; font-size: 13.5px; gap: 6px; }
+.member-grid.is-compact .btn-swipe { padding: 9px 6px; font-size: 11px; gap: 2px; }
 .member-grid.is-compact .btn-swipe .ic { width: 17px; height: 17px; flex-basis: 17px; }
-.member-grid.is-compact .pcard-actions { gap: 7px; margin-top: 8px; }
+.member-grid.is-compact .pcard-actions { gap: 7px; }
 
 @media (max-width: 1200px) { .member-grid.is-compact { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 992px)  { .member-grid.is-compact { grid-template-columns: repeat(3, 1fr); } }

@@ -3,6 +3,7 @@ $flash = $this->session->flashdata('flash');
 ?><!DOCTYPE html>
 <html lang="vi">
 <head>
+    
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <?php
@@ -18,19 +19,23 @@ $page_title = !empty($meta_title)
 <title><?= e($page_title) ?></title>
 <meta name="description" content="<?= e($meta_desc ?? '') ?>">
 <?php
-/*
- * Chặn công cụ tìm kiếm lập chỉ mục.
- * Bật/tắt tại Quản trị -> Cấu hình -> "Chặn Google lập chỉ mục".
- * Khi website còn đang phát triển nên để bật, lúc chạy thật thì tắt đi.
- */
-$noindex = ($settings['site_noindex'] ?? '1') === '1';
+// Kiểm tra biến $allow_index hoặc $data['allow_index'] truyền từ controller
+$force_allow_index = (isset($allow_index) && $allow_index === true) 
+                  || (isset($data['allow_index']) && $data['allow_index'] === true);
+
+// Cấu hình chung của website
+$site_blocked = ($settings['site_noindex'] ?? '1') === '1';
+
+// Ưu tiên nếu controller chủ động bật allow_index = true thì LUÔN INDEX
+$can_index = $force_allow_index || !$site_blocked;
 ?>
-<?php if ($noindex): ?>
-    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
-    <meta name="googlebot" content="noindex, nofollow">
-<?php else: ?>
+
+<?php if ($can_index): ?>
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="<?= current_url() ?>">
+<?php else: ?>
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+    <meta name="googlebot" content="noindex, nofollow">
 <?php endif; ?>
 <link rel="stylesheet" href="<?= base_url('assets/site/css/style.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/style.css') ?>">
 <link rel="icon" type="image/x-icon" href="<?= base_url('assets/site/img/favicon.ico?v=1232312131') ?>">

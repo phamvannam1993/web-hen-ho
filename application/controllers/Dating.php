@@ -94,6 +94,7 @@ class Dating extends MY_Controller
         $base  = 'hen-ho' . ($tab ? '/' . $tab : '');
 
         $this->render('dating/index', array(
+            'allow_index'    => true,
             'title'      => $current['title'],
             'meta_desc'  => $current['desc'],
             'heading'    => $current['heading'],

@@ -44,6 +44,7 @@ class Discover extends MY_Controller
         ));
 
         $data = array(
+            'allow_index'    => true,
             'meta_title' => 'Khám Phá & Ghép Đôi Nhanh - ' . ($this->data['settings']['site_name'] ?? 'Saigon Cupid'),
             'meta_desc'  => 'Trải nghiệm và khám phá hàng ngàn hồ sơ thành viên nổi bật. '
                           . 'Thích hoặc bỏ qua để tìm kiếm nửa kia phù hợp ngay lập tức!',

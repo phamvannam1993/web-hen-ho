@@ -20,13 +20,13 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
                     <?php if ($p_online): ?><span class="dot-online"></span><?php endif; ?>
                 </div>
                 <div class="profile-headline">
-                    <h1><?= e(display_name($m)) ?></h1>
+                    <h1><?= e(mb_convert_case(display_name($m), MB_CASE_TITLE, "UTF-8")) ?></h1>
                     <p class="profile-tags">
                         <?php if ($p_online): ?><span class="tag tag-online">Online</span><?php endif; ?>
                         <?php if ($p_new): ?><span class="tag tag-new">Mới tham gia</span><?php endif; ?>
                         <span><?= gender_label($m['gender']) ?></span>
                         <?php if ($age): ?><span><?= $age ?> tuổi</span><?php endif; ?>
-                        <?php if ($m['province_name']): ?><span><?= e($m['province_name']) ?></span><?php endif; ?>
+                        <!--<?php if ($m['province_name']): ?><span><?= e($m['province_name']) ?></span><?php endif; ?>-->
                         <?php if ($m['is_vip']): ?><span class="tag-vip">VIP</span><?php endif; ?>
                         <?php if ($m['kyc_status'] === 'verified'): ?><span class="tag-verified">Đã xác minh</span><?php endif; ?>
                     </p>
@@ -107,7 +107,7 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
                         <button type="button" class="btn-confirm" data-action="reveal">Xác nhận</button>
                         <span class="contact-revealed" data-field="result"><?= e(mask_contact($m['phone'])) ?></span>
                     </div>
-                    <p class="contact-note">Mỗi lần lấy pass trừ <?= (int) setting('unlock_cost', 20) ?> xu. Thành viên VIP xem miễn phí.</p>
+                    <!--<p class="contact-note">Mỗi lần lấy pass trừ <?= (int) setting('unlock_cost', 20) ?> xu. Thành viên VIP xem miễn phí.</p>-->
                 <?php endif; ?>
             </section>
 
@@ -245,10 +245,10 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
     </div>
 
     <aside>
-        <div class="sidebar-box">
-            <h3><?= e($settings['site_name'] ?? 'Saigon Cupid') ?></h3>
-            <p><?= e($settings['site_desc'] ?? '') ?></p>
-        </div>
+        <!--<div class="sidebar-box">-->
+        <!--    <h3><?= e($settings['site_name'] ?? 'Saigon Cupid') ?></h3>-->
+        <!--    <p><?= e($settings['site_desc'] ?? '') ?></p>-->
+        <!--</div>-->
         <div class="sidebar-box">
             <h3>Tìm theo khu vực</h3>
             <?php /* Dạng thẻ nhiều cột cho gọn, thay vì danh sách dọc dài lê thê */ ?>

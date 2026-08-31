@@ -103,6 +103,7 @@ class Confide extends MY_Controller
         $base  = 'tam-su' . ($tab ? '/' . $tab : '');
 
         $this->render('confide/index', array(
+            'allow_index'    => true,
             'title'      => $current['title'],
             'meta_desc'  => $current['desc'],
             'heading'    => $current['heading'],

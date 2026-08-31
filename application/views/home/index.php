@@ -63,23 +63,23 @@
     </section>
 <?php endforeach; ?>
 
-<section class="home-block">
-    <div class="container">
-        <h2 class="block-title">Thành viên nổi bật</h2>
-        <?php if (empty($online_members)): ?>
-            <p class="empty">Chưa có thành viên nào.</p>
-        <?php else: ?>
-            <div class="member-grid is-compact">
-                <?php foreach ($online_members as $m): ?>
-                    <?php $this->load->view('members/_card', array('m' => $m)); ?>
-                <?php endforeach; ?>
-            </div>
-            <div class="block-more">
-                <a class="btn btn-more" href="<?= site_url('thanh-vien') ?>">Xem tất cả →</a>
-            </div>
-        <?php endif; ?>
-    </div>
-</section>
+<!--<section class="home-block">-->
+<!--    <div class="container">-->
+<!--        <h2 class="block-title">Thành viên nổi bật</h2>-->
+<!--        <?php if (empty($online_members)): ?>-->
+<!--            <p class="empty">Chưa có thành viên nào.</p>-->
+<!--        <?php else: ?>-->
+<!--            <div class="member-grid is-compact">-->
+<!--                <?php foreach ($online_members as $m): ?>-->
+<!--                    <?php $this->load->view('members/_card', array('m' => $m)); ?>-->
+<!--                <?php endforeach; ?>-->
+<!--            </div>-->
+<!--            <div class="block-more">-->
+<!--                <a class="btn btn-more" href="<?= site_url('thanh-vien') ?>">Xem tất cả →</a>-->
+<!--            </div>-->
+<!--        <?php endif; ?>-->
+<!--    </div>-->
+<!--</section>-->
 
 <?php if (!empty($new_members)): ?>
 <section class="home-block alt">

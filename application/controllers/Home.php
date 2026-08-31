@@ -29,6 +29,7 @@ class Home extends MY_Controller
         }
 
         $data = array(
+            'allow_index'    => true,
             // Tiêu đề riêng cho trang chủ, sửa được ở Quản trị -> Cấu hình
             'meta_title'     => 'Saigon Cupid - Cộng đồng tìm kiếm đối tượng hẹn hò và bạn bè',
             'sections'       => $sections,
