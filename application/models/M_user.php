@@ -209,16 +209,23 @@ class M_user extends CI_Model
     /**
      * Danh sách hồ sơ để vuốt ở trang Khám phá.
      *
-     * Lọc nghiêm ngặt theo cặp (giới tính của tôi, giới tính tôi đang tìm):
-     *   nam tìm nữ  -> chỉ nữ đang tìm nam
-     *   nữ tìm nam  -> chỉ nam đang tìm nữ
-     *   nam tìm nam -> chỉ nam đang tìm nam   (gay)
-     *   nữ tìm nữ   -> chỉ nữ đang tìm nữ     (les)
-     * Người chưa khai nhu cầu vẫn được tính, vì mặc định họ tìm giới tính đối lập.
+     * Không lọc cứng theo giới tính nữa: hiện hết thành viên, chỉ xếp người hợp
+     * nhất lên trước. Điểm tương hợp tính ngay trong SQL để sắp đúng trên toàn bộ
+     * dữ liệu chứ không riêng trang đang xem:
+     *   +40  đúng giới tính tôi đang tìm
+     *   +25  họ cũng đang tìm giới tính của tôi   (hợp nhau hai chiều)
+     *   +15  tuổi họ nằm trong khoảng tôi tìm
+     *   +20  cùng tỉnh/thành
+     *   +15  cùng mục đích hẹn hò
+     *   +5   mỗi sở thích chung (tối đa 20)
+     *   +10  đang online
+     *   +0-10 theo mức hoàn thiện hồ sơ
+     * Chỉ loại trừ: chính mình, người đã chặn/bị chặn, người đã thích hoặc bỏ qua.
      *
-     * $view: 'male' | 'female' | 'gay' | 'les' — dùng cho khách chưa đăng nhập.
+     * $view: 'male' | 'female' | 'gay' | 'les' — khách chưa đăng nhập chọn nhóm
+     * muốn ưu tiên; nay chỉ dùng để xếp thứ tự chứ không cắt bớt danh sách.
      */
-    public function deck($me, $view = null, $filters = array(), $limit = 20)
+    public function deck($me, $view = null, $filters = array(), $limit = 20, $offset = 0)
     {
         list($gioi_ung_vien, $ung_vien_tim) = $this->cap_doi_phu_hop($me, $view);
 
@@ -232,59 +239,121 @@ class M_user extends CI_Model
                       + SIN(RADIANS($lat)) * SIN(RADIANS(u.lat)))), 1)";
         }
 
-        $this->db->select("u.*, p.name AS province_name, $km AS khoang_cach,
-            (SELECT GROUP_CONCAT(ph.path ORDER BY ph.sort SEPARATOR '|')
-               FROM user_photos ph
-              WHERE ph.user_id = u.id AND ph.status = 'approved') AS photo_paths,
-            (SELECT GROUP_CONCAT(i.name ORDER BY i.name SEPARATOR '|')
-               FROM user_interests ui JOIN interests i ON i.id = ui.interest_id
-              WHERE ui.user_id = u.id) AS interest_names", false)
-            ->from('users u')
-            ->join('provinces p', 'p.id = u.province_id', 'left')
-            ->join('user_preferences pr', 'pr.user_id = u.id', 'left')
-            ->where('u.status', 'active')->where('u.role', 'member')->where('u.deleted_at', null)
-            ->where('u.gender', $gioi_ung_vien);
+        $binds = array();
 
-        // Nhu cầu của ứng viên phải khớp; chưa khai thì coi như tìm giới tính đối lập
+        // Điểm giới tính: khách chưa đăng nhập chỉ có hai vế đầu
+        $diem = "IF(u.gender = ?, 40, 0) + IF(pr.seeking_gender = ? OR pr.seeking_gender = 'all'
+                    OR (pr.seeking_gender IS NULL AND u.gender <> ?), 25, 0)";
         $mac_dinh = $ung_vien_tim === 'male' ? 'female' : 'male';
-        $this->db->group_start()
-                 ->where('pr.seeking_gender', $ung_vien_tim)
-                 ->or_where('pr.seeking_gender', 'all')
-                 ->or_group_start()
-                     ->where('pr.seeking_gender', null)
-                     ->where('u.gender <>', $mac_dinh)
-                 ->group_end()
-                 ->group_end();
+        $binds[]  = $gioi_ung_vien;
+        $binds[]  = $ung_vien_tim;
+        $binds[]  = $mac_dinh;
 
         if ($me) {
-            $id = (int) $me['id'];
-            $this->db->where('u.id <>', $id)
-                ->where("u.id NOT IN (SELECT blocked_id FROM blocks WHERE user_id = $id)", null, false)
-                ->where("u.id NOT IN (SELECT user_id FROM blocks WHERE blocked_id = $id)", null, false)
-                ->where("u.id NOT IN (SELECT passed_id FROM user_passes WHERE user_id = $id)", null, false)
-                ->where("u.id NOT IN (SELECT target_id FROM likes
-                                       WHERE user_id = $id AND target_type = 'user')", null, false);
+            $pref    = $this->db->where('user_id', $me['id'])->get('user_preferences')->row_array();
+            $age_min = (int) ($pref['age_min'] ?? 18);
+            $age_max = (int) ($pref['age_max'] ?? 60);
+            $purpose = $pref['purpose'] ?? 'hen_ho';
+            $id      = (int) $me['id'];
+
+            $diem .= "
+                 + IF(TIMESTAMPDIFF(YEAR, u.birthday, CURDATE()) BETWEEN ? AND ?, 15, 0)
+                 + IF(u.province_id IS NOT NULL AND u.province_id = ?, 20, 0)
+                 + IF(pr.purpose = ?, 15, 0)
+                 + LEAST(20, 5 * (
+                       SELECT COUNT(*) FROM user_interests mine
+                       JOIN user_interests theirs
+                         ON theirs.interest_id = mine.interest_id AND theirs.user_id = u.id
+                      WHERE mine.user_id = $id
+                   ))";
+            $binds[] = $age_min;
+            $binds[] = $age_max;
+            $binds[] = (int) $me['province_id'];
+            $binds[] = $purpose;
         }
 
-        if (!empty($filters['province_id'])) $this->db->where('u.province_id', (int) $filters['province_id']);
-        if (!empty($filters['age_min']))
-            $this->db->where('u.birthday <=', date('Y-m-d', strtotime('-' . (int) $filters['age_min'] . ' years')));
-        if (!empty($filters['age_max']))
-            $this->db->where('u.birthday >=', date('Y-m-d', strtotime('-' . ((int) $filters['age_max'] + 1) . ' years')));
+        $diem .= "
+             + IF(u.last_active_at > NOW() - INTERVAL 5 MINUTE, 10, 0)
+             + ROUND(u.profile_score / 10)";
 
-        return $this->db->order_by('u.last_active_at', 'DESC')->limit($limit)->get()->result_array();
+        $where = "u.status = 'active' AND u.role = 'member' AND u.deleted_at IS NULL";
+        if ($me) {
+            $id = (int) $me['id'];
+            $where .= "
+                AND u.id <> $id
+                AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE user_id = $id)
+                AND u.id NOT IN (SELECT user_id    FROM blocks WHERE blocked_id = $id)
+                AND u.id NOT IN (SELECT passed_id  FROM user_passes WHERE user_id = $id)
+                AND u.id NOT IN (SELECT target_id  FROM likes
+                                  WHERE user_id = $id AND target_type = 'user')";
+        }
+
+        if (!empty($filters['province_id'])) {
+            $where .= ' AND u.province_id = ' . (int) $filters['province_id'];
+        }
+        if (!empty($filters['age_min'])) {
+            $where .= " AND u.birthday <= '"
+                . date('Y-m-d', strtotime('-' . (int) $filters['age_min'] . ' years')) . "'";
+        }
+        if (!empty($filters['age_max'])) {
+            $where .= " AND u.birthday >= '"
+                . date('Y-m-d', strtotime('-' . ((int) $filters['age_max'] + 1) . ' years')) . "'";
+        }
+
+        $sql = "
+            SELECT u.*, p.name AS province_name, $km AS khoang_cach,
+                   ($diem) AS match_score,
+                   (SELECT GROUP_CONCAT(ph.path ORDER BY ph.sort SEPARATOR '|')
+                      FROM user_photos ph
+                     WHERE ph.user_id = u.id AND ph.status = 'approved') AS photo_paths,
+                   (SELECT GROUP_CONCAT(i.name ORDER BY i.name SEPARATOR '|')
+                      FROM user_interests ui JOIN interests i ON i.id = ui.interest_id
+                     WHERE ui.user_id = u.id) AS interest_names
+              FROM users u
+         LEFT JOIN provinces p ON p.id = u.province_id
+         LEFT JOIN user_preferences pr ON pr.user_id = u.id
+             WHERE $where
+          ORDER BY match_score DESC, u.last_active_at DESC, u.id DESC
+             LIMIT ? OFFSET ?";
+
+        $binds[] = (int) $limit;
+        $binds[] = (int) $offset;
+
+        return $this->db->query($sql, $binds)->result_array();
     }
 
     /** Đếm tổng số hồ sơ còn lại cho khung vuốt. */
     public function count_deck($me, $view = null, $filters = array())
     {
-        $ds = $this->deck($me, $view, $filters, 500);
-        return count($ds);
+        $where = "u.status = 'active' AND u.role = 'member' AND u.deleted_at IS NULL";
+        if ($me) {
+            $id = (int) $me['id'];
+            $where .= "
+                AND u.id <> $id
+                AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE user_id = $id)
+                AND u.id NOT IN (SELECT user_id    FROM blocks WHERE blocked_id = $id)
+                AND u.id NOT IN (SELECT passed_id  FROM user_passes WHERE user_id = $id)
+                AND u.id NOT IN (SELECT target_id  FROM likes
+                                  WHERE user_id = $id AND target_type = 'user')";
+        }
+        if (!empty($filters['province_id'])) {
+            $where .= ' AND u.province_id = ' . (int) $filters['province_id'];
+        }
+        if (!empty($filters['age_min'])) {
+            $where .= " AND u.birthday <= '"
+                . date('Y-m-d', strtotime('-' . (int) $filters['age_min'] . ' years')) . "'";
+        }
+        if (!empty($filters['age_max'])) {
+            $where .= " AND u.birthday >= '"
+                . date('Y-m-d', strtotime('-' . ((int) $filters['age_max'] + 1) . ' years')) . "'";
+        }
+
+        return (int) $this->db->query("SELECT COUNT(*) c FROM users u WHERE $where")->row('c');
     }
 
     /**
-     * Từ hồ sơ người xem (hoặc lựa chọn của khách) suy ra cần tìm ai.
-     * Trả về [giới tính ứng viên, giới tính mà ứng viên phải đang tìm].
+     * Từ hồ sơ người xem (hoặc lựa chọn của khách) suy ra nên ưu tiên ai lên trước.
+     * Trả về [giới tính nên xếp trước, giới tính mà họ nên đang tìm].
      */
     private function cap_doi_phu_hop($me, $view = null)
     {
@@ -303,7 +372,6 @@ class M_user extends CI_Model
         if (!$toi_tim || $toi_tim === 'all') {
             $toi_tim = $me['gender'] === 'male' ? 'female' : 'male';
         }
-        // Ứng viên phải là giới tính tôi tìm, và họ phải đang tìm giới tính của tôi
         return array($toi_tim, $me['gender']);
     }
 
