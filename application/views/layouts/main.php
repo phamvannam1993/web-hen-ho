@@ -3,7 +3,15 @@ $flash = $this->session->flashdata('flash');
 ?><!DOCTYPE html>
 <html lang="vi">
 <head>
-    
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-NXYG6XSVEK"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-NXYG6XSVEK');
+</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <?php
@@ -205,7 +213,7 @@ $can_index = $force_allow_index || !$site_blocked;
                     <ul class="footer-col__list footer-col__list--social">
                         <ul class="footer-col__list footer-col__list--social">
             <li><a target="_blank" href="#"><span><img src="/assets/images/tiktok.png" alt="Tiktok" /></span> Tiktok</a></li>
-            <li><a target="_blank" href="#"><span><img src="/assets/images/youtube.png" alt="Youtube" /></span> Youtube</a></li>
+            <li><a target="_blank" href="#"><span><img src="/assets/images/youtube.png?v=345345435435" alt="Youtube" /></span> Youtube</a></li>
             <li><a target="_blank" href="#"><span><img src="/assets/images/insta.png" alt="Instagram" /></span> Instagram</a></li>
             <li><a target="_blank" href="#"><span><img src="/assets/images/facebook.png" alt="Facebook" /></span> Facebook</a></li>
           </ul>
