@@ -90,6 +90,14 @@ $route['ajax/report']          = 'ajax/report';
 /* ------------------------------------------------------------------
  | ADMIN
  * ---------------------------------------------------------------- */
+// Sitemap sinh động: phải đứng trước quy tắc bắt-tất-cả tỉnh thành ở cuối tệp
+$route['sitemap\.xml']          = 'sitemap/index';
+$route['sitemap-pages\.xml']    = 'sitemap/pages';
+$route['sitemap-dating\.xml']   = 'sitemap/dating';
+$route['sitemap-tamsu\.xml']    = 'sitemap/tamsu';
+$route['sitemap-khuvuc\.xml']   = 'sitemap/khuvuc';
+$route['sitemap-posts\.xml']    = 'sitemap/posts';
+
 // Phân trang khu quản trị: /admin/{muc}/trang/{n}
 $route['admin/(users|posts|articles|orders|reports|codes)/trang/(:num)'] = 'admin/$1/index/$2';
 

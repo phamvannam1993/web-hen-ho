@@ -1,2 +1,10 @@
 User-agent: *
 Allow: /
+
+Disallow: /tai-khoan
+Disallow: /admin
+Disallow: /dang-nhap
+Disallow: /dang-ky
+Disallow: /ajax
+
+Sitemap: https://saigoncupid.com/sitemap.xml
