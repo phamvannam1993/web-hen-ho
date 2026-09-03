@@ -6,7 +6,7 @@
         <?= validation_errors('<div class="alert alert-danger">', '</div>') ?>
 
         <form method="post" class="auth-form">
-            <label for="display_name">Tên hiển thị</label>
+            <label for="display_name">Họ và tên</label>
             <input type="text" id="display_name" name="display_name" value="<?= set_value('display_name') ?>" required>
 
             <label for="email">Email</label>
