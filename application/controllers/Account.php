@@ -32,7 +32,38 @@ class Account extends Member_Controller
         $me = $this->auth->user();
 
         if ($this->input->method() === 'post') {
-            $this->form_validation->set_rules('display_name', 'Tên hiển thị', 'required|min_length[2]|max_length[100]');
+            // Hồ sơ phải khai đủ mới cho lưu — chỉ kiểm tra có nhập hay chưa,
+            // thông báo lấy từ application/language/vietnamese/form_validation_lang.php
+            $bat_buoc = array(
+                'display_name'   => 'Tên hiển thị',
+                'gender'         => 'Giới tính',
+                'birthday'       => 'Ngày sinh',
+                'province_id'    => 'Khu vực',
+                'height_cm'      => 'Chiều cao',
+                'weight_kg'      => 'Cân nặng',
+                'job'            => 'Nghề nghiệp',
+                'education'      => 'Học vấn',
+                'marital_status' => 'Tình trạng hôn nhân',
+                'has_children'   => 'Con cái',
+                'confide_topic'  => 'Chủ đề muốn tâm sự',
+                'smoking'        => 'Hút thuốc',
+                'drinking'       => 'Uống rượu bia',
+                'bio'            => 'Giới thiệu bản thân',
+                'interests[]'    => 'Sở thích',
+                'seeking_gender' => 'Muốn tìm',
+                'purpose'        => 'Mục đích',
+                'age_min'        => 'Tuổi từ',
+                'age_max'        => 'Tuổi đến',
+                'allow_message'  => 'Ai được nhắn tin',
+            );
+            foreach ($bat_buoc as $o => $ten) {
+                $this->form_validation->set_rules($o, $ten, 'required');
+            }
+
+            // Ảnh đại diện: chỉ bắt với người chưa từng tải lên, không bắt tải lại mỗi lần
+            if (empty($me['avatar']) && empty($_FILES['avatar']['name'])) {
+                $this->form_validation->set_rules('avatar', 'Ảnh đại diện', 'required');
+            }
 
             if ($this->form_validation->run()) {
                 $data = array(

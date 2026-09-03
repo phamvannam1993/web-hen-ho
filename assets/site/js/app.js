@@ -1028,3 +1028,29 @@
         .catch(function () { form.submit(); });
     });
 })();
+
+/* Thông báo bắt buộc nhập bằng tiếng Việt.
+   Mặc định trình duyệt hiện câu theo ngôn ngữ máy ("Please fill out this field"),
+   nên ghi đè lại cho đồng nhất với thông báo phía máy chủ. */
+(function () {
+    var form = document.querySelector('form.auth-form');
+    if (!form || !form.querySelector('[required]')) return;
+
+    /** Lấy tên ô từ nhãn đi kèm, bỏ dấu sao và phần ghi chú trong ngoặc. */
+    function tenO(el) {
+        var lb = el.id ? form.querySelector('label[for="' + el.id + '"]') : null;
+        if (!lb) return 'thông tin này';
+        return lb.textContent.replace(/\*/g, '').replace(/\(.*?\)/g, '').trim().toLowerCase();
+    }
+
+    form.addEventListener('invalid', function (e) {
+        var el = e.target;
+        if (!el.willValidate) return;
+        var la = el.tagName === 'SELECT' ? 'Vui lòng chọn ' : 'Vui lòng nhập ';
+        el.setCustomValidity(el.validity.valueMissing ? la + tenO(el) + '.' : '');
+    }, true);
+
+    // Gõ lại thì xoá thông báo cũ, nếu không ô vẫn bị coi là sai
+    form.addEventListener('input', function (e) { e.target.setCustomValidity(''); });
+    form.addEventListener('change', function (e) { e.target.setCustomValidity(''); });
+})();

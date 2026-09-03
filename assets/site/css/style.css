@@ -2998,3 +2998,6 @@ body.is-bare .chat-widget.open { bottom: 22px; right: 22px; }
     .fact-list > div { grid-template-columns: 110px 1fr; gap: 12px; padding: 12px 0; }
     .fact-list dt, .fact-list dd { font-size: 13.5px; }
 }
+
+/* Dấu sao đỏ đánh dấu ô bắt buộc trong biểu mẫu hồ sơ */
+.req { color: #e5484d; font-weight: 700; }

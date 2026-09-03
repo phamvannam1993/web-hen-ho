@@ -34,21 +34,22 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
 
             <div class="form-row">
                 <div>
-                    <label for="gender">Giới tính</label>
-                    <select id="gender" name="gender">
+                    <label for="gender">Giới tính <b class="req">*</b></label>
+                    <select id="gender" name="gender" required>
+                        <option value="">-- Chọn --</option>
                         <?php foreach (array('female' => 'Nữ', 'male' => 'Nam', 'other' => 'Khác') as $k => $t): ?>
                             <option value="<?= $k ?>" <?= $me['gender'] === $k ? 'selected' : '' ?>><?= $t ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div>
-                    <label for="birthday">Ngày sinh</label>
-                    <input type="date" id="birthday" name="birthday" value="<?= $v('birthday') ?>">
+                    <label for="birthday">Ngày sinh <b class="req">*</b></label>
+                    <input type="date" id="birthday" name="birthday" required value="<?= $v('birthday') ?>">
                 </div>
             </div>
 
-            <label for="province_id">Khu vực</label>
-            <select id="province_id" name="province_id">
+            <label for="province_id">Khu vực <b class="req">*</b></label>
+            <select id="province_id" name="province_id" required>
                 <option value="">-- Chọn tỉnh/thành --</option>
                 <?php foreach ($provinces as $p): ?>
                     <option value="<?= (int) $p['id'] ?>" <?= $me['province_id'] == $p['id'] ? 'selected' : '' ?>><?= e($p['name']) ?></option>
@@ -56,17 +57,17 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
             </select>
 
             <div class="form-row">
-                <div><label for="height_cm">Chiều cao (cm)</label><input type="text" id="height_cm" name="height_cm" value="<?= $v('height_cm') ?>"></div>
-                <div><label for="weight_kg">Cân nặng (kg)</label><input type="text" id="weight_kg" name="weight_kg" value="<?= $v('weight_kg') ?>"></div>
+                <div><label for="height_cm">Chiều cao (cm) <b class="req">*</b></label><input type="number" id="height_cm" name="height_cm" required value="<?= $v('height_cm') ?>"></div>
+                <div><label for="weight_kg">Cân nặng (kg) <b class="req">*</b></label><input type="number" id="weight_kg" name="weight_kg" required value="<?= $v('weight_kg') ?>"></div>
             </div>
 
-            <label for="job">Nghề nghiệp</label>
-            <input type="text" id="job" name="job" value="<?= $v('job') ?>">
+            <label for="job">Nghề nghiệp <b class="req">*</b></label>
+            <input type="text" id="job" name="job" required value="<?= $v('job') ?>">
 
             <div class="form-row">
                 <div>
-                    <label for="education">Học vấn</label>
-                    <select id="education" name="education">
+                    <label for="education">Học vấn <b class="req">*</b></label>
+                    <select id="education" name="education" required>
                         <option value="">-- Chọn --</option>
                         <?php foreach (array('thpt' => 'THPT', 'trung_cap' => 'Trung cấp', 'cao_dang' => 'Cao đẳng',
                                              'dai_hoc' => 'Đại học', 'sau_dai_hoc' => 'Sau đại học') as $k => $t): ?>
@@ -75,8 +76,8 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
                     </select>
                 </div>
                 <div>
-                    <label for="marital_status">Tình trạng hôn nhân</label>
-                    <select id="marital_status" name="marital_status">
+                    <label for="marital_status">Tình trạng hôn nhân <b class="req">*</b></label>
+                    <select id="marital_status" name="marital_status" required>
                         <option value="">-- Chọn --</option>
                         <?php foreach (array('doc_than' => 'Độc thân', 'ly_hon' => 'Ly hôn', 'goa' => 'Goá', 'phuc_tap' => 'Phức tạp') as $k => $t): ?>
                             <option value="<?= $k ?>" <?= $me['marital_status'] === $k ? 'selected' : '' ?>><?= $t ?></option>
@@ -84,16 +85,16 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
                     </select>
                 </div>
                 <div>
-                    <label for="has_children">Con cái</label>
-                    <select id="has_children" name="has_children">
+                    <label for="has_children">Con cái <b class="req">*</b></label>
+                    <select id="has_children" name="has_children" required>
                         <option value="">-- Chọn --</option>
                         <option value="0" <?= (string) $me['has_children'] === '0' ? 'selected' : '' ?>>Chưa có con</option>
                         <option value="1" <?= (string) $me['has_children'] === '1' ? 'selected' : '' ?>>Đã có con</option>
                     </select>
                 </div>
                 <div>
-                    <label for="confide_topic">Chủ đề muốn tâm sự</label>
-                    <select id="confide_topic" name="confide_topic">
+                    <label for="confide_topic">Chủ đề muốn tâm sự <b class="req">*</b></label>
+                    <select id="confide_topic" name="confide_topic" required>
                         <option value="">-- Chọn --</option>
                         <?php foreach (array('lang_nghe' => 'Cần người lắng nghe', 'tro_chuyen' => 'Trò chuyện phiếm',
                                              'cong_viec' => 'Chia sẻ công việc', 'gia_dinh' => 'Chuyện gia đình',
@@ -103,8 +104,8 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
                     </select>
                 </div>
                 <div>
-                    <label for="smoking">Hút thuốc</label>
-                    <select id="smoking" name="smoking">
+                    <label for="smoking">Hút thuốc <b class="req">*</b></label>
+                    <select id="smoking" name="smoking" required>
                         <option value="">-- Chọn --</option>
                         <?php foreach (array('khong' => 'Không', 'thinh_thoang' => 'Thỉnh thoảng', 'thuong_xuyen' => 'Thường xuyên') as $k => $t): ?>
                             <option value="<?= $k ?>" <?= $me['smoking'] === $k ? 'selected' : '' ?>><?= $t ?></option>
@@ -112,8 +113,8 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
                     </select>
                 </div>
                 <div>
-                    <label for="drinking">Uống rượu bia</label>
-                    <select id="drinking" name="drinking">
+                    <label for="drinking">Uống rượu bia <b class="req">*</b></label>
+                    <select id="drinking" name="drinking" required>
                         <option value="">-- Chọn --</option>
                         <?php foreach (array('khong' => 'Không', 'thinh_thoang' => 'Thỉnh thoảng', 'thuong_xuyen' => 'Thường xuyên') as $k => $t): ?>
                             <option value="<?= $k ?>" <?= $me['drinking'] === $k ? 'selected' : '' ?>><?= $t ?></option>
@@ -122,7 +123,7 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
                 </div>
             </div>
 
-            <label>Sở thích <small>(chọn để được gợi ý và tìm thấy chính xác hơn)</small></label>
+            <label>Sở thích <b class="req">*</b> <small>(chọn ít nhất một mục)</small></label>
             <div class="pick-row interest-pick">
                 <?php foreach ($all_interests as $it): ?>
                     <?php $on = in_array((int) $it['id'], $my_interests, true); ?>
@@ -133,23 +134,24 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
                 <?php endforeach; ?>
             </div>
 
-            <label for="bio">Giới thiệu bản thân</label>
-            <textarea id="bio" name="bio" rows="4"><?= $v('bio') ?></textarea>
+            <label for="bio">Giới thiệu bản thân <b class="req">*</b></label>
+            <textarea id="bio" name="bio" rows="4" required><?= $v('bio') ?></textarea>
 
             <h2 class="section-title">Tiêu chí tìm kiếm</h2>
 
             <div class="form-row">
                 <div>
-                    <label for="seeking_gender">Muốn tìm</label>
-                    <select id="seeking_gender" name="seeking_gender">
+                    <label for="seeking_gender">Muốn tìm <b class="req">*</b></label>
+                    <select id="seeking_gender" name="seeking_gender" required>
                         <?php foreach (array('all' => 'Tất cả', 'female' => 'Nữ', 'male' => 'Nam') as $k => $t): ?>
                             <option value="<?= $k ?>" <?= ($pref['seeking_gender'] ?? 'all') === $k ? 'selected' : '' ?>><?= $t ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div>
-                    <label for="purpose">Mục đích</label>
-                    <select id="purpose" name="purpose">
+                    <label for="purpose">Mục đích <b class="req">*</b></label>
+                    <select id="purpose" name="purpose" required>
+                        <option value="">-- Chọn --</option>
                         <?php foreach (array('ket_ban', 'hen_ho', 'nghiem_tuc', 'ket_hon') as $k): ?>
                             <option value="<?= $k ?>" <?= ($pref['purpose'] ?? '') === $k ? 'selected' : '' ?>><?= purpose_label($k) ?></option>
                         <?php endforeach; ?>
@@ -158,12 +160,12 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
             </div>
 
             <div class="form-row">
-                <div><label for="age_min">Tuổi từ</label><input type="number" id="age_min" name="age_min" value="<?= $pv('age_min', '18') ?>"></div>
-                <div><label for="age_max">Đến</label><input type="number" id="age_max" name="age_max" value="<?= $pv('age_max', '60') ?>"></div>
+                <div><label for="age_min">Tuổi từ <b class="req">*</b></label><input type="number" id="age_min" name="age_min" required value="<?= $pv('age_min', '18') ?>"></div>
+                <div><label for="age_max">Đến <b class="req">*</b></label><input type="number" id="age_max" name="age_max" required value="<?= $pv('age_max', '60') ?>"></div>
             </div>
 
-            <label for="allow_message">Ai được nhắn tin cho tôi</label>
-            <select id="allow_message" name="allow_message">
+            <label for="allow_message">Ai được nhắn tin cho tôi <b class="req">*</b></label>
+            <select id="allow_message" name="allow_message" required>
                 <?php foreach (array('all' => 'Mọi thành viên', 'vip' => 'Chỉ thành viên VIP', 'matched' => 'Chỉ người đã ghép đôi') as $k => $t): ?>
                     <option value="<?= $k ?>" <?= ($pref['allow_message'] ?? 'all') === $k ? 'selected' : '' ?>><?= $t ?></option>
                 <?php endforeach; ?>
