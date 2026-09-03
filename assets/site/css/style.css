@@ -2771,3 +2771,63 @@ body.is-bare .chat-widget.open { bottom: 22px; right: 22px; }
         border-radius: 3px 3px 0 0; background: var(--pink);
     }
 }
+
+/* ---------------------- Khung hồ sơ dạng bảng thông tin ----------------------
+   Mỗi nhóm là một thẻ trắng bo góc, trong đó là các dòng "nhãn — giá trị".
+   Nhãn xám nhạt cố định bên trái, giá trị đậm hơn bên phải; giá trị mang tính
+   phân loại thì tô xanh cho dễ quét mắt. */
+.fact-panel { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
+
+.fact-card {
+    background: #fff; border: 1px solid #e8eaee; border-radius: 10px;
+    padding: 6px 22px;
+}
+
+/* Thanh tiêu đề: nút quay lại vuông bên trái, tên người bên phải */
+.fact-title { display: flex; align-items: center; gap: 16px; padding: 18px 22px; }
+.fact-back {
+    flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; border: 1px solid #d9dde3; border-radius: 8px; color: #55606e;
+}
+.fact-back:hover { background: #f4f6f9; color: var(--ink); text-decoration: none; }
+.fact-back svg {
+    width: 19px; height: 19px; fill: none; stroke: currentColor;
+    stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+}
+.fact-title h2 { margin: 0; font-size: 18px; font-weight: 700; color: var(--ink); line-height: 1.35; }
+
+/* Bảng thông tin: cột nhãn rộng cố định để các dòng thẳng hàng nhau */
+.fact-list { margin: 0; }
+.fact-list > div {
+    display: grid; grid-template-columns: 150px 1fr; gap: 18px;
+    padding: 13px 0; border-bottom: 1px solid #eef0f3;
+}
+.fact-list > div:last-child { border-bottom: 0; }
+.fact-list dt { margin: 0; color: #6b7480; font-size: 14.5px; }
+.fact-list dd { margin: 0; color: var(--ink); font-size: 14.5px; font-weight: 600; line-height: 1.5; }
+/* Thông tin phân loại: tô xanh như bản thiết kế */
+.fact-list dd.is-key, .fact-list dd .is-key { color: #1a73e8; font-weight: 600; }
+.fact-list dd a.is-key:hover { text-decoration: underline; }
+
+.fact-bio { padding: 18px 22px; }
+.fact-bio h3 { margin: 0 0 8px; font-size: 15px; font-weight: 700; color: var(--ink); }
+.fact-bio p { margin: 0; color: #4a5561; font-size: 14.5px; line-height: 1.7; }
+
+/* Khối mời đăng ký dành cho khách */
+.fact-cta { padding: 20px 22px; }
+.fact-cta p { margin: 0 0 12px; color: #4a5561; font-size: 14.5px; line-height: 1.65; }
+.fact-cta-lead { color: var(--ink) !important; font-weight: 700; }
+.fact-cta-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+.fact-cta-btns .btn {
+    flex: 1 1 200px; display: inline-flex; align-items: center; justify-content: center;
+    height: 44px; border-radius: 8px; font-size: 15px; font-weight: 600;
+}
+
+@media (max-width: 560px) {
+    .fact-card { padding: 4px 15px; }
+    .fact-title, .fact-bio, .fact-cta { padding: 15px; }
+    .fact-title h2 { font-size: 16px; }
+    /* Vẫn giữ hai cột như bản thiết kế, chỉ thu hẹp cột nhãn lại cho vừa màn */
+    .fact-list > div { grid-template-columns: 110px 1fr; gap: 12px; padding: 12px 0; }
+    .fact-list dt, .fact-list dd { font-size: 13.5px; }
+}

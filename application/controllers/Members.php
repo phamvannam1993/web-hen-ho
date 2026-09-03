@@ -96,6 +96,9 @@ class Members extends MY_Controller
                 ->join('interests i', 'i.id = ui.interest_id')
                 ->where('ui.user_id', $member['id'])->get()->result_array(),
             'comments'   => $this->m_user_comment->for_profile($member['id']),
+            // Mục tiêu hẹn hò nằm ở bảng riêng, khung hồ sơ cần nên nạp kèm
+            'prefs'      => $this->db->where('user_id', $member['id'])
+                ->get('user_preferences')->row_array(),
             'liked'      => $me ? $this->m_interaction->has_liked($me['id'], 'user', $member['id']) : false,
             'like_count' => $this->m_interaction->count_likes('user', $member['id']),
             'matched'    => $me ? $this->m_interaction->is_matched($me['id'], $member['id']) : false,

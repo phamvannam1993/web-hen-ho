@@ -62,54 +62,99 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
                 </div>
             </header>
 
-            <section class="info-panel">
-                <h2 class="info-heading">Thông tin</h2>
-                <dl class="info-list">
-                    <?php if ($m['bio']): ?>
-                        <div><dt>Giới thiệu</dt><dd><?= nl2br(e($m['bio'])) ?></dd></div>
-                    <?php endif; ?>
-                    <?php if ($age): ?><div><dt>Tuổi</dt><dd><?= $age ?> tuổi</dd></div><?php endif; ?>
-                    <div><dt>Giới tính</dt><dd><?= gender_label($m['gender']) ?></dd></div>
-                    <?php if ($m['marital_status']): ?>
-                        <div><dt>Hôn nhân</dt><dd><?= e($marital[$m['marital_status']] ?? '') ?></dd></div>
-                    <?php endif; ?>
-                    <?php if ($m['province_name']): ?>
-                        <div><dt>Nơi ở hiện tại</dt><dd><?= e($m['province_name']) ?></dd></div>
-                    <?php endif; ?>
-                    <?php if ($m['job']): ?><div><dt>Nghề nghiệp</dt><dd><?= e($m['job']) ?></dd></div><?php endif; ?>
-                    <?php if ($m['education']): ?>
-                        <div><dt>Học vấn</dt><dd><?= e($edu[$m['education']] ?? '') ?></dd></div>
-                    <?php endif; ?>
-                    <?php if ($m['height_cm'] || $m['weight_kg']): ?>
-                        <div><dt>Ngoại hình</dt><dd>
-                            <?= $m['height_cm'] ? 'Cao ' . (int) $m['height_cm'] . ' cm' : '' ?>
-                            <?= $m['weight_kg'] ? ' · Nặng ' . (int) $m['weight_kg'] . ' kg' : '' ?>
-                        </dd></div>
-                    <?php endif; ?>
-                    <?php $freq = array('khong' => 'Không', 'thinh_thoang' => 'Thỉnh thoảng', 'thuong_xuyen' => 'Thường xuyên'); ?>
-                    <div><dt>Con cái</dt><dd><?= (int) $m['has_children'] === 1 ? 'Đã có con' : 'Chưa có con' ?></dd></div>
-                    <?php if ($m['smoking']): ?>
-                        <div><dt>Hút thuốc</dt><dd><?= e($freq[$m['smoking']] ?? '') ?></dd></div>
-                    <?php endif; ?>
-                    <?php if ($m['drinking']): ?>
-                        <div><dt>Uống rượu bia</dt><dd><?= e($freq[$m['drinking']] ?? '') ?></dd></div>
-                    <?php endif; ?>
-                    <?php if ($interests): ?>
-                        <div><dt>Sở thích</dt><dd><?= e(implode(', ', array_column($interests, 'name'))) ?></dd></div>
-                    <?php endif; ?>
-                </dl>
+            <?php
+            /* Khung hồ sơ dạng bảng: mỗi nhóm một thẻ, nhãn bên trái, giá trị bên phải.
+               Giá trị nào là thông tin phân loại (giới tính, nơi ở, mục tiêu…) thì tô
+               xanh cho dễ quét mắt; thông tin liên hệ thì che lại nếu chưa đăng nhập. */
+            $freq  = array('khong' => 'Không', 'thinh_thoang' => 'Thỉnh thoảng', 'thuong_xuyen' => 'Thường xuyên');
+            $nam_sinh = $m['birthday'] ? date('Y', strtotime($m['birthday'])) : null;
+            $muc_tieu = !empty($prefs['purpose']) ? purpose_label($prefs['purpose']) : null;
 
+            // [nhãn, giá trị, có tô xanh không]
+            $nhom_chinh = array(
+                array('Họ tên',   display_name($m), false),
+                array('Giới tính', gender_label($m['gender']), true),
+                array('Năm sinh', $nam_sinh ? $nam_sinh . ($age ? ' (' . $age . ' tuổi)' : '') : null, false),
+                array('Nghề nghiệp', $m['job'], false),
+                array('Mục tiêu', $muc_tieu, true),
+            );
+            $nhom_noi_o = array(
+                array('Chỗ ở hiện tại', $m['province_name'], true),
+                array('Học vấn',        $m['education'] ? ($edu[$m['education']] ?? null) : null, true),
+                array('Hôn nhân',       $m['marital_status'] ? ($marital[$m['marital_status']] ?? null) : null, true),
+                array('Con cái',        (int) $m['has_children'] === 1 ? 'Đã có con' : 'Chưa có con', true),
+            );
+            $nhom_khac = array(
+                array('Ngoại hình', trim(($m['height_cm'] ? 'Cao ' . (int) $m['height_cm'] . ' cm' : '')
+                    . ($m['weight_kg'] ? ($m['height_cm'] ? ' · ' : '') . 'Nặng ' . (int) $m['weight_kg'] . ' kg' : '')), false),
+                array('Hút thuốc',     $m['smoking']  ? ($freq[$m['smoking']]  ?? null) : null, false),
+                array('Uống rượu bia', $m['drinking'] ? ($freq[$m['drinking']] ?? null) : null, false),
+                array('Sở thích', $interests ? implode(', ', array_column($interests, 'name')) : null, false),
+            );
+
+            /** Đổ một nhóm ra bảng, bỏ qua dòng không có dữ liệu. */
+            $ve_nhom = function ($rows) {
+                $co = array_filter($rows, function ($r) { return $r[1] !== null && $r[1] !== ''; });
+                if (!$co) return;
+                echo '<section class="fact-card"><dl class="fact-list">';
+                foreach ($co as $r) {
+                    echo '<div><dt>' . e($r[0]) . '</dt><dd' . ($r[2] ? ' class="is-key"' : '') . '>'
+                       . e($r[1]) . '</dd></div>';
+                }
+                echo '</dl></section>';
+            };
+            ?>
+
+            <div class="fact-panel">
+                <section class="fact-card fact-title">
+                    <a class="fact-back" href="<?= site_url('thanh-vien') ?>" aria-label="Quay lại danh sách">
+                        <svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/></svg>
+                    </a>
+                    <h2>Hẹn hò kết bạn với <?= e(display_name($m)) ?></h2>
+                </section>
+
+                <?php $ve_nhom($nhom_chinh); ?>
+
+                <?php // Liên hệ: khách chỉ thấy lời mời đăng ký, thành viên thấy số đã che bớt.
+                      // Ô "lấy pass" vẫn để tắt như trước, không dựng lại ở đây. ?>
                 <?php if (!$is_me): ?>
-                    <div class="contact-row" data-member="<?= e($m['slug']) ?>">
-                        <b>Số điện thoại:</b>
-                        <button type="button" class="btn-pass" data-action="get-pass">Lấy pass</button>
-                        <input type="text" data-field="pass" placeholder="Nhập pass ở đây để lấy số điện thoại">
-                        <button type="button" class="btn-confirm" data-action="reveal">Xác nhận</button>
-                        <span class="contact-revealed" data-field="result"><?= e(mask_contact($m['phone'])) ?></span>
-                    </div>
-                    <!--<p class="contact-note">Mỗi lần lấy pass trừ <?= (int) setting('unlock_cost', 20) ?> xu. Thành viên VIP xem miễn phí.</p>-->
+                    <section class="fact-card">
+                        <dl class="fact-list">
+                            <div><dt>Số điện thoại</dt><dd>
+                                <?php if ($user): ?><?= e(mask_contact($m['phone'])) ?>
+                                <?php else: ?><a class="is-key" href="<?= site_url('dang-ky') ?>">Đăng ký để xem</a><?php endif; ?>
+                            </dd></div>
+                            <div><dt>Zalo</dt><dd>
+                                <?php if ($user): ?><?= e(mask_contact($m['phone'])) ?>
+                                <?php else: ?><a class="is-key" href="<?= site_url('dang-ky') ?>">Đăng ký để xem</a><?php endif; ?>
+                            </dd></div>
+                        </dl>
+                    </section>
                 <?php endif; ?>
-            </section>
+
+                <?php $ve_nhom($nhom_noi_o); ?>
+                <?php $ve_nhom($nhom_khac); ?>
+
+                <?php if ($m['bio']): ?>
+                    <section class="fact-card fact-bio">
+                        <h3>Đôi lời giới thiệu</h3>
+                        <p><?= nl2br(e($m['bio'])) ?></p>
+                    </section>
+                <?php endif; ?>
+
+                <?php if (!$user): ?>
+                    <section class="fact-card fact-cta">
+                        <p class="fact-cta-lead"><b><?= e(display_name($m)) ?></b> là hồ sơ
+                            <?= $m['is_vip'] ? 'VIP, ' : '' ?>đẹp. Nên không công khai nhiều thông tin.</p>
+                        <p>Bạn vui lòng đăng nhập để xem ảnh, xem số điện thoại và trò chuyện
+                            với <b><?= e(display_name($m)) ?></b> bạn nhé!</p>
+                        <div class="fact-cta-btns">
+                            <a class="btn btn-primary" href="<?= site_url('dang-ky') ?>">Đăng ký tài khoản</a>
+                            <a class="btn btn-blue-outline" href="<?= site_url('dang-nhap') ?>">Đăng nhập</a>
+                        </div>
+                    </section>
+                <?php endif; ?>
+            </div>
 
             <?php if ($photos): ?>
                 <section class="profile-section">
