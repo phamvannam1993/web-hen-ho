@@ -249,7 +249,7 @@ select {
 .province-cloud a { background: #fff; padding: 8px 16px; color: var(--ink); border: 1px solid var(--line); }
 .province-cloud span { color: var(--muted); }
 
-.article-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+.article-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px;padding-bottom: 15px; }
 .article-card {
     background: #fff; border-radius: 12px; overflow: hidden;
     box-shadow: 0 2px 10px rgba(0,0,0,.08);
