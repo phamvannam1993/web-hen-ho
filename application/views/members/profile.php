@@ -14,16 +14,16 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
                 $p_new    = !empty($m['created_at']) && strtotime($m['created_at']) > strtotime('-7 days');
                 ?>
                 <div class="profile-photo">
-                    <img src="<?= avatar_url($m['avatar'], $m['gender']) ?>" alt="<?= e(display_name($m)) ?>">
-                    <?php /* Ảnh đại diện nhỏ nên chỉ giữ chấm báo online; các nhãn
-                             trạng thái chuyển xuống hàng thẻ thông tin cho khỏi che mặt */ ?>
-                    <?php if ($p_online): ?><span class="dot-online"></span><?php endif; ?>
-                </div>
+    <img src="<?= avatar_url($m['avatar'], $m['gender']) ?>" alt="<?= e(display_name($m)) ?>">
+    <?php if ($p_online): ?>
+        <span class="dot-online" title="Đang hoạt động"></span>
+    <?php endif; ?>
+</div>
                 <div class="profile-headline">
                     <h1><?= e(mb_convert_case(display_name($m), MB_CASE_TITLE, "UTF-8")) ?></h1>
                     <p class="profile-tags">
-                        <?php if ($p_online): ?><span class="tag tag-online">Online</span><?php endif; ?>
-                        <?php if ($p_new): ?><span class="tag tag-new">Mới tham gia</span><?php endif; ?>
+                        <!--<?php if ($p_online): ?><span class="tag tag-online">Online</span><?php endif; ?>-->
+                        <!--<?php if ($p_new): ?><span class="tag tag-new">Mới tham gia</span><?php endif; ?>-->
                         <span><?= gender_label($m['gender']) ?></span>
                         <?php if ($age): ?><span><?= $age ?> tuổi</span><?php endif; ?>
                         <!--<?php if ($m['province_name']): ?><span><?= e($m['province_name']) ?></span><?php endif; ?>-->
@@ -41,10 +41,12 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
                                 <?php // Cùng cấu trúc với thứ JS dựng lại sau khi bấm,
                                       // để trạng thái trước và sau khi tải lại trang giống nhau ?>
                                 <button class="btn btn-primary btn-like-toggle <?= $liked ? 'is-liked' : '' ?>"
-                                        type="button" data-like-user="<?= (int) $m['id'] ?>">
-                                    <svg viewBox="0 0 24 24" class="ic"><path d="M12 20.5s-7-4.3-7-9.1A4.4 4.4 0 0 1 12 8a4.4 4.4 0 0 1 7 3.4c0 4.8-7 9.1-7 9.1z"/></svg>
-                                    <span class="js-like-text"><?= $liked ? 'Đã thích' : 'Thích' ?></span>
-                                </button>
+        type="button" data-like-user="<?= (int) $m['id'] ?>">
+    <svg viewBox="0 0 24 24" class="ic">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+    </svg>
+    <span class="js-like-text"><?= $liked ? 'Đã thích' : 'Thích' ?></span>
+</button>
                                 <button class="btn btn-blue-outline" type="button" data-chat-with="<?= (int) $m['id'] ?>">Nhắn tin</button>
                                 <button class="btn btn-ghost" type="button" data-report-user="<?= (int) $m['id'] ?>">Báo cáo</button>
                             <?php else: ?>

@@ -275,7 +275,7 @@ select {
 
 /* ------------------------------ Trang trong ------------------------------ */
 
-.page-layout { gap: 24px; padding: 24px 0; width: 65vh; font-size: 12px;}
+.page-layout { gap: 24px; padding: 24px 0; width: 65vh; font-size: 13px;}
 .content-box { background: #fff; padding: 28px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
 .sidebar-box { background: #fff; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
 
@@ -460,8 +460,12 @@ select {
 .profile-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
 .profile-tags span {
     display: inline-flex; align-items: center;
-    background: #f4f4f6; color: #444; padding: 4px 14px; border-radius: 20px;
+    background: #f4f4f6; color: #444; padding: 4px 14px; 
+    border-radius: 5px; /* Bo góc 5px */
     font-size: 14px; line-height: 1.4;
+
+    /* Thêm viền nổi bật */
+    border: 1px solid #ccc; /* Viền xám xậm vừa phải */
 }
 .profile-tags .tag-vip { background: var(--amber); color: #fff; }
 .profile-tags .tag-verified { background: #2fa84f; color: #fff; }
@@ -1337,7 +1341,170 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
 
 /* Vùng cuộn bên trong thẻ: ảnh chiếm trọn, chi tiết nằm dưới */
 .sw-scroll { position: relative; }
+/* --- KHUNG ẢNH ĐẠI DIỆN --- */
+.profile-photo {
+    position: relative !important;
+    display: inline-block !important;
+    line-height: 0 !important; /* Triệt tiêu khoảng hở chân ảnh */
+}
+.profile-photo:has(.dot-online) img,
+.profile-photo.is-online img {
+    border: 3px solid #31a24c !important; /* Mã màu xanh Messenger */
+    padding: 2px;                          /* Khoảng hở nhỏ giữa ảnh và viền xanh cho đẹp */
+    background-color: #ffffff;
+}
+.profile-photo img {
+    display: block;
+    border-radius: 50%;
+}
 
+/* --- CHẤM XANH TRÊN DESKTOP (Màn hình lớn) --- */
+.profile-photo .dot-online {
+    position: absolute !important;
+    bottom: 8%;                   /* Tự động tính theo % đường cong avatar */
+    right: 8%;                    /* Tự động tính theo % đường cong avatar */
+    width: 27px;                  /* Kích thước chấm trên PC */
+    height: 27px;
+    background-color: #31a24c;    /* Xanh lá Messenger */
+    border: 3px solid #ffffff;     /* Viền trắng tách biệt */
+    border-radius: 50%;
+    z-index: 10;
+    box-sizing: border-box;
+}
+
+/* --- CHẤM XANH TRÊN MOBILE (Màn hình dưới 768px) --- */
+@media (max-width: 768px) {
+    .profile-photo .dot-online {
+        width: 20px;              /* Thu nhỏ chấm xanh một chút cho cân đối với avatar mobile */
+        height: 20px;
+        border-width: 2.5px;       /* Cho viền mỏng lại hợp lý hơn */
+        bottom: 6%;               /* Căn chỉnh lại góc ôm trên màn hình nhỏ */
+        right: 6%;
+    }
+}
+/* --- HIỆU ỨNG TỔNG THỂ CHO CẢ 2 NÚT --- */
+.btn-blue-outline,
+.btn-ghost {
+    transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                box-shadow 0.25s ease, 
+                background-color 0.25s ease;
+    cursor: pointer;
+}
+
+/* --- HIỆU ỨNG KHI NĂM CHUỘT (HOVER) --- */
+/* Nút nảy nhẹ lên trên */
+.btn-blue-outline:hover,
+.btn-ghost:hover {
+    transform: translateY(-3px) scale(1.02);
+}
+
+/* Nếu bên trong nút có chứa SVG (icon), icon sẽ nảy nhẹ theo */
+.btn-blue-outline:hover svg,
+.btn-ghost:hover svg {
+    transform: scale(1.15);
+    transition: transform 0.2s ease;
+}
+
+/* --- HIỆU ỨNG KHI BẤM NÚT (ACTIVE / CLICK) --- */
+/* Nút lún xuống rồi nảy lại */
+.btn-blue-outline:active,
+.btn-ghost:active {
+    transform: translateY(1px) scale(0.96);
+    transition: transform 0.1s ease;
+}
+
+/* --- TÙY CHỈNH MÀU SẮC NÂNG CẤP MẸO ĐẸP MẮT --- */
+
+/* Nút Nhắn tin (btn-blue-outline) */
+.btn-blue-outline {
+    border: 1.5px solid #0084ff;
+    color: #0084ff;
+    background: transparent;
+    border-radius: 50px;
+}
+
+.btn-blue-outline:hover {
+    background-color: #0084ff;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 132, 255, 0.3);
+}
+
+/* Nút Báo cáo (btn-ghost) */
+.btn-ghost {
+    border: 1.5px solid transparent;
+    color: #65676b;
+    background: #f0f2f5;
+    border-radius: 50px;
+}
+
+.btn-ghost:hover {
+    background-color: #e4e6eb;
+    color: #dc3545; /* Đổi chữ/icon sang màu đỏ nhẹ khi rê chuột báo cáo */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+/* --- NÚT THÍCH TỔNG THỂ --- */
+.btn-like-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px 22px;
+    border-radius: 50px;
+    border: 2px solid #ff3366;
+    background: #fff0f5; /* Nền hồng phấn ngọt ngào */
+    color: #ff3366;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 14px rgba(255, 51, 102, 0.2);
+}
+
+/* --- KÍCH THƯỚC TRÁI TIM TO HƠN --- */
+.btn-like-toggle .ic {
+    width: 26px;   /* Phóng to icon trái tim (cũ là 20px) */
+    height: 26px;
+    fill: #ff3366; /* Tô màu đặc cho trái tim nổi bật ngay từ đầu */
+    filter: drop-shadow(0 2px 4px rgba(255, 51, 102, 0.3)); /* Đổ bóng nhẹ cho trái tim 3D */
+    transition: transform 0.3s ease, fill 0.3s ease, filter 0.3s ease;
+}
+
+/* --- HIỆU ỨNG RÊ CHUỘT (HOVER) --- */
+.btn-like-toggle:hover {
+    background: #ff3366;
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 51, 102, 0.4);
+}
+
+.btn-like-toggle:hover .ic {
+    fill: #ffffff;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.2));
+    transform: scale(1.2); /* Phóng to nhẹ trái tim khi rê chuột vào */
+}
+
+/* --- TRẠNG THÁI ĐÃ THÍCH (.is-liked) --- */
+.btn-like-toggle.is-liked {
+    background: linear-gradient(135deg, #ff0055 0%, #ff5077 100%); /* Red-pink gradient rực rỡ */
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 4px 18px rgba(255, 0, 85, 0.45);
+}
+
+.btn-like-toggle.is-liked .ic {
+    fill: #ffffff;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.2));
+    animation: heartBeat 0.5s ease-in-out;
+}
+
+/* --- HIỆU ỨNG TRÁI TIM ĐẬP NHỊP KHI BẤM THÍCH --- */
+@keyframes heartBeat {
+    0% { transform: scale(1); }
+    25% { transform: scale(1.35); }
+    50% { transform: scale(0.95); }
+    75% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
 /* Ảnh cao đúng một khung nhìn; cuộn tiếp là tới phần chi tiết, rồi tới người kế */
 .sw-photo {
     position: relative;
@@ -2086,7 +2253,7 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
     /* Panel bộ lọc chỉ hiện khi được mở */
     .filter-panel { position: static; max-height: none; display: none; }
     .search-layout.filters-open .filter-panel { display: block; }
-    .filter-panel .btn-apply { position: sticky; bottom: 0; }
+    .filter-panel .btn-apply { bottom: 0; }
 }
 
 .profile-photo { position: relative; }
