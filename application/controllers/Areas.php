@@ -33,10 +33,29 @@ class Areas extends MY_Controller
     }
 
     /** /khu-vuc/{slug} — thành viên thuộc một tỉnh. */
+    /** Dựng trang nội dung khi slug gốc trỏ tới bảng pages chứ không phải tỉnh. */
+    private function pages_view($trang)
+    {
+        $this->render('pages/view', array(
+            'title'       => $trang['title'],
+            'meta_desc'   => excerpt($trang['content'], 160),
+            'page'        => $trang,
+            'other_pages' => $this->db->select('title, slug')->where('is_active', 1)
+                ->where('id !=', $trang['id'])->order_by('id')->get('pages')->result_array(),
+        ));
+    }
+
     public function province($slug, $page = 1)
     {
         $province = $this->m_province->by_slug($slug);
         if (!$province) {
+            // Đường dẫn gốc dùng chung cho tỉnh thành và trang nội dung:
+            // không phải tỉnh thì thử tìm trang nội dung trước khi báo 404.
+            $trang = $this->db->where('slug', $slug)->where('is_active', 1)
+                ->get('pages')->row_array();
+            if ($trang) {
+                return $this->pages_view($trang);
+            }
             show_404();
         }
 

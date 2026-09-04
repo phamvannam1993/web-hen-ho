@@ -165,11 +165,11 @@ $can_index = $force_allow_index || !$site_blocked;
         </div>
 
         <nav class="site-footer__policy-nav" aria-label="Liên kết chính sách">
-            <a href="<?= site_url('trang/gioi-thieu') ?>">Về chúng tôi</a>
-            <a href="<?= site_url('trang/noi-quy') ?>">Người điều hành</a>
-            <a href="<?= site_url('trang/dieu-khoan') ?>">Faqs</a>
-            <a href="<?= site_url('trang/bao-mat') ?>">Chính sách bảo mật</a>
-            <a href="<?= site_url('trang/lien-he') ?>">Liên hệ</a>
+            <a href="<?= site_url('gioi-thieu') ?>">Về chúng tôi</a>
+            <a href="<?= site_url('noi-quy') ?>">Người điều hành</a>
+            <a href="<?= site_url('dieu-khoan') ?>">Faqs</a>
+            <a href="<?= site_url('bao-mat') ?>">Chính sách bảo mật</a>
+            <a href="<?= site_url('lien-he') ?>">Liên hệ</a>
         </nav>
 
         <div class="site-footer__line"></div>
@@ -179,7 +179,7 @@ $can_index = $force_allow_index || !$site_blocked;
                 <div class="footer-col">
                     <h3 class="footer-col__title">Về chúng tôi</h3>
                     <ul class="footer-col__list">
-                        <li><a href="<?= site_url('trang/gioi-thieu') ?>">Giới thiệu</a></li>
+                        <li><a href="<?= site_url('gioi-thieu') ?>">Giới thiệu</a></li>
                         <li><a href="#">Văn hóa doanh nghiệp</a></li>
                         <li><a href="#">Đội ngũ phát triển</a></li>
                         <li><a href="#">Phần thưởng</a></li>
@@ -193,7 +193,7 @@ $can_index = $force_allow_index || !$site_blocked;
                         <li><a href="<?= site_url('dang-ky') ?>">Cách tạo tài khoản</a></li>
                         <li><a href="<?= site_url('swipe-match') ?>">Hướng dẫn ghép đôi</a></li>
                         <li><a href="<?= site_url('thanh-vien') ?>">Cộng đồng thành viên</a></li>
-                        <li><a href="<?= site_url('trang/noi-quy') ?>">Thông báo cộng đồng</a></li>
+                        <li><a href="<?= site_url('noi-quy') ?>">Thông báo cộng đồng</a></li>
                         <li><a href="#">Download Apps</a></li>
                     </ul>
                 </div>

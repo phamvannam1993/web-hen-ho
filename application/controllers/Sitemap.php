@@ -44,7 +44,7 @@ class Sitemap extends MY_Controller
         );
         foreach ($this->db->select('slug, updated_at')->where('is_active', 1)
                      ->order_by('id')->get('pages')->result_array() as $p) {
-            $urls[] = array('trang/' . $p['slug'], $p['updated_at'], 'monthly', '0.5');
+            $urls[] = array($p['slug'], $p['updated_at'], 'monthly', '0.5');
         }
         $this->tra_ve($this->bo_url($urls));
     }

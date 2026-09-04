@@ -31,7 +31,7 @@ $v = function ($k, $d = '') use ($p) { return e($p[$k] ?? $d); };
         <button class="btn btn-primary" type="submit">Lưu trang</button>
         <a class="btn btn-light" href="<?= site_url('admin/pages') ?>">Quay lại</a>
         <?php if (!empty($p['slug'])): ?>
-            <a class="btn btn-light" href="<?= site_url('trang/' . $p['slug']) ?>" target="_blank">Xem trang</a>
+            <a class="btn btn-light" href="<?= site_url($p['slug']) ?>" target="_blank">Xem trang</a>
         <?php endif; ?>
     </div>
 </form>

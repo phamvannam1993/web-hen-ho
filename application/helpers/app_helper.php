@@ -242,7 +242,7 @@ if (!function_exists('robots_content')) {
         // Cho phép lập chỉ mục, nhưng giấu các khu vực riêng tư
         foreach (array(
             '/admin', '/tai-khoan', '/dang-nhap', '/dang-ky', '/quen-mat-khau',
-            '/dat-lai-mat-khau', '/lay-pass', '/ajax', '/swipe-match',
+            '/dat-lai-mat-khau', '/lay-pass', '/ajax',
             '/application', '/system', '/writable', '/database',
         ) as $path) {
             $lines[] = 'Disallow: ' . $path;

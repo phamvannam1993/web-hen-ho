@@ -17,7 +17,7 @@
                 <h3>Trang khác</h3>
                 <ul class="sidebar-list">
                     <?php foreach ($other_pages as $p): ?>
-                        <li><a href="<?= site_url('trang/' . $p['slug']) ?>"><?= e($p['title']) ?></a></li>
+                        <li><a href="<?= site_url($p['slug']) ?>"><?= e($p['title']) ?></a></li>
                     <?php endforeach; ?>
                 </ul>
             </div>

@@ -47,7 +47,7 @@
 
             <label class="checkbox">
                 <input type="checkbox" name="agree" value="1" required>
-                Tôi đồng ý với <a href="<?= site_url('trang/noi-quy') ?>" target="_blank">nội quy</a> của website
+                Tôi đồng ý với <a href="<?= site_url('noi-quy') ?>" target="_blank">nội quy</a> của website
             </label>
 
             <div class="auth-actions">

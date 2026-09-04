@@ -26,7 +26,7 @@
                             : '<span class="badge bg-secondary">Tắt</span>' ?></td>
                     <td><?= date('d/m/Y H:i', strtotime($p['updated_at'])) ?></td>
                     <td class="actions">
-                        <a class="btn btn-light btn-sm" href="<?= site_url('trang/' . $p['slug']) ?>" target="_blank">Xem</a>
+                        <a class="btn btn-light btn-sm" href="<?= site_url($p['slug']) ?>" target="_blank">Xem</a>
                         <a class="btn btn-light btn-sm" href="<?= site_url('admin/pages/edit/' . $p['id']) ?>">Sửa</a>
                         <a class="btn btn-danger btn-sm" href="<?= site_url('admin/pages/delete/' . $p['id']) ?>"
                            data-confirm="Xoá trang này?" data-confirm-danger>Xoá</a>
