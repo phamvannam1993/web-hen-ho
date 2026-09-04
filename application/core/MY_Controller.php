@@ -32,7 +32,50 @@ class MY_Controller extends CI_Controller
         // hay khám phá không được tính là đang online.
         if ($this->auth->check()) {
             $this->auth->touch_active();
+            $this->chan_khi_ho_so_chua_xong();
         }
+    }
+
+    /**
+     * Người mới đăng ký phải khai xong hồ sơ mới được đi tiếp — cách các trang
+     * hẹn hò lớn vẫn làm, vì hồ sơ trống thì không ghép đôi được cho ai.
+     *
+     * Một số đường dẫn phải chừa ra để không rơi vào vòng lặp chuyển hướng:
+     * chính trang sửa hồ sơ, đăng xuất, các lời gọi ajax và tệp cho máy tìm kiếm.
+     */
+    protected function chan_khi_ho_so_chua_xong()
+    {
+        $me = $this->auth->user();
+
+        // Ban quản trị không bị chặn, họ không dùng hồ sơ để ghép đôi
+        if (in_array($me['role'], array('admin', 'moderator'), true)) {
+            return;
+        }
+
+        $uri  = uri_string();
+        $chua = array(
+            'tai-khoan/ho-so', 'dang-xuat', 'dang-nhap', 'dang-ky',
+            'robots.txt', 'sitemap',
+        );
+        foreach ($chua as $bo) {
+            if ($uri === $bo || strpos($uri, $bo) === 0) {
+                return;
+            }
+        }
+        if (strpos($uri, 'ajax') === 0 || $this->input->is_ajax_request()) {
+            return;
+        }
+
+        $this->load->model('m_user');
+        $thieu = $this->m_user->thieu_thong_tin($me['id']);
+        if (!$thieu) {
+            return;
+        }
+
+        set_flash('warning', 'Bạn cần hoàn thiện hồ sơ trước khi dùng tiếp: '
+            . implode(', ', array_slice($thieu, 0, 4))
+            . (count($thieu) > 4 ? ' và ' . (count($thieu) - 4) . ' mục nữa.' : '.'));
+        redirect('tai-khoan/ho-so');
     }
 
     /** Render layout frontend. */

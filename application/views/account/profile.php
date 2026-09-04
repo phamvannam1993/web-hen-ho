@@ -10,6 +10,25 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
             <h1 class="auth-title">Hồ sơ của tôi</h1>
             <?= validation_errors('<div class="alert alert-danger">', '</div>') ?>
 
+            <?php if (!empty($thieu)): ?>
+                <?php
+                // Thanh tiến độ cho thấy còn bao nhiêu mục nữa là xong
+                $tong = 20;
+                $xong = max(0, $tong - count($thieu));
+                ?>
+                <div class="ho-so-nhac">
+                    <div class="ho-so-nhac-dau">
+                        <b>Hồ sơ chưa hoàn thiện</b>
+                        <span><?= $xong ?>/<?= $tong ?> mục</span>
+                    </div>
+                    <div class="ho-so-thanh"><i style="width: <?= round($xong / $tong * 100) ?>%"></i></div>
+                    <p>Bạn cần khai nốt <?= count($thieu) ?> mục dưới đây thì mới dùng được các trang khác:</p>
+                    <ul>
+                        <?php foreach ($thieu as $t): ?><li><?= e($t) ?></li><?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
+
             <div class="profile-avatar">
                 <img src="<?= avatar_url($me['avatar'], $me['gender']) ?>" alt="Ảnh đại diện">
                 <div>

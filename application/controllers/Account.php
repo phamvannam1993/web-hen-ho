@@ -125,6 +125,8 @@ class Account extends Member_Controller
 
         $this->render('account/profile', array(
             'title'         => 'Hồ sơ của tôi',
+            // Danh sách mục còn trống, để hiện bảng nhắc ngay đầu trang
+            'thieu'         => $this->m_user->thieu_thong_tin($me['id']),
             'me'            => $this->m_user->find($me['id']),
             'pref'          => $this->db->where('user_id', $me['id'])->get('user_preferences')->row_array(),
             'all_interests' => $this->db->order_by('name')->get('interests')->result_array(),

@@ -3001,3 +3001,21 @@ body.is-bare .chat-widget.open { bottom: 22px; right: 22px; }
 
 /* Dấu sao đỏ đánh dấu ô bắt buộc trong biểu mẫu hồ sơ */
 .req { color: #e5484d; font-weight: 700; }
+
+/* Bảng nhắc hoàn thiện hồ sơ ở đầu trang sửa hồ sơ */
+.ho-so-nhac {
+    margin: 0 0 20px; padding: 15px 17px;
+    border: 1px solid #ffd9a8; border-left: 4px solid #f59e0b; border-radius: 10px;
+    background: #fffaf2;
+}
+.ho-so-nhac-dau { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ho-so-nhac-dau b { font-size: 15px; color: #8a5200; }
+.ho-so-nhac-dau span { font-size: 13px; font-weight: 700; color: #b26a00; }
+.ho-so-thanh { height: 7px; margin: 9px 0 11px; border-radius: 99px; background: #f2e3cd; overflow: hidden; }
+.ho-so-thanh i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #f59e0b, #e91e8c); }
+.ho-so-nhac p { margin: 0 0 8px; font-size: 14px; color: #6b5636; line-height: 1.6; }
+.ho-so-nhac ul { display: flex; flex-wrap: wrap; gap: 7px; margin: 0; padding: 0; list-style: none; }
+.ho-so-nhac li {
+    padding: 4px 11px; border: 1px solid #f0d6a8; border-radius: 99px;
+    background: #fff; font-size: 13px; font-weight: 600; color: #8a5200;
+}
