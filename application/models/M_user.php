@@ -216,10 +216,10 @@ class M_user extends CI_Model
     public function dieu_kien_ho_so_du($a = 'u')
     {
         $dk = array();
-        foreach (array('display_name', 'gender', 'birthday', 'province_id', 'bio', 'avatar') as $c) {
+        foreach (array('display_name', 'gender', 'birthday', 'province_id', 'avatar') as $c) {
             $dk[] = "$a.$c IS NOT NULL";
         }
-        foreach (array('display_name', 'bio', 'avatar') as $c) {
+        foreach (array('display_name', 'avatar') as $c) {
             $dk[] = "$a.$c <> ''";
         }
         $dk[] = "EXISTS (SELECT 1 FROM user_preferences up WHERE up.user_id = $a.id
