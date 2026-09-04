@@ -30,8 +30,23 @@ class MY_Controller extends CI_Controller
         // Ghi nhận hoạt động ở MỌI trang, không chỉ khu vực tài khoản. Trước đây
         // chỉ các trang bắt buộc đăng nhập mới gọi, nên người đang duyệt trang chủ
         // hay khám phá không được tính là đang online.
+        // Hồ sơ chưa khai đủ thì khoá mọi tính năng, kể cả chat thời gian thực
+        $this->data['ho_so_chua_xong'] = false;
         if ($this->auth->check()) {
             $this->auth->touch_active();
+
+            $me = $this->auth->user();
+            if (!in_array($me['role'], array('admin', 'moderator'), true)) {
+                $this->load->model('m_user');
+                $this->data['ho_so_chua_xong'] = (bool) $this->m_user->thieu_thong_tin($me['id']);
+            }
+            if ($this->data['ho_so_chua_xong']) {
+                // Không cấp mã WebSocket thì khung chat không kết nối được,
+                // chặn tận gốc thay vì chỉ giấu giao diện
+                $this->data['ws_token'] = '';
+                $this->data['ws_url']   = '';
+            }
+
             $this->chan_khi_ho_so_chua_xong();
         }
     }
@@ -66,11 +81,10 @@ class MY_Controller extends CI_Controller
             return;
         }
 
-        $this->load->model('m_user');
-        $thieu = $this->m_user->thieu_thong_tin($me['id']);
-        if (!$thieu) {
+        if (empty($this->data['ho_so_chua_xong'])) {
             return;
         }
+        $thieu = $this->m_user->thieu_thong_tin($me['id']);
 
         set_flash('warning', 'Bạn cần hoàn thiện hồ sơ trước khi dùng tiếp: '
             . implode(', ', array_slice($thieu, 0, 4))

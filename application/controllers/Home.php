@@ -36,7 +36,11 @@ class Home extends MY_Controller
             'online_members' => $this->m_user->search(array('online' => 1, 'sort' => 'active'), 10)
                 ?: $this->m_user->search(array('sort' => 'active'), 10),
             'new_members'    => $this->m_user->search(array('sort' => 'new'), 10),
-            'top_provinces'  => array_slice($this->m_province->with_member_count(), 0, 12),
+            // Chỉ nêu tỉnh thật sự có thành viên hiện được, tránh loạt "(0)" vô nghĩa
+            'top_provinces'  => array_slice(array_values(array_filter(
+                $this->m_province->with_member_count(),
+                function ($p) { return (int) $p['member_count'] > 0; }
+            )), 0, 12),
             'articles'       => $this->m_article->published(4),
             'stats'          => $this->m_user->stats(),
         );

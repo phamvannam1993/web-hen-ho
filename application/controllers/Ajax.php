@@ -16,6 +16,25 @@ class Ajax extends MY_Controller
             $this->json(array('ok' => false, 'message' => 'Vui lòng đăng nhập để thực hiện.'), 401);
             return false;
         }
+
+        // Hồ sơ chưa khai đủ thì không dùng được tính năng nào: thích, nhắn tin,
+        // bình luận, báo cáo. Cổng chặn ở MY_Controller không bắt được nhóm này
+        // vì các lời gọi ajax được chừa ra để không nhận về HTML thay cho JSON.
+        $me = $this->auth->user();
+        if (!in_array($me['role'], array('admin', 'moderator'), true)) {
+            $this->load->model('m_user');
+            $thieu = $this->m_user->thieu_thong_tin($me['id']);
+            if ($thieu) {
+                $this->json(array(
+                    'ok'      => false,
+                    'need'    => 'profile',
+                    'url'     => site_url('tai-khoan/ho-so'),
+                    'message' => 'Bạn cần hoàn thiện hồ sơ (còn thiếu '
+                        . count($thieu) . ' mục) trước khi dùng tính năng này.',
+                ), 403);
+                return false;
+            }
+        }
         return true;
     }
 

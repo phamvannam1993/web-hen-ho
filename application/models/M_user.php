@@ -153,7 +153,8 @@ class M_user extends CI_Model
     {
         $this->db->from('users u')->join('provinces p', 'p.id = u.province_id', 'left')
             ->where('u.status', 'active')->where('u.deleted_at', null)
-            ->where('u.role', 'member');
+            ->where('u.role', 'member')
+            ->where($this->dieu_kien_ho_so_du('u'), null, false);
 
         if (!empty($f['gender']))      $this->db->where('u.gender', $f['gender']);
         if (!empty($f['province_id'])) $this->db->where('u.province_id', (int) $f['province_id']);
@@ -204,6 +205,34 @@ class M_user extends CI_Model
                 ->or_like('p.name', $f['keyword'])
                 ->group_end();
         }
+    }
+
+    /**
+     * Điều kiện SQL: chỉ những hồ sơ đã khai đủ mới được hiện ra ngoài.
+     * Danh sách cột khớp đúng với M_user::thieu_thong_tin() để hai bên không lệch nhau.
+     *
+     * @param string $a bí danh bảng users trong câu truy vấn
+     */
+    public function dieu_kien_ho_so_du($a = 'u')
+    {
+        $cot = array('display_name', 'gender', 'birthday', 'province_id', 'height_cm',
+                     'weight_kg', 'job', 'education', 'marital_status', 'has_children',
+                     'confide_topic', 'smoking', 'drinking', 'bio', 'avatar');
+        $dk = array();
+        foreach ($cot as $c) {
+            $dk[] = "$a.$c IS NOT NULL";
+        }
+        // Vài cột là chuỗi nên còn phải khác rỗng
+        foreach (array('display_name', 'job', 'bio', 'avatar') as $c) {
+            $dk[] = "$a.$c <> ''";
+        }
+        // Phải có sở thích và đã khai tiêu chí tìm kiếm
+        $dk[] = "EXISTS (SELECT 1 FROM user_interests ui WHERE ui.user_id = $a.id)";
+        $dk[] = "EXISTS (SELECT 1 FROM user_preferences up WHERE up.user_id = $a.id
+                          AND up.seeking_gender IS NOT NULL AND up.purpose IS NOT NULL
+                          AND up.age_min IS NOT NULL AND up.age_max IS NOT NULL
+                          AND up.allow_message IS NOT NULL)";
+        return implode(' AND ', $dk);
     }
 
     /**
@@ -386,6 +415,7 @@ class M_user extends CI_Model
     private function dieu_kien_deck($me, $gioi_ung_vien, $filters = array())
     {
         $where = "u.status = 'active' AND u.role = 'member' AND u.deleted_at IS NULL";
+        $where .= ' AND ' . $this->dieu_kien_ho_so_du('u');
         $where .= " AND u.gender = " . $this->db->escape($gioi_ung_vien);
 
         if ($me) {
@@ -454,6 +484,7 @@ class M_user extends CI_Model
     public function suggestions($user, $limit = 12, $offset = 0)
     {
         $me   = (int) $user['id'];
+        $du   = $this->dieu_kien_ho_so_du('u');
         $pref = $this->db->where('user_id', $me)->get('user_preferences')->row_array();
 
         $seeking = $pref['seeking_gender'] ?? 'all';
@@ -489,6 +520,7 @@ class M_user extends CI_Model
          LEFT JOIN user_preferences pr ON pr.user_id = u.id
              WHERE u.id <> ?
                AND u.status = 'active' AND u.role = 'member' AND u.deleted_at IS NULL
+               AND $du
                AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE user_id = ?)
                AND u.id NOT IN (SELECT user_id     FROM blocks WHERE blocked_id = ?)
                AND u.id NOT IN (SELECT passed_id FROM user_passes WHERE user_id = ?)
@@ -515,11 +547,13 @@ class M_user extends CI_Model
     public function count_suggestions($user)
     {
         $me = (int) $user['id'];
+        $du = $this->dieu_kien_ho_so_du('u');
         $online_cond = $this->only_online()
             ? "AND u.last_active_at > '" . date('Y-m-d H:i:s', time() - 300) . "'" : '';
         return (int) $this->db->query(
             "SELECT COUNT(*) c FROM users u
               WHERE u.id <> ? AND u.status = 'active' AND u.role = 'member' AND u.deleted_at IS NULL
+                AND $du
                 AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE user_id = ?)
                 AND u.id NOT IN (SELECT user_id FROM blocks WHERE blocked_id = ?)
                 AND u.id NOT IN (SELECT passed_id FROM user_passes WHERE user_id = ?)
@@ -545,7 +579,8 @@ class M_user extends CI_Model
             ->join('provinces p', 'p.id = u.province_id', 'left')
             ->join('user_preferences pr', 'pr.user_id = u.id')
             ->where('pr.purpose', $purpose)
-            ->where('u.status', 'active')->where('u.role', 'member')->where('u.deleted_at', null);
+            ->where('u.status', 'active')->where('u.role', 'member')->where('u.deleted_at', null)
+            ->where($this->dieu_kien_ho_so_du('u'), null, false);
 
         if ($this->only_online()) {
             $this->db->where('u.last_active_at >', date('Y-m-d H:i:s', time() - 300));

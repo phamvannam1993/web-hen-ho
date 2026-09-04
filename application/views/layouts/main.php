@@ -261,10 +261,12 @@ $can_index = $force_allow_index || !$site_blocked;
 </footer>
 <?php endif; ?>
 
-<!-- Chat nổi: khách xem được phòng chung, muốn gửi thì phải đăng nhập -->
+<!-- Chat nổi: khách xem được phòng chung, muốn gửi thì phải đăng nhập.
+     Thành viên chưa khai xong hồ sơ cũng chỉ được xem như khách. -->
 <div id="chat-widget" class="chat-widget" data-base="<?= site_url() ?>"
      data-ws-url="<?= e($ws_url ?? '') ?>" data-ws-token="<?= e($ws_token ?? '') ?>"
-     data-guest="<?= $user ? '0' : '1' ?>">
+     data-guest="<?= ($user && empty($ho_so_chua_xong)) ? '0' : '1' ?>"
+     data-need-profile="<?= !empty($ho_so_chua_xong) ? '1' : '0' ?>">
     <button type="button" class="cw-bubble" id="cw-bubble" aria-label="Mở tin nhắn">
         <span class="cw-bubble-icon">💬</span>
         <span class="cw-badge" id="cw-badge" hidden>0</span>

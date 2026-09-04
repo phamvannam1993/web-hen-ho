@@ -13,6 +13,9 @@
     var base   = root.getAttribute('data-base');
     // Khách chưa đăng nhập chỉ xem được phòng chat chung, không có tin nhắn riêng
     var isGuest = root.getAttribute('data-guest') === '1';
+    // Thành viên đã đăng nhập nhưng hồ sơ chưa khai đủ: xem được như khách,
+    // gửi thì phải hoàn thiện hồ sơ trước
+    var canHoSo = root.getAttribute('data-need-profile') === '1';
     var EMOJI = ['😀','😄','😁','😊','🙂','😉','😍','🥰','😘','😋','😜','🤗','🤔','😐','🙄','😏',
                  '😢','😭','😤','😡','🥺','😳','😱','🤩','🥳','😎','👋','👌','✌️','👍','🙏','💪',
                  '👏','🙌','❤️','💕','💖','💘','💔','🌹','💐','💍','🔥','💯','🎉','☕','🍺','🎁'];
@@ -414,15 +417,25 @@
         var guestForm = document.getElementById('cw-room-form');
         if (guestForm) {
             guestForm.addEventListener('click', function () {
-                if (window.appModal) {
+                if (!window.appModal) return;
+                if (canHoSo) {
                     window.appModal({
                         type: 'info',
-                        title: 'Cần đăng nhập',
-                        message: 'Bạn cần đăng nhập để tham gia trò chuyện. Việc xem thì hoàn toàn tự do.',
-                        confirmText: 'Đăng nhập',
-                        onConfirm: function () { window.location.href = base + 'dang-nhap'; }
+                        title: 'Cần hoàn thiện hồ sơ',
+                        message: 'Bạn cần khai đủ thông tin hồ sơ rồi mới nhắn tin được. '
+                               + 'Việc xem thì vẫn tự do.',
+                        confirmText: 'Hoàn thiện ngay',
+                        onConfirm: function () { window.location.href = base + 'tai-khoan/ho-so'; }
                     });
+                    return;
                 }
+                window.appModal({
+                    type: 'info',
+                    title: 'Cần đăng nhập',
+                    message: 'Bạn cần đăng nhập để tham gia trò chuyện. Việc xem thì hoàn toàn tự do.',
+                    confirmText: 'Đăng nhập',
+                    onConfirm: function () { window.location.href = base + 'dang-nhap'; }
+                });
             });
         }
     }

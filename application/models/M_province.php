@@ -37,13 +37,22 @@ class M_province extends CI_Model
     }
 
     /** Danh sách tỉnh kèm số thành viên đang hoạt động, dùng cho trang khu vực. */
+    /**
+     * Số thành viên từng tỉnh, hiện ở khối "Khu vực nổi bật".
+     * Phải đếm đúng những người thật sự hiện ra ngoài — tức hồ sơ đã khai đủ —
+     * nếu không con số bên ngoài sẽ không khớp với danh sách trong trang tỉnh.
+     */
     public function with_member_count()
     {
+        $this->load->model('m_user');
+        $du = $this->m_user->dieu_kien_ho_so_du('u');
+
         return $this->db->query(
             "SELECT p.*, COUNT(u.id) AS member_count
                FROM provinces p
           LEFT JOIN users u ON u.province_id = p.id
                            AND u.status = 'active' AND u.role = 'member' AND u.deleted_at IS NULL
+                           AND $du
            GROUP BY p.id
            ORDER BY member_count DESC, p.sort ASC, p.name ASC"
         )->result_array();
