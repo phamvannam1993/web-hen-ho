@@ -215,23 +215,15 @@ class M_user extends CI_Model
      */
     public function dieu_kien_ho_so_du($a = 'u')
     {
-        $cot = array('display_name', 'gender', 'birthday', 'province_id', 'height_cm',
-                     'weight_kg', 'job', 'education', 'marital_status', 'has_children',
-                     'confide_topic', 'smoking', 'drinking', 'bio', 'avatar');
         $dk = array();
-        foreach ($cot as $c) {
+        foreach (array('display_name', 'gender', 'birthday', 'province_id', 'bio', 'avatar') as $c) {
             $dk[] = "$a.$c IS NOT NULL";
         }
-        // Vài cột là chuỗi nên còn phải khác rỗng
-        foreach (array('display_name', 'job', 'bio', 'avatar') as $c) {
+        foreach (array('display_name', 'bio', 'avatar') as $c) {
             $dk[] = "$a.$c <> ''";
         }
-        // Phải có sở thích và đã khai tiêu chí tìm kiếm
-        $dk[] = "EXISTS (SELECT 1 FROM user_interests ui WHERE ui.user_id = $a.id)";
         $dk[] = "EXISTS (SELECT 1 FROM user_preferences up WHERE up.user_id = $a.id
-                          AND up.seeking_gender IS NOT NULL AND up.purpose IS NOT NULL
-                          AND up.age_min IS NOT NULL AND up.age_max IS NOT NULL
-                          AND up.allow_message IS NOT NULL)";
+                          AND up.seeking_gender IS NOT NULL AND up.purpose IS NOT NULL)";
         return implode(' AND ', $dk);
     }
 
@@ -240,6 +232,12 @@ class M_user extends CI_Model
      * khi chưa khai xong. Trả về mảng tên mục theo đúng thứ tự trên biểu mẫu;
      * mảng rỗng nghĩa là hồ sơ đã đầy đủ.
      */
+    /** Tổng số mục bắt buộc, dùng cho thanh tiến độ ở trang hồ sơ. */
+    public function so_muc_bat_buoc()
+    {
+        return 8;   // 6 mục trong users + 2 mục tiêu chí tìm kiếm
+    }
+
     public function thieu_thong_tin($user_id)
     {
         $u = $this->db->where('id', $user_id)->get('users')->row_array();
@@ -247,23 +245,17 @@ class M_user extends CI_Model
             return array();
         }
         $pref = $this->db->where('user_id', $user_id)->get('user_preferences')->row_array();
-        $so_thich = $this->db->where('user_id', $user_id)->count_all_results('user_interests');
 
+        // Chỉ những mục thật sự cần để hồ sơ dùng được và ghép đôi được.
+        // Các mục còn lại (chiều cao, nghề nghiệp, học vấn, thói quen, sở thích,
+        // ảnh đại diện...) là tuỳ chọn, khai thêm thì hồ sơ đẹp hơn thôi.
         $can = array(
-            'display_name'   => 'Tên hiển thị',
-            'gender'         => 'Giới tính',
-            'birthday'       => 'Ngày sinh',
-            'province_id'    => 'Khu vực',
-            'height_cm'      => 'Chiều cao',
-            'weight_kg'      => 'Cân nặng',
-            'job'            => 'Nghề nghiệp',
-            'education'      => 'Học vấn',
-            'marital_status' => 'Tình trạng hôn nhân',
-            'confide_topic'  => 'Chủ đề muốn tâm sự',
-            'smoking'        => 'Hút thuốc',
-            'drinking'       => 'Uống rượu bia',
-            'bio'            => 'Giới thiệu bản thân',
-            'avatar'         => 'Ảnh đại diện',
+            'display_name' => 'Tên hiển thị',
+            'gender'       => 'Giới tính',
+            'birthday'     => 'Ngày sinh',
+            'province_id'  => 'Khu vực',
+            'bio'          => 'Giới thiệu bản thân',
+            'avatar'       => 'Ảnh đại diện',
         );
 
         $thieu = array();
@@ -272,22 +264,7 @@ class M_user extends CI_Model
                 $thieu[] = $ten;
             }
         }
-        // Con cái lưu 0/1 nên chỉ coi là thiếu khi còn NULL
-        if ($u['has_children'] === null) {
-            $thieu[] = 'Con cái';
-        }
-        if (!$so_thich) {
-            $thieu[] = 'Sở thích';
-        }
-
-        $can_pref = array(
-            'seeking_gender' => 'Muốn tìm',
-            'purpose'        => 'Mục đích',
-            'age_min'        => 'Tuổi từ',
-            'age_max'        => 'Tuổi đến',
-            'allow_message'  => 'Ai được nhắn tin',
-        );
-        foreach ($can_pref as $cot => $ten) {
+        foreach (array('seeking_gender' => 'Muốn tìm', 'purpose' => 'Mục đích') as $cot => $ten) {
             if (!$pref || $pref[$cot] === null || $pref[$cot] === '') {
                 $thieu[] = $ten;
             }

@@ -32,35 +32,23 @@ class Account extends Member_Controller
         $me = $this->auth->user();
 
         if ($this->input->method() === 'post') {
-            // Hồ sơ phải khai đủ mới cho lưu — chỉ kiểm tra có nhập hay chưa,
-            // thông báo lấy từ application/language/vietnamese/form_validation_lang.php
+            // Chỉ bắt buộc nhóm thông tin cần thiết, giống cách các trang hẹn hò
+            // khác vẫn làm: khai đủ nhóm này là hồ sơ dùng được, phần còn lại
+            // (nghề nghiệp, học vấn, thói quen, sở thích, ảnh...) để tuỳ chọn.
             $bat_buoc = array(
                 'display_name'   => 'Tên hiển thị',
                 'gender'         => 'Giới tính',
                 'birthday'       => 'Ngày sinh',
                 'province_id'    => 'Khu vực',
-                'height_cm'      => 'Chiều cao',
-                'weight_kg'      => 'Cân nặng',
-                'job'            => 'Nghề nghiệp',
-                'education'      => 'Học vấn',
-                'marital_status' => 'Tình trạng hôn nhân',
-                'has_children'   => 'Con cái',
-                'confide_topic'  => 'Chủ đề muốn tâm sự',
-                'smoking'        => 'Hút thuốc',
-                'drinking'       => 'Uống rượu bia',
                 'bio'            => 'Giới thiệu bản thân',
-                'interests[]'    => 'Sở thích',
                 'seeking_gender' => 'Muốn tìm',
                 'purpose'        => 'Mục đích',
-                'age_min'        => 'Tuổi từ',
-                'age_max'        => 'Tuổi đến',
-                'allow_message'  => 'Ai được nhắn tin',
             );
             foreach ($bat_buoc as $o => $ten) {
                 $this->form_validation->set_rules($o, $ten, 'required');
             }
 
-            // Ảnh đại diện: chỉ bắt với người chưa từng tải lên, không bắt tải lại mỗi lần
+            // Ảnh đại diện bắt buộc, nhưng chỉ đòi với người chưa từng tải lên
             if (empty($me['avatar']) && empty($_FILES['avatar']['name'])) {
                 $this->form_validation->set_rules('avatar', 'Ảnh đại diện', 'required');
             }
@@ -127,6 +115,7 @@ class Account extends Member_Controller
             'title'         => 'Hồ sơ của tôi',
             // Danh sách mục còn trống, để hiện bảng nhắc ngay đầu trang
             'thieu'         => $this->m_user->thieu_thong_tin($me['id']),
+            'tong_muc'      => $this->m_user->so_muc_bat_buoc(),
             'me'            => $this->m_user->find($me['id']),
             'pref'          => $this->db->where('user_id', $me['id'])->get('user_preferences')->row_array(),
             'all_interests' => $this->db->order_by('name')->get('interests')->result_array(),
