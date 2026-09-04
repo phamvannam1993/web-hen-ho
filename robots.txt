@@ -2,6 +2,7 @@ User-agent: *
 Allow: /
 
 Disallow: /tai-khoan
+Disallow: */trang
 Disallow: /admin
 Disallow: /dang-nhap
 Disallow: /dang-ky
