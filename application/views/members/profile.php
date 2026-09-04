@@ -20,7 +20,7 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
     <?php endif; ?>
 </div>
                 <div class="profile-headline">
-                    <h1><?= e(mb_convert_case(display_name($m), MB_CASE_TITLE, "UTF-8")) ?></h1>
+                    <h1><?= e(display_name($m)) ?></h1>
                     <p class="profile-tags">
                         <!--<?php if ($p_online): ?><span class="tag tag-online">Online</span><?php endif; ?>-->
                         <!--<?php if ($p_new): ?><span class="tag tag-new">Mới tham gia</span><?php endif; ?>-->

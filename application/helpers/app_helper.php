@@ -210,7 +210,17 @@ if (!function_exists('display_name')) {
     function display_name($user)
     {
         $nick = trim((string) ($user['nickname'] ?? ''));
-        return $nick !== '' ? $nick : ($user['display_name'] ?? '');
+        $ten  = $nick !== '' ? $nick : ($user['display_name'] ?? '');
+
+        // Viết hoa chữ cái đầu mỗi từ, giữ nguyên phần còn lại để những tên
+        // vốn viết hoa toàn bộ (NAM, TP...) không bị hạ xuống chữ thường.
+        $tu = preg_split('/(\s+)/u', trim($ten), -1, PREG_SPLIT_DELIM_CAPTURE);
+        foreach ($tu as $i => $t) {
+            if ($t === '' || preg_match('/^\s+$/u', $t)) continue;
+            $tu[$i] = mb_strtoupper(mb_substr($t, 0, 1, 'UTF-8'), 'UTF-8')
+                    . mb_substr($t, 1, null, 'UTF-8');
+        }
+        return implode('', $tu);
     }
 }
 
