@@ -298,3 +298,25 @@ if (!function_exists('zodiac')) {
         return '';
     }
 }
+
+if (!function_exists('chuan_hoa_dien_thoai')) {
+    /**
+     * Đưa số điện thoại về dạng chuẩn 10 chữ số bắt đầu bằng 0.
+     * Chấp nhận người dùng gõ có dấu cách, dấu chấm, gạch ngang, +84 hay 84.
+     * Trả về chuỗi rỗng nếu không phải số di động Việt Nam hợp lệ.
+     *
+     * Đầu số di động đang dùng: 03, 05, 07, 08, 09.
+     */
+    function chuan_hoa_dien_thoai($so)
+    {
+        $so = preg_replace('/[\s.\-()]/', '', (string) $so);
+
+        if (strpos($so, '+84') === 0) {
+            $so = '0' . substr($so, 3);
+        } elseif (strpos($so, '84') === 0 && strlen($so) === 11) {
+            $so = '0' . substr($so, 2);
+        }
+
+        return preg_match('/^0[35789][0-9]{8}$/', $so) ? $so : '';
+    }
+}

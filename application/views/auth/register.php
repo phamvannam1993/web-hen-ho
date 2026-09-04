@@ -9,36 +9,37 @@
             <label for="display_name">Họ và tên</label>
             <input type="text" id="display_name" name="display_name" value="<?= set_value('display_name') ?>" required>
 
-            <label for="email">Email</label>
+            <label for="email">Email <b class="req">*</b></label>
             <input type="email" id="email" name="email" value="<?= set_value('email') ?>" required>
 
-            <label for="phone">Số điện thoại (Zalo)</label>
-            <input type="text" id="phone" name="phone" value="<?= set_value('phone') ?>">
+            <label for="phone">Số điện thoại (Zalo) <b class="req">*</b></label>
+            <input type="text" id="phone" name="phone" value="<?= set_value('phone') ?>" required>
 
             <div class="form-row">
                 <div>
-                    <label for="gender">Giới tính</label>
+                    <label for="gender">Giới tính <b class="req">*</b></label>
                     <select id="gender" name="gender" required>
+                        <option value="">-- Chọn --</option>
                         <option value="female">Nữ</option>
                         <option value="male">Nam</option>
                         <option value="other">Khác</option>
                     </select>
                 </div>
                 <div>
-                    <label for="birthday">Ngày sinh</label>
-                    <input type="date" id="birthday" name="birthday" value="<?= set_value('birthday') ?>">
+                    <label for="birthday">Ngày sinh <b class="req">*</b></label>
+                    <input type="date" id="birthday" name="birthday" value="<?= set_value('birthday') ?>" required>
                 </div>
             </div>
 
-            <label for="province_id">Khu vực</label>
-            <select id="province_id" name="province_id">
+            <label for="province_id">Khu vực <b class="req">*</b></label>
+            <select id="province_id" name="province_id" required>
                 <option value="">-- Chọn tỉnh/thành --</option>
                 <?php foreach ($provinces as $p): ?>
                     <option value="<?= (int) $p['id'] ?>" <?= set_select('province_id', $p['id']) ?>><?= e($p['name']) ?></option>
                 <?php endforeach; ?>
             </select>
 
-            <label for="password">Mật khẩu</label>
+            <label for="password">Mật khẩu <b class="req">*</b></label>
             <input type="password" id="password" name="password" required>
 
             <label for="password_confirm">Xác nhận mật khẩu</label>

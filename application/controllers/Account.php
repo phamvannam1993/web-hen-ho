@@ -27,6 +27,23 @@ class Account extends Member_Controller
     }
 
     /** Cập nhật hồ sơ cá nhân + tiêu chí tìm kiếm. */
+    /** Số điện thoại phải là số di động Việt Nam và chưa ai dùng. */
+    public function dien_thoai_hop_le($so)
+    {
+        $chuan = chuan_hoa_dien_thoai($so);
+        if ($chuan === '') {
+            $this->form_validation->set_message('dien_thoai_hop_le',
+                'Số điện thoại không đúng. Nhập số di động Việt Nam 10 chữ số, VD: 0912345678.');
+            return false;
+        }
+        if ($this->m_user->phone_exists($chuan, $this->auth->id())) {
+            $this->form_validation->set_message('dien_thoai_hop_le',
+                'Số điện thoại này đã có người dùng.');
+            return false;
+        }
+        return true;
+    }
+
     public function profile()
     {
         $me = $this->auth->user();
@@ -37,6 +54,7 @@ class Account extends Member_Controller
             // (nghề nghiệp, học vấn, thói quen, sở thích, ảnh...) để tuỳ chọn.
             $bat_buoc = array(
                 'display_name'   => 'Tên hiển thị',
+                'phone'          => 'Số điện thoại',
                 'gender'         => 'Giới tính',
                 'birthday'       => 'Ngày sinh',
                 'province_id'    => 'Khu vực',
@@ -47,6 +65,8 @@ class Account extends Member_Controller
             foreach ($bat_buoc as $o => $ten) {
                 $this->form_validation->set_rules($o, $ten, 'required');
             }
+            $this->form_validation->set_rules('phone', 'Số điện thoại',
+                'required|callback_dien_thoai_hop_le');
 
             // Ảnh đại diện bắt buộc, nhưng chỉ đòi với người chưa từng tải lên
             if (empty($me['avatar']) && empty($_FILES['avatar']['name'])) {
@@ -56,6 +76,7 @@ class Account extends Member_Controller
             if ($this->form_validation->run()) {
                 $data = array(
                     'display_name'   => $this->input->post('display_name', true),
+                    'phone'          => chuan_hoa_dien_thoai($this->input->post('phone')),
                     'nickname'       => $this->input->post('nickname', true) ?: null,
                     'gender'         => $this->input->post('gender'),
                     'birthday'       => $this->input->post('birthday') ?: null,

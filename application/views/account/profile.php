@@ -1,6 +1,25 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
-$v = function ($k, $d = '') use ($me) { return e($me[$k] ?? $d); };
-$pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
+
+/* Khi lưu hỏng vì thiếu ô nào đó, biểu mẫu phải giữ nguyên những gì người dùng
+   vừa nhập chứ không đổ lại dữ liệu cũ trong cơ sở dữ liệu — bắt gõ lại từ đầu
+   là cách nhanh nhất khiến người ta bỏ cuộc. */
+$da_gui = ($this->input->method() === 'post');
+
+/** Giá trị nên hiện ra: ưu tiên thứ vừa gửi lên, chưa gửi thì lấy trong CSDL. */
+$goc = function ($k, $mac_dinh = '') use ($da_gui, $me, $pref) {
+    if ($da_gui) {
+        return isset($_POST[$k]) ? (string) $_POST[$k] : '';
+    }
+    if (array_key_exists($k, (array) $me))   return (string) ($me[$k] ?? $mac_dinh);
+    if (array_key_exists($k, (array) $pref)) return (string) ($pref[$k] ?? $mac_dinh);
+    return (string) $mac_dinh;
+};
+$v   = function ($k, $d = '') use ($goc) { return e($goc($k, $d)); };
+$pv  = function ($k, $d = '') use ($goc) { return e($goc($k, $d)); };
+/** In ra "selected" nếu giá trị này đang được chọn. */
+$chon = function ($k, $gt, $d = '') use ($goc) {
+    return $goc($k, $d) === (string) $gt ? 'selected' : '';
+};
 ?>
 <div class="container page-layout">
     <div>
@@ -54,11 +73,20 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
 
             <div class="form-row">
                 <div>
+                    <label for="phone">Số điện thoại (Zalo) <b class="req">*</b></label>
+                    <input type="tel" id="phone" name="phone" value="<?= $v('phone') ?>"
+                           maxlength="15" inputmode="tel" placeholder="VD: 0912345678" required>
+                    <small class="field-hint">Số di động Việt Nam, 10 chữ số. Chỉ thành viên đã đăng nhập mới xem được.</small>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
                     <label for="gender">Giới tính <b class="req">*</b></label>
                     <select id="gender" name="gender" required>
                         <option value="">-- Chọn --</option>
                         <?php foreach (array('female' => 'Nữ', 'male' => 'Nam', 'other' => 'Khác') as $k => $t): ?>
-                            <option value="<?= $k ?>" <?= $me['gender'] === $k ? 'selected' : '' ?>><?= $t ?></option>
+                            <option value="<?= $k ?>" <?= $chon('gender', $k) ?>><?= $t ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -72,7 +100,7 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
             <select id="province_id" name="province_id" required>
                 <option value="">-- Chọn tỉnh/thành --</option>
                 <?php foreach ($provinces as $p): ?>
-                    <option value="<?= (int) $p['id'] ?>" <?= $me['province_id'] == $p['id'] ? 'selected' : '' ?>><?= e($p['name']) ?></option>
+                    <option value="<?= (int) $p['id'] ?>" <?= $chon('province_id', $p['id']) ?>><?= e($p['name']) ?></option>
                 <?php endforeach; ?>
             </select>
 
@@ -91,7 +119,7 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
                         <option value="">-- Chọn --</option>
                         <?php foreach (array('thpt' => 'THPT', 'trung_cap' => 'Trung cấp', 'cao_dang' => 'Cao đẳng',
                                              'dai_hoc' => 'Đại học', 'sau_dai_hoc' => 'Sau đại học') as $k => $t): ?>
-                            <option value="<?= $k ?>" <?= $me['education'] === $k ? 'selected' : '' ?>><?= $t ?></option>
+                            <option value="<?= $k ?>" <?= $chon('education', $k) ?>><?= $t ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -100,7 +128,7 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
                     <select id="marital_status" name="marital_status">
                         <option value="">-- Chọn --</option>
                         <?php foreach (array('doc_than' => 'Độc thân', 'ly_hon' => 'Ly hôn', 'goa' => 'Goá', 'phuc_tap' => 'Phức tạp') as $k => $t): ?>
-                            <option value="<?= $k ?>" <?= $me['marital_status'] === $k ? 'selected' : '' ?>><?= $t ?></option>
+                            <option value="<?= $k ?>" <?= $chon('marital_status', $k) ?>><?= $t ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -108,8 +136,8 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
                     <label for="has_children">Con cái</label>
                     <select id="has_children" name="has_children">
                         <option value="">-- Chọn --</option>
-                        <option value="0" <?= (string) $me['has_children'] === '0' ? 'selected' : '' ?>>Chưa có con</option>
-                        <option value="1" <?= (string) $me['has_children'] === '1' ? 'selected' : '' ?>>Đã có con</option>
+                        <option value="0" <?= $chon('has_children', '0') ?>>Chưa có con</option>
+                        <option value="1" <?= $chon('has_children', '1') ?>>Đã có con</option>
                     </select>
                 </div>
                 <div>
@@ -119,7 +147,7 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
                         <?php foreach (array('lang_nghe' => 'Cần người lắng nghe', 'tro_chuyen' => 'Trò chuyện phiếm',
                                              'cong_viec' => 'Chia sẻ công việc', 'gia_dinh' => 'Chuyện gia đình',
                                              'tinh_cam' => 'Chuyện tình cảm', 'dem_khuya' => 'Trò chuyện đêm khuya') as $k => $t): ?>
-                            <option value="<?= $k ?>" <?= ($me['confide_topic'] ?? '') === $k ? 'selected' : '' ?>><?= $t ?></option>
+                            <option value="<?= $k ?>" <?= $chon('confide_topic', $k) ?>><?= $t ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -128,7 +156,7 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
                     <select id="smoking" name="smoking">
                         <option value="">-- Chọn --</option>
                         <?php foreach (array('khong' => 'Không', 'thinh_thoang' => 'Thỉnh thoảng', 'thuong_xuyen' => 'Thường xuyên') as $k => $t): ?>
-                            <option value="<?= $k ?>" <?= $me['smoking'] === $k ? 'selected' : '' ?>><?= $t ?></option>
+                            <option value="<?= $k ?>" <?= $chon('smoking', $k) ?>><?= $t ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -137,7 +165,7 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
                     <select id="drinking" name="drinking">
                         <option value="">-- Chọn --</option>
                         <?php foreach (array('khong' => 'Không', 'thinh_thoang' => 'Thỉnh thoảng', 'thuong_xuyen' => 'Thường xuyên') as $k => $t): ?>
-                            <option value="<?= $k ?>" <?= $me['drinking'] === $k ? 'selected' : '' ?>><?= $t ?></option>
+                            <option value="<?= $k ?>" <?= $chon('drinking', $k) ?>><?= $t ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -146,7 +174,13 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
             <label>Sở thích <small>(chọn để được gợi ý chính xác hơn)</small></label>
             <div class="pick-row interest-pick">
                 <?php foreach ($all_interests as $it): ?>
-                    <?php $on = in_array((int) $it['id'], $my_interests, true); ?>
+                    <?php
+                    // Vừa gửi lên thì lấy đúng ô người dùng đã tích, không lấy lại trong CSDL
+                    $dang_chon = $da_gui
+                        ? array_map('intval', (array) $this->input->post('interests'))
+                        : $my_interests;
+                    $on = in_array((int) $it['id'], $dang_chon, true);
+                    ?>
                     <label class="pick <?= $on ? 'on' : '' ?>">
                         <input type="checkbox" name="interests[]" value="<?= (int) $it['id'] ?>" <?= $on ? 'checked' : '' ?>>
                         <?= e($it['name']) ?>
@@ -164,7 +198,7 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
                     <label for="seeking_gender">Muốn tìm <b class="req">*</b></label>
                     <select id="seeking_gender" name="seeking_gender" required>
                         <?php foreach (array('all' => 'Tất cả', 'female' => 'Nữ', 'male' => 'Nam') as $k => $t): ?>
-                            <option value="<?= $k ?>" <?= ($pref['seeking_gender'] ?? 'all') === $k ? 'selected' : '' ?>><?= $t ?></option>
+                            <option value="<?= $k ?>" <?= $chon('seeking_gender', $k, 'all') ?>><?= $t ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -173,7 +207,7 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
                     <select id="purpose" name="purpose" required>
                         <option value="">-- Chọn --</option>
                         <?php foreach (array('ket_ban', 'hen_ho', 'nghiem_tuc', 'ket_hon') as $k): ?>
-                            <option value="<?= $k ?>" <?= ($pref['purpose'] ?? '') === $k ? 'selected' : '' ?>><?= purpose_label($k) ?></option>
+                            <option value="<?= $k ?>" <?= $chon('purpose', $k) ?>><?= purpose_label($k) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -187,12 +221,14 @@ $pv = function ($k, $d = '') use ($pref) { return e($pref[$k] ?? $d); };
             <label for="allow_message">Ai được nhắn tin cho tôi</label>
             <select id="allow_message" name="allow_message">
                 <?php foreach (array('all' => 'Mọi thành viên', 'vip' => 'Chỉ thành viên VIP', 'matched' => 'Chỉ người đã ghép đôi') as $k => $t): ?>
-                    <option value="<?= $k ?>" <?= ($pref['allow_message'] ?? 'all') === $k ? 'selected' : '' ?>><?= $t ?></option>
+                    <option value="<?= $k ?>" <?= $chon('allow_message', $k, 'all') ?>><?= $t ?></option>
                 <?php endforeach; ?>
             </select>
 
             <label class="checkbox">
-                <input type="checkbox" name="show_online" value="1" <?= !isset($pref['show_online']) || $pref['show_online'] ? 'checked' : '' ?>>
+                <input type="checkbox" name="show_online" value="1"
+                       <?= ($da_gui ? $this->input->post('show_online')
+                                    : (!isset($pref['show_online']) || $pref['show_online'])) ? 'checked' : '' ?>>
                 Hiển thị trạng thái online
             </label>
 

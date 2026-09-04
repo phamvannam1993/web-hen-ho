@@ -10,6 +10,17 @@ class Auth extends MY_Controller
         $this->load->library('mailer');
     }
 
+    /** Số điện thoại phải là số di động Việt Nam hợp lệ. */
+    public function dien_thoai_hop_le($so)
+    {
+        if (chuan_hoa_dien_thoai($so) === '') {
+            $this->form_validation->set_message('dien_thoai_hop_le',
+                'Số điện thoại không đúng. Nhập số di động Việt Nam 10 chữ số, VD: 0912345678.');
+            return false;
+        }
+        return true;
+    }
+
     public function register()
     {
         if ($this->auth->check()) {
@@ -19,15 +30,18 @@ class Auth extends MY_Controller
         if ($this->input->method() === 'post') {
             $this->form_validation->set_rules('display_name', 'Tên hiển thị', 'required|min_length[2]|max_length[100]');
             $this->form_validation->set_rules('email', 'Email', 'required|valid_email|max_length[190]');
-            $this->form_validation->set_rules('phone', 'Số điện thoại', 'trim|max_length[20]');
+            $this->form_validation->set_rules('phone', 'Số điện thoại',
+                'required|trim|callback_dien_thoai_hop_le');
             $this->form_validation->set_rules('password', 'Mật khẩu', 'required|min_length[6]');
             $this->form_validation->set_rules('password_confirm', 'Xác nhận mật khẩu', 'required|matches[password]');
             $this->form_validation->set_rules('gender', 'Giới tính', 'required|in_list[male,female,other]');
+            $this->form_validation->set_rules('birthday', 'Ngày sinh', 'required');
+            $this->form_validation->set_rules('province_id', 'Khu vực', 'required');
             $this->form_validation->set_rules('agree', 'Điều khoản', 'required');
 
             if ($this->form_validation->run()) {
                 $email = $this->input->post('email', true);
-                $phone = $this->input->post('phone', true);
+                $phone = chuan_hoa_dien_thoai($this->input->post('phone'));
 
                 if ($this->m_user->email_exists($email)) {
                     set_flash('danger', 'Email đã được sử dụng.');
