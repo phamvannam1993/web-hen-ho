@@ -102,3 +102,25 @@ $sort_url = function ($key) use ($base_url) {
         <button type="button" class="seo-toggle" id="seo-toggle" aria-expanded="false">Xem thêm</button>
     </section>
 </div>
+<!-- ===== BOTTOM NAVIGATION - HẸN HÒ ===== -->
+<div class="bottom-nav" id="bottomNav">
+    <div class="bottom-nav-inner">
+        <a href="<?= site_url('') ?>" class="bottom-nav-item">
+            <span class="bottom-nav-icon">🏠</span>
+            <span class="bottom-nav-label">Trang chủ</span>
+        </a>
+        <a href="<?= site_url('swipe-match') ?>" class="bottom-nav-item">
+            <span class="bottom-nav-icon">🔍</span>
+            <span class="bottom-nav-label">Khám phá</span>
+        </a>
+        <a href="<?= site_url('hen-ho') ?>" class="bottom-nav-item active">
+            <span class="bottom-nav-icon">💕</span>
+            <span class="bottom-nav-label">Hẹn hò</span>
+        </a>
+        <a href="<?= site_url('tam-su') ?>" class="bottom-nav-item">
+            <span class="bottom-nav-icon">💬</span>
+            <span class="bottom-nav-label">Tâm sự</span>
+        </a>
+    </div>
+</div>
+<!-- ===== END BOTTOM NAVIGATION ===== -->

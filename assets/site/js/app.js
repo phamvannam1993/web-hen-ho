@@ -1054,3 +1054,64 @@
     form.addEventListener('input', function (e) { e.target.setCustomValidity(''); });
     form.addEventListener('change', function (e) { e.target.setCustomValidity(''); });
 })();
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Lấy các element cần điều chỉnh
+    const bottomNav = document.getElementById('bottomNav');
+    const footer = document.querySelector('.site-footer');
+    const chatWidget = document.querySelector('.chat-widget');
+    const chatPanel = document.querySelector('.cw-panel');
+    
+    if (!bottomNav) return;
+    
+    // Kiểm tra bottom nav có đang hiển thị không
+    const isVisible = window.getComputedStyle(bottomNav).display !== 'none';
+    
+    if (isVisible) {
+        // Lấy chiều cao của bottom nav
+        const navHeight = bottomNav.offsetHeight || 65;
+        
+        // Đẩy footer lên
+        if (footer) {
+            footer.style.marginBottom = navHeight + 'px';
+        }
+        
+        // Đẩy chat widget lên
+        if (chatWidget) {
+            chatWidget.style.marginBottom = navHeight + 'px';
+        }
+        
+        // Điều chỉnh chat panel nếu đang mở
+        if (chatPanel) {
+            chatPanel.style.bottom = navHeight + 10 + 'px';
+        }
+        
+        // Tăng padding cho body
+        document.body.style.paddingBottom = navHeight + 15 + 'px';
+    }
+    
+    // Khi chat mở/đóng, điều chỉnh lại
+    const bubble = document.getElementById('cw-bubble');
+    if (bubble) {
+        bubble.addEventListener('click', function() {
+            setTimeout(function() {
+                const panel = document.getElementById('cw-panel');
+                if (panel && panel.style.display !== 'none') {
+                    const navHeight = bottomNav.offsetHeight || 65;
+                    panel.style.bottom = navHeight + 10 + 'px';
+                }
+            }, 50);
+        });
+    }
+    
+    // Khi cửa sổ thay đổi kích thước
+    window.addEventListener('resize', function() {
+        const isVisibleNow = window.getComputedStyle(bottomNav).display !== 'none';
+        if (isVisibleNow) {
+            const navHeight = bottomNav.offsetHeight || 65;
+            if (footer) footer.style.marginBottom = navHeight + 'px';
+            if (chatWidget) chatWidget.style.marginBottom = navHeight + 'px';
+        }
+    });
+});

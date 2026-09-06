@@ -357,6 +357,7 @@ $can_index = $force_allow_index || !$site_blocked;
         </div>
     </div>
 </div>
+
 <?php endif; ?>
 
 <script src="<?= base_url('assets/site/js/password-toggle.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/password-toggle.js') ?>"></script>
@@ -364,5 +365,6 @@ $can_index = $force_allow_index || !$site_blocked;
 <!-- Chat nạp cho cả khách: xem được phòng chung, muốn gửi thì phải đăng nhập -->
 <script src="<?= base_url('assets/site/js/realtime.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/realtime.js') ?>"></script>
 <script src="<?= base_url('assets/site/js/chat-widget.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/chat-widget.js') ?>"></script>
+
 </body>
 </html>
