@@ -1056,62 +1056,80 @@
 })();
 
 
+// Active bottom nav - chỉ active 1 item duy nhất
 document.addEventListener('DOMContentLoaded', function() {
-    // Lấy các element cần điều chỉnh
-    const bottomNav = document.getElementById('bottomNav');
-    const footer = document.querySelector('.site-footer');
-    const chatWidget = document.querySelector('.chat-widget');
-    const chatPanel = document.querySelector('.cw-panel');
+    var bottomNavItems = document.querySelectorAll('.bottom-nav-item');
+    var currentPath = window.location.pathname;
     
-    if (!bottomNav) return;
-    
-    // Kiểm tra bottom nav có đang hiển thị không
-    const isVisible = window.getComputedStyle(bottomNav).display !== 'none';
-    
-    if (isVisible) {
-        // Lấy chiều cao của bottom nav
-        const navHeight = bottomNav.offsetHeight || 65;
-        
-        // Đẩy footer lên
-        if (footer) {
-            footer.style.marginBottom = navHeight + 'px';
-        }
-        
-        // Đẩy chat widget lên
-        if (chatWidget) {
-            chatWidget.style.marginBottom = navHeight + 'px';
-        }
-        
-        // Điều chỉnh chat panel nếu đang mở
-        if (chatPanel) {
-            chatPanel.style.bottom = navHeight + 10 + 'px';
-        }
-        
-        // Tăng padding cho body
-        document.body.style.paddingBottom = navHeight + 15 + 'px';
+    // Xóa trailing slash
+    if (currentPath.length > 1 && currentPath.endsWith('/')) {
+        currentPath = currentPath.slice(0, -1);
     }
     
-    // Khi chat mở/đóng, điều chỉnh lại
-    const bubble = document.getElementById('cw-bubble');
-    if (bubble) {
-        bubble.addEventListener('click', function() {
-            setTimeout(function() {
-                const panel = document.getElementById('cw-panel');
-                if (panel && panel.style.display !== 'none') {
-                    const navHeight = bottomNav.offsetHeight || 65;
-                    panel.style.bottom = navHeight + 10 + 'px';
-                }
-            }, 50);
-        });
-    }
+    // Lấy segment đầu tiên
+    var segments = currentPath.split('/').filter(function(s) { return s !== ''; });
+    var firstSegment = segments.length > 0 ? segments[0] : '';
     
-    // Khi cửa sổ thay đổi kích thước
-    window.addEventListener('resize', function() {
-        const isVisibleNow = window.getComputedStyle(bottomNav).display !== 'none';
-        if (isVisibleNow) {
-            const navHeight = bottomNav.offsetHeight || 65;
-            if (footer) footer.style.marginBottom = navHeight + 'px';
-            if (chatWidget) chatWidget.style.marginBottom = navHeight + 'px';
+    // Reset tất cả active trước
+    bottomNavItems.forEach(function(item) {
+        item.classList.remove('active');
+    });
+    
+    // Tìm và active đúng item
+    var activeFound = false;
+    
+    bottomNavItems.forEach(function(item) {
+        var href = item.getAttribute('href');
+        if (!href) return;
+        
+        // Xử lý href
+        var fullUrl = new URL(href, window.location.origin);
+        var path = fullUrl.pathname;
+        
+        if (path.length > 1 && path.endsWith('/')) {
+            path = path.slice(0, -1);
+        }
+        
+        var hrefSegments = path.split('/').filter(function(s) { return s !== ''; });
+        var hrefFirstSegment = hrefSegments.length > 0 ? hrefSegments[0] : '';
+        
+        var isMatch = false;
+        
+        // Trường hợp 1: Trang chủ
+        if ((path === '/' || path === '') && (currentPath === '/' || currentPath === '')) {
+            isMatch = true;
+        }
+        // Trường hợp 2: Khớp chính xác
+        else if (path === currentPath) {
+            isMatch = true;
+        }
+        // Trường hợp 3: Trang con (hen-ho/nam -> active hen-ho)
+        else if (hrefFirstSegment === 'hen-ho' && firstSegment === 'hen-ho' && !activeFound) {
+            isMatch = true;
+        }
+        else if (hrefFirstSegment === 'tam-su' && firstSegment === 'tam-su' && !activeFound) {
+            isMatch = true;
+        }
+        // Trường hợp 4: Khớp segment chính xác
+        else if (hrefFirstSegment === firstSegment && hrefFirstSegment !== '') {
+            isMatch = true;
+        }
+        
+        if (isMatch && !activeFound) {
+            item.classList.add('active');
+            activeFound = true;
         }
     });
+    
+    // Nếu không tìm thấy active, active trang chủ
+    if (!activeFound) {
+        bottomNavItems.forEach(function(item) {
+            var href = item.getAttribute('href');
+            if (href === '' || href === '/' || href === site_url) {
+                item.classList.add('active');
+            }
+        });
+    }
 });
+
+
