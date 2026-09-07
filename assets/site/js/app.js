@@ -290,6 +290,39 @@
         });
     });
 
+    /* --- Trả lời lượt thích: Thích lại (ghép đôi) hoặc Bỏ qua --- */
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-like-reply]');
+        if (!btn) { return; }
+
+        var action = btn.getAttribute('data-like-reply');
+        var id     = btn.getAttribute('data-user');
+        var box    = btn.closest('[data-like-request]');
+        var nutBam = box ? box.querySelectorAll('button') : [btn];
+
+        nutBam.forEach(function (b) { b.disabled = true; });
+
+        post(base + 'ajax/tra-loi-thich', { id: id, action: action }).then(function (res) {
+            if (!res.ok) {
+                nutBam.forEach(function (b) { b.disabled = false; });
+                return showModal({ type: 'error', title: 'Không thực hiện được', message: res.message });
+            }
+
+            // Đã trả lời rồi thì bỏ thẻ khỏi danh sách đang chờ
+            if (box) {
+                box.classList.add('card-gone');
+                setTimeout(function () { box.remove(); }, 280);
+            }
+
+            if (res.matched) {
+                showModal({
+                    type: 'success', title: 'Ghép đôi thành công!',
+                    message: 'Hai bạn đã thích nhau. Vào mục Tin nhắn để bắt đầu trò chuyện.'
+                });
+            }
+        });
+    });
+
     /* --- Trang Khám phá: chồng thẻ vuốt --- */
     var stage = document.getElementById('sw-stage');
     var deck  = document.getElementById('sw-deck');

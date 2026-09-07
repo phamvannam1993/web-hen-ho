@@ -10,8 +10,9 @@
  *   3. Thêm cột dữ liệu mới (chủ đề tâm sự)
  *   4. Toạ độ tỉnh/thành và vị trí thành viên, để tính khoảng cách
  *   5. Dọn trạng thái "đang online" giả của tài khoản mẫu
- *   6. Điền các trường hồ sơ còn trống để bộ lọc tìm kiếm có dữ liệu mà lọc
- *   7. (tuỳ chọn) Sinh thêm thành viên mẫu:  php database/update.php 30
+ *   6. Trạng thái lượt thích (chờ trả lời / ghép đôi / bị bỏ qua) cho luật chat mới
+ *   7. Điền các trường hồ sơ còn trống để bộ lọc tìm kiếm có dữ liệu mà lọc
+ *   8. (tuỳ chọn) Sinh thêm thành viên mẫu:  php database/update.php 30
  *
  * Thành viên mẫu có email dạng @demo.local nên gỡ lại rất dễ:
  *   DELETE FROM users WHERE email LIKE '%@demo.local';
@@ -153,11 +154,46 @@ $st = $pdo->prepare("UPDATE users SET last_active_at = NOW() - INTERVAL (30 + FL
 $st->execute();
 echo '  Đã chỉnh ' . $st->rowCount() . " tài khoản mẫu.\n";
 
-echo "\n== 6. Hồ sơ thành viên ==\n";
+echo "\n== 6. Trạng thái lượt thích ==\n";
+// Chat chỉ mở khi hai bên đã ghép đôi, nên mỗi lượt thích cần biết mình đang
+// ở trạng thái nào: chờ người kia trả lời, đã thành ghép đôi, hay bị bỏ qua.
+$co = $pdo->query("SHOW COLUMNS FROM likes LIKE 'status'")->fetch();
+if (!$co) {
+    $pdo->exec("ALTER TABLE likes
+        ADD COLUMN `status` ENUM('pending','matched','rejected') NOT NULL DEFAULT 'pending'
+            COMMENT 'chỉ dùng cho target_type=user' AFTER target_id,
+        ADD KEY `idx_like_status` (target_type, target_id, `status`)");
+    echo "  + thêm cột status cho bảng likes\n";
+} else {
+    echo "  Đã có cột status.\n";
+}
+
+// Hai bên cùng thích nhau nhưng chưa có bản ghi matches (dữ liệu cũ) thì tạo bù.
+$st = $pdo->prepare("INSERT IGNORE INTO matches (user_low_id, user_high_id)
+        SELECT DISTINCT LEAST(a.user_id, a.target_id), GREATEST(a.user_id, a.target_id)
+          FROM likes a
+          JOIN likes b ON b.user_id = a.target_id AND b.target_id = a.user_id
+                      AND b.target_type = 'user'
+         WHERE a.target_type = 'user'
+           AND a.status <> 'rejected' AND b.status <> 'rejected'");
+$st->execute();
+echo '  Tạo bù ' . $st->rowCount() . " ghép đôi còn thiếu.\n";
+
+// Lượt thích thuộc một cặp đã ghép đôi phải mang trạng thái 'matched' để không
+// lọt vào danh sách "Người thích bạn" đang chờ trả lời.
+$st = $pdo->prepare("UPDATE likes l
+        JOIN matches m ON m.user_low_id = LEAST(l.user_id, l.target_id)
+                      AND m.user_high_id = GREATEST(l.user_id, l.target_id)
+           SET l.status = 'matched'
+         WHERE l.target_type = 'user' AND l.status <> 'matched'");
+$st->execute();
+echo '  Đánh dấu ' . $st->rowCount() . " lượt thích đã ghép đôi.\n";
+
+echo "\n== 7. Hồ sơ thành viên ==\n";
 require $root . '/database/fill_member_profiles.php';
 
 if ($demo > 0) {
-    echo "\n== 7. Thành viên mẫu ==\n";
+    echo "\n== 8. Thành viên mẫu ==\n";
     // seed_demo_users.php đọc số lượng từ $argv[1] nên truyền thẳng tham số qua
     $argv[1] = $demo;
     require $root . '/database/seed_demo_users.php';

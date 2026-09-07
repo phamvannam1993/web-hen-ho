@@ -283,15 +283,20 @@ class Account extends Member_Controller
         $me = $this->auth->user();
         $messages = array();
         $partner  = null;
+        $can_send = false;
 
         // Bấm "Nhắn tin" ở trang cá nhân sẽ tới đây kèm ?to=ID:
         // mở sẵn (hoặc tạo mới) hội thoại với người đó.
         $to = (int) $this->input->get('to');
         if ($to && $to !== (int) $me['id']) {
+            // Chưa ghép đôi thì không có hội thoại để mở
             $conv = $this->m_interaction->conversation_with($me['id'], $to);
             if ($conv) {
                 redirect('tai-khoan/tin-nhan/' . $conv['id']);
             }
+            set_flash('danger', 'Hai bạn chưa ghép đôi nên chưa nhắn tin được. '
+                . 'Hãy bấm Thích và chờ người ấy thích lại.');
+            redirect('tai-khoan/quan-tam');
         }
 
         if ($conversation_id) {
@@ -301,6 +306,9 @@ class Account extends Member_Controller
             }
             $other_id = (int) $conv['user_low_id'] === (int) $me['id'] ? $conv['user_high_id'] : $conv['user_low_id'];
             $partner  = $this->m_user->find($other_id);
+            // Hội thoại cũ của cặp chưa (hoặc không còn) ghép đôi thì chỉ xem lại
+            // được lịch sử, không gửi thêm tin nhắn.
+            $can_send = $this->m_interaction->is_matched($me['id'], $other_id);
             $messages = $this->m_interaction->messages($conversation_id);
             $this->m_interaction->mark_read($conversation_id, $me['id']);
         }
@@ -310,6 +318,7 @@ class Account extends Member_Controller
             'conversations' => $this->m_interaction->conversations($me['id']),
             'messages'      => $messages,
             'partner'       => $partner,
+            'can_send'      => $can_send,
             'conversation_id' => $conversation_id,
         ));
     }

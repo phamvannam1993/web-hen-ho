@@ -2506,6 +2506,27 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
 .pcard:hover { box-shadow: 0 8px 26px rgba(17, 24, 39, .15); }
 .pcard.card-gone { opacity: 0; transform: scale(.96); }
 
+.section-hint { color: var(--muted); font-size: 14px; margin: -4px 0 14px; }
+
+/* Khung soạn tin bị khoá vì hai người chưa ghép đôi */
+.chat-locked {
+    margin: 0; padding: 14px 16px; text-align: center;
+    color: var(--muted); font-size: 14px; line-height: 1.5;
+    background: #f7f8fa; border-top: 1px solid #e6e8ec;
+}
+
+/* Thẻ trong mục "Người thích bạn": thẻ hồ sơ + hai nút quyết định bên dưới */
+.like-request { display: flex; flex-direction: column; transition: opacity .28s ease, transform .28s ease; }
+.like-request.card-gone { opacity: 0; transform: scale(.96); }
+.like-request .pcard { flex: 1; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.like-request-actions {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    padding: 10px 12px 12px; background: #fff;
+    border-radius: 0 0 7px 7px; box-shadow: 0 3px 16px rgba(17, 24, 39, .09);
+}
+.like-request-actions .btn { padding: 8px 10px; font-size: 14px; }
+.matched-note-wait { color: var(--muted); font-weight: 500; }
+
 .pcard-photo { position: relative; display: block; background: #f1f2f4; }
 .pcard-photo img { width: 100%; aspect-ratio: 1 / 1; max-height: 230px; object-fit: cover; display: block; }
 

@@ -57,6 +57,12 @@
                         <?php endforeach; ?>
                     </div>
 
+                    <?php if (!$can_send): ?>
+                        <p class="chat-locked">
+                            Hai bạn chưa ghép đôi nên không gửi tin nhắn được.
+                            Chỉ khi cả hai cùng thích nhau, khung trò chuyện mới mở lại.
+                        </p>
+                    <?php else: ?>
                     <form class="chat-form" method="post" enctype="multipart/form-data"
                           action="<?= site_url('ajax/send-message') ?>">
                         <input type="hidden" name="receiver_id" value="<?= (int) $partner['id'] ?>">
@@ -86,6 +92,7 @@
                         <button class="btn btn-primary" type="submit">Gửi</button>
                     </form>
                     <p class="chat-seen" id="chat-seen"></p>
+                    <?php endif; ?>
                 <?php endif; ?>
             </div>
         </div>

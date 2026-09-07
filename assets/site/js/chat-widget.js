@@ -480,7 +480,15 @@
         btn.addEventListener('click', function (e) {
             e.preventDefault();
             api('ajax/mo-chat/' + btn.getAttribute('data-chat-with')).then(function (res) {
-                if (res.ok) { openChat(res); }
+                if (res.ok) { return openChat(res); }
+                // Chưa ghép đôi (hoặc lỗi khác) thì nói rõ lý do thay vì im lặng
+                if (window.appModal) {
+                    window.appModal({
+                        type: res.need_match ? 'info' : 'error',
+                        title: res.need_match ? 'Chưa ghép đôi' : 'Không mở được trò chuyện',
+                        message: res.message
+                    });
+                }
             });
         });
     });

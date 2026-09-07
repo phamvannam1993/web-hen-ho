@@ -313,9 +313,12 @@ CREATE TABLE `likes` (
   `user_id`     BIGINT UNSIGNED NOT NULL COMMENT 'người thích',
   `target_type` ENUM('user','post') NOT NULL,
   `target_id`   BIGINT UNSIGNED NOT NULL,
+  `status`      ENUM('pending','matched','rejected') NOT NULL DEFAULT 'pending'
+                COMMENT 'chỉ dùng cho target_type=user: chờ trả lời / đã ghép đôi / bị bỏ qua',
   `created_at`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_like` (`user_id`,`target_type`,`target_id`),
+  KEY `idx_like_status` (`target_type`,`target_id`,`status`),
   KEY `idx_like_target` (`target_type`,`target_id`),
   CONSTRAINT `fk_like_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

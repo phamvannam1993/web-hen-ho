@@ -16,9 +16,17 @@ class M_interaction extends CI_Model
         if ($exists) {
             $this->db->where('id', $exists['id'])->delete('likes');
             $liked = false;
+            // Rút lại lượt thích của một cặp đã ghép đôi thì gỡ luôn ghép đôi,
+            // khung chat giữa hai người khoá lại theo.
+            if ($target_type === 'user') {
+                $this->unmatch($user_id, $target_id);
+            }
         } else {
             $this->db->insert('likes', array(
-                'user_id' => $user_id, 'target_type' => $target_type, 'target_id' => $target_id,
+                'user_id'     => $user_id,
+                'target_type' => $target_type,
+                'target_id'   => $target_id,
+                'status'      => 'pending',
             ));
             $liked = true;
         }
@@ -33,8 +41,9 @@ class M_interaction extends CI_Model
             $this->load->model('m_notification');
             $matched = $this->check_match($user_id, $target_id);
             if (!$matched) {
-                $this->m_notification->push($target_id, 'like', 'Bạn có lượt thích mới',
-                    'Ai đó vừa quan tâm đến bạn', site_url('tai-khoan/quan-tam'));
+                $this->m_notification->push($target_id, 'like', 'Có 1 người vừa thích bạn',
+                    'Thích lại để ghép đôi và mở khung trò chuyện.',
+                    site_url('tai-khoan/quan-tam'));
             }
         }
 
@@ -59,48 +68,157 @@ class M_interaction extends CI_Model
         ))->count_all_results('likes') > 0;
     }
 
-    /** Ai đã thích tôi. */
+    /**
+     * Ai đã thích tôi và đang chờ tôi trả lời.
+     * Không lấy lượt đã ghép đôi (đã nằm ở danh sách ghép đôi) và lượt tôi đã
+     * bỏ qua (coi như không còn tồn tại với tôi).
+     */
     public function liked_me($user_id, $limit = 30)
     {
-        return $this->db->select('u.*')->from('likes l')->join('users u', 'u.id = l.user_id')
+        return $this->db->select('u.*, l.created_at AS liked_at')
+            ->from('likes l')->join('users u', 'u.id = l.user_id')
             ->where('l.target_type', 'user')->where('l.target_id', $user_id)
+            ->where('l.status', 'pending')
             ->where('u.deleted_at', null)
             ->order_by('l.created_at', 'DESC')->limit($limit)->get()->result_array();
     }
 
-    /** Tôi đã thích ai. */
+    /** Số lượt thích đang chờ tôi trả lời. */
+    public function liked_me_count($user_id)
+    {
+        return (int) $this->db->from('likes l')->join('users u', 'u.id = l.user_id')
+            ->where('l.target_type', 'user')->where('l.target_id', $user_id)
+            ->where('l.status', 'pending')->where('u.deleted_at', null)
+            ->count_all_results();
+    }
+
+    /**
+     * Tôi đã thích ai (chưa thành ghép đôi).
+     * Lượt bị người kia bỏ qua vẫn hiện ở đây: người gửi không bao giờ biết
+     * mình đã bị từ chối.
+     */
     public function my_likes($user_id, $limit = 30)
     {
         return $this->db->select('u.*')->from('likes l')->join('users u', 'u.id = l.target_id')
             ->where('l.target_type', 'user')->where('l.user_id', $user_id)
+            ->where('l.status !=', 'matched')
             ->where('u.deleted_at', null)
             ->order_by('l.created_at', 'DESC')->limit($limit)->get()->result_array();
     }
 
     /* ------------------------- Ghép đôi ------------------------- */
 
-    /** Nếu hai bên cùng thích nhau thì tạo match + thông báo. */
+    /**
+     * Nếu hai bên cùng thích nhau thì tạo match + thông báo.
+     *
+     * Lượt thích người kia đã bị bỏ qua ('rejected') không tính là thích lại,
+     * nếu không thì người bị từ chối chỉ cần thích lại là ép được ghép đôi.
+     */
     private function check_match($user_id, $other_id)
     {
-        $mutual = $this->db->where(array(
+        $nguoc = $this->db->where(array(
             'user_id' => $other_id, 'target_type' => 'user', 'target_id' => $user_id,
-        ))->count_all_results('likes') > 0;
+        ))->get('likes')->row_array();
 
-        if (!$mutual) {
+        if (!$nguoc || $nguoc['status'] === 'rejected') {
             return false;
         }
+        $this->create_match($user_id, $other_id);
+        return true;
+    }
+
+    /**
+     * Chốt ghép đôi giữa hai người: đánh dấu cả hai lượt thích là 'matched',
+     * tạo bản ghi matches và báo cho cả hai. Gọi lại nhiều lần không sinh trùng.
+     */
+    private function create_match($user_id, $other_id)
+    {
+        $this->db->where('target_type', 'user')
+            ->group_start()
+                ->group_start()->where('user_id', $user_id)->where('target_id', $other_id)->group_end()
+                ->or_group_start()->where('user_id', $other_id)->where('target_id', $user_id)->group_end()
+            ->group_end()
+            ->update('likes', array('status' => 'matched'));
+
         list($low, $high) = $this->pair($user_id, $other_id);
         $exists = $this->db->where('user_low_id', $low)->where('user_high_id', $high)
             ->count_all_results('matches') > 0;
-        if (!$exists) {
-            $this->db->insert('matches', array('user_low_id' => $low, 'user_high_id' => $high));
-            $this->load->model('m_notification');
-            foreach (array($user_id, $other_id) as $uid) {
-                $this->m_notification->push($uid, 'match', 'Ghép đôi thành công!',
-                    'Hai bạn đã thích nhau, hãy bắt đầu trò chuyện.', site_url('tai-khoan/tin-nhan'));
-            }
+        if ($exists) {
+            return;
         }
-        return true;
+
+        $this->db->insert('matches', array('user_low_id' => $low, 'user_high_id' => $high));
+        $this->load->model('m_notification');
+        foreach (array($user_id, $other_id) as $uid) {
+            $this->m_notification->push($uid, 'match', 'Ghép đôi thành công!',
+                'Hai bạn đã thích nhau, hãy bắt đầu trò chuyện.', site_url('tai-khoan/tin-nhan'));
+        }
+    }
+
+    /**
+     * Trả lời một lượt thích đang chờ ở mục "Người thích bạn".
+     *
+     *   $action = 'accept' : thích lại -> ghép đôi, mở khoá chat cho cả hai
+     *   $action = 'skip'   : bỏ qua    -> lượt thích chuyển 'rejected', người
+     *                                     gửi không nhận được thông báo gì
+     *
+     * Trả về ['ok'=>bool, 'matched'=>bool, 'message'=>string].
+     */
+    public function respond_like($user_id, $other_id, $action)
+    {
+        $user_id = (int) $user_id;
+        $other_id = (int) $other_id;
+        if ($user_id === $other_id) {
+            return array('ok' => false, 'matched' => false, 'message' => 'Yêu cầu không hợp lệ.');
+        }
+
+        $cua_ho = $this->db->where(array(
+            'user_id' => $other_id, 'target_type' => 'user', 'target_id' => $user_id,
+        ))->get('likes')->row_array();
+
+        if (!$cua_ho || $cua_ho['status'] !== 'pending') {
+            return array('ok' => false, 'matched' => false,
+                'message' => 'Lượt thích này không còn chờ trả lời.');
+        }
+
+        if ($action === 'accept') {
+            if ($this->is_blocked($user_id, $other_id)) {
+                return array('ok' => false, 'matched' => false,
+                    'message' => 'Không thể ghép đôi với người dùng này.');
+            }
+            // Thích lại: bổ sung lượt thích chiều ngược lại nếu chưa có
+            $cua_toi = $this->db->where(array(
+                'user_id' => $user_id, 'target_type' => 'user', 'target_id' => $other_id,
+            ))->count_all_results('likes') > 0;
+            if (!$cua_toi) {
+                $this->db->insert('likes', array(
+                    'user_id'     => $user_id,
+                    'target_type' => 'user',
+                    'target_id'   => $other_id,
+                    'status'      => 'matched',
+                ));
+            }
+            $this->create_match($user_id, $other_id);
+            return array('ok' => true, 'matched' => true,
+                'message' => 'Ghép đôi thành công! Hai bạn có thể nhắn tin cho nhau.');
+        }
+
+        // Bỏ qua: chỉ đổi trạng thái, tuyệt đối không báo cho người gửi biết
+        $this->db->where('id', $cua_ho['id'])->update('likes', array('status' => 'rejected'));
+        return array('ok' => true, 'matched' => false, 'message' => 'Đã bỏ qua lượt thích này.');
+    }
+
+    /** Gỡ ghép đôi (khi một bên rút lại lượt thích). Chat khoá lại theo. */
+    private function unmatch($user_id, $other_id)
+    {
+        list($low, $high) = $this->pair($user_id, $other_id);
+        $this->db->where('user_low_id', $low)->where('user_high_id', $high)->delete('matches');
+
+        // Lượt thích còn lại của người kia quay về trạng thái chờ trả lời
+        $this->db->where(array(
+            'user_id' => $other_id, 'target_type' => 'user',
+            'target_id' => $user_id, 'status' => 'matched',
+        ))->update('likes', array('status' => 'pending'));
     }
 
     public function matches($user_id, $limit = 50)
@@ -144,8 +262,15 @@ class M_interaction extends CI_Model
 
     /* ------------------------- Nhắn tin ------------------------- */
 
+    /**
+     * Lấy hội thoại giữa hai người. Chỉ tạo mới khi hai bên đã ghép đôi —
+     * đây là chốt chặn cuối cùng cho luật "có match mới được nhắn tin".
+     */
     public function conversation_with($user_id, $other_id, $create = true)
     {
+        if ($create && !$this->is_matched($user_id, $other_id)) {
+            $create = false;
+        }
         list($low, $high) = $this->pair($user_id, $other_id);
         $conv = $this->db->where('user_low_id', $low)->where('user_high_id', $high)
             ->get('conversations')->row_array();
@@ -188,16 +313,22 @@ class M_interaction extends CI_Model
         if ($this->is_blocked($sender_id, $receiver_id)) {
             return array('ok' => false, 'message' => 'Không thể gửi tin nhắn tới người dùng này.');
         }
-        $pref = $this->db->where('user_id', $receiver_id)->get('user_preferences')->row_array();
-        $rule = $pref['allow_message'] ?? 'all';
-        if ($rule === 'vip' && !$this->auth->is_vip()) {
-            return array('ok' => false, 'message' => 'Người này chỉ nhận tin nhắn từ thành viên VIP.');
+        // Luật chung: chỉ nhắn tin được khi hai bên đã ghép đôi.
+        if (!$this->is_matched($sender_id, $receiver_id)) {
+            return array('ok' => false, 'need_match' => true,
+                'message' => 'Hai bạn chưa ghép đôi. Hãy thích nhau trước khi nhắn tin.');
         }
-        if ($rule === 'matched' && !$this->is_matched($sender_id, $receiver_id)) {
-            return array('ok' => false, 'message' => 'Người này chỉ nhận tin nhắn khi đã ghép đôi.');
+
+        // Người nhận vẫn có thể siết thêm: chỉ nhận tin từ thành viên VIP.
+        $pref = $this->db->where('user_id', $receiver_id)->get('user_preferences')->row_array();
+        if (($pref['allow_message'] ?? 'all') === 'vip' && !$this->auth->is_vip()) {
+            return array('ok' => false, 'message' => 'Người này chỉ nhận tin nhắn từ thành viên VIP.');
         }
 
         $conv = $this->conversation_with($sender_id, $receiver_id);
+        if (!$conv) {
+            return array('ok' => false, 'message' => 'Không mở được hội thoại với người này.');
+        }
         $this->db->insert('messages', array(
             'conversation_id' => $conv['id'],
             'sender_id'       => $sender_id,

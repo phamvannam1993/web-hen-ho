@@ -218,9 +218,11 @@ $chon = function ($k, $gt, $d = '') use ($goc) {
                 <div><label for="age_max">Đến</label><input type="number" id="age_max" name="age_max" value="<?= $pv('age_max', '60') ?>"></div>
             </div>
 
+            <?php /* Mọi tin nhắn đều đã yêu cầu ghép đôi, mục này chỉ để siết thêm */ ?>
             <label for="allow_message">Ai được nhắn tin cho tôi</label>
+            <p class="section-hint">Chỉ người đã ghép đôi với bạn mới nhắn tin được. Bạn có thể siết thêm bên dưới.</p>
             <select id="allow_message" name="allow_message">
-                <?php foreach (array('all' => 'Mọi thành viên', 'vip' => 'Chỉ thành viên VIP', 'matched' => 'Chỉ người đã ghép đôi') as $k => $t): ?>
+                <?php foreach (array('all' => 'Mọi người đã ghép đôi', 'vip' => 'Chỉ người đã ghép đôi và là VIP') as $k => $t): ?>
                     <option value="<?= $k ?>" <?= $chon('allow_message', $k, 'all') ?>><?= $t ?></option>
                 <?php endforeach; ?>
             </select>

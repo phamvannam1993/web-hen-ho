@@ -59,6 +59,24 @@ class Ajax extends MY_Controller
         return $this->json($result);
     }
 
+    /**
+     * Trả lời một lượt thích ở mục "Người thích bạn": thích lại (ghép đôi) hoặc bỏ qua.
+     */
+    public function respond_like()
+    {
+        if (!$this->require_login()) {
+            return;
+        }
+        $id     = (int) $this->input->post('id');
+        $action = $this->input->post('action') === 'accept' ? 'accept' : 'skip';
+        if ($id <= 0) {
+            return $this->json(array('ok' => false, 'message' => 'Yêu cầu không hợp lệ.'));
+        }
+
+        $result = $this->m_interaction->respond_like($this->auth->id(), $id, $action);
+        return $this->json($result);
+    }
+
     public function send_message()
     {
         if (!$this->require_login()) {
@@ -245,6 +263,16 @@ class Ajax extends MY_Controller
         $other = $this->m_user->find($user_id);
         if (!$other) {
             return $this->json(array('ok' => false, 'message' => 'Không tìm thấy thành viên.'), 404);
+        }
+
+        // Chưa ghép đôi thì không mở được khung chat
+        if (!$this->m_interaction->is_matched($this->auth->id(), $user_id)) {
+            return $this->json(array(
+                'ok'         => false,
+                'need_match' => true,
+                'message'    => 'Hai bạn chưa ghép đôi. Hãy bấm Thích và chờ ' . display_name($other)
+                    . ' thích lại để mở khung trò chuyện.',
+            ), 403);
         }
 
         $conv = $this->m_interaction->conversation_with($this->auth->id(), $user_id);

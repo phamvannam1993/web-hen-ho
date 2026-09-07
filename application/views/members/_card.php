@@ -64,8 +64,12 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
             <?php foreach ($tags as $t): ?><span><?= e($t) ?></span><?php endforeach; ?>
         </p>
 
+        <?php /* Thẻ trong danh sách "Người thích bạn" dùng hai nút riêng bên dưới,
+                 nên bỏ cặp nút Bỏ qua / Thích mặc định đi cho khỏi lẫn */ ?>
         <div class="pcard-actions">
-            <?php if ($me && (int) $me['id'] !== (int) $m['id']): ?>
+            <?php if (!empty($hide_actions)): ?>
+                <a class="btn-swipe btn-swipe-pass" href="<?= site_url('profile/' . $m['slug']) ?>">Xem hồ sơ</a>
+            <?php elseif ($me && (int) $me['id'] !== (int) $m['id']): ?>
                 <button type="button" class="btn-swipe btn-swipe-pass" data-card-action="pass"><?= $ic_close ?>Bỏ qua</button>
                 <button type="button" class="btn-swipe btn-swipe-like <?= !empty($m['liked']) ? 'is-liked' : '' ?>"
                         data-card-action="like"><?= $ic_heart ?><span class="js-like-text"><?= !empty($m['liked']) ? 'Đã thích' : 'Thích' ?></span></button>
