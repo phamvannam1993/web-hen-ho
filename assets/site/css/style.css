@@ -316,34 +316,44 @@ select {
 
 /* ===== PC ===== */
 @media (min-width: 769px) {
+    /* Thanh nổi chỉ cần vừa đủ 4 mục, không kéo rộng theo màn hình */
     .bottom-nav {
-        width: 70% !important;
-        max-width: 500px !important;
-        min-width: 350px !important;
-        padding: 6px !important;
+        width: auto !important;
+        max-width: 540px !important;
+        min-width: 0 !important;
+        padding: 4px 6px !important;
         bottom: 20px;
-        border-radius: 35px;
+        border-radius: 30px;
     }
-    
+
+    .bottom-nav-inner { gap: 4px; }
+
+    /* Mọi mục cùng bề rộng để mục đang chọn không phình to hơn các mục khác */
     .bottom-nav-item {
-        padding: 10px 16px !important;
-        min-width: 60px !important;
-        border-radius: 29px !important;
-        font-size: 12px !important;
+        flex: 1 1 0 !important;
+        padding: 6px 18px !important;
+        min-width: 104px !important;
+        border-radius: 26px !important;
+        font-size: 12.5px !important;
     }
-    
+
     .bottom-nav-item .bottom-nav-icon {
-        font-size: 22px !important;
+        font-size: 19px !important;
+        line-height: 1;
+        margin-bottom: 2px;
     }
-    
+
     .bottom-nav-item .bottom-nav-label {
-        font-size: 10px !important;
+        font-size: 11px !important;
     }
-    
+
+    /* Cùng padding với các mục khác: chỉ khác nền, không khác kích thước */
     .bottom-nav-item.active {
-        padding: 10px 20px !important;
-        border-radius: 29px !important;
+        padding: 6px 18px !important;
+        border-radius: 26px !important;
     }
+
+    .bottom-nav-item.active .bottom-nav-icon { transform: none; }
 }
 
 /* ===== MOBILE - Cách xa viền hơn ===== */
@@ -2619,6 +2629,17 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
 .btn-swipe:active { transform: scale(.97); }
 .btn-swipe:disabled { opacity: .55; cursor: default; transform: none; }
 
+/* Màn hình hẹp: thẻ hồ sơ nhỏ lại nên cặp nút Hồ sơ / Thích cũng thu gọn theo */
+@media (max-width: 720px) {
+    .pcard-actions { gap: 6px; }
+    .btn-swipe { padding: 7px 6px; font-size: 11.5px; gap: 4px; border-width: 1.2px; }
+    .btn-swipe .ic { width: 14px; height: 14px; flex: 0 0 14px; stroke-width: 2; }
+
+    /* Hai nút trả lời lượt thích ở mục "Người thích bạn" */
+    .like-request-actions { gap: 6px; padding: 8px 10px 10px; }
+    .like-request-actions .btn { padding: 7px 8px; font-size: 12.5px; }
+}
+
 /* ---------------- Lưới gọn ở trang chủ ----------------
    Trang chủ chỉ để lướt nhanh nên xếp 5 thẻ một hàng và lược bớt phần phụ;
    bấm vào ảnh hoặc tên là sang trang hồ sơ đầy đủ. */
@@ -2655,7 +2676,7 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
 .member-grid.is-list .pcard-body { padding: 18px 20px; }
 .member-grid.is-list .pcard-bio { -webkit-line-clamp: 1; min-height: 0; margin-bottom: 14px; }
 .member-grid.is-list .pcard-actions { justify-content: flex-start; }
-.member-grid.is-list
+
 @media (max-width: 560px) {
     .member-grid { grid-template-columns: 1fr; gap: 14px; }
 
@@ -2669,8 +2690,11 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
     .member-grid.is-compact .pcard-meta .ic { width: 14px; height: 14px; flex-basis: 14px; }
     .member-grid.is-compact .pcard-meta .ic + span { margin-right: 5px; }
     .member-grid.is-compact .pcard-bio,
-    .member-grid.is-compact .pcard-chips,
-    .member-grid.is-compact .pcard-actions { display: none; }
+    .member-grid.is-compact .pcard-chips { display: none; }
+    /* Vẫn giữ cặp nút Hồ sơ / Thích, chỉ thu nhỏ cho vừa thẻ hai cột */
+    .member-grid.is-compact .pcard-actions { gap: 5px; }
+    .member-grid.is-compact .btn-swipe { padding: 6px 4px; font-size: 11px; gap: 3px; }
+    .member-grid.is-compact .btn-swipe .ic { width: 13px; height: 13px; flex: 0 0 13px; }
     .member-grid.is-compact .pcard-tags { top: 8px; left: 8px; gap: 5px; }
     .member-grid.is-compact .pcard-tags .tag { padding: 4px 9px; font-size: 10px; }
     .member-grid.is-compact .pcard-gender { width: 30px; height: 30px; right: 8px; bottom: 8px; }
@@ -2682,7 +2706,8 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
     .member-grid.is-list .pcard-body { padding: 12px 14px; }
     .member-grid.is-list .pcard-tags { right: 10px; top: 10px; }
     .member-grid.is-list .pcard-chips { display: none; }
-    .member-grid.is-list}
+
+}
 
 .block-sub { text-align: center; color: var(--muted); margin: -8px 0 14px; }
 
