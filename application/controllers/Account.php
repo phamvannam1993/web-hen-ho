@@ -8,7 +8,7 @@ class Account extends Member_Controller
     {
         parent::__construct();
         $this->load->model(array('m_user', 'm_post', 'm_category', 'm_interaction',
-                                 'm_notification', 'm_billing'));
+                                 'm_notification', 'm_billing', 'm_job'));
     }
 
     public function index()
@@ -82,7 +82,8 @@ class Account extends Member_Controller
                     'birthday'       => $this->input->post('birthday') ?: null,
                     'province_id'    => $this->input->post('province_id') ?: null,
                     'bio'            => $this->input->post('bio', true),
-                    'job'            => $this->input->post('job', true),
+                    // Nghề nghiệp giờ chọn trong danh mục, không nhận chữ tự gõ
+                    'job'            => $this->m_job->valid_name($this->input->post('job', true), $me['job']),
                     'height_cm'      => $this->input->post('height_cm') ?: null,
                     'weight_kg'      => $this->input->post('weight_kg') ?: null,
                     'education'      => $this->input->post('education') ?: null,
@@ -138,6 +139,7 @@ class Account extends Member_Controller
             'thieu'         => $this->m_user->thieu_thong_tin($me['id']),
             'tong_muc'      => $this->m_user->so_muc_bat_buoc(),
             'me'            => $this->m_user->find($me['id']),
+            'jobs'          => $this->m_job->names(),
             'pref'          => $this->db->where('user_id', $me['id'])->get('user_preferences')->row_array(),
             'all_interests' => $this->db->order_by('name')->get('interests')->result_array(),
             'my_interests'  => array_map('intval', array_column(

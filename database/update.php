@@ -11,8 +11,9 @@
  *   4. Toạ độ tỉnh/thành và vị trí thành viên, để tính khoảng cách
  *   5. Dọn trạng thái "đang online" giả của tài khoản mẫu
  *   6. Trạng thái lượt thích (chờ trả lời / ghép đôi / bị bỏ qua) cho luật chat mới
- *   7. Điền các trường hồ sơ còn trống để bộ lọc tìm kiếm có dữ liệu mà lọc
- *   8. (tuỳ chọn) Sinh thêm thành viên mẫu:  php database/update.php 30
+ *   7. Danh mục nghề nghiệp cho ô chọn nghề trong hồ sơ
+ *   8. Điền các trường hồ sơ còn trống để bộ lọc tìm kiếm có dữ liệu mà lọc
+ *   9. (tuỳ chọn) Sinh thêm thành viên mẫu:  php database/update.php 30
  *
  * Thành viên mẫu có email dạng @demo.local nên gỡ lại rất dễ:
  *   DELETE FROM users WHERE email LIKE '%@demo.local';
@@ -189,11 +190,39 @@ $st = $pdo->prepare("UPDATE likes l
 $st->execute();
 echo '  Đánh dấu ' . $st->rowCount() . " lượt thích đã ghép đôi.\n";
 
-echo "\n== 7. Hồ sơ thành viên ==\n";
+echo "\n== 7. Danh mục nghề nghiệp ==\n";
+// Ô "Nghề nghiệp" trong hồ sơ đổi từ gõ tay sang chọn trong danh mục này.
+$pdo->exec("CREATE TABLE IF NOT EXISTS `jobs` (
+  `id`        SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name`      VARCHAR(120) NOT NULL,
+  `sort`      SMALLINT NOT NULL DEFAULT 0,
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_jobs_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+$nghe = require $root . '/database/jobs_list.php';
+$st = $pdo->prepare("INSERT IGNORE INTO jobs (name) VALUES (?)");
+$them = 0;
+foreach ($nghe as $ten) {
+    $st->execute(array($ten));
+    $them += $st->rowCount();
+}
+echo '  Thêm ' . $them . ' nghề mới (danh mục có ' . count($nghe) . " mục).\n";
+
+// Nghề cũ người dùng đã gõ tay mà chưa có trong danh mục thì đưa vào luôn,
+// nếu không họ mở hồ sơ ra sẽ thấy ô nghề nghiệp trống trơn.
+$st = $pdo->prepare("INSERT IGNORE INTO jobs (name)
+        SELECT DISTINCT TRIM(job) FROM users
+         WHERE job IS NOT NULL AND TRIM(job) <> ''");
+$st->execute();
+echo '  Giữ lại ' . $st->rowCount() . " nghề người dùng đã tự nhập.\n";
+
+echo "\n== 8. Hồ sơ thành viên ==\n";
 require $root . '/database/fill_member_profiles.php';
 
 if ($demo > 0) {
-    echo "\n== 8. Thành viên mẫu ==\n";
+    echo "\n== 9. Thành viên mẫu ==\n";
     // seed_demo_users.php đọc số lượng từ $argv[1] nên truyền thẳng tham số qua
     $argv[1] = $demo;
     require $root . '/database/seed_demo_users.php';

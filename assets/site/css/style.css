@@ -189,6 +189,42 @@ select {
   background-position: right 10px center;
   background-size: 12px;
 }
+
+/* ---------------- Ô chọn có tìm kiếm (nghề nghiệp…) ----------------
+   Thẻ <select> gốc vẫn nằm trong form để gửi dữ liệu, chỉ bị ẩn đi khi JS
+   dựng xong phần thay thế. Không có JS thì select hiện bình thường. */
+.ss { position: relative; }
+.ss .ss-native { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; }
+
+.ss-toggle {
+    width: 100%; text-align: left; cursor: pointer;
+    background: #fff; border: 1px solid #ccc; border-radius: 4px;
+    padding: 10px 34px 10px 15px; color: #333; font: inherit; line-height: 1.4;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22293%22%20height%3D%22293%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M236%20129L146.5%20218.5%2057%20129z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat; background-position: right 10px center; background-size: 12px;
+}
+.ss-toggle:hover { border-color: #9aa2ad; }
+.ss-toggle.is-empty { color: #8b929c; }
+
+.ss-panel {
+    position: absolute; z-index: 40; left: 0; right: 0; top: calc(100% + 4px);
+    background: #fff; border: 1px solid #d7dbe0; border-radius: 6px;
+    box-shadow: 0 10px 28px rgba(17, 24, 39, .16); overflow: hidden;
+}
+.ss-search {
+    width: 100%; border: 0; border-bottom: 1px solid #e6e8ec;
+    padding: 10px 14px; font: inherit; outline: none; border-radius: 0;
+}
+.ss-list { max-height: 260px; overflow-y: auto; }
+.ss-item {
+    display: block; width: 100%; text-align: left; cursor: pointer;
+    background: none; border: 0; padding: 9px 14px; font: inherit; color: #333;
+}
+.ss-item:hover { background: #f2f5f9; }
+.ss-item.is-on { background: #eaf1fb; color: #2f6fc4; font-weight: 600; }
+.ss-empty { margin: 0; padding: 14px; text-align: center; color: var(--muted); font-size: 14px; }
+
 .search-bar { background: var(--pink); padding: 14px 0; }
 .search-form { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 .search-form input[type=text] { flex: 1 1 480px; padding: 12px 14px; border: 0; }

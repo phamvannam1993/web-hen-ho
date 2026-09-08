@@ -8,7 +8,7 @@ class Users extends Admin_Controller
     public function __construct()
     {
         parent::__construct();
-        $this->load->model(array('m_user', 'm_province', 'm_billing', 'm_notification'));
+        $this->load->model(array('m_user', 'm_province', 'm_billing', 'm_notification', 'm_job'));
     }
 
     public function index($page = 1)
@@ -62,7 +62,7 @@ class Users extends Admin_Controller
                 'gender'         => $this->input->post('gender'),
                 'birthday'       => $this->input->post('birthday') ?: null,
                 'province_id'    => $this->input->post('province_id') ?: null,
-                'job'            => $this->input->post('job', true),
+                'job'            => $this->m_job->valid_name($this->input->post('job', true), $user['job']),
                 'bio'            => $this->input->post('bio', true),
                 'role'           => $this->input->post('role'),
                 'status'         => $this->input->post('status'),
@@ -80,6 +80,7 @@ class Users extends Admin_Controller
             'title'     => 'Sửa thành viên',
             'u'         => $user,
             'provinces' => $this->m_province->all(),
+            'jobs'      => $this->m_job->names(),
         ));
     }
 

@@ -109,8 +109,21 @@ $chon = function ($k, $gt, $d = '') use ($goc) {
                 <div><label for="weight_kg">Cân nặng (kg)</label><input type="number" id="weight_kg" name="weight_kg" value="<?= $v('weight_kg') ?>"></div>
             </div>
 
+            <?php /* Ô chọn thường; JS nâng cấp thành ô chọn có tìm kiếm,
+                     tắt JS thì vẫn chọn được như select bình thường */ ?>
             <label for="job">Nghề nghiệp</label>
-            <input type="text" id="job" name="job" value="<?= $v('job') ?>">
+            <?php
+            // Nghề cũ đã bị gỡ khỏi danh mục vẫn phải hiện ra, kẻo lưu hồ sơ là mất
+            $nghe_hien = (string) ($me['job'] ?? '');
+            $ds_nghe   = ($nghe_hien !== '' && !in_array($nghe_hien, $jobs, true))
+                ? array_merge(array($nghe_hien), $jobs) : $jobs;
+            ?>
+            <select id="job" name="job" data-searchable data-search-placeholder="Tìm nghề...">
+                <option value="">-- Chọn nghề nghiệp --</option>
+                <?php foreach ($ds_nghe as $ten): ?>
+                    <option value="<?= e($ten) ?>" <?= $chon('job', $ten) ?>><?= e($ten) ?></option>
+                <?php endforeach; ?>
+            </select>
 
             <div class="form-row">
                 <div>
