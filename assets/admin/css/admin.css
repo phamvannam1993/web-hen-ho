@@ -245,3 +245,36 @@ input[type=file]:hover { border-color: var(--pink); background: #fdf3f8; }
 }
 .pw-toggle:hover { opacity: 1; background: #f1f2f5; }
 .pw-toggle.on { opacity: 1; }
+
+/* ---------------- Ô chọn có tìm kiếm (searchable-select.js) ----------------
+   Thẻ <select> gốc vẫn nằm trong form để gửi dữ liệu, chỉ bị ẩn khi JS dựng
+   xong phần thay thế. Không có JS thì select hiện bình thường. */
+.ss { position: relative; }
+.ss .ss-native { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; }
+
+.ss-toggle {
+    width: 100%; text-align: left; cursor: pointer;
+    background: #fff; border: 1px solid #d1d5db; border-radius: 6px;
+    padding: 9px 30px 9px 12px; font-size: 15px; color: #111827; line-height: 1.4;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ss-toggle:hover { border-color: #9ca3af; }
+.ss-toggle.is-empty { color: #9ca3af; }
+
+.ss-panel {
+    position: absolute; z-index: 40; left: 0; right: 0; top: calc(100% + 4px);
+    background: #fff; border: 1px solid #d1d5db; border-radius: 8px;
+    box-shadow: 0 10px 28px rgba(17, 24, 39, .16); overflow: hidden;
+}
+.ss-search {
+    width: 100%; border: 0; border-bottom: 1px solid #e5e7eb; border-radius: 0;
+    padding: 9px 12px; font-size: 15px; outline: none;
+}
+.ss-list { max-height: 260px; overflow-y: auto; }
+.ss-item {
+    display: block; width: 100%; text-align: left; cursor: pointer;
+    background: none; border: 0; padding: 8px 12px; font-size: 15px; color: #111827;
+}
+.ss-item:hover { background: #f3f4f6; }
+.ss-item.is-on { background: #eaf1fb; color: #2f6fc4; font-weight: 600; }
+.ss-empty { margin: 0; padding: 14px; text-align: center; color: #6b7280; font-size: 14px; }

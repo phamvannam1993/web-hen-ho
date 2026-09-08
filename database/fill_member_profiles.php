@@ -31,9 +31,16 @@ try {
     exit("Không kết nối được cơ sở dữ liệu. Kiểm tra DB_USER / DB_PASS trong .env\n");
 }
 
-$nghe      = array('Nhân viên văn phòng', 'Kinh doanh tự do', 'Giáo viên', 'Kỹ sư', 'Kế toán',
-                   'Điều dưỡng', 'Công nhân', 'Lái xe', 'Bán hàng online', 'Đầu bếp',
-                   'Thiết kế đồ hoạ', 'Lập trình viên', 'Nhân viên ngân hàng', 'Bác sĩ');
+// Nghề lấy thẳng từ bảng jobs để hồ sơ mẫu khớp với ô chọn trong hồ sơ thật;
+// bảng chưa có dữ liệu thì tạm dùng danh sách gốc.
+try {
+    $nghe = $pdo->query("SELECT name FROM jobs WHERE is_active = 1")->fetchAll(PDO::FETCH_COLUMN);
+} catch (PDOException $e) {
+    $nghe = array();   // bảng chưa được tạo (chạy lẻ file này)
+}
+if (!$nghe) {
+    $nghe = require __DIR__ . '/jobs_list.php';
+}
 $hoc_van   = array('thpt', 'trung_cap', 'cao_dang', 'dai_hoc', 'dai_hoc', 'sau_dai_hoc');
 $hon_nhan  = array('doc_than', 'doc_than', 'doc_than', 'ly_hon', 'goa');
 $muc_do    = array('khong', 'khong', 'thinh_thoang', 'thuong_xuyen');

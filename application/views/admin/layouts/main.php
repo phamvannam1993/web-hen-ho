@@ -7,6 +7,7 @@ $menu  = array(
     'users'        => array('Thành viên', 'admin/users'),
     'categories'   => array('Danh mục', 'admin/categories'),
     'provinces'    => array('Tỉnh/thành', 'admin/provinces'),
+    'jobs'         => array('Nghề nghiệp', 'admin/jobs'),
     'reports'      => array('Báo cáo vi phạm', 'admin/reports'),
     'orders'       => array('Đơn nạp / VIP', 'admin/orders'),
     'packages'     => array('Gói dịch vụ', 'admin/packages'),
@@ -60,6 +61,7 @@ $menu  = array(
 </div>
 <script src="<?= base_url('assets/admin/js/password-toggle.js') ?>?v=<?= @filemtime(FCPATH.'assets/admin/js/password-toggle.js') ?>"></script>
 <script src="<?= base_url('assets/admin/js/admin.js') ?>?v=<?= @filemtime(FCPATH.'assets/admin/js/admin.js') ?>"></script>
+<script src="<?= base_url('assets/site/js/searchable-select.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/searchable-select.js') ?>"></script>
 <script src="<?= base_url('assets/ckeditor/ckeditor.js') ?>"></script>
 <script src="<?= base_url('assets/admin/js/editor.js') ?>?v=<?= @filemtime(FCPATH.'assets/admin/js/editor.js') ?>"></script>
 </body>

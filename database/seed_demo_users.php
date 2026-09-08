@@ -46,8 +46,15 @@ $ho  = array('Nguyễn', 'Trần', 'Lê', 'Phạm', 'Hoàng', 'Vũ', 'Đặng', 
 $dem = array('Thị', 'Văn', 'Minh', 'Ngọc', 'Thanh', 'Quang', 'Hải', 'Thu');
 $ten_nu   = array('Lan', 'Hương', 'Trang', 'Mai', 'Linh', 'Ngọc', 'Thảo', 'Hà', 'Yến', 'Nhung', 'Vân', 'Quỳnh');
 $ten_nam  = array('Hùng', 'Nam', 'Tuấn', 'Dũng', 'Long', 'Sơn', 'Khánh', 'Đạt', 'Phong', 'Bảo', 'Kiên', 'Hiếu');
-$nghe = array('Nhân viên văn phòng', 'Kinh doanh tự do', 'Giáo viên', 'Kỹ sư', 'Kế toán',
-              'Điều dưỡng', 'Công nhân', 'Lái xe', 'Bán hàng online', 'Đầu bếp');
+// Nghề lấy từ bảng jobs để hồ sơ mẫu khớp với ô chọn nghề trong hồ sơ thật
+try {
+    $nghe = $pdo->query("SELECT name FROM jobs WHERE is_active = 1")->fetchAll(PDO::FETCH_COLUMN);
+} catch (PDOException $e) {
+    $nghe = array();   // bảng chưa được tạo (chạy lẻ file này)
+}
+if (!$nghe) {
+    $nghe = require __DIR__ . '/jobs_list.php';
+}
 $gioi_thieu = array(
     'Mình sống tình cảm, thích nấu ăn và đi du lịch. Mong tìm một người bạn chân thành để chia sẻ buồn vui.',
     'Tính cách hoà đồng, vui vẻ. Rảnh thì hay cà phê với bạn bè, thích xem phim và nghe nhạc nhẹ.',

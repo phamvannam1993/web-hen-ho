@@ -27,7 +27,21 @@ $v = function ($k) use ($u) { return e($u[$k] ?? ''); };
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div><label>Nghề nghiệp</label><input type="text" name="job" value="<?= $v('job') ?>"></div>
+            <div>
+                <label>Nghề nghiệp</label>
+                <?php
+                // Nghề cũ đã bị gỡ khỏi danh mục vẫn phải hiện ra, kẻo lưu là mất
+                $nghe_hien = (string) ($u['job'] ?? '');
+                $ds_nghe   = ($nghe_hien !== '' && !in_array($nghe_hien, $jobs, true))
+                    ? array_merge(array($nghe_hien), $jobs) : $jobs;
+                ?>
+                <select name="job" data-searchable data-search-placeholder="Tìm nghề...">
+                    <option value="">-- Chọn nghề nghiệp --</option>
+                    <?php foreach ($ds_nghe as $ten): ?>
+                        <option value="<?= e($ten) ?>" <?= ($u['job'] ?? '') === $ten ? 'selected' : '' ?>><?= e($ten) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
             <div><label>Mật khẩu mới</label><input type="password" name="password" placeholder="Để trống nếu không đổi"></div>
             <div class="full"><label>Giới thiệu</label><textarea name="bio"><?= $v('bio') ?></textarea></div>
         </div>
