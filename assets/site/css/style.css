@@ -314,52 +314,52 @@ select {
     transform: scale(0.92);
 }
 
-/* ===== PC ===== */
+/* ===== PC - Nhỏ hơn về chiều cao ===== */
 @media (min-width: 769px) {
-    /* Thanh nổi chỉ cần vừa đủ 4 mục, không kéo rộng theo màn hình */
     .bottom-nav {
         width: auto !important;
         max-width: 540px !important;
         min-width: 0 !important;
-        padding: 4px 6px !important;
+        padding: 3px 6px !important;
         bottom: 20px;
-        border-radius: 30px;
+        border-radius: 28px;
     }
 
-    .bottom-nav-inner { gap: 4px; }
+    .bottom-nav-inner { 
+        gap: 3px;
+    }
 
-    /* Mọi mục cùng bề rộng để mục đang chọn không phình to hơn các mục khác */
     .bottom-nav-item {
         flex: 1 1 0 !important;
-        padding: 6px 18px !important;
-        min-width: 104px !important;
-        border-radius: 26px !important;
-        font-size: 12.5px !important;
-    }
-
-    .bottom-nav-item .bottom-nav-icon {
-        font-size: 19px !important;
-        line-height: 1;
-        margin-bottom: 2px;
-    }
-
-    .bottom-nav-item .bottom-nav-label {
+        padding: 4px 18px !important;
+        min-width: 80px !important;
+        border-radius: 25px !important;
         font-size: 11px !important;
     }
 
-    /* Cùng padding với các mục khác: chỉ khác nền, không khác kích thước */
-    .bottom-nav-item.active {
-        padding: 6px 18px !important;
-        border-radius: 26px !important;
+    .bottom-nav-item .bottom-nav-icon {
+        font-size: 17px !important;
+        line-height: 1;
+        margin-bottom: 1px;
     }
 
-    .bottom-nav-item.active .bottom-nav-icon { transform: none; }
+    .bottom-nav-item .bottom-nav-label {
+        font-size: 9px !important;
+    }
+
+    .bottom-nav-item.active {
+        padding: 4px 18px !important;
+        border-radius: 25px !important;
+    }
+
+    .bottom-nav-item.active .bottom-nav-icon { 
+        transform: none; 
+    }
 }
 
 /* ===== MOBILE - Cách xa viền hơn ===== */
 @media (max-width: 768px) {
     .bottom-nav {
-        /* Cách 15px mỗi bên */
         width: calc(100% - 30px) !important;
         max-width: calc(100% - 30px) !important;
         min-width: auto !important;
@@ -401,7 +401,6 @@ select {
 /* ===== ĐIỆN THOẠI NHỎ ===== */
 @media (max-width: 480px) {
     .bottom-nav {
-        /* Cách 12px mỗi bên */
         width: calc(100% - 24px) !important;
         max-width: calc(100% - 24px) !important;
         padding: 4px !important;
