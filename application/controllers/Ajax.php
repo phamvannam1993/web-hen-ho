@@ -128,6 +128,54 @@ class Ajax extends MY_Controller
         redirect($result['ok'] ? 'tai-khoan/tin-nhan/' . $result['conversation_id'] : 'tai-khoan/tin-nhan');
     }
 
+    /* ==================== Thông báo ==================== */
+
+    /**
+     * Danh sách thông báo cho khay xổ xuống ở chuông.
+     *
+     * Không dùng require_login() vì cổng đó còn bắt hồ sơ phải khai đủ; người
+     * chưa khai xong vẫn cần đọc được thông báo nhắc họ hoàn thiện hồ sơ.
+     */
+    public function notifications()
+    {
+        if (!$this->auth->check()) {
+            return $this->json(array('ok' => false, 'message' => 'Vui lòng đăng nhập.'), 401);
+        }
+        $this->load->model('m_notification');
+        $me = $this->auth->id();
+
+        $items = array();
+        foreach ($this->m_notification->for_user($me, 15) as $n) {
+            $items[] = array(
+                'id'     => (int) $n['id'],
+                'type'   => $n['type'],
+                'title'  => $n['title'],
+                'body'   => $n['body'],
+                'url'    => $n['url'],
+                'time'   => time_ago($n['created_at']),
+                'unread' => empty($n['read_at']),
+            );
+        }
+
+        return $this->json(array(
+            'ok'     => true,
+            'items'  => $items,
+            'unread' => $this->m_notification->unread_count($me),
+        ));
+    }
+
+    /** Đánh dấu đã đọc toàn bộ thông báo. */
+    public function notifications_read()
+    {
+        if (!$this->auth->check()) {
+            return $this->json(array('ok' => false, 'message' => 'Vui lòng đăng nhập.'), 401);
+        }
+        $this->load->model('m_notification');
+        $this->m_notification->mark_all_read($this->auth->id());
+
+        return $this->json(array('ok' => true));
+    }
+
     /* ==================== Phòng chat chung ==================== */
 
     /**

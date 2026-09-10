@@ -26,6 +26,12 @@ class MY_Controller extends CI_Controller
             : '';
         $this->data['categories'] = $this->m_category->tree('post');
         $this->data['provinces']  = $this->m_province->all();
+        // Số thông báo chưa đọc cho chuông trên thanh đầu trang
+        $this->data['unread_noti'] = 0;
+        if ($this->auth->check()) {
+            $this->load->model('m_notification');
+            $this->data['unread_noti'] = (int) $this->m_notification->unread_count($this->auth->id());
+        }
 
         // Ghi nhận hoạt động ở MỌI trang, không chỉ khu vực tài khoản. Trước đây
         // chỉ các trang bắt buộc đăng nhập mới gọi, nên người đang duyệt trang chủ

@@ -75,8 +75,9 @@ class M_interaction extends CI_Model
      */
     public function liked_me($user_id, $limit = 30)
     {
-        return $this->db->select('u.*, l.created_at AS liked_at')
+        return $this->db->select('u.*, p.name AS province_name, l.created_at AS liked_at')
             ->from('likes l')->join('users u', 'u.id = l.user_id')
+            ->join('provinces p', 'p.id = u.province_id', 'left')
             ->where('l.target_type', 'user')->where('l.target_id', $user_id)
             ->where('l.status', 'pending')
             ->where('u.deleted_at', null)

@@ -79,6 +79,8 @@ $route['trang/(:any)']            = 'pages/view/$1';
 /* AJAX */
 $route['ajax/like']            = 'ajax/like';
 $route['ajax/tra-loi-thich']   = 'ajax/respond_like';
+$route['ajax/thong-bao']       = 'ajax/notifications';
+$route['ajax/thong-bao/doc-het'] = 'ajax/notifications_read';
 $route['ajax/unlock/(:num)']   = 'ajax/unlock_contact/$1';
 $route['ajax/send-message']    = 'ajax/send_message';
 $route['ajax/tin-nhan/(:num)'] = 'ajax/poll_messages/$1';

@@ -98,17 +98,6 @@ $nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai', 'gay' => 'Gay', 
 </nav>
     </div>
 
-    <?php if ($matches): ?>
-        <section class="home-block">
-            <h2 class="block-title">Đã ghép đôi</h2>
-            <div class="member-grid is-compact">
-                <?php foreach ($matches as $m): ?>
-                    <?php $this->load->view('members/_card', array('m' => $m)); ?>
-                <?php endforeach; ?>
-            </div>
-            <div class="block-more"><a class="btn btn-more" href="<?= site_url('tai-khoan/tin-nhan') ?>">Nhắn tin →</a></div>
-        </section>
-    <?php endif; ?>
 </div>
 
 <?php /* Khách chưa chọn nhóm: hỏi ngay khi vào trang */ ?>

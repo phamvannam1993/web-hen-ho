@@ -13,7 +13,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
     <title>Không tìm thấy trang - Saigon Cupid</title>
     <style>
         :root {
-            --pink: #e91e8c; --pink-dark: #c2126f;
+            --pink: #d1273f; --pink-dark: #b21f35;
             --ink: #2c2c2c; --muted: #6d6d6d; --line: #e8eaee;
         }
         * { box-sizing: border-box; }
@@ -86,11 +86,11 @@ defined('BASEPATH') or exit('No direct script access allowed');
         <div class="err-art" aria-hidden="true">
             <svg class="half-l" viewBox="0 0 48 48" fill="none">
                 <path d="M23 41S6 30.6 6 19.8A7.9 7.9 0 0 1 20.4 15L23 18.6l-4 5.4 4 4-2.4 4.6L23 41z"
-                      fill="#f9c9e2" stroke="#e91e8c" stroke-width="1.6" stroke-linejoin="round"/>
+                      fill="#f7ccd3" stroke="#d1273f" stroke-width="1.6" stroke-linejoin="round"/>
             </svg>
             <svg class="half-r" viewBox="0 0 48 48" fill="none">
                 <path d="M25 41s17-10.4 17-21.2A7.9 7.9 0 0 0 27.6 15L25 18.6l4 5.4-4 4 2.4 4.6L25 41z"
-                      fill="#fbdcec" stroke="#e91e8c" stroke-width="1.6" stroke-linejoin="round"/>
+                      fill="#fbdde1" stroke="#d1273f" stroke-width="1.6" stroke-linejoin="round"/>
             </svg>
         </div>
 

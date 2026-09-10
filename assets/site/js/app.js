@@ -612,7 +612,9 @@
         var btn = e.target.closest('[data-card-action]');
         if (!btn) { return; }
 
-        var card = btn.closest('.pcard');
+        // Thẻ hồ sơ (.pcard) và dòng gợi ý ở trang chủ (.hm-sug) dùng chung bộ nút
+        var card = btn.closest('[data-user]');
+        if (!card) { return; }
         var id = card.getAttribute('data-user');
         var action = btn.getAttribute('data-card-action');
         btn.disabled = true;
@@ -635,7 +637,12 @@
             }
 
             var lbl = btn.querySelector('.js-like-text');
-            if (lbl) { lbl.textContent = res.liked ? 'Đã thích' : 'Thích'; }
+            if (lbl) {
+                // Trang chủ dùng chữ "Thả tim", các trang khác dùng "Thích"
+                lbl.textContent = res.liked
+                    ? 'Đã thích'
+                    : (btn.getAttribute('data-like-label') || 'Thích');
+            }
             btn.classList.toggle('is-liked', !!res.liked);
             btn.disabled = false;
             if (res.matched) {

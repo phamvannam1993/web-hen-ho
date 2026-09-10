@@ -343,10 +343,13 @@
     var chatJump = makeJump(document.getElementById('cw-jump'), bodyEl, atBottom);
 
     /* Số người đang online hiện luôn trên thẻ dọc, không cần mở khung chat ra */
-    var tabCount = document.getElementById('cw-tab-count');
+    var tabCount  = document.getElementById('cw-tab-count');
+    var tabOnline = document.getElementById('cw-tab-online');
     function setOnline(n) {
         if (roomOnline) { roomOnline.textContent = n + ' người đang online'; }
         if (tabCount) { tabCount.textContent = Number(n).toLocaleString('vi-VN'); }
+        // Chỉ hiện cụm này khi đã có số thật, tránh chỗ trống lửng lơ trên thẻ
+        if (tabOnline) { tabOnline.hidden = false; }
     }
 
     /**

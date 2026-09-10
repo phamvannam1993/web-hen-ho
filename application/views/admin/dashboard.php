@@ -41,7 +41,7 @@ foreach ($chart as $c) { $max = max($max, $c['users'], $c['posts']); }
         </div>
         <div class="chart-legend">
             <span><i style="background:#2563eb"></i>Thành viên mới</span>
-            <span><i style="background:#e91e8c"></i>Tin đăng mới</span>
+            <span><i style="background:#d1273f"></i>Tin đăng mới</span>
         </div>
     </div>
 </div>

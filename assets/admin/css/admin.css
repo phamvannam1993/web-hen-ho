@@ -1,7 +1,7 @@
 /* Giao diện khu quản trị: sidebar tối, nội dung sáng, bảng dữ liệu gọn. */
 
 :root {
-    --pink: #e91e8c;
+    --pink: #d1273f;   /* đỏ crimson, đồng bộ với trang ngoài */
     --blue: #2563eb;
     --ink: #1f2430;
     --muted: #6b7280;

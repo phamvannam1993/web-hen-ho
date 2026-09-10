@@ -51,7 +51,6 @@ class Discover extends MY_Controller
             'title'      => 'Khám phá',
             'candidates' => $this->m_user->deck($me, $view, $filters, $this->per_page),
             'remaining'  => $this->m_user->count_deck($me, $view, $filters),
-            'matches'    => $me ? $this->m_interaction->matches($me['id'], 6) : array(),
             'view'       => $view,
             'need_pick'  => !$me && !$view,          // khách chưa chọn nhóm -> hỏi ngay
             'filters'    => $filters,

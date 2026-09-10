@@ -12,7 +12,7 @@
 
 <!-- Nút bấm: dùng bảng để Outlook hiển thị đúng -->
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 22px;">
-<tr><td align="center" style="border-radius:26px; background:#e91e8c;">
+<tr><td align="center" style="border-radius:26px; background:#d1273f;">
     <a href="<?= $link ?>"
        style="display:inline-block; padding:13px 34px; color:#ffffff; font-size:15.5px;
               font-weight:700; text-decoration:none; border-radius:26px;">
@@ -25,7 +25,7 @@
     Nút không bấm được? Sao chép đường dẫn sau vào trình duyệt:
 </p>
 <p style="margin:0 0 22px; padding:11px 14px; background:#faf7f9; border-radius:8px;
-          word-break:break-all; font-size:13px; color:#c2126f;">
+          word-break:break-all; font-size:13px; color:#b21f35;">
     <?= $link ?>
 </p>
 

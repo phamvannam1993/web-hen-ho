@@ -56,12 +56,49 @@ $can_index = $force_allow_index || !$site_blocked;
 <!-- Dải mảnh trên cùng: khẩu hiệu + hotline -->
 <?php /* Chế độ toàn màn hình (trang Khám phá): bỏ thanh trên, menu và chân trang */ ?>
 <?php if (empty($bare)): ?>
+<?php
+/* Thanh trên cùng: liên hệ bên trái, trang tĩnh và mạng xã hội bên phải.
+   Mục nào chưa khai trong Quản trị -> Cấu hình thì tự ẩn đi. */
+$mxh = array_filter(array(
+    'facebook'  => $settings['facebook_url']  ?? '',
+    'instagram' => $settings['instagram_url'] ?? '',
+    'youtube'   => $settings['youtube_url']   ?? '',
+    'tiktok'    => $settings['tiktok_url']    ?? '',
+));
+?>
 <div class="topbar">
     <div class="container topbar-inner">
-        
-        <?php if (!empty($settings['hotline'])): ?>
-            <span class="topbar-hotline">Hỗ trợ: <b><?= e($settings['hotline']) ?></b></span>
-        <?php endif; ?>
+        <div class="topbar-contact">
+            <?php if (!empty($settings['hotline'])): ?>
+                <a class="topbar-item" href="tel:<?= e(preg_replace('/\D+/', '', $settings['hotline'])) ?>">
+                    <svg viewBox="0 0 24 24" class="ic" aria-hidden="true">
+                        <path d="M6.5 3.5h3l1.5 4-2 1.4a12 12 0 0 0 6.1 6.1l1.4-2 4 1.5v3a2 2 0 0 1-2.2 2A17 17 0 0 1 4.5 5.7a2 2 0 0 1 2-2.2z"/>
+                    </svg>
+                    Hỗ trợ: <b><?= e($settings['hotline']) ?></b>
+                </a>
+            <?php endif; ?>
+            <?php if (!empty($settings['contact_email'])): ?>
+                <a class="topbar-item" href="mailto:<?= e($settings['contact_email']) ?>">
+                    <svg viewBox="0 0 24 24" class="ic" aria-hidden="true">
+                        <rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="m3.8 6.8 8.2 5.7 8.2-5.7"/>
+                    </svg>
+                    <?= e($settings['contact_email']) ?>
+                </a>
+            <?php endif; ?>
+        </div>
+
+        <div class="topbar-right">
+            <a href="<?= site_url('dieu-khoan') ?>">Điều khoản</a>
+            <a href="<?= site_url('noi-quy') ?>">Nội quy</a>
+            <a href="<?= site_url('lien-he') ?>">Liên hệ</a>
+            <?php foreach ($mxh as $ten => $url): ?>
+                <a class="topbar-social" href="<?= e($url) ?>" target="_blank" rel="noopener"
+                   aria-label="<?= e(ucfirst($ten)) ?>">
+                    <img src="<?= base_url('assets/images/' . ($ten === 'instagram' ? 'insta' : $ten) . '.png') ?>"
+                         alt="<?= e(ucfirst($ten)) ?>" loading="lazy">
+                </a>
+            <?php endforeach; ?>
+        </div>
     </div>
 </div>
 
@@ -108,7 +145,7 @@ $can_index = $force_allow_index || !$site_blocked;
             array('url' => 'swipe-match',      'label' => 'Khám phá',   'match' => array('swipe-match')),
             array('url' => 'khu-vuc',       'label' => 'Khu vực',    'match' => array('khu-vuc')),
             array('url' => 'tin-tuc',       'label' => 'Sforum',   'match' => array('tin-tuc')),
-            array('url' => 'trang/noi-quy', 'label' => 'Thông báo',    'match' => array('trang')),
+            array('url' => 'noi-quy',       'label' => 'Thông báo',    'match' => array('noi-quy', 'trang')),
         );
         $seg1 = (string) $this->uri->segment(1);
         // Trang tỉnh nay nằm ở gốc (/ha-noi) nên phải đối chiếu với danh mục tỉnh
@@ -134,7 +171,36 @@ $can_index = $force_allow_index || !$site_blocked;
                 <a class="btn-nav-ghost" href="<?= site_url('dang-xuat') ?>">Đăng xuất</a>
             <?php else: ?>
                 <a class="btn-nav-ghost" href="<?= site_url('dang-nhap') ?>">Đăng nhập</a>
-                <a class="btn-nav-solid" href="<?= site_url('dang-ky') ?>">Tạo tài khoản</a>
+                <a class="btn-nav-solid" href="<?= site_url('dang-ky') ?>">Đăng ký</a>
+            <?php endif; ?>
+
+            <?php /* Chuông thông báo + khay xổ xuống; chỉ có nghĩa khi đã đăng nhập */ ?>
+            <?php if ($user): ?>
+                <div class="hd-noti" id="hd-noti" data-base="<?= site_url() ?>">
+                    <button type="button" class="hd-bell" id="noti-toggle"
+                            aria-label="Thông báo" aria-expanded="false" aria-haspopup="dialog">
+                        <svg viewBox="0 0 24 24" class="ic" aria-hidden="true">
+                            <path d="M18 16.5V11a6 6 0 1 0-12 0v5.5L4.5 18.5h15z"/>
+                            <path d="M10 21.2a2.2 2.2 0 0 0 4 0"/>
+                        </svg>
+                        <span class="hd-bell-badge" id="noti-badge"
+                              <?= empty($unread_noti) ? 'hidden' : '' ?>><?= $unread_noti > 99 ? '99+' : (int) $unread_noti ?></span>
+                    </button>
+
+                    <div class="noti-panel" id="noti-panel" role="dialog" aria-label="Thông báo" hidden>
+                        <header class="noti-head">
+                            <h3>Thông báo</h3>
+                            <button type="button" class="noti-readall" id="noti-readall">Đánh dấu đã đọc</button>
+                            <button type="button" class="noti-close" id="noti-close" aria-label="Đóng">&times;</button>
+                        </header>
+                        <div class="noti-list" id="noti-list">
+                            <p class="noti-empty">Đang tải…</p>
+                        </div>
+                        <footer class="noti-foot">
+                            <a href="<?= site_url('tai-khoan/thong-bao') ?>">Xem tất cả thông báo</a>
+                        </footer>
+                    </div>
+                </div>
             <?php endif; ?>
         </div>
         </div><!-- /.nav-drawer -->
@@ -271,9 +337,14 @@ $can_index = $force_allow_index || !$site_blocked;
     <button type="button" class="cw-tab" id="cw-bubble" aria-label="Mở trò chuyện">
         <span class="cw-tab-arrow" aria-hidden="true">&laquo;</span>
         <span class="cw-tab-label">Trò chuyện</span>
-        <span class="cw-tab-online"><i class="cw-tab-dot"></i><b id="cw-tab-count">—</b></span>
+        <span class="cw-tab-online" id="cw-tab-online" hidden><i class="cw-tab-dot"></i><b id="cw-tab-count"></b></span>
         <span class="cw-tab-icons" aria-hidden="true">
-            <i class="cw-tab-b1">💬</i><i class="cw-tab-b2">💬</i>
+            <svg viewBox="0 0 40 32" class="cw-tab-bubbles">
+                <path class="cw-b-back" d="M23 8h11a5 5 0 0 1 5 5v6a5 5 0 0 1-5 5h-2v5l-5.5-5H23a5 5 0 0 1-5-5v-6a5 5 0 0 1 5-5z"/>
+                <path class="cw-b-front" d="M7 2h14a6 6 0 0 1 6 6v7a6 6 0 0 1-6 6h-7l-7 6v-6a6 6 0 0 1-6-6V8a6 6 0 0 1 6-6z"/>
+                <circle class="cw-b-eye" cx="11" cy="11.5" r="1.6"/>
+                <circle class="cw-b-eye" cx="17.5" cy="11.5" r="1.6"/>
+            </svg>
         </span>
         <span class="cw-badge" id="cw-badge" hidden>0</span>
     </button>
@@ -389,6 +460,7 @@ $can_index = $force_allow_index || !$site_blocked;
 <script src="<?= base_url('assets/site/js/password-toggle.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/password-toggle.js') ?>"></script>
 <script src="<?= base_url('assets/site/js/app.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/app.js') ?>"></script>
 <script src="<?= base_url('assets/site/js/searchable-select.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/searchable-select.js') ?>"></script>
+<script src="<?= base_url('assets/site/js/notifications.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/notifications.js') ?>"></script>
 <!-- Chat nạp cho cả khách: xem được phòng chung, muốn gửi thì phải đăng nhập -->
 <script src="<?= base_url('assets/site/js/realtime.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/realtime.js') ?>"></script>
 <script src="<?= base_url('assets/site/js/chat-widget.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/chat-widget.js') ?>"></script>

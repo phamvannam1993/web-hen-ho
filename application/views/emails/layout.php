@@ -23,7 +23,7 @@
 
         <!-- Đầu thư -->
         <tr>
-            <td align="center" style="background:#e91e8c; padding:26px 24px;">
+            <td align="center" style="background:#d1273f; padding:26px 24px;">
                 <span style="display:inline-block; width:42px; height:42px; line-height:42px;
                              border-radius:50%; background:rgba(255,255,255,.22);
                              color:#ffffff; font-size:21px;">&#9829;</span>
