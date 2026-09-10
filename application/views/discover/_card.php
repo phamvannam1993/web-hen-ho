@@ -130,7 +130,7 @@ $ic_flag  = $ic('<path d="M5 21V4"/><path d="M5 5h11l-1.6 3.2L16 12H5z"/>');
                 </section>
             <?php endif; ?>
 
-                <a class="sw-more" href="<?= site_url('profile/' . $c['slug']) ?>">Xem trang cá nhân đầy đủ →</a>
+                <!--<a class="sw-more" href="<?= site_url('profile/' . $c['slug']) ?>">Xem trang cá nhân đầy đủ →</a>-->
             </div>
         </div>
     </div>
