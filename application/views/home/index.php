@@ -172,7 +172,7 @@ $hero_img = setting('home_hero_image') ?: 'assets/images/banner.png';
                             <h3><a href="<?= site_url('profile/' . $m['slug']) ?>"><?= e(display_name($m)) ?><?= $tuoi ? ', ' . $tuoi : '' ?></a></h3>
                             <span class="hm-pill hm-pill-pink">Tương hợp: <?= $hop ?>%</span>
                             <?php if ($da_match): ?>
-                                <span class="hm-pill hm-pill-green">Đã match! Chat ngay</span>
+                                <span class="hm-pill hm-pill-green">Đã match!</span>
                             <?php endif; ?>
                         </div>
 
@@ -186,7 +186,7 @@ $hero_img = setting('home_hero_image') ?: 'assets/images/banner.png';
                     <div class="hm-sug-actions">
                         <?php if ($da_match): ?>
                             <button type="button" class="btn-hm btn-hm-solid" data-chat-with="<?= (int) $m['id'] ?>">
-                                <?= $ic($ic_chat) ?>Nhắn tin
+                                <?= $ic($ic_chat) ?>Trò chuyện ngay
                             </button>
                         <?php else: ?>
                             <button type="button" class="btn-hm btn-hm-line" data-card-action="pass">

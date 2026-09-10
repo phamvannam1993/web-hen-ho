@@ -120,6 +120,48 @@ $mxh = array_filter(array(
                    placeholder="Tìm theo tên, khu vực hoặc nghề nghiệp..." aria-label="Tìm thành viên">
         </form>
 
+        <?php /* Nhóm nút cạnh nút mở menu: tìm kiếm (chỉ mobile) + chuông thông báo.
+                 Chuông ĐƯỢC CHUYỂN RA ĐÂY khỏi .nav-drawer. Trước nó nằm trong ngăn
+                 kéo, mà trên điện thoại ngăn kéo là panel trượt ra — nên người dùng
+                 không thấy chuông cho tới khi mở menu.
+                 Chuyển hẳn chứ không nhân bản: hai khối cùng id (#noti-toggle,
+                 #noti-panel) thì JS bắt nhầm phần tử, khay không xổ được. */ ?>
+        <div class="hd-mini">
+            <a class="hd-mini-btn" href="<?= site_url('tim-kiem') ?>" aria-label="Tìm kiếm">
+                <svg viewBox="0 0 24 24" class="ic" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/>
+                </svg>
+            </a>
+            <?php /* Chuông thông báo + khay xổ xuống; chỉ có nghĩa khi đã đăng nhập */ ?>
+            <?php if ($user): ?>
+                <div class="hd-noti" id="hd-noti" data-base="<?= site_url() ?>">
+                    <button type="button" class="hd-bell" id="noti-toggle"
+                            aria-label="Thông báo" aria-expanded="false" aria-haspopup="dialog">
+                        <svg viewBox="0 0 24 24" class="ic" aria-hidden="true">
+                            <path d="M18 16.5V11a6 6 0 1 0-12 0v5.5L4.5 18.5h15z"/>
+                            <path d="M10 21.2a2.2 2.2 0 0 0 4 0"/>
+                        </svg>
+                        <span class="hd-bell-badge" id="noti-badge"
+                              <?= empty($unread_noti) ? 'hidden' : '' ?>><?= $unread_noti > 99 ? '99+' : (int) $unread_noti ?></span>
+                    </button>
+
+                    <div class="noti-panel" id="noti-panel" role="dialog" aria-label="Thông báo" hidden>
+                        <header class="noti-head">
+                            <h3>Thông báo</h3>
+                            <button type="button" class="noti-readall" id="noti-readall">Đánh dấu đã đọc</button>
+                            <button type="button" class="noti-close" id="noti-close" aria-label="Đóng">&times;</button>
+                        </header>
+                        <div class="noti-list" id="noti-list">
+                            <p class="noti-empty">Đang tải…</p>
+                        </div>
+                        <footer class="noti-foot">
+                            <a href="<?= site_url('tai-khoan/thong-bao') ?>">Xem tất cả thông báo</a>
+                        </footer>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </div>
+
         <button class="nav-toggle" type="button" id="nav-toggle"
                 aria-label="Mở menu" aria-expanded="false" aria-controls="nav-drawer">
             <span class="nav-toggle-bar"></span>
@@ -174,34 +216,6 @@ $mxh = array_filter(array(
                 <a class="btn-nav-solid" href="<?= site_url('dang-ky') ?>">Đăng ký</a>
             <?php endif; ?>
 
-            <?php /* Chuông thông báo + khay xổ xuống; chỉ có nghĩa khi đã đăng nhập */ ?>
-            <?php if ($user): ?>
-                <div class="hd-noti" id="hd-noti" data-base="<?= site_url() ?>">
-                    <button type="button" class="hd-bell" id="noti-toggle"
-                            aria-label="Thông báo" aria-expanded="false" aria-haspopup="dialog">
-                        <svg viewBox="0 0 24 24" class="ic" aria-hidden="true">
-                            <path d="M18 16.5V11a6 6 0 1 0-12 0v5.5L4.5 18.5h15z"/>
-                            <path d="M10 21.2a2.2 2.2 0 0 0 4 0"/>
-                        </svg>
-                        <span class="hd-bell-badge" id="noti-badge"
-                              <?= empty($unread_noti) ? 'hidden' : '' ?>><?= $unread_noti > 99 ? '99+' : (int) $unread_noti ?></span>
-                    </button>
-
-                    <div class="noti-panel" id="noti-panel" role="dialog" aria-label="Thông báo" hidden>
-                        <header class="noti-head">
-                            <h3>Thông báo</h3>
-                            <button type="button" class="noti-readall" id="noti-readall">Đánh dấu đã đọc</button>
-                            <button type="button" class="noti-close" id="noti-close" aria-label="Đóng">&times;</button>
-                        </header>
-                        <div class="noti-list" id="noti-list">
-                            <p class="noti-empty">Đang tải…</p>
-                        </div>
-                        <footer class="noti-foot">
-                            <a href="<?= site_url('tai-khoan/thong-bao') ?>">Xem tất cả thông báo</a>
-                        </footer>
-                    </div>
-                </div>
-            <?php endif; ?>
         </div>
         </div><!-- /.nav-drawer -->
 

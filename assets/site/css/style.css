@@ -37,6 +37,10 @@ img { max-width: 100%; height: auto; display: block; }
 
 .container { width: min(1200px, 100% - 32px); margin-inline: auto; }
 
+/* Chiều cao thanh header, khai thành biến để khay thông báo biết phải đặt cách
+   đỉnh màn hình bao nhiêu. Đổi min-height của .header-inner thì nhớ đổi ở đây. */
+:root { --hd-h: 66px; }
+
 /* ------------------------------ Header ------------------------------ */
 
 /* Dải mảnh trên cùng: khẩu hiệu bên trái, hotline bên phải */
@@ -176,19 +180,26 @@ img { max-width: 100%; height: auto; display: block; }
 }
 .noti-foot a { color: var(--pink); font-weight: 700; font-size: 14px; }
 
-/* Màn hẹp: khay trải hết bề ngang như một tấm phủ từ đáy lên */
+/* Màn hẹp: khay XỔ XUỐNG NGAY DƯỚI CHUÔNG, không phải tấm phủ từ đáy lên.
+   Bản cũ dùng `position: fixed; bottom: 0` nên khay rơi xuống tận đáy màn hình,
+   cách nút chuông cả trang — bấm chuông ở trên mà thứ mở ra nằm dưới cùng thì
+   không ai hiểu là hai cái đó liên quan tới nhau.
+   Vẫn `fixed` (không `absolute`) để khay không bị bó trong bề ngang của header
+   và luôn trải đều hai mép màn hình. */
 @media (max-width: 560px) {
     .noti-panel {
-        position: fixed; top: auto; left: 0; right: 0; bottom: 0;
-        width: auto; max-width: none; border-radius: 16px 16px 0 0;
-        max-height: 78vh; animation: noti-sheet .2s ease-out;
+        position: fixed;
+        top: calc(var(--hd-h, 58px) + 8px);
+        left: 12px; right: 12px; bottom: auto;
+        width: auto; max-width: none; border-radius: 16px;
+        max-height: calc(100vh - var(--hd-h, 58px) - 24px);
+        animation: noti-pop .16s ease-out;
     }
-    .noti-panel::before { display: none; }
+    /* Mũi tên trỏ lên nút chuông. Chuông là nút THỨ HAI từ phải, nên phải lùi
+       vào: lề container 16 + nút menu 42 + khoảng cách 8 + nửa nút chuông 21,
+       trừ đi 12px lề của khay = 75px. */
+    .noti-panel::before { right: 75px; }
     .noti-list { max-height: none; }
-    @keyframes noti-sheet {
-        from { opacity: .6; transform: translateY(20px); }
-        to   { opacity: 1; transform: none; }
-    }
 }
 
 /* Thanh chính dính khi cuộn: logo - menu - nút hành động */
@@ -213,6 +224,15 @@ img { max-width: 100%; height: auto; display: block; }
 .brand-text {
     font-size: 23px; font-weight: 800; color: var(--pink); letter-spacing: -.3px;
 }
+
+/* Nhóm nút cạnh nút mở menu: tìm kiếm (chỉ mobile) + chuông thông báo.
+   Chuông thật nằm trong nhóm này ở MỌI cỡ màn hình — trước nó nằm trong
+   .nav-drawer nên trên điện thoại bị khoá trong panel trượt.
+   `order: 3` đẩy nhóm về cuối hàng: trong mã nó đứng trước .nav-drawer, mà
+   trên desktop ngăn kéo là `display: contents` nên menu và nút đăng nhập đổ
+   thẳng vào hàng header — không có order thì chuông chen lên trước menu. */
+.hd-mini { display: flex; align-items: center; gap: 8px; margin-left: auto; order: 3; }
+.hd-mini > .hd-mini-btn { display: none; }   /* nút tìm kiếm: chỉ mobile */
 
 /* ------------------------------ Menu ------------------------------ */
 
@@ -1394,7 +1414,63 @@ select {
 @media (max-width: 900px) {
     /* ---------- Menu mobile: ngăn kéo trượt từ phải ---------- */
 
-    .nav-toggle { display: flex; }
+    /* Ba nút vuông bo góc, nền hồng nhạt — logo trái, nhóm nút phải. */
+    .hd-mini > .hd-mini-btn { display: grid; }
+
+    /* Chuông đổi từ hình tròn viền xám sang vuông bo góc nền hồng cho đồng bộ
+       với hai nút bên cạnh. */
+    .hd-mini .hd-bell {
+        width: 42px; height: 42px; border-radius: 14px;
+        background: #fdecef; border-color: transparent; color: var(--pink);
+    }
+
+    .hd-mini-btn {
+        position: relative; display: grid; place-items: center;
+        width: 42px; height: 42px; border-radius: 14px;
+        background: #fdecef; color: var(--pink); text-decoration: none;
+        transition: background .15s;
+    }
+    .hd-mini-btn:hover { background: #fbdae1; text-decoration: none; }
+    .hd-mini-btn .ic {
+        width: 21px; height: 21px; fill: none; stroke: currentColor;
+        stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .hd-mini-badge {
+        position: absolute; top: -5px; right: -5px; min-width: 20px; height: 20px;
+        padding: 0 5px; border-radius: 10px; background: #e11d48; color: #fff;
+        font-size: 11.5px; font-weight: 700; display: grid; place-items: center;
+        border: 2px solid #fff;
+    }
+
+    /* Nút mở menu mặc định có margin-left:auto để tự đẩy sang phải. Giờ nhóm
+       .hd-mini đã đẩy rồi, giữ nguyên margin đó sẽ tách nút menu rời khỏi hai
+       nút kia. Cho nó cùng khối và cùng kiểu nền.
+
+       `order: 4` BẮT BUỘC phải có: .hd-mini đang mang `order: 3`, còn nút này
+       không khai order nên tính là 0 — flex xếp số nhỏ trước, thành ra nút menu
+       nhảy lên TRƯỚC nút tìm kiếm và chuông. Thứ tự đúng là tìm kiếm · chuông ·
+       menu. */
+    .nav-toggle {
+        display: flex; align-items: center; gap: 5px; order: 4;
+        width: 42px; height: 42px; padding: 0; margin-left: 8px;
+        border-radius: 14px; background: #fdecef;
+    }
+    .nav-toggle-bar { width: 19px; }
+
+    /* Ẩn thanh trên cùng: hotline, khẩu hiệu và biểu tượng mạng xã hội chiếm
+       một dải chiều cao mà trên điện thoại gần như không ai bấm. */
+    .topbar { display: none; }
+
+    /* Logo trên điện thoại: trái tim đỏ trần, bỏ vòng tròn nền chuyển sắc.
+       Vòng tròn 36px cộng chữ 23px chiếm gần nửa bề ngang màn hẹp, không còn
+       chỗ cho ba nút bên phải. */
+    .brand-mark {
+        width: auto; height: auto; border-radius: 0;
+        background: none; box-shadow: none;
+        color: var(--pink); font-size: 27px; line-height: 1;
+    }
+    .brand-text { font-size: 21px; }
+    .header-inner { gap: 10px; }
 
     .nav-drawer {
         display: flex; flex-direction: column;
@@ -1493,6 +1569,7 @@ select {
     .brand-text { font-size: 19px; }
     .brand-mark { width: 32px; height: 32px; font-size: 17px; }
     .site-header .header-inner { min-height: 58px; gap: 10px; }
+    :root { --hd-h: 58px; }
     .topbar-inner { justify-content: center; font-size: 12px; }
     .card-grid, .article-grid { grid-template-columns: 1fr; }
 }
@@ -3890,14 +3967,40 @@ body.is-bare .chat-widget {
     .hm-liker small { font-size: 12.5px; }
 
     /* Gợi ý: ảnh và tên một hàng, chip hàng dưới, nút chiếm hết bề ngang */
-    .hm-sug { flex-wrap: wrap; gap: 14px; padding: 18px; border-radius: 14px; }
-    .hm-sug-photo img { width: 64px; height: 64px; }
-    .hm-sug-body { flex: 1 1 auto; min-width: 140px; }
-    .hm-sug-top { gap: 8px; margin-bottom: 8px; }
-    .hm-sug-top h3 { font-size: 17px; }
-    .hm-sug-chips { width: 100%; }
-    .hm-sug-actions { flex: 1 1 100%; }
-    .hm-sug-actions .btn-hm { flex: 1; }
+    /* Thẻ gợi ý trên điện thoại — xếp theo LƯỚI, không dùng flex-wrap.
+       flex-wrap để chiều rộng tự quyết định chỗ xuống dòng, nên tên dài thì
+       nhãn "Tương hợp" rơi xuống, tên ngắn thì nằm cạnh — mỗi thẻ một kiểu.
+       Lưới thì ba hàng luôn cố định: ảnh + tên · chips · nút. */
+    .hm-sug {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        align-items: center;
+        gap: 14px;
+        padding: 18px;
+        border-radius: 18px;
+    }
+    .hm-sug-photo img { width: 72px; height: 72px; }
+    .hm-sug-body { min-width: 0; }
+
+    /* Tên một dòng, nhãn xuống dòng dưới — cùng hàng thì tên bị bóp cụt. */
+    .hm-sug-top { display: block; margin: 0; }
+    .hm-sug-top h3 { font-size: 19px; line-height: 1.25; }
+    .hm-sug-top .hm-pill { display: inline-block; margin-top: 7px; }
+
+    /* Chips và nút trải hết hai cột, nằm dưới cụm ảnh + tên. */
+    .hm-sug-chips { grid-column: 1 / -1; gap: 8px; }
+    .hm-sug-actions { grid-column: 1 / -1; gap: 10px; }
+
+    /* Nút cao 50px cho ngón tay bấm dễ; hai nút chia đôi bề ngang, một nút thì
+       chiếm hết — giống hệt hai kiểu thẻ trong bản thiết kế. */
+    .hm-sug-actions .btn-hm {
+        flex: 1;
+        justify-content: center;
+        min-height: 50px;
+        padding: 0 16px;
+        font-size: 15.5px;
+        border-radius: 14px;
+    }
 
     .hm-quotes { gap: 16px; margin-top: 30px; }
     .hm-quote { padding: 22px 20px; }
