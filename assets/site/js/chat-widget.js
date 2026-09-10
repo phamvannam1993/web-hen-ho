@@ -16,9 +16,22 @@
     // Thành viên đã đăng nhập nhưng hồ sơ chưa khai đủ: xem được như khách,
     // gửi thì phải hoàn thiện hồ sơ trước
     var canHoSo = root.getAttribute('data-need-profile') === '1';
-    var EMOJI = ['😀','😄','😁','😊','🙂','😉','😍','🥰','😘','😋','😜','🤗','🤔','😐','🙄','😏',
-                 '😢','😭','😤','😡','🥺','😳','😱','🤩','🥳','😎','👋','👌','✌️','👍','🙏','💪',
-                 '👏','🙌','❤️','💕','💖','💘','💔','🌹','💐','💍','🔥','💯','🎉','☕','🍺','🎁'];
+    /* Icon chia nhóm để bảng chọn có tab, mỗi tab một biểu tượng đại diện */
+    var EMOJI_GROUPS = [
+        { icon: '🙂', name: 'Cảm xúc', items: [
+            '😀','😃','😄','😁','😆','😊','🙂','😉','😍','🥰','😘','😗','😙','😚','😋','😜',
+            '🤪','🤗','🤔','🤭','😐','😑','😶','🙄','😏','😥','😮','😯','😴','😌','😔','😪',
+            '🤤','😭','😢','😤','😠','😡','🥺','😳','🥵','🥶','😱','😨','😰','🤩','🥳','😎'] },
+        { icon: '👍', name: 'Cử chỉ', items: [
+            '👋','🤚','✋','👌','🤌','✌️','🤞','🤟','🤘','👈','👉','👆','👇','👍','👎','✊',
+            '👊','🤝','🙏','💪','👏','🙌','🤲','💅','👀','👁️','👄','💋'] },
+        { icon: '❤️', name: 'Tình yêu', items: [
+            '❤️','🧡','💛','💚','💙','💜','🖤','🤍','💔','❣️','💕','💞','💓','💗','💖','💘',
+            '💝','💐','🌹','🌷','🌸','💌','💍','💑','💏','👩‍❤️‍👨','🥂','🍫','🎁','🌙','✨','⭐'] },
+        { icon: '🎉', name: 'Khác', items: [
+            '🔥','💯','🎉','🎊','☕','🍺','🍻','🍰','🍜','🍕','🚗','✈️','🏖️','🌴','🎵','🎸',
+            '⚽','🏀','🎬','📷','📱','💤','☀️','🌧️','❄️','🐶','🐱','🌻','🍀','🎯','🕐','✅'] }
+    ];
     var bubble = document.getElementById('cw-bubble');
     var badge  = document.getElementById('cw-badge');
     var panel  = document.getElementById('cw-panel');
@@ -43,6 +56,39 @@
     function rtLive() { return !!(RT && RT.connected); }
 
     /* ------------------------- Tiện ích ------------------------- */
+
+    /**
+     * Nút "N tin nhắn mới" ở góc dưới khung tin.
+     * Chỉ đếm khi người dùng đang xem tin cũ ở trên; bấm vào thì nhảy xuống cuối.
+     */
+    function makeJump(btn, body, atBottomFn) {
+        var so = 0;
+        if (!btn || !body) {
+            return { them: function () {}, reset: function () {} };
+        }
+
+        var text = btn.querySelector('.cw-jump-text');
+        function ve() {
+            btn.hidden = so === 0;
+            if (text) { text.textContent = so + ' Tin nhắn mới'; }
+        }
+        function reset() { so = 0; ve(); }
+
+        btn.addEventListener('click', function () {
+            body.scrollTop = body.scrollHeight;
+            reset();
+        });
+        // Tự cuộn tới đáy là coi như đã đọc hết
+        body.addEventListener('scroll', function () {
+            if (atBottomFn()) { reset(); }
+        });
+
+        return {
+            them: function () { so++; ve(); },
+            reset: reset
+        };
+    }
+
 
     function api(url, options) {
         return fetch(base + url, Object.assign({
@@ -140,6 +186,7 @@
             res.messages.forEach(function (m) {
                 bodyEl.appendChild(renderMessage(m));
                 if (m.id > lastId) { lastId = m.id; }
+                if (!stick && !m.mine) { chatJump.them(); }
             });
             if (res.messages.length && stick) { scrollDown(); }
         }).catch(function () { /* mất mạng thì bỏ qua, chu kỳ sau thử lại */ });
@@ -150,6 +197,7 @@
         current = info;
         lastId = 0;
         bodyEl.innerHTML = '';
+        chatJump.reset();
         receiver.value = info.user_id;
 
         document.getElementById('cw-avatar').src = info.avatar;
@@ -220,32 +268,62 @@
 
     /* ------------------------- Bảng icon ------------------------- */
 
+    /**
+     * Dựng một bảng icon: hàng tab ở trên, lưới icon ở dưới.
+     * Bảng nằm dưới ô nhập nên mở ra là khung tin ngắn lại, không bị che.
+     */
+    function setupEmoji(btn, panel, input) {
+        if (!btn || !panel || !input) { return; }
+
+        var tabs = panel.querySelector('.cw-emoji-tabs');
+        var list = panel.querySelector('.cw-emoji-list');
+        if (!tabs || !list) { return; }
+
+        function chen(ch) {
+            var a = input.selectionStart || input.value.length;
+            var b = input.selectionEnd || input.value.length;
+            input.value = input.value.slice(0, a) + ch + input.value.slice(b);
+            input.focus();
+            input.selectionStart = input.selectionEnd = a + ch.length;
+        }
+
+        function veNhom(i) {
+            list.textContent = '';
+            EMOJI_GROUPS[i].items.forEach(function (ch) {
+                var it = document.createElement('button');
+                it.type = 'button';
+                it.className = 'cw-emoji-item';
+                it.textContent = ch;
+                it.addEventListener('click', function () { chen(ch); });
+                list.appendChild(it);
+            });
+            Array.prototype.forEach.call(tabs.children, function (t, k) {
+                t.classList.toggle('is-on', k === i);
+            });
+            list.scrollTop = 0;
+        }
+
+        EMOJI_GROUPS.forEach(function (g, i) {
+            var t = document.createElement('button');
+            t.type = 'button';
+            t.className = 'cw-emoji-tab';
+            t.textContent = g.icon;
+            t.title = g.name;
+            t.addEventListener('click', function () { veNhom(i); });
+            tabs.appendChild(t);
+        });
+        veNhom(0);
+
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            panel.hidden = !panel.hidden;
+        });
+        panel.addEventListener('click', function (e) { e.stopPropagation(); });
+    }
 
     var emojiBtn = document.getElementById('cw-emoji-btn');
     var emojiPanel = document.getElementById('cw-emoji-panel');
-
-    if (emojiBtn && emojiPanel && inputEl) {
-    EMOJI.forEach(function (ch) {
-        var b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'cw-emoji-item';
-        b.textContent = ch;
-        b.addEventListener('click', function () {
-            var s = inputEl.selectionStart || inputEl.value.length;
-            var e2 = inputEl.selectionEnd || inputEl.value.length;
-            inputEl.value = inputEl.value.slice(0, s) + ch + inputEl.value.slice(e2);
-            inputEl.focus();
-            inputEl.selectionStart = inputEl.selectionEnd = s + ch.length;
-        });
-        emojiPanel.appendChild(b);
-    });
-
-    emojiBtn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        emojiPanel.hidden = !emojiPanel.hidden;
-    });
-    emojiPanel.addEventListener('click', function (e) { e.stopPropagation(); });
-    }
+    setupEmoji(emojiBtn, emojiPanel, inputEl);
 
     /* ------------------------- Phòng chat chung ------------------------- */
 
@@ -259,6 +337,33 @@
 
     function roomAtBottom() {
         return roomBody.scrollHeight - roomBody.scrollTop - roomBody.clientHeight < 60;
+    }
+
+    var roomJump = makeJump(document.getElementById('cw-room-jump'), roomBody, roomAtBottom);
+    var chatJump = makeJump(document.getElementById('cw-jump'), bodyEl, atBottom);
+
+    /* Số người đang online hiện luôn trên thẻ dọc, không cần mở khung chat ra */
+    var tabCount = document.getElementById('cw-tab-count');
+    function setOnline(n) {
+        if (roomOnline) { roomOnline.textContent = n + ' người đang online'; }
+        if (tabCount) { tabCount.textContent = Number(n).toLocaleString('vi-VN'); }
+    }
+
+    /**
+     * Đổ nội dung tin vào thẻ p, tô màu phần "@Tên ai đó" ở đầu câu.
+     * Dùng textContent cho từng mảnh nên không có đường nào chèn được HTML.
+     */
+    function veNoiDungCoNhac(p, content) {
+        var m = /^(@[^\s@]+(?:\s[^\s@]+){0,3})(\s+)([\s\S]*)$/.exec(content);
+        if (!m) {
+            p.textContent = content;
+            return;
+        }
+        var at = document.createElement('span');
+        at.className = 'cw-at';
+        at.textContent = m[1];
+        p.appendChild(at);
+        p.appendChild(document.createTextNode(m[2] + m[3]));
     }
 
     /** Tin phòng chung có kèm avatar và tên người gửi để phân biệt nhiều người. */
@@ -296,8 +401,10 @@
             var p = document.createElement('p');
             if (/^[\p{Extended_Pictographic}️\s]{1,8}$/u.test(m.content.trim())) {
                 p.className = 'cw-emoji-only';
+                p.textContent = m.content;
+            } else {
+                veNoiDungCoNhac(p, m.content);
             }
-            p.textContent = m.content;
             col.appendChild(p);
         }
 
@@ -317,12 +424,21 @@
             res.messages.forEach(function (m) {
                 roomBody.appendChild(renderRoomMessage(m));
                 if (m.id > roomLastId) { roomLastId = m.id; }
+                if (!stick && !m.mine) { roomJump.them(); }
             });
 
-            roomOnline.textContent = res.online + ' người đang online';
+            setOnline(res.online);
             if (res.messages.length && stick) { roomBody.scrollTop = roomBody.scrollHeight; }
         }).catch(function () { /* bỏ qua, chu kỳ sau thử lại */ });
     }
+
+    /* Số online hiện ngay trên thẻ dọc khi vừa vào trang, chưa cần mở chat.
+       Sau đó pollRoom (lúc mở) và sự kiện realtime lo phần cập nhật. */
+    (function demOnlineLanDau() {
+        api('ajax/phong-chat?only=online').then(function (res) {
+            if (res && res.ok) { setOnline(res.online); }
+        }).catch(function () { /* không có mạng thì thôi, để dấu — */ });
+    })();
 
     function startRoom() {
         pollRoom();
@@ -374,27 +490,7 @@
     /* Bảng icon riêng cho phòng chung */
     var roomEmojiBtn = document.getElementById('cw-room-emoji-btn');
     var roomEmojiPanel = document.getElementById('cw-room-emoji-panel');
-    if (roomEmojiBtn && roomEmojiPanel) {
-    EMOJI.forEach(function (ch) {
-        var b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'cw-emoji-item';
-        b.textContent = ch;
-        b.addEventListener('click', function () {
-            var s2 = roomInput.selectionStart || roomInput.value.length;
-            var e2 = roomInput.selectionEnd || roomInput.value.length;
-            roomInput.value = roomInput.value.slice(0, s2) + ch + roomInput.value.slice(e2);
-            roomInput.focus();
-            roomInput.selectionStart = roomInput.selectionEnd = s2 + ch.length;
-        });
-        roomEmojiPanel.appendChild(b);
-    });
-    roomEmojiBtn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        roomEmojiPanel.hidden = !roomEmojiPanel.hidden;
-    });
-    roomEmojiPanel.addEventListener('click', function (e) { e.stopPropagation(); });
-    }
+    setupEmoji(roomEmojiBtn, roomEmojiPanel, roomInput);
 
     /* Chuyển qua lại giữa phòng chung và danh sách chat riêng */
     function showRoom() {
@@ -470,9 +566,10 @@
 
     var backBtn = document.getElementById('cw-back');
     if (backBtn) { backBtn.addEventListener('click', backToList); }
-    // Khách chưa đăng nhập không có khung chat riêng nên các phần tử này vắng mặt
+    // Bấm ra ngoài thì đóng bảng icon (khách chưa đăng nhập không có bảng riêng)
     document.addEventListener('click', function () {
         if (emojiPanel) { emojiPanel.hidden = true; }
+        if (roomEmojiPanel) { roomEmojiPanel.hidden = true; }
     });
 
     /* Nút "Nhắn tin" ở trang cá nhân mở thẳng khung chat thay vì chuyển trang */
@@ -504,6 +601,7 @@
             roomBody.appendChild(renderRoomMessage(msg.message));
             if (msg.message.id > roomLastId) { roomLastId = msg.message.id; }
             if (stick) { roomBody.scrollTop = roomBody.scrollHeight; }
+            else if (!msg.message.mine) { roomJump.them(); }
         });
 
         // Lịch sử phòng chung khi vừa vào
@@ -515,11 +613,12 @@
                 if (m.id > roomLastId) { roomLastId = m.id; }
             });
             roomBody.scrollTop = roomBody.scrollHeight;
+            roomJump.reset();
         });
 
         // Số người online cập nhật tức thời
         RT.on('room.presence', function (msg) {
-            roomOnline.textContent = msg.online + ' người đang online';
+            setOnline(msg.online);
         });
 
         // Tin nhắn riêng đến
@@ -529,6 +628,7 @@
                 bodyEl.appendChild(renderMessage(msg.message));
                 if (msg.message.id > lastId) { lastId = msg.message.id; }
                 if (stick) { scrollDown(); }
+                else if (!msg.message.mine) { chatJump.them(); }
                 RT.send({ t: 'chat.read', conversationId: current.id });
             } else if (!msg.message.mine) {
                 // đang ở màn khác: cập nhật huy hiệu chưa đọc

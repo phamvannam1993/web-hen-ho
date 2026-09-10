@@ -268,8 +268,13 @@ $can_index = $force_allow_index || !$site_blocked;
      data-ws-url="<?= e($ws_url ?? '') ?>" data-ws-token="<?= e($ws_token ?? '') ?>"
      data-guest="<?= ($user && empty($ho_so_chua_xong)) ? '0' : '1' ?>"
      data-need-profile="<?= !empty($ho_so_chua_xong) ? '1' : '0' ?>">
-    <button type="button" class="cw-bubble" id="cw-bubble" aria-label="Mở tin nhắn">
-        <span class="cw-bubble-icon">💬</span>
+    <button type="button" class="cw-tab" id="cw-bubble" aria-label="Mở trò chuyện">
+        <span class="cw-tab-arrow" aria-hidden="true">&laquo;</span>
+        <span class="cw-tab-label">Trò chuyện</span>
+        <span class="cw-tab-online"><i class="cw-tab-dot"></i><b id="cw-tab-count">—</b></span>
+        <span class="cw-tab-icons" aria-hidden="true">
+            <i class="cw-tab-b1">💬</i><i class="cw-tab-b2">💬</i>
+        </span>
         <span class="cw-badge" id="cw-badge" hidden>0</span>
     </button>
 
@@ -287,7 +292,13 @@ $can_index = $force_allow_index || !$site_blocked;
                 <button type="button" class="cw-close" data-close aria-label="Đóng">&times;</button>
             </header>
 
-            <div class="cw-body" id="cw-room-body"></div>
+            <div class="cw-body-wrap">
+                <div class="cw-body" id="cw-room-body"></div>
+                <button type="button" class="cw-jump" id="cw-room-jump" hidden>
+                    <span class="cw-jump-arrow" aria-hidden="true">&raquo;</span>
+                    <b class="cw-jump-text">Tin nhắn mới</b>
+                </button>
+            </div>
 
             <form class="cw-form" id="cw-room-form">
                 <label class="cw-attach<?= $user ? '' : ' is-disabled' ?>" title="Gửi ảnh">
@@ -297,19 +308,24 @@ $can_index = $force_allow_index || !$site_blocked;
                 </label>
                 <div class="cw-input-wrap">
                     <input type="text" name="content" id="cw-room-input" autocomplete="off"
-                           placeholder="<?= $user ? 'Nhắn cho cả phòng…' : 'Đăng nhập để trò chuyện…' ?>"
+                           placeholder="<?= $user ? 'Vui lòng nhập tin nhắn' : 'Đăng nhập để trò chuyện…' ?>"
                            <?= $user ? '' : 'disabled' ?>>
-                    <button type="button" class="cw-emoji-btn" id="cw-room-emoji-btn" title="Biểu tượng cảm xúc">☺</button>
-                    <div class="cw-emoji-panel" id="cw-room-emoji-panel" hidden></div>
+                    <button type="button" class="cw-emoji-btn" id="cw-room-emoji-btn"
+                            title="Biểu tượng cảm xúc" <?= $user ? '' : 'disabled' ?>>☺</button>
                 </div>
                 <button class="cw-send" type="submit" aria-label="Gửi"
-                        <?= $user ? '' : 'disabled' ?>>➤</button>
+                        <?= $user ? '' : 'disabled' ?>><svg viewBox="0 0 24 24" class="cw-send-ic" aria-hidden="true"><path d="M21.4 3.6 2.9 10.3c-1 .4-1 1.8 0 2.1l6.2 2 2.4 6.6c.3.9 1.6 1 2 .1l8-16.2c.4-.8-.4-1.6-1.2-1.3z"/><path d="M9.4 14.6 21 3.9"/></svg></button>
             </form>
             <?php if (!$user): ?>
                 <p class="cw-guest-note">
                     <a href="<?= site_url('dang-nhap') ?>">Đăng nhập</a> để tham gia trò chuyện
                 </p>
             <?php endif; ?>
+            <?php /* Bảng icon nằm dưới ô nhập, đẩy khung tin ngắn lại chứ không đè lên */ ?>
+            <div class="cw-emoji-panel" id="cw-room-emoji-panel" hidden>
+                <div class="cw-emoji-tabs"></div>
+                <div class="cw-emoji-list"></div>
+            </div>
         </div>
 
         <?php if ($user): ?>
@@ -340,7 +356,13 @@ $can_index = $force_allow_index || !$site_blocked;
                 <button type="button" class="cw-close" data-close aria-label="Đóng">&times;</button>
             </header>
 
-            <div class="cw-body" id="cw-body"></div>
+            <div class="cw-body-wrap">
+                <div class="cw-body" id="cw-body"></div>
+                <button type="button" class="cw-jump" id="cw-jump" hidden>
+                    <span class="cw-jump-arrow" aria-hidden="true">&raquo;</span>
+                    <b class="cw-jump-text">Tin nhắn mới</b>
+                </button>
+            </div>
 
             <form class="cw-form" id="cw-form">
                 <input type="hidden" name="receiver_id" id="cw-receiver">
@@ -349,12 +371,15 @@ $can_index = $force_allow_index || !$site_blocked;
                     <span>🖼</span>
                 </label>
                 <div class="cw-input-wrap">
-                    <input type="text" name="content" id="cw-input" placeholder="Nhắn gì đó…" autocomplete="off">
+                    <input type="text" name="content" id="cw-input" placeholder="Vui lòng nhập tin nhắn" autocomplete="off">
                     <button type="button" class="cw-emoji-btn" id="cw-emoji-btn" title="Biểu tượng cảm xúc">☺</button>
-                    <div class="cw-emoji-panel" id="cw-emoji-panel" hidden></div>
                 </div>
-                <button class="cw-send" type="submit" aria-label="Gửi">➤</button>
+                <button class="cw-send" type="submit" aria-label="Gửi"><svg viewBox="0 0 24 24" class="cw-send-ic" aria-hidden="true"><path d="M21.4 3.6 2.9 10.3c-1 .4-1 1.8 0 2.1l6.2 2 2.4 6.6c.3.9 1.6 1 2 .1l8-16.2c.4-.8-.4-1.6-1.2-1.3z"/><path d="M9.4 14.6 21 3.9"/></svg></button>
             </form>
+            <div class="cw-emoji-panel" id="cw-emoji-panel" hidden>
+                <div class="cw-emoji-tabs"></div>
+                <div class="cw-emoji-list"></div>
+            </div>
         </div>
     </div>
 </div>

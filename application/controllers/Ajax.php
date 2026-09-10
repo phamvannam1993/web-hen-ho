@@ -140,6 +140,16 @@ class Ajax extends MY_Controller
         $me    = $this->auth->id();   // null nếu là khách
         $after = (int) $this->input->get('after');
 
+        // Thẻ "Trò chuyện" ngoài rìa màn hình chỉ cần con số người đang online,
+        // gọi kèm ?only=online để khỏi kéo về cả danh sách tin nhắn.
+        if ($this->input->get('only') === 'online') {
+            return $this->json(array(
+                'ok'       => true,
+                'messages' => array(),
+                'online'   => $this->online_count(),
+            ));
+        }
+
         $this->db->select('r.id, r.user_id, r.type, r.content, r.created_at,
                            u.display_name, u.nickname, u.avatar, u.gender, u.slug')
             ->from('room_messages r')->join('users u', 'u.id = r.user_id')
@@ -174,11 +184,16 @@ class Ajax extends MY_Controller
             'ok'       => true,
             'guest'    => !$me,
             'messages' => $messages,
-            // Không tính tài khoản đã xoá mềm
-            'online'   => (int) $this->db->where('last_active_at >', date('Y-m-d H:i:s', time() - 300))
-                ->where('status', 'active')->where('deleted_at', null)
-                ->count_all_results('users'),
+            'online'   => $this->online_count(),
         ));
+    }
+
+    /** Số thành viên hoạt động trong 5 phút gần nhất; không tính tài khoản đã xoá mềm. */
+    private function online_count()
+    {
+        return (int) $this->db->where('last_active_at >', date('Y-m-d H:i:s', time() - 300))
+            ->where('status', 'active')->where('deleted_at', null)
+            ->count_all_results('users');
     }
 
     /** Gửi tin vào phòng chat chung. */
