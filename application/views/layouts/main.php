@@ -13,7 +13,7 @@ $flash = $this->session->flashdata('flash');
   gtag('config', 'G-NXYG6XSVEK');
 </script>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <?php
 /*
  * Tiêu đề trang: nếu controller đặt sẵn $meta_title thì dùng nguyên văn,
@@ -106,9 +106,9 @@ $mxh = array_filter(array(
 <header class="site-header">
     <div class="container header-inner">
         <a class="brand" href="<?= site_url() ?>">
-            <span class="brand-mark">♥</span>
-            <span class="brand-text"><?= e($settings['site_name'] ?? 'Saigon Cupid') ?></span>
-        </a>
+    <img src="https://saigoncupid.com/assets/images/logo.png" alt="<?= e($settings['site_name'] ?? 'Saigon Cupid') ?>" class="brand-logo">
+    <span class="brand-text"><?= e($settings['site_name'] ?? 'Saigon Cupid') ?></span>
+</a>
 
         <?php /* Ô tìm kiếm gọn ở giữa hàng trên, lấp khoảng trống giữa logo và nhóm nút.
                  Chỉ hiện trên màn rộng; màn hẹp dùng bộ lọc trong trang Thành viên. */ ?>

@@ -272,23 +272,23 @@ $hero_img = setting('home_hero_image') ?: 'assets/images/banner.png';
 </section>
 
 <?php /* ===== Thanh điều hướng đáy: chỉ hiện ở trang chủ ===== */ ?>
-<div class="bottom-nav" id="bottomNav">
-    <div class="bottom-nav-inner">
-        <a href="<?= site_url('') ?>" class="bottom-nav-item active">
-            <span class="bottom-nav-icon">🏠</span>
-            <span class="bottom-nav-label">Trang chủ</span>
-        </a>
-        <a href="<?= site_url('swipe-match') ?>" class="bottom-nav-item">
-            <span class="bottom-nav-icon">👩🏻‍❤️‍👨🏻</span>
-            <span class="bottom-nav-label">Ghép đôi</span>
-        </a>
-        <a href="<?= site_url('hen-ho') ?>" class="bottom-nav-item">
-            <span class="bottom-nav-icon">💕</span>
-            <span class="bottom-nav-label">Hẹn hò</span>
-        </a>
-        <a href="<?= site_url('tam-su') ?>" class="bottom-nav-item">
-            <span class="bottom-nav-icon">💬</span>
-            <span class="bottom-nav-label">Tâm sự</span>
-        </a>
-    </div>
-</div>
+<!--<div class="bottom-nav" id="bottomNav">-->
+<!--    <div class="bottom-nav-inner">-->
+<!--        <a href="<?= site_url('') ?>" class="bottom-nav-item active">-->
+<!--            <span class="bottom-nav-icon">🏠</span>-->
+<!--            <span class="bottom-nav-label">Trang chủ</span>-->
+<!--        </a>-->
+<!--        <a href="<?= site_url('swipe-match') ?>" class="bottom-nav-item">-->
+<!--            <span class="bottom-nav-icon">👩🏻‍❤️‍👨🏻</span>-->
+<!--            <span class="bottom-nav-label">Ghép đôi</span>-->
+<!--        </a>-->
+<!--        <a href="<?= site_url('hen-ho') ?>" class="bottom-nav-item">-->
+<!--            <span class="bottom-nav-icon">💕</span>-->
+<!--            <span class="bottom-nav-label">Hẹn hò</span>-->
+<!--        </a>-->
+<!--        <a href="<?= site_url('tam-su') ?>" class="bottom-nav-item">-->
+<!--            <span class="bottom-nav-icon">💬</span>-->
+<!--            <span class="bottom-nav-label">Tâm sự</span>-->
+<!--        </a>-->
+<!--    </div>-->
+<!--</div>-->

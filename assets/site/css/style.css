@@ -19,7 +19,12 @@
 }
 
 * { box-sizing: border-box; }
-
+.brand-logo {
+    height: 32px; /* Hoặc điều chỉnh kích thước phù hợp với header */
+    width: auto;
+    object-fit: contain;
+    margin-right: 8px; /* Khoảng cách với chữ "Saigon Cupid" */
+}
 body {
     margin: 0;
     /* Ngăn ngăn kéo menu (nằm ngoài màn hình bên phải) tạo thanh cuộn ngang */
@@ -796,6 +801,26 @@ select {
     .page-layout {
         width: 100%;
     }
+        .brand {
+        display: flex;
+        align-items: center;
+        gap: 8px; /* Khoảng cách giữa trái tim và chữ */
+        padding-left: 10px; /* Đẩy logo vào trong cho khỏi sát lề */
+    }
+
+    /* Chỉnh kích thước logo trái tim */
+    .brand-logo {
+        height: 24px; /* Thu nhỏ logo lại cho cân đối với header mobile */
+        width: auto;
+    }
+
+    /* Chỉnh chữ Saigon Cupid */
+    .brand-text {
+        font-size: 18px; /* Chỉnh cỡ chữ to hơn một chút cho dễ đọc */
+        font-weight: 700;
+        color: #d32f2f; /* Màu đỏ giống ảnh mẫu */
+        white-space: nowrap;
+    }
 }
 
 /* Trang tĩnh: nội quy, điều khoản, liên hệ */
@@ -1243,7 +1268,7 @@ select {
 .site-footer {
     background: black;
     color: rgba(255, 255, 255, .88);
-    margin-top: 40px;
+    /*margin-top: 40px;*/
     padding: 56px 0 15px;
     width: 100%;
     margin-bottom: -20px !important;
@@ -1492,9 +1517,21 @@ select {
     }
     .drawer-title { font-size: 17px; font-weight: 700; letter-spacing: .3px; }
     .drawer-close {
-        background: rgba(255,255,255,.2); border: 0; color: #fff; cursor: pointer;
-        width: 32px; height: 32px; border-radius: 50%; font-size: 24px; line-height: 1;
-    }
+    background: rgba(255,255,255,.2); 
+    border: 0; 
+    color: #fff; 
+    cursor: pointer;
+    width: 32px!important; 
+    height: 32px!important; 
+    border-radius: 50%; 
+    font-size: 24px; 
+    line-height: 1;
+    
+    /* THÊM 3 DÒNG NÀY ĐỂ SỬA LỖI */
+    flex: 0 0 auto;       /* Ngăn chặn Flexbox kéo giãn nút */
+    display: grid;         /* Căn giữa dấu X */
+    place-items: center;   /* Căn giữa dấu X */
+}
     .drawer-close:hover { background: rgba(255,255,255,.35); }
 
     /* Lớp phủ mờ phía sau ngăn kéo */
@@ -1744,7 +1781,7 @@ select {
 /* Lưới tự chia cột theo bề rộng còn lại: tránh cảnh chỉ 1 cột khiến thẻ
    phình to gần hết màn hình ở khoảng 560-1024px. */
 /* Khoảng thở giữa thanh điều hướng dính trên đỉnh và nội dung bên dưới */
-main { display: block; padding-top: 14px; }
+main { display: block }
 
 /* Đường dẫn phân cấp (Trang chủ › Hẹn hò › ...) */
 .breadcrumb {
@@ -3160,7 +3197,8 @@ body.is-bare .chat-widget {
 .cw-head h3 { margin: 0; font-size: 16.5px; font-weight: 700; flex: 1; letter-spacing: .2px; }
 .cw-close, .cw-back {
     background: #f3f4f8; border: 0; color: #6b7280; cursor: pointer; line-height: 1;
-    width: 32px; height: 32px; border-radius: 50%; flex: 0 0 auto;
+    width: 32px!important; height: 32px!important; border-radius: 50%; 
+    flex: 0 0 auto; /* <--- DÒNG NÀY ĐÃ CÓ SẴN */
     display: grid; place-items: center;
     transition: background .15s, color .15s;
 }
@@ -3284,7 +3322,7 @@ body.is-bare .chat-widget {
 .cw-room-msg.mine { align-self: flex-end; flex-direction: row-reverse; }
 /* Vòng gradient quanh avatar cho giống khung avatar có viền ở ảnh mẫu */
 .cw-room-avatar {
-    width: 52px; height: 52px; border-radius: 50%; object-fit: cover; flex: 0 0 auto;
+    width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex: 0 0 auto;
     /* Viền trắng nằm trong, vòng gradient nằm ngoài: vẽ bằng padding + nền */
     padding: 2px; background: #fff;
     border: 2px solid transparent;
@@ -3748,9 +3786,7 @@ body.is-bare .chat-widget {
 /* Lớp phủ đỏ trong suốt: giữ được ảnh nhưng chữ trắng vẫn đọc rõ */
 .hm-hero-bg::after {
     content: ""; position: absolute; inset: 0;
-    background:
-        linear-gradient(135deg, rgba(224,89,110,.62) 0%, rgba(209,39,63,.55) 45%, rgba(168,27,50,.68) 100%),
-        radial-gradient(120% 90% at 50% 120%, rgba(0,0,0,.3), transparent 60%);
+    background: linear-gradient(135deg, rgb(225 188 194 / 62%) 0%, rgb(233 190 196 / 55%) 45%, rgb(205 115 130 / 68%) 100%), radial-gradient(120% 90% at 50% 120%, rgba(0, 0, 0, .3), transparent 60%);
 }
 .hm-hero-inner { position: relative; z-index: 1; padding: 120px 0 104px; }
 .hm-hero-title {
@@ -3936,12 +3972,37 @@ body.is-bare .chat-widget {
 
     /* Ô tìm kiếm xếp dọc: chữ một dòng, nút chiếm hết bề ngang bên dưới */
     .hm-hero-search {
-        flex-direction: column; align-items: stretch; gap: 12px;
-        padding: 16px; border-radius: 18px;
-    }
-    .hm-hero-search-ic { position: absolute; left: 28px; top: 30px; }
-    .hm-hero-search input { padding: 4px 0 4px 30px; }
-    .hm-hero-search .btn-hm { width: 100%; }
+    display: flex;
+    flex-direction: column; /* SỬA: Đổi từ column thành row để icon và input nằm ngang */
+    align-items: stretch; /* Căn giữa theo chiều dọc */
+    gap: 12px;
+    padding: 16px;
+    border-radius: 18px;
+    position: relative;
+}
+
+.hm-hero-search-ic {
+        position: absolute; /* Đưa icon trở lại nằm trong ô input */
+        left: 16px;
+        top: 20px; /* Điều chỉnh số này cho khớp với ô input */
+}
+
+.hm-hero-search input {
+    flex: 1;
+        padding: 6px 0px 1px 30px;
+        border: none;
+        outline: none;
+        width: 100%;
+        font-size: 13px ;
+}
+
+/* Nút tìm kiếm */
+.hm-hero-search .btn-hm {
+    width: 100%;
+    /* Vì cha đã là flex-direction: row, nút này sẽ nằm cùng hàng với input */
+    /* Nếu bạn muốn nút nằm dưới cùng (như comment mô tả), bạn cần bọc input và icon trong 1 div riêng */
+    /* Hoặc dùng flex-wrap: wrap; cho thẻ cha .hm-hero-search */
+}
     .hm-hero-cta { margin-top: 24px; }
     .hm-hero-stats { gap: 8px 14px; font-size: 13.5px; }
     .hm-hero-stats li + li { padding-left: 14px; }
