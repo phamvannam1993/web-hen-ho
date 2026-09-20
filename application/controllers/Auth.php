@@ -6,7 +6,7 @@ class Auth extends MY_Controller
     public function __construct()
     {
         parent::__construct();
-        $this->load->model('m_user');
+        $this->load->model(array('m_user', 'm_otp'));
         $this->load->library('mailer');
     }
 
@@ -57,6 +57,11 @@ class Auth extends MY_Controller
                         'birthday'     => $this->input->post('birthday'),
                         'province_id'  => $this->input->post('province_id'),
                     ));
+                    // Bật xác thực email thì chưa cho vào ngay, phải nhập mã trước
+                    if (setting('otp_register', '1') === '1') {
+                        return $this->bat_dau_otp($id, 'register');
+                    }
+
                     $this->auth->login($this->m_user->find($id));
                     set_flash('success', 'Đăng ký thành công. Hãy hoàn thiện hồ sơ để được ghép đôi tốt hơn!');
                     redirect('tai-khoan/ho-so');
@@ -78,22 +83,194 @@ class Auth extends MY_Controller
             $this->form_validation->set_rules('password', 'Mật khẩu', 'required');
 
             if ($this->form_validation->run()) {
-                $result = $this->auth->attempt(
-                    $this->input->post('identity', true),
-                    $this->input->post('password'),
-                    (bool) $this->input->post('remember')
-                );
-                if ($result === true) {
-                    $next = $this->input->get('next');
-                    redirect($next ? urldecode($next) : 'tai-khoan');
+                $identity = $this->input->post('identity', true);
+                $remember = (bool) $this->input->post('remember');
+
+                // Người đăng ký xong nhưng chưa xác thực email thì phải xác thực
+                // trước đã, kể cả khi OTP đăng nhập đang tắt — nếu không họ chỉ
+                // cần đăng nhập bằng mật khẩu là né được bước xác thực.
+                if (setting('otp_register', '1') === '1') {
+                    $chua_xac = $this->auth->kiem_mat_khau($identity, $this->input->post('password'));
+                    if (is_array($chua_xac) && empty($chua_xac['email_verified_at'])
+                        && !empty($chua_xac['email'])) {
+                        set_flash('warning', 'Email của bạn chưa được xác thực. '
+                            . 'Chúng tôi vừa gửi lại mã xác thực.');
+                        return $this->bat_dau_otp($chua_xac['id'], 'register');
+                    }
                 }
-                set_flash('danger', $result === 'locked'
-                    ? 'Tài khoản đang bị khoá. Liên hệ hỗ trợ để được trợ giúp.'
-                    : 'Email/SĐT hoặc mật khẩu không đúng.');
+
+                // Bước hai bằng mã email: kiểm mật khẩu trước, chưa tạo phiên vội
+                if (setting('otp_login', '1') === '1') {
+                    $user = $this->auth->kiem_mat_khau($identity, $this->input->post('password'));
+
+                    if ($user === 'locked') {
+                        set_flash('danger', 'Tài khoản đang bị khoá. Liên hệ hỗ trợ để được trợ giúp.');
+                    } elseif (!$user) {
+                        set_flash('danger', 'Email/SĐT hoặc mật khẩu không đúng.');
+                    } elseif (empty($user['email'])) {
+                        // Tài khoản cũ không có email thì không gửi mã đi đâu được
+                        $this->auth->login($user);
+                        redirect($this->sau_dang_nhap());
+                    } else {
+                        return $this->bat_dau_otp($user['id'], 'login', $remember);
+                    }
+                } else {
+                    $result = $this->auth->attempt($identity, $this->input->post('password'), $remember);
+                    if ($result === true) {
+                        redirect($this->sau_dang_nhap());
+                    }
+                    set_flash('danger', $result === 'locked'
+                        ? 'Tài khoản đang bị khoá. Liên hệ hỗ trợ để được trợ giúp.'
+                        : 'Email/SĐT hoặc mật khẩu không đúng.');
+                }
             }
         }
 
         $this->render('auth/login', array('title' => 'Đăng nhập'));
+    }
+
+    /* ===================== Mã OTP qua email ===================== */
+
+    /** Nơi cần tới sau khi đăng nhập xong. */
+    private function sau_dang_nhap()
+    {
+        $next = $this->input->get('next');
+        return $next ? urldecode($next) : 'tai-khoan';
+    }
+
+    /**
+     * Sinh mã, gửi email rồi đưa người dùng sang trang nhập mã.
+     * Trạng thái "đang chờ mã" giữ trong session, chưa tạo phiên đăng nhập.
+     */
+    private function bat_dau_otp($user_id, $muc_dich, $remember = false)
+    {
+        $this->session->set_userdata('otp_cho', array(
+            'user_id'  => (int) $user_id,
+            'muc_dich' => $muc_dich,
+            'remember' => (bool) $remember,
+            'next'     => $this->input->get('next'),
+        ));
+
+        $this->gui_ma($user_id, $muc_dich);
+        redirect('xac-thuc');
+    }
+
+    /** Gửi (hoặc gửi lại) mã tới email của người dùng. */
+    private function gui_ma($user_id, $muc_dich)
+    {
+        $user = $this->m_user->find($user_id);
+        if (!$user || empty($user['email'])) {
+            set_flash('danger', 'Tài khoản này chưa có email nên không gửi được mã.');
+            return false;
+        }
+
+        $ma   = $this->m_otp->tao($user_id, $muc_dich);
+        $sent = $this->mailer->send(
+            $user['email'],
+            ($muc_dich === 'register' ? 'Mã xác thực email' : 'Mã đăng nhập') . ' - '
+                . setting('site_name', 'Saigon Cupid'),
+            'otp',
+            array(
+                'name'    => display_name($user),
+                'code'    => $ma,
+                'minutes' => M_otp::PHUT_SONG,
+                'purpose' => $muc_dich,
+            )
+        );
+
+        if ($sent) {
+            set_flash('success', 'Đã gửi mã xác thực tới ' . mask_email($user['email']) . '.');
+            return true;
+        }
+
+        // Gửi hỏng thì nói thật; lúc đang phát triển thì hiện mã ra cho đỡ tắc
+        set_flash('warning', ENVIRONMENT === 'production'
+            ? 'Hệ thống chưa gửi được email. Bấm "Gửi lại mã" sau ít phút hoặc liên hệ hỗ trợ.'
+            : 'Chưa gửi được email. Mã (chỉ hiện khi đang phát triển): ' . $ma);
+        return false;
+    }
+
+    /** Lấy trạng thái chờ mã trong session, hết hạn thì trả về null. */
+    private function phien_otp()
+    {
+        $cho = $this->session->userdata('otp_cho');
+        if (!is_array($cho) || empty($cho['user_id'])) {
+            return null;
+        }
+        return $cho;
+    }
+
+    /** Trang nhập mã cho cả đăng ký lẫn đăng nhập. */
+    public function verify()
+    {
+        $cho = $this->phien_otp();
+        if (!$cho) {
+            set_flash('danger', 'Phiên xác thực đã kết thúc. Vui lòng thao tác lại.');
+            redirect('dang-nhap');
+        }
+
+        $user = $this->m_user->find($cho['user_id']);
+        if (!$user) {
+            $this->session->unset_userdata('otp_cho');
+            redirect('dang-nhap');
+        }
+
+        if ($this->input->method() === 'post') {
+            $this->form_validation->set_rules('code', 'Mã xác thực', 'required');
+
+            if ($this->form_validation->run()) {
+                $kq = $this->m_otp->kiem_tra($cho['user_id'], $cho['muc_dich'], $this->input->post('code'));
+
+                if ($kq['ok']) {
+                    $this->session->unset_userdata('otp_cho');
+
+                    if ($cho['muc_dich'] === 'register') {
+                        // Xác thực xong mới kích hoạt tài khoản
+                        $this->db->where('id', $user['id'])->update('users', array(
+                            'email_verified_at' => date('Y-m-d H:i:s'),
+                            'status' => $user['status'] === 'pending' ? 'active' : $user['status'],
+                        ));
+                        $this->auth->login($this->m_user->find($user['id']));
+                        set_flash('success', 'Xác thực email thành công! '
+                            . 'Hãy hoàn thiện hồ sơ để được ghép đôi tốt hơn.');
+                        redirect('tai-khoan/ho-so');
+                    }
+
+                    $this->auth->login($user);
+                    if (!empty($cho['remember'])) {
+                        $this->auth->ghi_nho($user['id']);
+                    }
+                    redirect($cho['next'] ? urldecode($cho['next']) : 'tai-khoan');
+                }
+
+                set_flash('danger', $kq['message']);
+            }
+        }
+
+        $this->render('auth/otp', array(
+            'title'     => $cho['muc_dich'] === 'register' ? 'Xác thực email' : 'Xác minh đăng nhập',
+            'email'     => mask_email($user['email']),
+            'purpose'   => $cho['muc_dich'],
+            'cho_giay'  => $this->m_otp->con_cho($cho['user_id'], $cho['muc_dich']),
+            'phut_song' => M_otp::PHUT_SONG,
+        ));
+    }
+
+    /** Gửi lại mã, có chặn bấm liên tục. */
+    public function resend()
+    {
+        $cho = $this->phien_otp();
+        if (!$cho) {
+            redirect('dang-nhap');
+        }
+
+        $con_cho = $this->m_otp->con_cho($cho['user_id'], $cho['muc_dich']);
+        if ($con_cho > 0) {
+            set_flash('warning', 'Vui lòng chờ thêm ' . $con_cho . ' giây rồi hãy gửi lại mã.');
+        } else {
+            $this->gui_ma($cho['user_id'], $cho['muc_dich']);
+        }
+        redirect('xac-thuc');
     }
 
     public function logout()

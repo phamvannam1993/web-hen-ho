@@ -13,6 +13,8 @@ INSERT INTO `settings` (`key`,`value`,`group`) VALUES
 ('hotline','0900 000 000','contact'),
 ('contact_email','support@henho24.local','contact'),
 ('auto_approve_user','1','moderation'),
+('otp_register','1','security'),
+('otp_login','1','security'),
 ('auto_approve_post','0','moderation'),
 ('post_expire_days','30','moderation'),
 ('unlock_cost','20','coin'),

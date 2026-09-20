@@ -12,6 +12,8 @@ $route['robots.txt']              = 'robots/index';
 $route['dang-ky']                 = 'auth/register';
 $route['dang-nhap']               = 'auth/login';
 $route['dang-xuat']               = 'auth/logout';
+$route['xac-thuc']                = 'auth/verify';
+$route['xac-thuc/gui-lai']        = 'auth/resend';
 $route['quen-mat-khau']           = 'auth/forgot';
 $route['dat-lai-mat-khau/(:any)'] = 'auth/reset/$1';
 

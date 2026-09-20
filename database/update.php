@@ -12,8 +12,9 @@
  *   5. Dọn trạng thái "đang online" giả của tài khoản mẫu
  *   6. Trạng thái lượt thích (chờ trả lời / ghép đôi / bị bỏ qua) cho luật chat mới
  *   7. Danh mục nghề nghiệp cho ô chọn nghề trong hồ sơ
- *   8. Điền các trường hồ sơ còn trống để bộ lọc tìm kiếm có dữ liệu mà lọc
- *   9. (tuỳ chọn) Sinh thêm thành viên mẫu:  php database/update.php 30
+ *   8. Mã OTP gửi qua email khi đăng ký / đăng nhập
+ *   9. Điền các trường hồ sơ còn trống để bộ lọc tìm kiếm có dữ liệu mà lọc
+ *  10. (tuỳ chọn) Sinh thêm thành viên mẫu:  php database/update.php 30
  *
  * Thành viên mẫu có email dạng @demo.local nên gỡ lại rất dễ:
  *   DELETE FROM users WHERE email LIKE '%@demo.local';
@@ -52,6 +53,8 @@ echo "== 1. Khoá cấu hình mới ==\n";
 $settings = array(
     // key                 giá trị mặc định            nhóm
     array('enable_posts',  '0',                        'moderation'),
+    array('otp_register',  '1',                        'security'),
+    array('otp_login',     '1',                        'security'),
     array('only_online',   '0',                        'moderation'),
     array('company_name',  'CÔNG TY TNHH SAIGON CUPID', 'company'),
     array('tax_code',      '',                         'company'),
@@ -218,11 +221,44 @@ $st = $pdo->prepare("INSERT IGNORE INTO jobs (name)
 $st->execute();
 echo '  Giữ lại ' . $st->rowCount() . " nghề người dùng đã tự nhập.\n";
 
-echo "\n== 8. Hồ sơ thành viên ==\n";
+echo "\n== 8. Mã OTP qua email ==\n";
+// Mỗi mã OTP đếm riêng số lần nhập sai để khoá lại sau vài lần đoán bừa.
+$co = $pdo->query("SHOW COLUMNS FROM user_tokens LIKE 'attempts'")->fetch();
+if (!$co) {
+    $pdo->exec("ALTER TABLE user_tokens
+        ADD COLUMN `attempts` TINYINT UNSIGNED NOT NULL DEFAULT 0
+            COMMENT 'số lần nhập sai mã OTP' AFTER expires_at");
+    echo "  + thêm cột attempts cho bảng user_tokens\n";
+} else {
+    echo "  Đã có cột attempts.\n";
+}
+
+// Bảng cũ có thể chưa có 'otp' trong danh sách loại token
+$cot = $pdo->query("SHOW COLUMNS FROM user_tokens LIKE 'type'")->fetch();
+if ($cot && strpos($cot['Type'], "'otp'") === false) {
+    $pdo->exec("ALTER TABLE user_tokens
+        MODIFY `type` ENUM('verify_email','reset_password','remember','otp') NOT NULL");
+    echo "  + bổ sung loại token 'otp'\n";
+} else {
+    echo "  Loại token 'otp' đã sẵn sàng.\n";
+}
+
+// Tài khoản đã tồn tại từ trước khi có tính năng OTP thì coi như đã xác thực.
+// Không làm bước này thì bật OTP lên là toàn bộ người dùng cũ bị đá ra màn
+// nhập mã, mà nhiều người trong số đó đăng ký bằng email không có thật.
+$st = $pdo->prepare("UPDATE users
+        SET email_verified_at = COALESCE(created_at, NOW())
+      WHERE email_verified_at IS NULL
+        AND email IS NOT NULL AND email <> ''
+        AND deleted_at IS NULL");
+$st->execute();
+echo '  Ân xá ' . $st->rowCount() . " tài khoản cũ (coi như đã xác thực email).\n";
+
+echo "\n== 9. Hồ sơ thành viên ==\n";
 require $root . '/database/fill_member_profiles.php';
 
 if ($demo > 0) {
-    echo "\n== 9. Thành viên mẫu ==\n";
+    echo "\n== 10. Thành viên mẫu ==\n";
     // seed_demo_users.php đọc số lượng từ $argv[1] nên truyền thẳng tham số qua
     $argv[1] = $demo;
     require $root . '/database/seed_demo_users.php';
