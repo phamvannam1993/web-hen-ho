@@ -86,9 +86,8 @@ class Auth extends MY_Controller
                 $identity = $this->input->post('identity', true);
                 $remember = (bool) $this->input->post('remember');
 
-                // Người đăng ký xong nhưng chưa xác thực email thì phải xác thực
-                // trước đã, kể cả khi OTP đăng nhập đang tắt — nếu không họ chỉ
-                // cần đăng nhập bằng mật khẩu là né được bước xác thực.
+                // Đăng ký xong mà chưa xác thực email thì phải xác thực trước,
+                // không thì chỉ cần đăng nhập bằng mật khẩu là né được bước này.
                 if (setting('otp_register', '1') === '1') {
                     $chua_xac = $this->auth->kiem_mat_khau($identity, $this->input->post('password'));
                     if (is_array($chua_xac) && empty($chua_xac['email_verified_at'])
@@ -99,30 +98,13 @@ class Auth extends MY_Controller
                     }
                 }
 
-                // Bước hai bằng mã email: kiểm mật khẩu trước, chưa tạo phiên vội
-                if (setting('otp_login', '1') === '1') {
-                    $user = $this->auth->kiem_mat_khau($identity, $this->input->post('password'));
-
-                    if ($user === 'locked') {
-                        set_flash('danger', 'Tài khoản đang bị khoá. Liên hệ hỗ trợ để được trợ giúp.');
-                    } elseif (!$user) {
-                        set_flash('danger', 'Email/SĐT hoặc mật khẩu không đúng.');
-                    } elseif (empty($user['email'])) {
-                        // Tài khoản cũ không có email thì không gửi mã đi đâu được
-                        $this->auth->login($user);
-                        redirect($this->sau_dang_nhap());
-                    } else {
-                        return $this->bat_dau_otp($user['id'], 'login', $remember);
-                    }
-                } else {
-                    $result = $this->auth->attempt($identity, $this->input->post('password'), $remember);
-                    if ($result === true) {
-                        redirect($this->sau_dang_nhap());
-                    }
-                    set_flash('danger', $result === 'locked'
-                        ? 'Tài khoản đang bị khoá. Liên hệ hỗ trợ để được trợ giúp.'
-                        : 'Email/SĐT hoặc mật khẩu không đúng.');
+                $result = $this->auth->attempt($identity, $this->input->post('password'), $remember);
+                if ($result === true) {
+                    redirect($this->sau_dang_nhap());
                 }
+                set_flash('danger', $result === 'locked'
+                    ? 'Tài khoản đang bị khoá. Liên hệ hỗ trợ để được trợ giúp.'
+                    : 'Email/SĐT hoặc mật khẩu không đúng.');
             }
         }
 
@@ -236,10 +218,8 @@ class Auth extends MY_Controller
                         redirect('tai-khoan/ho-so');
                     }
 
+                    // Phiên chờ cũ còn sót từ lúc có OTP đăng nhập: đăng nhập luôn
                     $this->auth->login($user);
-                    if (!empty($cho['remember'])) {
-                        $this->auth->ghi_nho($user['id']);
-                    }
                     redirect($cho['next'] ? urldecode($cho['next']) : 'tai-khoan');
                 }
 

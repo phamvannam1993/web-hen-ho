@@ -39,7 +39,6 @@ class Settings extends Admin_Controller
         ),
         'security'   => array(
             'otp_register' => 'Bắt xác thực email bằng mã OTP khi đăng ký (1 = bật, 0 = tắt)',
-            'otp_login'    => 'Bắt nhập mã OTP gửi qua email khi đăng nhập (1 = bật, 0 = tắt)',
         ),
         'coin'       => array(
             'unlock_cost'       => 'Xu để mở liên hệ',

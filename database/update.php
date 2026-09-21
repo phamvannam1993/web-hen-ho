@@ -54,7 +54,6 @@ $settings = array(
     // key                 giá trị mặc định            nhóm
     array('enable_posts',  '0',                        'moderation'),
     array('otp_register',  '1',                        'security'),
-    array('otp_login',     '1',                        'security'),
     array('only_online',   '0',                        'moderation'),
     array('company_name',  'CÔNG TY TNHH SAIGON CUPID', 'company'),
     array('tax_code',      '',                         'company'),
