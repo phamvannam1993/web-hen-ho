@@ -315,6 +315,7 @@ CREATE TABLE `user_tokens` (
   `type`       ENUM('verify_email','reset_password','remember','otp') NOT NULL,
   `token`      VARCHAR(128) NOT NULL,
   `expires_at` DATETIME NOT NULL,
+  `attempts`   TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'số lần nhập sai mã OTP',
   `used_at`    DATETIME DEFAULT NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),

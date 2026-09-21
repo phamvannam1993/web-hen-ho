@@ -891,6 +891,26 @@ select {
 .auth-actions { display: flex; gap: 14px; margin-top: 24px; }
 .auth-foot { text-align: center; margin-top: 20px; color: var(--muted); }
 
+/* ---------- Trang nhập mã OTP ---------- */
+.otp-lead { text-align: center; color: var(--muted); margin: -12px 0 26px; line-height: 1.65; }
+.otp-lead b { color: var(--ink); }
+/* Ô mã: chữ to, giãn rộng để đọc từng số cho dễ */
+.otp-input {
+    width: 100%; text-align: center; letter-spacing: 14px; text-indent: 14px;
+    font-size: 30px; font-weight: 700; font-family: "Courier New", Courier, monospace;
+    padding: 14px 10px;
+}
+.otp-input::placeholder { letter-spacing: 10px; color: #c9ccd2; }
+.otp-resend { text-align: center; margin: 18px 0 0; color: var(--muted); font-size: 14.5px; }
+.otp-resend a { font-weight: 700; }
+/* Đang trong thời gian chờ thì mờ đi và không bấm được */
+.otp-resend a.is-off { color: var(--muted); font-weight: 600; pointer-events: none; text-decoration: none; }
+.otp-hint { display: block; margin-top: 6px; font-size: 13px; }
+
+@media (max-width: 480px) {
+    .otp-input { font-size: 24px; letter-spacing: 9px; text-indent: 9px; }
+}
+
 .btn { display: inline-block; border: 0; padding: 14px 30px; font-size: 14px; cursor: pointer; text-align: center; }
 .btn-primary { background: var(--pink); color: #fff; }
 .btn-primary:hover { background: var(--pink-dark); text-decoration: none; }

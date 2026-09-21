@@ -37,6 +37,9 @@ class Settings extends Admin_Controller
             'enable_posts'      => 'Bật tính năng đăng tin hẹn hò (1 = bật, 0 = tắt)',
             'only_online'       => 'Chỉ hiện thành viên đang online ở các trang danh sách (1/0)',
         ),
+        'security'   => array(
+            'otp_register' => 'Bắt xác thực email bằng mã OTP khi đăng ký (1 = bật, 0 = tắt)',
+        ),
         'coin'       => array(
             'unlock_cost'       => 'Xu để mở liên hệ',
             'signup_bonus_coin' => 'Xu tặng khi đăng ký',

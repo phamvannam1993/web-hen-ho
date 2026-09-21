@@ -17,7 +17,15 @@ class Userauth
         $this->CI->load->helper('cookie'); // get_cookie/set_cookie cho chức năng ghi nhớ đăng nhập
     }
 
-    public function attempt($identity, $password, $remember = false)
+    /**
+     * Đối chiếu email/SĐT + mật khẩu, KHÔNG tạo phiên đăng nhập.
+     *
+     * Tách riêng để bước xác thực bằng mã OTP dùng lại được: kiểm mật khẩu
+     * trước, gửi mã, nhập đúng mã rồi mới gọi login().
+     *
+     * Trả về mảng thông tin người dùng, 'locked', hoặc false.
+     */
+    public function kiem_mat_khau($identity, $password)
     {
         $user = $this->CI->db
             ->group_start()->where('email', $identity)->or_where('phone', $identity)->group_end()
@@ -30,18 +38,33 @@ class Userauth
         if (in_array($user['status'], array('banned', 'locked'), true)) {
             return 'locked';
         }
+        return $user;
+    }
+
+    /** Phát hành cookie "ghi nhớ đăng nhập" 30 ngày. */
+    public function ghi_nho($user_id)
+    {
+        $token = bin2hex(random_bytes(32));
+        $this->CI->db->insert('user_tokens', array(
+            'user_id'    => (int) $user_id,
+            'type'       => 'remember',
+            'token'      => $token,
+            'expires_at' => date('Y-m-d H:i:s', strtotime('+30 days')),
+        ));
+        set_cookie('remember_token', $token, 60 * 60 * 24 * 30);
+    }
+
+    public function attempt($identity, $password, $remember = false)
+    {
+        $user = $this->kiem_mat_khau($identity, $password);
+
+        if ($user === false || $user === 'locked') {
+            return $user;
+        }
 
         $this->login($user);
-
         if ($remember) {
-            $token = bin2hex(random_bytes(32));
-            $this->CI->db->insert('user_tokens', array(
-                'user_id'    => $user['id'],
-                'type'       => 'remember',
-                'token'      => $token,
-                'expires_at' => date('Y-m-d H:i:s', strtotime('+30 days')),
-            ));
-            set_cookie('remember_token', $token, 60 * 60 * 24 * 30);
+            $this->ghi_nho($user['id']);
         }
         return true;
     }
