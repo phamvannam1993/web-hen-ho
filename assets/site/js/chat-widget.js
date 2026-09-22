@@ -1,8 +1,13 @@
 /**
  * Khung chat nổi hiển thị trên mọi trang.
  *
- * Luồng: bong bóng sát mép phải -> bấm xổ ra danh sách hội thoại
- * -> chọn một người -> khung trò chuyện. Tin nhắn mới tự tải về theo chu kỳ.
+ * Luồng: thẻ dọc ở mép phải -> mở ra thấy DANH SÁCH hội thoại (phòng chat
+ * chung nằm ngay đầu danh sách như một mục bình thường) -> chọn một mục mới
+ * vào khung trò chuyện.
+ *
+ * Màn rộng: hai cột, danh sách bên trái và nội dung bên phải.
+ * Màn hẹp: danh sách chiếm hết khung, chọn mục thì trượt sang khung chat và
+ * có nút quay lại.
  */
 (function () {
     'use strict';
@@ -10,12 +15,10 @@
     var root = document.getElementById('chat-widget');
     if (!root) { return; }
 
-    var base   = root.getAttribute('data-base');
-    // Khách chưa đăng nhập chỉ xem được phòng chat chung, không có tin nhắn riêng
+    var base    = root.getAttribute('data-base');
     var isGuest = root.getAttribute('data-guest') === '1';
-    // Thành viên đã đăng nhập nhưng hồ sơ chưa khai đủ: xem được như khách,
-    // gửi thì phải hoàn thiện hồ sơ trước
     var canHoSo = root.getAttribute('data-need-profile') === '1';
+
     /* Icon chia nhóm để bảng chọn có tab, mỗi tab một biểu tượng đại diện */
     var EMOJI_GROUPS = [
         { icon: '🙂', name: 'Cảm xúc', items: [
@@ -32,14 +35,16 @@
             '🔥','💯','🎉','🎊','☕','🍺','🍻','🍰','🍜','🍕','🚗','✈️','🏖️','🌴','🎵','🎸',
             '⚽','🏀','🎬','📷','📱','💤','☀️','🌧️','❄️','🐶','🐱','🌻','🍀','🎯','🕐','✅'] }
     ];
+
     var bubble = document.getElementById('cw-bubble');
     var badge  = document.getElementById('cw-badge');
     var panel  = document.getElementById('cw-panel');
 
-    var roomView = document.getElementById('cw-room-view');
-    var listView = document.getElementById('cw-list-view');
-    var chatView = document.getElementById('cw-chat-view');
+    var sideEl   = document.getElementById('cw-side');
     var listEl   = document.getElementById('cw-list');
+    var searchEl = document.getElementById('cw-search');
+    var idleEl   = document.getElementById('cw-idle');
+    var convoEl  = document.getElementById('cw-convo');
 
     var bodyEl   = document.getElementById('cw-body');
     var formEl   = document.getElementById('cw-form');
@@ -47,52 +52,30 @@
     var fileEl   = document.getElementById('cw-file');
     var receiver = document.getElementById('cw-receiver');
 
-    var current = null;   // hội thoại đang mở
-    var lastId  = 0;      // id tin nhắn cuối đã hiển thị
-    var timer   = null;   // chu kỳ tải tin mới của hội thoại đang mở
+    var avatarEl = document.getElementById('cw-avatar');
+    var avatarRm = document.getElementById('cw-avatar-room');
+    var nameEl   = document.getElementById('cw-name');
+    var statusEl = document.getElementById('cw-status');
 
-    /* Lớp realtime (nếu có). Khi WebSocket sống thì tắt polling để đỡ tải máy chủ. */
+    var roomLastEl = document.getElementById('cw-room-last');
+    var roomTimeEl = document.getElementById('cw-room-time');
+    var rowRoom    = document.getElementById('cw-row-room');
+
+    /** Hội thoại đang mở: {kind:'room'} hoặc {kind:'chat', id, user_id, name, ...} */
+    var dang_mo = null;
+    var lastId  = 0;     // id tin cuối đã vẽ của hội thoại đang mở
+    var timer   = null;  // chu kỳ tải tin mới
+    var listTimer = null;
+
     var RT = window.Realtime || null;
     function rtLive() { return !!(RT && RT.connected); }
 
     /* ------------------------- Tiện ích ------------------------- */
 
-    /**
-     * Nút "N tin nhắn mới" ở góc dưới khung tin.
-     * Chỉ đếm khi người dùng đang xem tin cũ ở trên; bấm vào thì nhảy xuống cuối.
-     */
-    function makeJump(btn, body, atBottomFn) {
-        var so = 0;
-        if (!btn || !body) {
-            return { them: function () {}, reset: function () {} };
-        }
-
-        var text = btn.querySelector('.cw-jump-text');
-        function ve() {
-            btn.hidden = so === 0;
-            if (text) { text.textContent = so + ' Tin nhắn mới'; }
-        }
-        function reset() { so = 0; ve(); }
-
-        btn.addEventListener('click', function () {
-            body.scrollTop = body.scrollHeight;
-            reset();
-        });
-        // Tự cuộn tới đáy là coi như đã đọc hết
-        body.addEventListener('scroll', function () {
-            if (atBottomFn()) { reset(); }
-        });
-
-        return {
-            them: function () { so++; ve(); },
-            reset: reset
-        };
-    }
-
-
     function api(url, options) {
         return fetch(base + url, Object.assign({
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
         }, options || {})).then(function (r) { return r.json(); });
     }
 
@@ -102,181 +85,473 @@
     function scrollDown() { bodyEl.scrollTop = bodyEl.scrollHeight; }
 
     function setBadge(n) {
-        if (n > 0) {
-            badge.textContent = n > 99 ? '99+' : n;
-            badge.hidden = false;
-        } else {
-            badge.hidden = true;
-        }
+        if (!badge) { return; }
+        badge.textContent = n > 99 ? '99+' : n;
+        badge.hidden = n <= 0;
     }
+
+    /** Nút "N tin nhắn mới" ở góc dưới khung tin. */
+    var jump = (function () {
+        var btn = document.getElementById('cw-jump');
+        var so  = 0;
+        if (!btn) { return { them: function () {}, reset: function () {} }; }
+
+        var text = btn.querySelector('.cw-jump-text');
+        function ve() {
+            btn.hidden = so === 0;
+            if (text) { text.textContent = so + ' Tin nhắn mới'; }
+        }
+        function reset() { so = 0; ve(); }
+
+        btn.addEventListener('click', function () { scrollDown(); reset(); });
+        bodyEl.addEventListener('scroll', function () { if (atBottom()) { reset(); } });
+
+        return { them: function () { so++; ve(); }, reset: reset };
+    })();
 
     /* ------------------------- Danh sách hội thoại ------------------------- */
 
-    function loadList() {
-        return api('ajax/hoi-thoai').then(function (res) {
-            if (!res.ok) { return; }
-            setBadge(res.unread);
+    var duLieuList = [];   // giữ lại để lọc theo ô tìm kiếm mà không gọi lại máy chủ
 
-            if (!res.items.length) {
-                listEl.innerHTML = '<p class="cw-empty">Chưa có cuộc trò chuyện nào.<br>'
-                    + 'Hãy vào <a href="' + base + 'swipe-match">Khám phá</a> để kết nối.</p>';
-                return;
+    function boDau(s) {
+        return s.normalize('NFD').replace(/[̀-ͯ]/g, '')
+                .replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();
+    }
+
+    function veList() {
+        if (!listEl) { return; }
+
+        var key = boDau((searchEl && searchEl.value || '').trim());
+        var hien = duLieuList.filter(function (it) {
+            return !key || boDau(it.name).indexOf(key) !== -1;
+        });
+
+        listEl.textContent = '';
+
+        if (!hien.length) {
+            var p = document.createElement('p');
+            p.className = 'cw-empty';
+            p.textContent = key
+                ? 'Không tìm thấy ai tên như vậy.'
+                : 'Chưa có cuộc trò chuyện nào. Hãy ghép đôi để bắt đầu nhắn tin.';
+            listEl.appendChild(p);
+            return;
+        }
+
+        hien.forEach(function (it) {
+            var row = document.createElement('button');
+            row.type = 'button';
+            row.className = 'cw-row' + (it.unread > 0 ? ' is-unread' : '');
+
+            var av = document.createElement('span');
+            av.className = 'cw-row-avatar';
+            var img = document.createElement('img');
+            img.src = it.avatar; img.alt = '';
+            av.appendChild(img);
+            if (it.online) {
+                var dot = document.createElement('i');
+                dot.className = 'cw-dot';
+                av.appendChild(dot);
             }
 
-            listEl.innerHTML = '';
-            res.items.forEach(function (it) {
-                var row = document.createElement('button');
-                row.type = 'button';
-                row.className = 'cw-item';
-                row.innerHTML =
-                    '<span class="cw-item-avatar">'
-                  +   '<img src="' + it.avatar + '" alt="">'
-                  +   (it.online ? '<i class="cw-dot"></i>' : '')
-                  + '</span>'
-                  + '<span class="cw-item-text">'
-                  +   '<b></b><small></small>'
-                  + '</span>'
-                  + (it.unread ? '<span class="cw-item-unread">' + it.unread + '</span>' : '');
-                // gán bằng textContent để tránh chèn HTML từ dữ liệu người dùng
-                row.querySelector('b').textContent = it.name;
-                row.querySelector('small').textContent = it.last;
+            var text = document.createElement('span');
+            text.className = 'cw-row-text';
 
-                row.addEventListener('click', function () { openChat(it); });
-                listEl.appendChild(row);
-            });
+            var top = document.createElement('span');
+            top.className = 'cw-row-top';
+            var b = document.createElement('b');
+            var ten = document.createElement('span');
+            ten.className = 'cw-row-name';
+            ten.textContent = it.name;
+            b.appendChild(ten);
+            var t = document.createElement('small');
+            t.textContent = it.time || '';
+            top.appendChild(b);
+            top.appendChild(t);
+
+            var last = document.createElement('span');
+            last.className = 'cw-row-last';
+            last.textContent = it.last || '';
+
+            text.appendChild(top);
+            text.appendChild(last);
+
+            row.appendChild(av);
+            row.appendChild(text);
+
+            if (it.unread > 0) {
+                var n = document.createElement('i');
+                n.className = 'cw-row-unread';
+                n.textContent = it.unread > 99 ? '99+' : it.unread;
+                row.appendChild(n);
+            }
+
+            row.dataset.conv = it.id;
+            row.addEventListener('click', function () { moChat(it); });
+            listEl.appendChild(row);
         });
     }
 
-    /* ------------------------- Khung trò chuyện ------------------------- */
+    function loadList() {
+        if (isGuest || !listEl) { return Promise.resolve(); }
+        return api('ajax/hoi-thoai').then(function (res) {
+            if (!res.ok) { return; }
+            duLieuList = res.items || [];
+            setBadge(res.unread || 0);
+            veList();
 
+            // Dòng đang mở được tô sáng để biết mình đang ở đâu
+            danhDauDangMo();
+        }).catch(function () { /* mất mạng thì để nguyên danh sách cũ */ });
+    }
+
+    function danhDauDangMo() {
+        var rows = sideEl ? sideEl.querySelectorAll('.cw-row') : [];
+        Array.prototype.forEach.call(rows, function (r) { r.classList.remove('is-on'); });
+
+        if (!dang_mo) { return; }
+        if (dang_mo.kind === 'room') {
+            rowRoom.classList.add('is-on');
+            return;
+        }
+        // Tra theo id gắn trên từng dòng, không theo thứ tự: danh sách hiển thị
+        // có thể đang bị ô tìm kiếm lọc bớt nên thứ tự không còn khớp dữ liệu.
+        var row = listEl.querySelector('[data-conv="' + dang_mo.id + '"]');
+        if (row) { row.classList.add('is-on'); }
+    }
+
+    /** Tóm tắt phòng chung cho dòng đầu danh sách + số online trên thẻ dọc. */
+    function loadRoomSummary() {
+        return api('ajax/phong-chat?only=online').then(function (res) {
+            if (!res || !res.ok) { return; }
+            setOnline(res.online);
+            if (roomLastEl) { roomLastEl.textContent = res.last || ''; }
+            if (roomTimeEl) { roomTimeEl.textContent = res.time || ''; }
+        }).catch(function () {});
+    }
+
+    var tabCount  = document.getElementById('cw-tab-count');
+    var tabOnline = document.getElementById('cw-tab-online');
+    function setOnline(n) {
+        if (statusEl && dang_mo && dang_mo.kind === 'room') {
+            statusEl.textContent = n + ' người đang online';
+        }
+        if (tabCount) { tabCount.textContent = Number(n).toLocaleString('vi-VN'); }
+        if (tabOnline) { tabOnline.hidden = false; }
+    }
+
+    /* ------------------------- Vẽ tin nhắn ------------------------- */
+
+    var ngayCuoi = null;   // ngày của tin vừa vẽ, để biết khi nào cần chèn vạch ngày
+    var nguoiCuoi = null;  // người gửi tin vừa vẽ, để gộp tin liên tiếp
+
+    function chiLaIcon(s) {
+        return /^[\p{Extended_Pictographic}️\s]{1,8}$/u.test(String(s).trim());
+    }
+
+    /** Tô màu phần "@Tên ai đó" ở đầu câu, dùng textContent nên không chèn được HTML. */
+    function veNoiDungCoNhac(p, content) {
+        var m = /^(@[^\s@]+(?:\s[^\s@]+){0,3})(\s+)([\s\S]*)$/.exec(content);
+        if (!m) { p.textContent = content; return; }
+
+        var at = document.createElement('span');
+        at.className = 'cw-at';
+        at.textContent = m[1];
+        p.appendChild(at);
+        p.appendChild(document.createTextNode(m[2] + m[3]));
+    }
+
+    function vachNgay(nhan) {
+        var d = document.createElement('div');
+        d.className = 'cw-day';
+        var s = document.createElement('span');
+        s.textContent = nhan;
+        d.appendChild(s);
+        return d;
+    }
+
+    /**
+     * Vẽ một tin. Tin liên tiếp của cùng một người được gộp: chỉ tin đầu nhóm
+     * mới có avatar và tên, các tin sau thụt vào cho gọn.
+     */
     function renderMessage(m) {
-        var div = document.createElement('div');
-        div.className = 'cw-msg' + (m.mine ? ' mine' : '') + (m.type === 'image' ? ' is-image' : '');
+        // Sang ngày mới thì chèn vạch ngăn
+        if (m.day && m.day !== ngayCuoi) {
+            bodyEl.appendChild(vachNgay(m.day));
+            ngayCuoi = m.day;
+            nguoiCuoi = null;
+        }
+
+        var khoa = m.mine ? 'me' : ('u' + (m.user_id || m.sender_id || m.name || ''));
+        var noiTiep = khoa === nguoiCuoi;
+        nguoiCuoi = khoa;
+
+        var wrap = document.createElement('div');
+        wrap.className = 'cw-msg' + (m.mine ? ' mine' : '') + (noiTiep ? ' is-cont' : '');
+
+        // Avatar chỉ vẽ ở tin đầu nhóm, và chỉ với tin của người khác
+        if (!m.mine) {
+            if (!noiTiep && m.avatar) {
+                var av = document.createElement('img');
+                av.className = 'cw-msg-avatar';
+                av.src = m.avatar; av.alt = '';
+                wrap.appendChild(av);
+            } else {
+                var chen = document.createElement('span');
+                chen.className = 'cw-msg-avatar is-blank';
+                wrap.appendChild(chen);
+            }
+        }
+
+        var col = document.createElement('div');
+        col.className = 'cw-msg-col';
+
+        if (!m.mine && !noiTiep && m.name) {
+            var who = m.slug ? document.createElement('a') : document.createElement('span');
+            who.className = 'cw-msg-name';
+            if (m.slug) { who.href = base + 'profile/' + m.slug; }
+            who.textContent = m.name;
+            col.appendChild(who);
+        }
 
         if (m.type === 'image') {
             var a = document.createElement('a');
-            a.href = m.content;
-            a.target = '_blank';
+            a.href = m.content; a.target = '_blank'; a.rel = 'noopener';
             var img = document.createElement('img');
-            img.src = m.content;
-            img.alt = 'Ảnh';
+            img.src = m.content; img.alt = 'Ảnh'; img.className = 'cw-msg-image';
             img.onload = function () { if (atBottom()) { scrollDown(); } };
             a.appendChild(img);
-            div.appendChild(a);
+            col.appendChild(a);
         } else {
             var p = document.createElement('p');
-            if (/^[\p{Extended_Pictographic}️\s]{1,8}$/u.test(m.content.trim())) {
+            if (chiLaIcon(m.content)) {
                 p.className = 'cw-emoji-only';
+                p.textContent = m.content;
+            } else {
+                veNoiDungCoNhac(p, m.content);
             }
-            p.textContent = m.content;
-            div.appendChild(p);
+            col.appendChild(p);
         }
 
-        var t = document.createElement('small');
-        t.textContent = m.time;
-        div.appendChild(t);
-        return div;
+        var meta = document.createElement('small');
+        meta.className = 'cw-msg-time';
+        meta.textContent = m.time || '';
+        if (m.mine && m.seen) {
+            meta.classList.add('has-seen');
+            var seen = document.createElement('i');
+            seen.className = 'cw-seen';
+            seen.textContent = 'Đã xem';
+            meta.appendChild(seen);
+        }
+        col.appendChild(meta);
+
+        wrap.appendChild(col);
+        return wrap;
     }
 
-    function poll() {
-        if (!current || rtLive()) { return; }
-        api('ajax/tin-nhan/' + current.id + '?after=' + lastId).then(function (res) {
-            if (!res.ok) { return; }
-            var stick = atBottom();
-            res.messages.forEach(function (m) {
-                bodyEl.appendChild(renderMessage(m));
-                if (m.id > lastId) { lastId = m.id; }
-                if (!stick && !m.mine) { chatJump.them(); }
-            });
-            if (res.messages.length && stick) { scrollDown(); }
-        }).catch(function () { /* mất mạng thì bỏ qua, chu kỳ sau thử lại */ });
+    function veLai(messages) {
+        bodyEl.textContent = '';
+        ngayCuoi = null;
+        nguoiCuoi = null;
+
+        if (!messages || !messages.length) {
+            var trong = document.createElement('p');
+            trong.className = 'cw-empty';
+            trong.textContent = dang_mo && dang_mo.kind === 'room'
+                ? 'Chưa có ai nhắn gì. Bạn mở lời trước nhé!'
+                : 'Chưa có tin nhắn nào. Gửi lời chào đi!';
+            bodyEl.appendChild(trong);
+            return;
+        }
+
+        messages.forEach(function (m) { bodyEl.appendChild(renderMessage(m)); });
+        scrollDown();
     }
 
-    function openChat(info) {
-        stopRoom();
-        current = info;
+    function themTin(m) {
+        var trong = bodyEl.querySelector('.cw-empty');
+        if (trong) { trong.remove(); }
+
+        var stick = atBottom();
+        bodyEl.appendChild(renderMessage(m));
+        if (stick) { scrollDown(); }
+        else if (!m.mine) { jump.them(); }
+    }
+
+    /* ------------------------- Mở hội thoại ------------------------- */
+
+    function moKhung() {
+        if (idleEl) { idleEl.hidden = true; }
+        convoEl.hidden = false;
+        root.classList.add('is-chat');   // màn hẹp: trượt sang khung chat
+        jump.reset();
+    }
+
+    /** Mở phòng chat chung. */
+    function moPhong() {
+        dang_mo = { kind: 'room' };
         lastId = 0;
-        bodyEl.innerHTML = '';
-        chatJump.reset();
-        receiver.value = info.user_id;
-
-        document.getElementById('cw-avatar').src = info.avatar;
-        document.getElementById('cw-name').textContent = info.name;
-        document.getElementById('cw-status').textContent = info.online ? 'Đang online' : 'Ngoại tuyến';
-
-        roomView.hidden = true;
-        listView.hidden = true;
-        chatView.hidden = false;
-        panel.hidden = false;
-        root.classList.add('open');
-
-        poll();
         clearInterval(timer);
-        timer = setInterval(poll, 4000);
-        inputEl.focus();
+
+        if (avatarEl) { avatarEl.hidden = true; }
+        if (avatarRm) { avatarRm.hidden = false; }
+        nameEl.textContent = 'Phòng chat chung';
+        statusEl.textContent = 'Đang tải…';
+        if (receiver) { receiver.value = ''; }
+        if (inputEl) {
+            inputEl.placeholder = isGuest ? 'Đăng nhập để trò chuyện…' : 'Nhắn cho cả phòng…';
+        }
+
+        moKhung();
+        danhDauDangMo();
+        bodyEl.textContent = '';
+
+        batDauTai();
+        if (inputEl && !isGuest) { inputEl.focus(); }
     }
 
-    function backToList() {
+    /** Mở một hội thoại riêng. */
+    function moChat(info) {
+        dang_mo = Object.assign({ kind: 'chat' }, info);
+        lastId = 0;
         clearInterval(timer);
-        current = null;
-        chatView.hidden = true;
-        listView.hidden = false;
+
+        if (avatarRm) { avatarRm.hidden = true; }
+        if (avatarEl) {
+            avatarEl.hidden = false;
+            avatarEl.src = info.avatar || '';
+        }
+        nameEl.textContent = info.name || '';
+        statusEl.textContent = info.online ? 'Đang online' : '';
+        if (receiver) { receiver.value = info.user_id || ''; }
+        if (inputEl) { inputEl.placeholder = 'Vui lòng nhập tin nhắn'; }
+
+        moKhung();
+        danhDauDangMo();
+        bodyEl.textContent = '';
+
+        batDauTai();
+        if (inputEl) { inputEl.focus(); }
+    }
+
+    /** Quay lại danh sách (màn hẹp). */
+    function veDanhSach() {
+        root.classList.remove('is-chat');
+        dang_mo = null;
+        clearInterval(timer);
+        convoEl.hidden = true;
+        if (idleEl) { idleEl.hidden = false; }
+        danhDauDangMo();
         loadList();
+    }
+
+    /* ------------------------- Tải tin ------------------------- */
+
+    /** Tải ngay một lần rồi bật lại vòng lặp (nếu không có WebSocket). */
+    function batDauTai() {
+        clearInterval(timer);
+        tai();
+        if (!rtLive()) { timer = setInterval(tai, 4000); }
+    }
+
+    function tai() {
+        if (!dang_mo) { return; }
+
+        if (dang_mo.kind === 'room') {
+            if (rtLive() && lastId > 0) { return; }
+            return api('ajax/phong-chat?after=' + lastId).then(function (res) {
+                // Đổi hội thoại rất nhanh thì câu trả lời của hội thoại cũ có
+                // thể về sau — bỏ qua, không thì tin của người này lọt sang
+                // khung của người kia.
+                if (!res.ok || !dang_mo || dang_mo.kind !== 'room') { return; }
+                if (typeof res.online !== 'undefined') { setOnline(res.online); }
+
+                if (lastId === 0) {
+                    veLai(res.messages);
+                } else {
+                    res.messages.forEach(function (m) { themTin(m); });
+                }
+                (res.messages || []).forEach(function (m) {
+                    if (m.id > lastId) { lastId = m.id; }
+                });
+            }).catch(function () {});
+        }
+
+        if (rtLive() && lastId > 0) { return; }
+        var hoi_thoai = dang_mo.id;   // ghim lại để đối chiếu khi câu trả lời về
+        return api('ajax/tin-nhan/' + hoi_thoai + '?after=' + lastId).then(function (res) {
+            if (!res.ok || !dang_mo || dang_mo.kind !== 'chat') { return; }
+            if (Number(dang_mo.id) !== Number(hoi_thoai)) { return; }
+
+            if (lastId === 0) {
+                veLai(res.messages);
+            } else {
+                res.messages.forEach(function (m) { themTin(m); });
+            }
+            (res.messages || []).forEach(function (m) {
+                if (m.id > lastId) { lastId = m.id; }
+            });
+
+            if (res.messages && res.messages.length) { loadList(); }
+        }).catch(function () {});
     }
 
     /* ------------------------- Gửi tin ------------------------- */
 
     if (formEl) {
-    formEl.addEventListener('submit', function (e) {
-        e.preventDefault();
-        var text = (inputEl.value || '').trim();
-        var hasFile = fileEl.files && fileEl.files.length;
-        if (!text && !hasFile) { return; }
+        formEl.addEventListener('submit', function (e) {
+            e.preventDefault();
+            if (!dang_mo) { return; }
 
-        if (!hasFile && rtLive() && current && current.id) {
-            inputEl.value = '';
-            RT.send({ t: 'chat.send', conversationId: current.id, content: text });
-            return;
-        }
+            var text = (inputEl.value || '').trim();
+            var coAnh = fileEl && fileEl.files && fileEl.files.length;
+            if (!text && !coAnh) { return; }
 
-        var data = new FormData(formEl);
-        inputEl.value = '';
-        fileEl.value = '';
-
-        api('ajax/send-message', { method: 'POST', body: data }).then(function (res) {
-            if (!res.ok) {
-                inputEl.value = text;
+            if (canHoSo) {
                 if (window.appModal) {
-                    window.appModal({ type: 'error', title: 'Không gửi được', message: res.message });
+                    window.appModal({
+                        type: 'info', title: 'Cần hoàn thiện hồ sơ',
+                        message: 'Bạn cần khai đủ hồ sơ trước khi nhắn tin.'
+                    });
                 }
                 return;
             }
-            if (res.warning && window.appModal) {
-                window.appModal({ type: 'error', title: 'Ảnh không gửi được', message: res.warning });
-            }
-            poll();
-        });
-    });
 
-    // chọn ảnh xong gửi luôn
-    fileEl.addEventListener('change', function () {
-        if (fileEl.files && fileEl.files.length) {
-            formEl.dispatchEvent(new Event('submit', { cancelable: true }));
-        }
-    });
+            var data = new FormData(formEl);
+            var url  = dang_mo.kind === 'room' ? 'ajax/phong-chat/gui' : 'ajax/send-message';
+
+            inputEl.value = '';
+            api(url, { method: 'POST', body: data }).then(function (res) {
+                if (fileEl) { fileEl.value = ''; }
+                if (!res.ok) {
+                    if (window.appModal) {
+                        window.appModal({ type: 'error', title: 'Không gửi được', message: res.message });
+                    }
+                    return;
+                }
+                tai();
+                loadList();
+                loadRoomSummary();
+            });
+        });
+    }
+
+    /* Chọn ảnh xong là gửi luôn, không phải bấm thêm nút */
+    if (fileEl) {
+        fileEl.addEventListener('change', function () {
+            if (fileEl.files && fileEl.files.length) {
+                formEl.dispatchEvent(new Event('submit', { cancelable: true }));
+            }
+        });
     }
 
     /* ------------------------- Bảng icon ------------------------- */
 
-    /**
-     * Dựng một bảng icon: hàng tab ở trên, lưới icon ở dưới.
-     * Bảng nằm dưới ô nhập nên mở ra là khung tin ngắn lại, không bị che.
-     */
-    function setupEmoji(btn, panel, input) {
-        if (!btn || !panel || !input) { return; }
+    function setupEmoji(btn, panelEl, input) {
+        if (!btn || !panelEl || !input) { return; }
 
-        var tabs = panel.querySelector('.cw-emoji-tabs');
-        var list = panel.querySelector('.cw-emoji-list');
+        var tabs = panelEl.querySelector('.cw-emoji-tabs');
+        var list = panelEl.querySelector('.cw-emoji-list');
         if (!tabs || !list) { return; }
 
         function chen(ch) {
@@ -316,263 +591,62 @@
 
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
-            panel.hidden = !panel.hidden;
+            panelEl.hidden = !panelEl.hidden;
         });
-        panel.addEventListener('click', function (e) { e.stopPropagation(); });
+        panelEl.addEventListener('click', function (e) { e.stopPropagation(); });
     }
 
-    var emojiBtn = document.getElementById('cw-emoji-btn');
     var emojiPanel = document.getElementById('cw-emoji-panel');
-    setupEmoji(emojiBtn, emojiPanel, inputEl);
-
-    /* ------------------------- Phòng chat chung ------------------------- */
-
-    var roomBody  = document.getElementById('cw-room-body');
-    var roomForm  = document.getElementById('cw-room-form');   // khách: không có
-    var roomInput = document.getElementById('cw-room-input');
-    var roomFile  = document.getElementById('cw-room-file');
-    var roomOnline = document.getElementById('cw-room-online');
-    var roomLastId = 0;
-    var roomTimer  = null;
-
-    function roomAtBottom() {
-        return roomBody.scrollHeight - roomBody.scrollTop - roomBody.clientHeight < 60;
-    }
-
-    var roomJump = makeJump(document.getElementById('cw-room-jump'), roomBody, roomAtBottom);
-    var chatJump = makeJump(document.getElementById('cw-jump'), bodyEl, atBottom);
-
-    /* Số người đang online hiện luôn trên thẻ dọc, không cần mở khung chat ra */
-    var tabCount  = document.getElementById('cw-tab-count');
-    var tabOnline = document.getElementById('cw-tab-online');
-    function setOnline(n) {
-        if (roomOnline) { roomOnline.textContent = n + ' người đang online'; }
-        if (tabCount) { tabCount.textContent = Number(n).toLocaleString('vi-VN'); }
-        // Chỉ hiện cụm này khi đã có số thật, tránh chỗ trống lửng lơ trên thẻ
-        if (tabOnline) { tabOnline.hidden = false; }
-    }
-
-    /**
-     * Đổ nội dung tin vào thẻ p, tô màu phần "@Tên ai đó" ở đầu câu.
-     * Dùng textContent cho từng mảnh nên không có đường nào chèn được HTML.
-     */
-    function veNoiDungCoNhac(p, content) {
-        var m = /^(@[^\s@]+(?:\s[^\s@]+){0,3})(\s+)([\s\S]*)$/.exec(content);
-        if (!m) {
-            p.textContent = content;
-            return;
-        }
-        var at = document.createElement('span');
-        at.className = 'cw-at';
-        at.textContent = m[1];
-        p.appendChild(at);
-        p.appendChild(document.createTextNode(m[2] + m[3]));
-    }
-
-    /** Tin phòng chung có kèm avatar và tên người gửi để phân biệt nhiều người. */
-    function renderRoomMessage(m) {
-        var wrap = document.createElement('div');
-        wrap.className = 'cw-room-msg' + (m.mine ? ' mine' : '');
-
-        if (!m.mine) {
-            var av = document.createElement('img');
-            av.className = 'cw-room-avatar';
-            av.src = m.avatar;
-            av.alt = '';
-            wrap.appendChild(av);
-        }
-
-        var col = document.createElement('div');
-        col.className = 'cw-room-col';
-
-        if (!m.mine) {
-            var who = document.createElement('a');
-            who.className = 'cw-room-name';
-            who.href = base + 'profile/' + m.slug;
-            who.textContent = m.name;
-            col.appendChild(who);
-        }
-
-        if (m.type === 'image') {
-            var a = document.createElement('a');
-            a.href = m.content; a.target = '_blank';
-            var img = document.createElement('img');
-            img.src = m.content; img.alt = 'Ảnh'; img.className = 'cw-room-image';
-            img.onload = function () { if (roomAtBottom()) { roomBody.scrollTop = roomBody.scrollHeight; } };
-            a.appendChild(img); col.appendChild(a);
-        } else {
-            var p = document.createElement('p');
-            if (/^[\p{Extended_Pictographic}️\s]{1,8}$/u.test(m.content.trim())) {
-                p.className = 'cw-emoji-only';
-                p.textContent = m.content;
-            } else {
-                veNoiDungCoNhac(p, m.content);
-            }
-            col.appendChild(p);
-        }
-
-        var t = document.createElement('small');
-        t.textContent = m.time;
-        col.appendChild(t);
-        wrap.appendChild(col);
-        return wrap;
-    }
-
-    function pollRoom() {
-        if (rtLive()) { return; }
-        api('ajax/phong-chat?after=' + roomLastId).then(function (res) {
-            if (!res.ok) { return; }
-            var stick = roomAtBottom() || roomLastId === 0;
-
-            res.messages.forEach(function (m) {
-                roomBody.appendChild(renderRoomMessage(m));
-                if (m.id > roomLastId) { roomLastId = m.id; }
-                if (!stick && !m.mine) { roomJump.them(); }
-            });
-
-            setOnline(res.online);
-            if (res.messages.length && stick) { roomBody.scrollTop = roomBody.scrollHeight; }
-        }).catch(function () { /* bỏ qua, chu kỳ sau thử lại */ });
-    }
-
-    /* Số online hiện ngay trên thẻ dọc khi vừa vào trang, chưa cần mở chat.
-       Sau đó pollRoom (lúc mở) và sự kiện realtime lo phần cập nhật. */
-    (function demOnlineLanDau() {
-        api('ajax/phong-chat?only=online').then(function (res) {
-            if (res && res.ok) { setOnline(res.online); }
-        }).catch(function () { /* không có mạng thì thôi, để dấu — */ });
-    })();
-
-    function startRoom() {
-        pollRoom();
-        clearInterval(roomTimer);
-        roomTimer = setInterval(pollRoom, 4000);
-    }
-    function stopRoom() { clearInterval(roomTimer); }
-
-    if (roomForm) {
-    roomForm.addEventListener('submit', function (e) {
-        e.preventDefault();
-        var text = (roomInput.value || '').trim();
-        var hasFile = roomFile.files && roomFile.files.length;
-        if (!text && !hasFile) { return; }
-
-        // Tin chữ đi qua WebSocket cho tức thời; có ảnh thì vẫn phải qua HTTP để tải file
-        if (!hasFile && rtLive()) {
-            roomInput.value = '';
-            RT.send({ t: 'room.send', content: text });
-            return;
-        }
-
-        var data = new FormData(roomForm);
-        roomInput.value = '';
-        roomFile.value = '';
-
-        api('ajax/phong-chat/gui', { method: 'POST', body: data }).then(function (res) {
-            if (!res.ok) {
-                roomInput.value = text;
-                if (window.appModal) {
-                    window.appModal({ type: 'error', title: 'Không gửi được', message: res.message });
-                }
-                return;
-            }
-            if (res.warning && window.appModal) {
-                window.appModal({ type: 'error', title: 'Ảnh không gửi được', message: res.warning });
-            }
-            pollRoom();
-        });
-    });
-
-    roomFile.addEventListener('change', function () {
-        if (roomFile.files && roomFile.files.length) {
-            roomForm.dispatchEvent(new Event('submit', { cancelable: true }));
-        }
-    });
-    }
-
-    /* Bảng icon riêng cho phòng chung */
-    var roomEmojiBtn = document.getElementById('cw-room-emoji-btn');
-    var roomEmojiPanel = document.getElementById('cw-room-emoji-panel');
-    setupEmoji(roomEmojiBtn, roomEmojiPanel, roomInput);
-
-    /* Chuyển qua lại giữa phòng chung và danh sách chat riêng */
-    function showRoom() {
-        listView.hidden = true; chatView.hidden = true; roomView.hidden = false;
-        clearInterval(timer); current = null;
-        startRoom();
-    }
-    function showList() {
-        stopRoom();
-        roomView.hidden = true; chatView.hidden = true; listView.hidden = false;
-        loadList();
-    }
-    var toListBtn = document.getElementById('cw-to-list');
-    var toRoomBtn = document.getElementById('cw-to-room');
-    if (toListBtn) { toListBtn.addEventListener('click', showList); }
-    if (toRoomBtn) { toRoomBtn.addEventListener('click', showRoom); }
-
-    /* Khách bấm vào ô nhập hoặc nút gửi: mời đăng nhập thay vì không phản hồi gì */
-    if (isGuest) {
-        var guestForm = document.getElementById('cw-room-form');
-        if (guestForm) {
-            guestForm.addEventListener('click', function () {
-                if (!window.appModal) return;
-                if (canHoSo) {
-                    window.appModal({
-                        type: 'info',
-                        title: 'Cần hoàn thiện hồ sơ',
-                        message: 'Bạn cần khai đủ thông tin hồ sơ rồi mới nhắn tin được. '
-                               + 'Việc xem thì vẫn tự do.',
-                        confirmText: 'Hoàn thiện ngay',
-                        onConfirm: function () { window.location.href = base + 'tai-khoan/ho-so'; }
-                    });
-                    return;
-                }
-                window.appModal({
-                    type: 'info',
-                    title: 'Cần đăng nhập',
-                    message: 'Bạn cần đăng nhập để tham gia trò chuyện. Việc xem thì hoàn toàn tự do.',
-                    confirmText: 'Đăng nhập',
-                    onConfirm: function () { window.location.href = base + 'dang-nhap'; }
-                });
-            });
-        }
-    }
+    setupEmoji(document.getElementById('cw-emoji-btn'), emojiPanel, inputEl);
 
     /* ------------------------- Đóng / mở ------------------------- */
 
     bubble.addEventListener('click', function () {
-        var opening = panel.hidden;
-        panel.hidden = !opening;
-        root.classList.toggle('open', opening);
-        if (opening) {
-            // mở lên là vào thẳng phòng chat chung
-            if (roomView.hidden && listView.hidden && chatView.hidden) { showRoom(); }
-            else if (!roomView.hidden) { startRoom(); }
+        var moRa = panel.hidden;
+        panel.hidden = !moRa;
+        root.classList.toggle('open', moRa);
+
+        if (moRa) {
+            // Mở ra là thấy danh sách trước, không nhảy thẳng vào phòng chung
+            loadRoomSummary();
+            loadList();
+            clearInterval(listTimer);
+            listTimer = setInterval(function () {
+                loadList();
+                loadRoomSummary();
+            }, 15000);
+            // Mở lại phải bật lại vòng lặp, không thì hội thoại đang mở
+            // đứng im vì chỉ gọi tai() đúng một lần.
+            if (dang_mo) { batDauTai(); }
         } else {
-            stopRoom();
+            clearInterval(timer);
+            clearInterval(listTimer);
         }
     });
 
     root.querySelectorAll('[data-close]').forEach(function (b) {
         b.addEventListener('click', function () {
             panel.hidden = true;
-            root.classList.remove('open');
+            root.classList.remove('open', 'is-chat');
             clearInterval(timer);
-            stopRoom();
-            current = null;
-            chatView.hidden = true;
-            listView.hidden = true;
-            roomView.hidden = false;
+            clearInterval(listTimer);
+            dang_mo = null;
+            convoEl.hidden = true;
+            if (idleEl) { idleEl.hidden = false; }
         });
     });
 
+    if (rowRoom) { rowRoom.addEventListener('click', moPhong); }
+
     var backBtn = document.getElementById('cw-back');
-    if (backBtn) { backBtn.addEventListener('click', backToList); }
-    // Bấm ra ngoài thì đóng bảng icon (khách chưa đăng nhập không có bảng riêng)
+    if (backBtn) { backBtn.addEventListener('click', veDanhSach); }
+
+    if (searchEl) {
+        searchEl.addEventListener('input', function () { veList(); danhDauDangMo(); });
+    }
+
     document.addEventListener('click', function () {
         if (emojiPanel) { emojiPanel.hidden = true; }
-        if (roomEmojiPanel) { roomEmojiPanel.hidden = true; }
     });
 
     /* Nút "Nhắn tin" ở trang cá nhân mở thẳng khung chat thay vì chuyển trang */
@@ -580,8 +654,12 @@
         btn.addEventListener('click', function (e) {
             e.preventDefault();
             api('ajax/mo-chat/' + btn.getAttribute('data-chat-with')).then(function (res) {
-                if (res.ok) { return openChat(res); }
-                // Chưa ghép đôi (hoặc lỗi khác) thì nói rõ lý do thay vì im lặng
+                if (res.ok) {
+                    panel.hidden = false;
+                    root.classList.add('open');
+                    loadList();
+                    return moChat(res);
+                }
                 if (window.appModal) {
                     window.appModal({
                         type: res.need_match ? 'info' : 'error',
@@ -593,108 +671,37 @@
         });
     });
 
-
-    /* ------------------------- Gắn với máy chủ realtime ------------------------- */
+    /* ------------------------- Realtime ------------------------- */
 
     if (RT) {
-        // Nhận tin mới của phòng chung
         RT.on('room.message', function (msg) {
-            if (roomView.hidden) { return; }
-            var stick = roomAtBottom();
-            roomBody.appendChild(renderRoomMessage(msg.message));
-            if (msg.message.id > roomLastId) { roomLastId = msg.message.id; }
-            if (stick) { roomBody.scrollTop = roomBody.scrollHeight; }
-            else if (!msg.message.mine) { roomJump.them(); }
+            if (!dang_mo || dang_mo.kind !== 'room') { loadRoomSummary(); return; }
+            themTin(msg.message);
+            if (msg.message.id > lastId) { lastId = msg.message.id; }
         });
 
-        // Lịch sử phòng chung khi vừa vào
         RT.on('room.history', function (msg) {
-            roomBody.innerHTML = '';
-            roomLastId = 0;
-            msg.messages.forEach(function (m) {
-                roomBody.appendChild(renderRoomMessage(m));
-                if (m.id > roomLastId) { roomLastId = m.id; }
+            if (!dang_mo || dang_mo.kind !== 'room') { return; }
+            veLai(msg.messages);
+            (msg.messages || []).forEach(function (m) {
+                if (m.id > lastId) { lastId = m.id; }
             });
-            roomBody.scrollTop = roomBody.scrollHeight;
-            roomJump.reset();
+            jump.reset();
         });
 
-        // Số người online cập nhật tức thời
-        RT.on('room.presence', function (msg) {
-            setOnline(msg.online);
-        });
+        RT.on('room.presence', function (msg) { setOnline(msg.online); });
 
-        // Tin nhắn riêng đến
         RT.on('chat.message', function (msg) {
-            if (current && Number(current.id) === Number(msg.conversationId)) {
-                var stick = atBottom();
-                bodyEl.appendChild(renderMessage(msg.message));
+            if (dang_mo && dang_mo.kind === 'chat' && Number(dang_mo.id) === Number(msg.conversationId)) {
+                themTin(msg.message);
                 if (msg.message.id > lastId) { lastId = msg.message.id; }
-                if (stick) { scrollDown(); }
-                else if (!msg.message.mine) { chatJump.them(); }
-                RT.send({ t: 'chat.read', conversationId: current.id });
-            } else if (!msg.message.mine) {
-                // đang ở màn khác: cập nhật huy hiệu chưa đọc
-                loadList();
+                RT.send({ t: 'chat.read', conversationId: dang_mo.id });
             }
+            loadList();
         });
-
-        // Lịch sử khi mở hội thoại riêng bằng WebSocket
-        RT.on('chat.opened', function (msg) {
-            bodyEl.innerHTML = '';
-            lastId = 0;
-            msg.messages.forEach(function (m) {
-                bodyEl.appendChild(renderMessage(m));
-                if (m.id > lastId) { lastId = m.id; }
-            });
-            scrollDown();
-        });
-
-        // Kết nối lại thì lấy bù phần đã lỡ
-        RT.on('open', function () {
-            if (!roomView.hidden) { RT.send({ t: 'room.join' }); }
-            if (current && current.id) { RT.send({ t: 'chat.load', conversationId: current.id, after: lastId }); }
-        });
-
-        RT.on('chat.history', function (msg) {
-            if (!current || Number(current.id) !== Number(msg.conversationId)) { return; }
-            var stick = atBottom();
-            msg.messages.forEach(function (m) {
-                bodyEl.appendChild(renderMessage(m));
-                if (m.id > lastId) { lastId = m.id; }
-            });
-            if (stick) { scrollDown(); }
-        });
-
-        // Máy chủ báo lỗi (vượt giới hạn, bị chặn…)
-        RT.on('error', function (msg) {
-            if (window.appModal) {
-                window.appModal({ type: 'error', title: 'Không gửi được', message: msg.message });
-            }
-        });
-
-        // Vào/rời phòng chung theo màn hình đang mở
-        var _showRoom = showRoom;
-        showRoom = function () {
-            _showRoom();
-            RT.send({ t: 'room.join' });
-        };
-        var _showList = showList;
-        showList = function () {
-            RT.send({ t: 'room.leave' });
-            _showList();
-        };
-        var _openChat = openChat;
-        openChat = function (info) {
-            _openChat(info);
-            RT.send({ t: 'room.leave' });
-            if (info && info.id) { RT.send({ t: 'chat.load', conversationId: info.id, after: 0 }); }
-        };
     }
 
-    /* Đếm tin chưa đọc định kỳ ngay cả khi chưa mở khung chat */
-    if (!isGuest) {
-        loadList();
-        setInterval(function () { if (!current) { loadList(); } }, 20000);
-    }
+    /* Số chưa đọc và tóm tắt phòng chung lấy ngay khi vào trang */
+    loadRoomSummary();
+    if (!isGuest) { loadList(); }
 })();

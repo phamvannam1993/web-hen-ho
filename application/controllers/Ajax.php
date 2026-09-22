@@ -188,13 +188,23 @@ class Ajax extends MY_Controller
         $me    = $this->auth->id();   // null nếu là khách
         $after = (int) $this->input->get('after');
 
-        // Thẻ "Trò chuyện" ngoài rìa màn hình chỉ cần con số người đang online,
-        // gọi kèm ?only=online để khỏi kéo về cả danh sách tin nhắn.
+        // Thẻ "Trò chuyện" và dòng phòng chung trong danh sách chỉ cần con số
+        // online + tin cuối, gọi kèm ?only=online để khỏi kéo cả danh sách tin.
         if ($this->input->get('only') === 'online') {
+            $cuoi = $this->db->select('r.type, r.content, r.created_at, u.display_name, u.nickname')
+                ->from('room_messages r')->join('users u', 'u.id = r.user_id')
+                ->where('r.deleted_at', null)
+                ->order_by('r.id', 'DESC')->limit(1)
+                ->get()->row_array();
+
             return $this->json(array(
                 'ok'       => true,
                 'messages' => array(),
                 'online'   => $this->online_count(),
+                'last'     => $cuoi
+                    ? display_name($cuoi) . ': ' . $this->tom_tat_tin($cuoi['type'], $cuoi['content'])
+                    : 'Chưa có tin nhắn nào',
+                'time'     => $cuoi ? time_ago($cuoi['created_at']) : '',
             ));
         }
 
@@ -222,9 +232,11 @@ class Ajax extends MY_Controller
                 'name'    => display_name($r),
                 'avatar'  => avatar_url($r['avatar'], $r['gender']),
                 'slug'    => $r['slug'],
+                'user_id' => (int) $r['user_id'],
                 'type'    => $r['type'],
                 'content' => $r['type'] === 'image' ? base_url(ltrim($r['content'], '/')) : $r['content'],
-                'time'    => date('H:i d/m', strtotime($r['created_at'])),
+                'time'    => date('H:i', strtotime($r['created_at'])),
+                'day'     => $this->nhan_ngay($r['created_at']),
             );
         }
 
@@ -234,6 +246,19 @@ class Ajax extends MY_Controller
             'messages' => $messages,
             'online'   => $this->online_count(),
         ));
+    }
+
+    /** Nhãn ngày để chèn vạch ngăn khi cuộn qua ngày khác. */
+    private function nhan_ngay($datetime)
+    {
+        $ngay = date('Y-m-d', strtotime($datetime));
+        if ($ngay === date('Y-m-d')) {
+            return 'Hôm nay';
+        }
+        if ($ngay === date('Y-m-d', strtotime('-1 day'))) {
+            return 'Hôm qua';
+        }
+        return date('d/m/Y', strtotime($datetime));
     }
 
     /** Số thành viên hoạt động trong 5 phút gần nhất; không tính tài khoản đã xoá mềm. */
@@ -300,7 +325,9 @@ class Ajax extends MY_Controller
                 'name'    => display_name($r),
                 'avatar'  => avatar_url($r['avatar'], $r['gender']),
                 'online'  => (bool) is_online($r['last_active_at']),
-                'last'    => $r['last_content'] ? excerpt($r['last_content'], 38) : 'Bắt đầu trò chuyện',
+                'last'    => $this->tom_tat_tin($r['last_type'], $r['last_content'],
+                                               (int) $r['last_sender_id'] === (int) $me),
+                'time'    => $r['last_at'] ? time_ago($r['last_at']) : '',
                 'unread'  => (int) $r['unread'],
             );
         }
@@ -310,6 +337,30 @@ class Ajax extends MY_Controller
             'items'  => $items,
             'unread' => (int) $this->m_interaction->unread_count($me),
         ));
+    }
+
+    /**
+     * Một dòng xem trước cho tin nhắn cuối.
+     *
+     * Tin ảnh lưu đường dẫn tệp trong cột content, đem hiện thẳng ra danh sách
+     * thì người dùng thấy "uploads/chat/2026/09/..." chứ không hiểu gì.
+     */
+    private function tom_tat_tin($type, $content, $cua_minh = false)
+    {
+        $dau = $cua_minh ? 'Bạn: ' : '';
+
+        if ($type === 'image') {
+            return $dau . 'Đã gửi một ảnh';
+        }
+        if ($type === 'system') {
+            return excerpt((string) $content, 38);
+        }
+
+        $chu = trim((string) $content);
+        if ($chu === '') {
+            return $dau . 'Đã gửi một tệp';
+        }
+        return $dau . excerpt($chu, 38);
     }
 
     /** Mở (hoặc tạo) hội thoại với một người, dùng cho nút "Nhắn tin". */
@@ -378,12 +429,16 @@ class Ajax extends MY_Controller
 
         $messages = array();
         foreach ($rows as $r) {
+            $la_cua_toi = (int) $r['sender_id'] === (int) $me;
             $messages[] = array(
                 'id'      => (int) $r['id'],
-                'mine'    => (int) $r['sender_id'] === (int) $me,
+                'mine'    => $la_cua_toi,
                 'type'    => $r['type'],
                 'content' => $r['type'] === 'image' ? base_url(ltrim($r['content'], '/')) : $r['content'],
-                'time'    => date('H:i d/m', strtotime($r['created_at'])),
+                'time'    => date('H:i', strtotime($r['created_at'])),
+                'day'     => $this->nhan_ngay($r['created_at']),
+                // Chỉ tin của mình mới cần nhãn "Đã xem"
+                'seen'    => $la_cua_toi && !empty($r['read_at']),
             );
         }
 

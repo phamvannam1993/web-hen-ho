@@ -282,18 +282,25 @@ class M_interaction extends CI_Model
         return $conv;
     }
 
-    /** Danh sách hội thoại kèm người đối diện và tin nhắn cuối. */
+    /**
+     * Danh sách hội thoại kèm người đối diện và tin nhắn cuối.
+     *
+     * Dùng JOIN chứ không LEFT JOIN: hội thoại chưa có tin nhắn nào (tạo ra khi
+     * mở khung chat rồi đóng luôn) thì không liệt kê, tránh đầy danh sách
+     * những dòng "Bắt đầu trò chuyện" rỗng.
+     */
     public function conversations($user_id)
     {
         return $this->db->query(
             "SELECT c.*, u.id AS other_id, u.display_name, u.slug AS user_slug, u.avatar,
                     u.gender, u.last_active_at,
                     m.content AS last_content, m.sender_id AS last_sender_id,
+                    m.type AS last_type, m.created_at AS last_at,
                     (SELECT COUNT(*) FROM messages x
                       WHERE x.conversation_id = c.id AND x.sender_id <> ? AND x.read_at IS NULL) AS unread
                FROM conversations c
                JOIN users u ON u.id = IF(c.user_low_id = ?, c.user_high_id, c.user_low_id)
-          LEFT JOIN messages m ON m.id = c.last_message_id
+               JOIN messages m ON m.id = c.last_message_id
               WHERE ? IN (c.user_low_id, c.user_high_id) AND u.deleted_at IS NULL
               ORDER BY c.last_message_at DESC, c.id DESC",
             array($user_id, $user_id, $user_id)
