@@ -364,112 +364,112 @@ $mxh = array_filter(array(
     </button>
 
     <div class="cw-panel" id="cw-panel" hidden>
-        <!-- Màn hình mặc định: phòng chat chung -->
-        <div class="cw-view" id="cw-room-view">
-            <header class="cw-head">
-                <div class="cw-peer">
-                    <b>Phòng chat chung</b>
-                    <small id="cw-room-online">Đang tải…</small>
-                </div>
+        <?php /* Cột trái: danh sách hội thoại. Mở chat ra là thấy cái này trước,
+                 phòng chat chung nằm trong danh sách như một mục bình thường. */ ?>
+        <aside class="cw-side" id="cw-side">
+            <header class="cw-side-head">
+                <h3>Tin nhắn</h3>
+                <button type="button" class="cw-close" data-close aria-label="Đóng">&times;</button>
+            </header>
+
+            <div class="cw-search">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+                <input type="text" id="cw-search" placeholder="Tìm theo tên…" autocomplete="off" aria-label="Tìm hội thoại">
+            </div>
+
+            <div class="cw-side-list" id="cw-side-list">
+                <?php /* Phòng chung luôn đứng đầu, ai cũng vào được kể cả khách */ ?>
+                <button type="button" class="cw-row is-room" id="cw-row-room" data-name="Phòng chat chung">
+                    <span class="cw-row-avatar cw-row-room-ic" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><path d="M16.2 5.8a3.2 3.2 0 0 1 0 5.4M17.5 19a6 6 0 0 0-1.6-4"/></svg>
+                    </span>
+                    <span class="cw-row-text">
+                        <span class="cw-row-top">
+                            <b><span class="cw-row-name">Phòng chat chung</span><i class="cw-tag">Cộng đồng</i></b>
+                            <small id="cw-room-time"></small>
+                        </span>
+                        <span class="cw-row-last" id="cw-room-last">Đang tải…</span>
+                    </span>
+                </button>
+
                 <?php if ($user): ?>
-                    <button type="button" class="cw-icon-btn" id="cw-to-list" title="Tin nhắn riêng">✉</button>
+                    <p class="cw-side-label">Trò chuyện riêng</p>
+                    <div id="cw-list"><p class="cw-empty">Đang tải…</p></div>
+                <?php else: ?>
+                    <p class="cw-empty">
+                        <a href="<?= site_url('dang-nhap') ?>">Đăng nhập</a> để nhắn tin riêng với thành viên khác.
+                    </p>
                 <?php endif; ?>
-                <button type="button" class="cw-close" data-close aria-label="Đóng">&times;</button>
-            </header>
-
-            <div class="cw-body-wrap">
-                <div class="cw-body" id="cw-room-body"></div>
-                <button type="button" class="cw-jump" id="cw-room-jump" hidden>
-                    <span class="cw-jump-arrow" aria-hidden="true">&raquo;</span>
-                    <b class="cw-jump-text">Tin nhắn mới</b>
-                </button>
             </div>
 
-            <form class="cw-form" id="cw-room-form">
-                <label class="cw-attach<?= $user ? '' : ' is-disabled' ?>" title="Gửi ảnh">
-                    <input type="file" name="image" accept="image/*" hidden id="cw-room-file"
-                           <?= $user ? '' : 'disabled' ?>>
-                    <span>🖼</span>
-                </label>
-                <div class="cw-input-wrap">
-                    <input type="text" name="content" id="cw-room-input" autocomplete="off"
-                           placeholder="<?= $user ? 'Vui lòng nhập tin nhắn' : 'Đăng nhập để trò chuyện…' ?>"
-                           <?= $user ? '' : 'disabled' ?>>
-                    <button type="button" class="cw-emoji-btn" id="cw-room-emoji-btn"
-                            title="Biểu tượng cảm xúc" <?= $user ? '' : 'disabled' ?>>☺</button>
-                </div>
-                <button class="cw-send" type="submit" aria-label="Gửi"
-                        <?= $user ? '' : 'disabled' ?>><svg viewBox="0 0 24 24" class="cw-send-ic" aria-hidden="true"><path d="M21.4 3.6 2.9 10.3c-1 .4-1 1.8 0 2.1l6.2 2 2.4 6.6c.3.9 1.6 1 2 .1l8-16.2c.4-.8-.4-1.6-1.2-1.3z"/><path d="M9.4 14.6 21 3.9"/></svg></button>
-            </form>
-            <?php if (!$user): ?>
-                <p class="cw-guest-note">
-                    <a href="<?= site_url('dang-nhap') ?>">Đăng nhập</a> để tham gia trò chuyện
-                </p>
+            <?php if ($user): ?>
+                <footer class="cw-foot">
+                    <a href="<?= site_url('tai-khoan/tin-nhan') ?>">Xem tất cả tin nhắn</a>
+                </footer>
             <?php endif; ?>
-            <?php /* Bảng icon nằm dưới ô nhập, đẩy khung tin ngắn lại chứ không đè lên */ ?>
-            <div class="cw-emoji-panel" id="cw-room-emoji-panel" hidden>
-                <div class="cw-emoji-tabs"></div>
-                <div class="cw-emoji-list"></div>
-            </div>
-        </div>
+        </aside>
 
-        <?php if ($user): ?>
-        <!-- Danh sách hội thoại riêng -->
-        <div class="cw-view" id="cw-list-view" hidden>
-            <header class="cw-head">
-                <button type="button" class="cw-back" id="cw-to-room" aria-label="Về phòng chung">‹</button>
-                <h3>Tin nhắn riêng</h3>
-                <button type="button" class="cw-close" data-close aria-label="Đóng">&times;</button>
-            </header>
-            <div class="cw-list" id="cw-list">
-                <p class="cw-empty">Đang tải…</p>
+        <?php /* Cột phải: nội dung hội thoại đang mở (phòng chung hoặc chat riêng) */ ?>
+        <section class="cw-main" id="cw-main">
+            <div class="cw-idle" id="cw-idle">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v11H9.5L5.5 20v-3.5H4z"/></svg>
+                <p>Chọn một hội thoại để bắt đầu</p>
             </div>
-            <footer class="cw-foot">
-                <a href="<?= site_url('tai-khoan/tin-nhan') ?>">Xem tất cả tin nhắn</a>
-            </footer>
-        </div>
 
-        <!-- Màn hình 2: khung trò chuyện -->
-        <div class="cw-view" id="cw-chat-view" hidden>
-            <header class="cw-head">
-                <button type="button" class="cw-back" id="cw-back" aria-label="Quay lại">‹</button>
-                <img class="cw-avatar" id="cw-avatar" src="" alt="">
-                <div class="cw-peer">
-                    <b id="cw-name"></b>
-                    <small id="cw-status"></small>
+            <div class="cw-convo" id="cw-convo" hidden>
+                <header class="cw-head">
+                    <button type="button" class="cw-back" id="cw-back" aria-label="Về danh sách">‹</button>
+                    <img class="cw-avatar" id="cw-avatar" src="" alt="" hidden>
+                    <span class="cw-avatar cw-row-room-ic" id="cw-avatar-room" hidden aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><path d="M16.2 5.8a3.2 3.2 0 0 1 0 5.4M17.5 19a6 6 0 0 0-1.6-4"/></svg>
+                    </span>
+                    <div class="cw-peer">
+                        <b id="cw-name"></b>
+                        <small id="cw-status"></small>
+                    </div>
+                    <button type="button" class="cw-close" data-close aria-label="Đóng">&times;</button>
+                </header>
+
+                <div class="cw-body-wrap">
+                    <div class="cw-body" id="cw-body"></div>
+                    <button type="button" class="cw-jump" id="cw-jump" hidden>
+                        <span class="cw-jump-arrow" aria-hidden="true">&raquo;</span>
+                        <b class="cw-jump-text">Tin nhắn mới</b>
+                    </button>
                 </div>
-                <button type="button" class="cw-close" data-close aria-label="Đóng">&times;</button>
-            </header>
 
-            <div class="cw-body-wrap">
-                <div class="cw-body" id="cw-body"></div>
-                <button type="button" class="cw-jump" id="cw-jump" hidden>
-                    <span class="cw-jump-arrow" aria-hidden="true">&raquo;</span>
-                    <b class="cw-jump-text">Tin nhắn mới</b>
-                </button>
-            </div>
+                <form class="cw-form" id="cw-form">
+                    <input type="hidden" name="receiver_id" id="cw-receiver">
+                    <label class="cw-attach<?= $user ? '' : ' is-disabled' ?>" title="Gửi ảnh">
+                        <input type="file" name="image" accept="image/*" hidden id="cw-file" <?= $user ? '' : 'disabled' ?>>
+                        <span>🖼</span>
+                    </label>
+                    <div class="cw-input-wrap">
+                        <input type="text" name="content" id="cw-input" autocomplete="off"
+                               placeholder="<?= $user ? 'Vui lòng nhập tin nhắn' : 'Đăng nhập để trò chuyện…' ?>"
+                               <?= $user ? '' : 'disabled' ?>>
+                        <button type="button" class="cw-emoji-btn" id="cw-emoji-btn"
+                                title="Biểu tượng cảm xúc" <?= $user ? '' : 'disabled' ?>>☺</button>
+                    </div>
+                    <button class="cw-send" type="submit" aria-label="Gửi" <?= $user ? '' : 'disabled' ?>>
+                        <svg viewBox="0 0 24 24" class="cw-send-ic" aria-hidden="true"><path d="M21.4 3.6 2.9 10.3c-1 .4-1 1.8 0 2.1l6.2 2 2.4 6.6c.3.9 1.6 1 2 .1l8-16.2c.4-.8-.4-1.6-1.2-1.3z"/><path d="M9.4 14.6 21 3.9"/></svg>
+                    </button>
+                </form>
 
-            <form class="cw-form" id="cw-form">
-                <input type="hidden" name="receiver_id" id="cw-receiver">
-                <label class="cw-attach" title="Gửi ảnh">
-                    <input type="file" name="image" accept="image/*" hidden id="cw-file">
-                    <span>🖼</span>
-                </label>
-                <div class="cw-input-wrap">
-                    <input type="text" name="content" id="cw-input" placeholder="Vui lòng nhập tin nhắn" autocomplete="off">
-                    <button type="button" class="cw-emoji-btn" id="cw-emoji-btn" title="Biểu tượng cảm xúc">☺</button>
+                <?php if (!$user): ?>
+                    <p class="cw-guest-note">
+                        <a href="<?= site_url('dang-nhap') ?>">Đăng nhập</a> để tham gia trò chuyện
+                    </p>
+                <?php endif; ?>
+
+                <div class="cw-emoji-panel" id="cw-emoji-panel" hidden>
+                    <div class="cw-emoji-tabs"></div>
+                    <div class="cw-emoji-list"></div>
                 </div>
-                <button class="cw-send" type="submit" aria-label="Gửi"><svg viewBox="0 0 24 24" class="cw-send-ic" aria-hidden="true"><path d="M21.4 3.6 2.9 10.3c-1 .4-1 1.8 0 2.1l6.2 2 2.4 6.6c.3.9 1.6 1 2 .1l8-16.2c.4-.8-.4-1.6-1.2-1.3z"/><path d="M9.4 14.6 21 3.9"/></svg></button>
-            </form>
-            <div class="cw-emoji-panel" id="cw-emoji-panel" hidden>
-                <div class="cw-emoji-tabs"></div>
-                <div class="cw-emoji-list"></div>
             </div>
-        </div>
+        </section>
     </div>
 </div>
-
-<?php endif; ?>
 
 <script src="<?= base_url('assets/site/js/password-toggle.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/password-toggle.js') ?>"></script>
 <script src="<?= base_url('assets/site/js/app.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/app.js') ?>"></script>
