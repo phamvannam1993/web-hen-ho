@@ -320,3 +320,32 @@ if (!function_exists('chuan_hoa_dien_thoai')) {
         return preg_match('/^0[35789][0-9]{8}$/', $so) ? $so : '';
     }
 }
+
+if (!function_exists('dong_bo_mui_gio_db')) {
+    /**
+     * Bắt MySQL dùng đúng múi giờ mà PHP đang chạy.
+     *
+     * Trong mã nguồn có chỗ ghi thời gian bằng PHP (date('Y-m-d H:i:s')), có
+     * chỗ để MySQL tự điền (DEFAULT CURRENT_TIMESTAMP). Nếu hai bên lệch múi
+     * giờ thì cùng một thời điểm ra hai con số khác nhau, kéo theo:
+     *   - tin vừa gửi bị ghi là "7 giờ trước"
+     *   - thứ tự hội thoại sắp sai
+     *   - hạn mã OTP và thời gian chờ gửi lại tính sai
+     *
+     * Gửi đúng độ lệch hiện tại (tự đúng cả khi có giờ mùa hè) thay vì ghi
+     * cứng '+07:00', để máy chủ đặt múi giờ nào cũng chạy đúng.
+     */
+    function dong_bo_mui_gio_db($CI)
+    {
+        if (!isset($CI->db)) {
+            return;
+        }
+        $lech = (new DateTime('now', new DateTimeZone(date_default_timezone_get())))->format('P');
+        try {
+            $CI->db->query('SET time_zone = ' . $CI->db->escape($lech));
+        } catch (Exception $e) {
+            // Máy chủ không cho đổi thì thôi, chỉ ghi log chứ không làm sập trang
+            log_message('error', 'Không đặt được time_zone cho MySQL: ' . $e->getMessage());
+        }
+    }
+}

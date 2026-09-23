@@ -12,6 +12,9 @@ class MY_Controller extends CI_Controller
     public function __construct()
     {
         parent::__construct();
+        // Phải chạy trước mọi truy vấn có dính thời gian
+        dong_bo_mui_gio_db($this);
+
         $this->load->model(array('m_setting', 'm_category', 'm_province'));
         $this->load->library('realtime');
 
@@ -159,6 +162,8 @@ class Admin_Controller extends CI_Controller
     public function __construct()
     {
         parent::__construct();
+        dong_bo_mui_gio_db($this);
+
         $this->load->model(array('m_setting'));
         if (!$this->auth->is_admin()) {
             redirect('admin/dang-nhap');

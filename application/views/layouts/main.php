@@ -441,8 +441,15 @@ $mxh = array_filter(array(
                 <form class="cw-form" id="cw-form">
                     <input type="hidden" name="receiver_id" id="cw-receiver">
                     <label class="cw-attach<?= $user ? '' : ' is-disabled' ?>" title="Gửi ảnh">
-                        <input type="file" name="image" accept="image/*" hidden id="cw-file" <?= $user ? '' : 'disabled' ?>>
-                        <span>🖼</span>
+                        <input type="file" name="image" accept="image/*" hidden id="cw-file"
+                               data-no-preview <?= $user ? '' : 'disabled' ?>>
+                        <?php /* Vẽ bằng SVG thay vì emoji 🖼: emoji mỗi máy một cỡ, có máy
+                                 không có glyph màu nên hiện ra hình thay thế rất to. */ ?>
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <rect x="3" y="5" width="18" height="14" rx="2.5"/>
+                            <circle cx="8.5" cy="10" r="1.6"/>
+                            <path d="M4 17l4.5-4.5 3 3L15 12l5 5"/>
+                        </svg>
                     </label>
                     <div class="cw-input-wrap">
                         <input type="text" name="content" id="cw-input" autocomplete="off"

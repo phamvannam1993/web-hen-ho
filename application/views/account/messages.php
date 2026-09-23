@@ -68,7 +68,7 @@
                         <input type="hidden" name="receiver_id" value="<?= (int) $partner['id'] ?>">
 
                         <label class="chat-attach" title="Gửi ảnh">
-                            <input type="file" name="image" accept="image/*" hidden>
+                            <input type="file" name="image" accept="image/*" hidden data-no-preview>
                             <span>🖼</span>
                         </label>
 

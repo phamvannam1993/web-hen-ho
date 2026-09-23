@@ -3411,7 +3411,20 @@ body.is-bare .chat-widget {
     background: none !important; box-shadow: none !important;
     font-size: 46px; line-height: 1.1; padding: 2px 4px !important;
 }
-.cw-msg-image { max-width: 220px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.14); display: block; }
+/* Ảnh trong tin nhắn: chặn cả bề ngang lẫn chiều cao, nếu không ảnh chụp dọc
+   sẽ cao lút cả khung chat. Nền xám giữ chỗ trong lúc ảnh chưa tải xong. */
+.cw-msg-image {
+    display: block; max-width: min(240px, 100%); max-height: 260px; width: auto; height: auto;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(17, 24, 39, .12);
+}
+/* Ảnh hỏng: một dòng chữ gọn thay cho biểu tượng ảnh vỡ cỡ lớn */
+.cw-msg-broken {
+    display: inline-block; padding: 10px 15px; border-radius: 16px;
+    background: #fff; color: var(--muted); font-size: 14px; font-style: italic;
+    box-shadow: 0 1px 4px rgba(17, 24, 39, .07);
+}
+.cw-msg-col a:hover .cw-msg-image { opacity: .92; }
 
 .cw-msg-time { display: block; margin-top: 3px; padding: 0 5px; font-size: 11px; color: #9aa0a6; }
 /* Giờ của tin nối tiếp chỉ hiện khi rê chuột, đỡ rối mắt khi đọc một mạch.
@@ -3442,12 +3455,24 @@ body.is-bare .chat-widget {
     display: flex; align-items: center; gap: 12px; padding: 18px 20px;
     border-top: 1px solid #f0f0f4; background: #fff; flex: 0 0 auto;
 }
+/* Nút đính kèm phải cao ngang ô nhập và nút gửi, không thì cụm dưới bị lệch */
 .cw-attach {
-    flex: 0 0 auto; width: 37px; height: 37px; border-radius: 50%; background: #f2f3f6;
-    display: grid; place-items: center; cursor: pointer; margin: 0; font-size: 17px;
+    flex: 0 0 auto; width: 46px; height: 46px; border-radius: 50%; background: #f1f2f6;
+    display: grid; place-items: center; cursor: pointer; margin: 0;
     transition: background .15s, transform .15s;
 }
-.cw-attach:hover { background: #fce1ef; transform: scale(1.08); }
+.cw-attach svg {
+    width: 21px; height: 21px; fill: none; stroke: #6b7280;
+    stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+}
+.cw-attach:hover svg { stroke: #4f6ef7; }
+.cw-attach:hover { background: #e6e9fb; transform: scale(1.06); }
+.cw-attach.is-disabled { opacity: .5; cursor: default; }
+/* Đang tải ảnh lên: khoá nút lại và cho quay vòng để biết máy đang làm việc */
+.cw-form.is-sending .cw-attach { pointer-events: none; opacity: .6; }
+.cw-form.is-sending .cw-send { pointer-events: none; }
+.cw-form.is-sending .cw-send-ic { animation: cw-spin .8s linear infinite; }
+@keyframes cw-spin { to { transform: rotate(360deg); } }
 .cw-input-wrap { position: relative; flex: 1; min-width: 0; }
 .cw-input-wrap input {
     width: 100%; padding: 16px 52px 16px 24px; border: 1px solid transparent;
