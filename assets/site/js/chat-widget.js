@@ -319,7 +319,17 @@
             a.href = m.content; a.target = '_blank'; a.rel = 'noopener';
             var img = document.createElement('img');
             img.src = m.content; img.alt = 'Ảnh'; img.className = 'cw-msg-image';
+            img.loading = 'lazy';
+            // Ảnh vào khung làm nội dung dài thêm, cuộn lại cho khỏi hụt đáy
             img.onload = function () { if (atBottom()) { scrollDown(); } };
+            // Ảnh hỏng (file bị xoá, sai đường dẫn) thì trình duyệt vẽ biểu
+            // tượng ảnh vỡ to đùng tràn cả khung — thay bằng một dòng gọn.
+            img.onerror = function () {
+                var hong = document.createElement('span');
+                hong.className = 'cw-msg-broken';
+                hong.textContent = 'Ảnh không tải được';
+                a.replaceWith(hong);
+            };
             a.appendChild(img);
             col.appendChild(a);
         } else {
@@ -521,7 +531,12 @@
             var url  = dang_mo.kind === 'room' ? 'ajax/phong-chat/gui' : 'ajax/send-message';
 
             inputEl.value = '';
+            // Tải ảnh lên mất vài giây, phải cho thấy là máy đang làm việc chứ
+            // không để người dùng bấm đi bấm lại vì tưởng hỏng.
+            formEl.classList.add('is-sending');
+
             api(url, { method: 'POST', body: data }).then(function (res) {
+                formEl.classList.remove('is-sending');
                 if (fileEl) { fileEl.value = ''; }
                 if (!res.ok) {
                     if (window.appModal) {
@@ -532,6 +547,15 @@
                 tai();
                 loadList();
                 loadRoomSummary();
+            }).catch(function () {
+                formEl.classList.remove('is-sending');
+                if (fileEl) { fileEl.value = ''; }
+                if (window.appModal) {
+                    window.appModal({
+                        type: 'error', title: 'Không gửi được',
+                        message: 'Mất kết nối khi đang gửi. Bạn thử lại nhé.'
+                    });
+                }
             });
         });
     }

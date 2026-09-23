@@ -208,6 +208,12 @@
     /* ------------------------- Xem trước ảnh khi chọn file ------------------------- */
 
     document.querySelectorAll('input[type=file][accept*="image"]').forEach(function (input) {
+        // Nút đính kèm của khung chat là một nhãn tròn nhỏ, nhét khung xem
+        // trước vào trong đó thì ảnh tràn ra ngoài. Những ô đánh dấu
+        // data-no-preview thì bỏ qua hẳn.
+
+        if (input.hasAttribute('data-no-preview')) { return; }
+
         // ảnh đại diện có sẵn thẻ img cạnh bên thì cập nhật trực tiếp thẻ đó
         var target = input.getAttribute('data-preview')
             ? document.querySelector(input.getAttribute('data-preview'))
