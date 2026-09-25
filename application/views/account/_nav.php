@@ -7,6 +7,7 @@ $items = array(
     'quan-tam'  => 'Quan tâm & ghép đôi',
     'tin-nhan'  => 'Tin nhắn',
     'thong-bao' => 'Thông báo',
+    'email'     => 'Cài đặt email',
     'nap-xu'    => 'Nạp xu / VIP',
     'doi-mat-khau' => 'Đổi mật khẩu',
 );

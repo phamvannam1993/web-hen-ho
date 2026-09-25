@@ -46,10 +46,17 @@ class Mailer
 
         // Nội dung được bọc trong khung thư dùng chung
         $data['site_name'] = setting('site_name', 'Saigon Cupid');
-        $body = $this->CI->load->view('emails/layout', array(
-            'site_name' => $data['site_name'],
-            'content'   => $this->CI->load->view('emails/' . $view, $data, true),
-        ), true);
+        $body = $this->CI->load->view('emails/layout', array_merge(array(
+            'site_name'    => $data['site_name'],
+            'content'      => $this->CI->load->view('emails/' . $view, $data, true),
+            // Chân thư bắt buộc: lý do nhận thư, link huỷ, link cài đặt, ảnh đo lượt mở.
+            // Thư giao dịch (đặt lại mật khẩu, mã OTP) không truyền mấy khoá này
+            // nên chân thư tự bỏ qua phần huỷ đăng ký.
+            'ly_do'        => $data['ly_do']        ?? null,
+            'link_huy'     => $data['link_huy']     ?? null,
+            'link_cai_dat' => $data['link_cai_dat'] ?? null,
+            'link_mo'      => $data['link_mo']      ?? null,
+        )), true);
 
         $this->CI->email->clear(true);
         $this->CI->email->from($from_address, $from_name);

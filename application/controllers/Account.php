@@ -277,6 +277,7 @@ class Account extends Member_Controller
             'liked_me' => $this->m_interaction->liked_me($me['id']),
             'my_likes' => $this->m_interaction->my_likes($me['id']),
             'matches'  => $this->m_interaction->matches($me['id']),
+            'viewers'  => $this->m_interaction->viewers($me['id'], 12),
         ));
     }
 
@@ -322,6 +323,39 @@ class Account extends Member_Controller
             'partner'       => $partner,
             'can_send'      => $can_send,
             'conversation_id' => $conversation_id,
+        ));
+    }
+
+    /** Trang cài đặt email: bật/tắt từng loại và chọn tần suất gợi ý. */
+    public function email_prefs()
+    {
+        $me = $this->auth->user();
+        $this->load->model('m_email');
+
+        if ($this->input->method() === 'post') {
+            if ($this->input->post('huy_tat_ca')) {
+                $this->m_email->unsubscribe_all($me['id']);
+                set_flash('success', 'Đã huỷ nhận toàn bộ email.');
+                redirect('tai-khoan/email');
+            }
+
+            $this->m_email->save_prefs($me['id'], array(
+                'new_message'      => (int) (bool) $this->input->post('new_message'),
+                'notification'     => (int) (bool) $this->input->post('notification'),
+                'match_suggest'    => (int) (bool) $this->input->post('match_suggest'),
+                're_engage'        => (int) (bool) $this->input->post('re_engage'),
+                // Tần suất chỉ nhận 2 hoặc 3 ngày như đặc tả
+                'match_every_days' => in_array((int) $this->input->post('match_every_days'), array(2, 3), true)
+                    ? (int) $this->input->post('match_every_days') : 2,
+                'disabled_at'      => null,
+            ));
+            set_flash('success', 'Đã lưu cài đặt email.');
+            redirect('tai-khoan/email');
+        }
+
+        $this->render('account/email_prefs', array(
+            'title' => 'Cài đặt email',
+            'p'     => $this->m_email->prefs($me['id']),
         ));
     }
 

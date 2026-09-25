@@ -8,6 +8,7 @@ $menu  = array(
     'categories'   => array('Danh mục', 'admin/categories'),
     'provinces'    => array('Tỉnh/thành', 'admin/provinces'),
     'jobs'         => array('Nghề nghiệp', 'admin/jobs'),
+    'emails'       => array('Email', 'admin/emails'),
     'reports'      => array('Báo cáo vi phạm', 'admin/reports'),
     'orders'       => array('Đơn nạp / VIP', 'admin/orders'),
     'packages'     => array('Gói dịch vụ', 'admin/packages'),

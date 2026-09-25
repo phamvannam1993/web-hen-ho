@@ -47,6 +47,20 @@
         </div>
 
         <div class="content-box">
+            <h2 class="section-title">Đã xem hồ sơ bạn (<?= count($viewers) ?>)</h2>
+            <?php if (empty($viewers)): ?>
+                <p class="empty">Chưa có ai ghé xem hồ sơ của bạn.</p>
+            <?php else: ?>
+                <p class="section-hint">Những người này vừa ghé qua hồ sơ của bạn gần đây.</p>
+                <div class="member-grid">
+                    <?php foreach ($viewers as $m): ?>
+                        <?php $this->load->view('members/_card', array('m' => $m)); ?>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <div class="content-box">
             <h2 class="section-title">Bạn đã thích (<?= count($my_likes) ?>)</h2>
             <?php if (empty($my_likes)): ?>
                 <p class="empty">Bạn chưa thích ai.</p>

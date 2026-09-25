@@ -560,6 +560,69 @@ CREATE TABLE `room_messages` (
   CONSTRAINT `fk_room_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+DROP TABLE IF EXISTS `profile_views`;
+CREATE TABLE `profile_views` (
+  `id`         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `viewer_id`  BIGINT UNSIGNED NOT NULL COMMENT 'người xem',
+  `owner_id`   BIGINT UNSIGNED NOT NULL COMMENT 'chủ hồ sơ',
+  `viewed_at`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  -- Mỗi cặp chỉ giữ một dòng, xem lại thì cập nhật thời điểm: bảng không phình
+  -- theo số lần bấm và đếm "bao nhiêu người đã xem" ra đúng số người.
+  UNIQUE KEY `uq_view_pair` (`viewer_id`,`owner_id`),
+  KEY `idx_view_owner` (`owner_id`,`viewed_at`),
+  CONSTRAINT `fk_view_viewer` FOREIGN KEY (`viewer_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_view_owner`  FOREIGN KEY (`owner_id`)  REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------
+-- Hệ thống email: cài đặt của từng người + hàng đợi kiêm nhật ký gửi
+-- ---------------------------------------------------------------------
+DROP TABLE IF EXISTS `email_prefs`;
+CREATE TABLE `email_prefs` (
+  `user_id`       BIGINT UNSIGNED NOT NULL,
+  `welcome`       TINYINT(1) NOT NULL DEFAULT 1,
+  `new_message`   TINYINT(1) NOT NULL DEFAULT 1,
+  `notification`  TINYINT(1) NOT NULL DEFAULT 1,
+  `match_suggest` TINYINT(1) NOT NULL DEFAULT 1,
+  `re_engage`     TINYINT(1) NOT NULL DEFAULT 1,
+  `match_every_days` TINYINT UNSIGNED NOT NULL DEFAULT 2 COMMENT 'gửi gợi ý ghép đôi mỗi N ngày',
+  `token`         CHAR(40) NOT NULL COMMENT 'mã huỷ đăng ký, dùng trong link ở chân thư',
+  `bounce_count`  TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `disabled_at`   DATETIME DEFAULT NULL COMMENT 'ngừng gửi hẳn: người dùng huỷ hoặc gửi hỏng nhiều lần',
+  `updated_at`    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `uq_email_prefs_token` (`token`),
+  CONSTRAINT `fk_email_prefs_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Vừa là hàng đợi (chờ gửi, thử lại) vừa là nhật ký (đã gửi, mở, bấm)
+DROP TABLE IF EXISTS `email_queue`;
+CREATE TABLE `email_queue` (
+  `id`         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id`    BIGINT UNSIGNED NOT NULL,
+  `type`       VARCHAR(40) NOT NULL COMMENT 'welcome|new_message|notify_match|notify_like|notify_view|match_suggest|re_engage',
+  `to_email`   VARCHAR(190) NOT NULL,
+  `subject`    VARCHAR(255) NOT NULL,
+  `variant`    CHAR(1) DEFAULT NULL COMMENT 'nhánh A/B của tiêu đề, NULL nếu không thử nghiệm',
+  `view`       VARCHAR(60) NOT NULL COMMENT 'tên view trong application/views/emails/',
+  `payload`    TEXT DEFAULT NULL COMMENT 'dữ liệu cho view, dạng JSON',
+  `related_id` BIGINT UNSIGNED DEFAULT NULL COMMENT 'id hội thoại / người được gợi ý…',
+  `send_after` DATETIME NOT NULL COMMENT 'sớm nhất được gửi lúc nào',
+  `status`     ENUM('pending','sent','failed','skipped') NOT NULL DEFAULT 'pending',
+  `attempts`   TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `error`      VARCHAR(255) DEFAULT NULL,
+  `sent_at`    DATETIME DEFAULT NULL,
+  `opened_at`  DATETIME DEFAULT NULL,
+  `clicked_at` DATETIME DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_email_due` (`status`,`send_after`),
+  KEY `idx_email_user_type` (`user_id`,`type`,`status`,`sent_at`),
+  KEY `idx_email_related` (`type`,`related_id`,`sent_at`),
+  CONSTRAINT `fk_email_queue_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 DROP TABLE IF EXISTS `notifications`;
 CREATE TABLE `notifications` (
   `id`         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,

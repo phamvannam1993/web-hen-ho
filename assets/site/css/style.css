@@ -4207,3 +4207,20 @@ body.is-bare .chat-widget {
     .hm-band-cta h2 { font-size: 24px; margin-bottom: 22px; }
     .hm-band-cta .btn-hm { width: 100%; }
 }
+
+/* ---------------- Cài đặt email ---------------- */
+.email-prefs { display: flex; flex-direction: column; gap: 10px; margin: 6px 0 22px; }
+.email-pref {
+    display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px;
+    border: 1px solid #e8eaee; border-radius: 12px; cursor: pointer;
+    transition: border-color .15s, background .15s;
+}
+.email-pref:hover { border-color: #f3c8d0; background: #fffafb; }
+.email-pref:has(input:checked) { border-color: var(--pink); background: #fdf0f2; }
+.email-pref input { margin-top: 3px; accent-color: var(--pink); flex: 0 0 auto; }
+.email-pref b { display: block; font-size: 15px; color: var(--ink); }
+.email-pref small { display: block; margin-top: 3px; color: var(--muted); font-size: 13.5px; line-height: 1.55; }
+.email-unsub-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 12px 16px; border: 1px solid #e8eaee; border-radius: 12px;
+}

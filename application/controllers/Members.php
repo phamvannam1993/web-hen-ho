@@ -85,6 +85,11 @@ class Members extends MY_Controller
         }
         $this->auth->touch_active();
 
+        // Ghi lượt xem để gom thành thông báo "N người đã xem hồ sơ bạn"
+        if ($me) {
+            $this->m_interaction->record_view($me['id'], $member['id']);
+        }
+
         $this->render('members/profile', array(
             'title'      => $member['display_name'],
             'meta_desc'  => excerpt($member['bio'], 160),

@@ -154,6 +154,10 @@ class M_interaction extends CI_Model
             $this->m_notification->push($uid, 'match', 'Ghép đôi thành công!',
                 'Hai bạn đã thích nhau, hãy bắt đầu trò chuyện.', site_url('tai-khoan/tin-nhan'));
         }
+
+        // Ghép đôi là tin đáng báo ngay, không gom vào lô cuối ngày
+        $this->load->library('emailer');
+        $this->emailer->matched($user_id, $other_id);
     }
 
     /**
@@ -238,6 +242,56 @@ class M_interaction extends CI_Model
         list($low, $high) = $this->pair($a, $b);
         return $this->db->where('user_low_id', $low)->where('user_high_id', $high)
             ->count_all_results('matches') > 0;
+    }
+
+    /* ------------------------- Lượt xem hồ sơ ------------------------- */
+
+    /**
+     * Ghi nhận một lượt xem hồ sơ.
+     *
+     * Mỗi cặp chỉ giữ một dòng: xem lại thì cập nhật thời điểm chứ không thêm
+     * dòng mới, nên bảng không phình theo số lần bấm F5 và câu "bao nhiêu người
+     * đã xem" luôn ra đúng số người.
+     */
+    public function record_view($viewer_id, $owner_id)
+    {
+        $viewer_id = (int) $viewer_id;
+        $owner_id  = (int) $owner_id;
+
+        // Tự xem hồ sơ mình thì không tính
+        if (!$viewer_id || !$owner_id || $viewer_id === $owner_id) {
+            return;
+        }
+        if ($this->is_blocked($viewer_id, $owner_id)) {
+            return;
+        }
+
+        $this->db->query(
+            "INSERT INTO profile_views (viewer_id, owner_id, viewed_at) VALUES (?, ?, NOW())
+             ON DUPLICATE KEY UPDATE viewed_at = NOW()",
+            array($viewer_id, $owner_id)
+        );
+    }
+
+    /** Ai đã xem hồ sơ của tôi, mới nhất trước. */
+    public function viewers($owner_id, $limit = 30)
+    {
+        return $this->db->select('u.*, p.name AS province_name, v.viewed_at')
+            ->from('profile_views v')
+            ->join('users u', 'u.id = v.viewer_id')
+            ->join('provinces p', 'p.id = u.province_id', 'left')
+            ->where('v.owner_id', (int) $owner_id)
+            ->where('u.deleted_at', null)
+            ->order_by('v.viewed_at', 'DESC')->limit($limit)
+            ->get()->result_array();
+    }
+
+    public function viewer_count($owner_id)
+    {
+        return (int) $this->db->from('profile_views v')
+            ->join('users u', 'u.id = v.viewer_id')
+            ->where('v.owner_id', (int) $owner_id)->where('u.deleted_at', null)
+            ->count_all_results();
     }
 
     /* ------------------------- Chặn ------------------------- */
@@ -352,6 +406,14 @@ class M_interaction extends CI_Model
         $this->load->model('m_notification');
         $this->m_notification->push($receiver_id, 'message', 'Tin nhắn mới',
             excerpt($content, 80), site_url('tai-khoan/tin-nhan/' . $conv['id']));
+
+        // Báo qua email nếu 5 phút nữa người nhận vẫn chưa đọc và không online
+        $this->load->library('emailer');
+        $nguoi_gui = $this->db->select('id, display_name, nickname, avatar, gender')
+            ->where('id', $sender_id)->get('users')->row_array();
+        if ($nguoi_gui) {
+            $this->emailer->new_message($receiver_id, $nguoi_gui, $conv['id'], $content, $type);
+        }
 
         return array('ok' => true, 'conversation_id' => (int) $conv['id'], 'message_id' => $message_id);
     }

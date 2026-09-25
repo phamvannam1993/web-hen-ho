@@ -13,8 +13,9 @@
  *   6. Trạng thái lượt thích (chờ trả lời / ghép đôi / bị bỏ qua) cho luật chat mới
  *   7. Danh mục nghề nghiệp cho ô chọn nghề trong hồ sơ
  *   8. Mã OTP gửi qua email khi đăng ký / đăng nhập
- *   9. Điền các trường hồ sơ còn trống để bộ lọc tìm kiếm có dữ liệu mà lọc
- *  10. (tuỳ chọn) Sinh thêm thành viên mẫu:  php database/update.php 30
+ *   9. Hệ thống email: cài đặt của từng người + hàng đợi gửi thư
+ *  10. Điền các trường hồ sơ còn trống để bộ lọc tìm kiếm có dữ liệu mà lọc
+ *  11. (tuỳ chọn) Sinh thêm thành viên mẫu:  php database/update.php 30
  *
  * Thành viên mẫu có email dạng @demo.local nên gỡ lại rất dễ:
  *   DELETE FROM users WHERE email LIKE '%@demo.local';
@@ -253,11 +254,86 @@ $st = $pdo->prepare("UPDATE users
 $st->execute();
 echo '  Ân xá ' . $st->rowCount() . " tài khoản cũ (coi như đã xác thực email).\n";
 
-echo "\n== 9. Hồ sơ thành viên ==\n";
+echo "\n== 9. Hệ thống email ==\n";
+$pdo->exec("CREATE TABLE IF NOT EXISTS `email_prefs` (
+  `user_id`       BIGINT UNSIGNED NOT NULL,
+  `welcome`       TINYINT(1) NOT NULL DEFAULT 1,
+  `new_message`   TINYINT(1) NOT NULL DEFAULT 1,
+  `notification`  TINYINT(1) NOT NULL DEFAULT 1,
+  `match_suggest` TINYINT(1) NOT NULL DEFAULT 1,
+  `re_engage`     TINYINT(1) NOT NULL DEFAULT 1,
+  `match_every_days` TINYINT UNSIGNED NOT NULL DEFAULT 2,
+  `token`         CHAR(40) NOT NULL,
+  `bounce_count`  TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `disabled_at`   DATETIME DEFAULT NULL,
+  `updated_at`    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `uq_email_prefs_token` (`token`),
+  CONSTRAINT `fk_email_prefs_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+$pdo->exec("CREATE TABLE IF NOT EXISTS `email_queue` (
+  `id`         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id`    BIGINT UNSIGNED NOT NULL,
+  `type`       VARCHAR(40) NOT NULL,
+  `to_email`   VARCHAR(190) NOT NULL,
+  `subject`    VARCHAR(255) NOT NULL,
+  `view`       VARCHAR(60) NOT NULL,
+  `payload`    TEXT DEFAULT NULL,
+  `related_id` BIGINT UNSIGNED DEFAULT NULL,
+  `send_after` DATETIME NOT NULL,
+  `status`     ENUM('pending','sent','failed','skipped') NOT NULL DEFAULT 'pending',
+  `attempts`   TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `error`      VARCHAR(255) DEFAULT NULL,
+  `sent_at`    DATETIME DEFAULT NULL,
+  `opened_at`  DATETIME DEFAULT NULL,
+  `clicked_at` DATETIME DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_email_due` (`status`,`send_after`),
+  KEY `idx_email_user_type` (`user_id`,`type`,`status`,`sent_at`),
+  KEY `idx_email_related` (`type`,`related_id`,`sent_at`),
+  CONSTRAINT `fk_email_queue_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+echo "  Đã có hai bảng email_prefs và email_queue.\n";
+
+// Ai chưa có dòng cài đặt thì tạo sẵn, kèm mã huỷ đăng ký riêng
+$st = $pdo->prepare("INSERT IGNORE INTO email_prefs (user_id, token)
+        SELECT u.id, SHA1(CONCAT(u.id, '-', u.uuid, '-', RAND()))
+          FROM users u WHERE u.deleted_at IS NULL");
+$st->execute();
+echo '  Tạo cài đặt email cho ' . $st->rowCount() . " thành viên.\n";
+
+// Nhánh A/B của tiêu đề thư, để so tỉ lệ mở giữa hai cách viết
+$co = $pdo->query("SHOW COLUMNS FROM email_queue LIKE 'variant'")->fetch();
+if (!$co) {
+    $pdo->exec("ALTER TABLE email_queue
+        ADD COLUMN `variant` CHAR(1) DEFAULT NULL COMMENT 'A hoặc B, NULL nếu loại thư không thử nghiệm'
+        AFTER `subject`");
+    echo "  + thêm cột variant cho email_queue\n";
+} else {
+    echo "  Đã có cột variant.\n";
+}
+
+// Ghi ai đã xem hồ sơ ai, để gom thành thông báo "N người đã xem hồ sơ bạn"
+$pdo->exec("CREATE TABLE IF NOT EXISTS `profile_views` (
+  `id`         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `viewer_id`  BIGINT UNSIGNED NOT NULL,
+  `owner_id`   BIGINT UNSIGNED NOT NULL,
+  `viewed_at`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_view_pair` (`viewer_id`,`owner_id`),
+  KEY `idx_view_owner` (`owner_id`,`viewed_at`),
+  CONSTRAINT `fk_view_viewer` FOREIGN KEY (`viewer_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_view_owner`  FOREIGN KEY (`owner_id`)  REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+echo "  Đã có bảng profile_views.\n";
+
+echo "\n== 10. Hồ sơ thành viên ==\n";
 require $root . '/database/fill_member_profiles.php';
 
 if ($demo > 0) {
-    echo "\n== 10. Thành viên mẫu ==\n";
+    echo "\n== 11. Thành viên mẫu ==\n";
     // seed_demo_users.php đọc số lượng từ $argv[1] nên truyền thẳng tham số qua
     $argv[1] = $demo;
     require $root . '/database/seed_demo_users.php';

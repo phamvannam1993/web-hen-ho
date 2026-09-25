@@ -7,7 +7,7 @@ class Auth extends MY_Controller
     {
         parent::__construct();
         $this->load->model(array('m_user', 'm_otp'));
-        $this->load->library('mailer');
+        $this->load->library(array('mailer', 'emailer'));
     }
 
     /** Số điện thoại phải là số di động Việt Nam hợp lệ. */
@@ -57,6 +57,9 @@ class Auth extends MY_Controller
                         'birthday'     => $this->input->post('birthday'),
                         'province_id'  => $this->input->post('province_id'),
                     ));
+                    // Thư chào mừng xếp hàng đợi, gửi sau 1 phút
+                    $this->emailer->welcome($id);
+
                     // Bật xác thực email thì chưa cho vào ngay, phải nhập mã trước
                     if (setting('otp_register', '1') === '1') {
                         return $this->bat_dau_otp($id, 'register');
