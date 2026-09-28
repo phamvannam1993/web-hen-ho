@@ -75,21 +75,31 @@ class M_interaction extends CI_Model
      */
     public function liked_me($user_id, $limit = 30)
     {
+        $user_id = (int) $user_id;
         return $this->db->select('u.*, p.name AS province_name, l.created_at AS liked_at')
             ->from('likes l')->join('users u', 'u.id = l.user_id')
             ->join('provinces p', 'p.id = u.province_id', 'left')
             ->where('l.target_type', 'user')->where('l.target_id', $user_id)
             ->where('l.status', 'pending')
             ->where('u.deleted_at', null)
+            // Lượt thích để lâu quá thì ẩn đi, danh sách mới không bị ứ đọng
+            ->where('l.created_at >=', date('Y-m-d H:i:s', strtotime('-30 days')))
+            // Đã chặn nhau thì không hiện trong danh sách nữa
+            ->where("u.id NOT IN (SELECT blocked_id FROM blocks WHERE user_id = $user_id)", null, false)
+            ->where("u.id NOT IN (SELECT user_id FROM blocks WHERE blocked_id = $user_id)", null, false)
             ->order_by('l.created_at', 'DESC')->limit($limit)->get()->result_array();
     }
 
     /** Số lượt thích đang chờ tôi trả lời. */
     public function liked_me_count($user_id)
     {
+        $user_id = (int) $user_id;
         return (int) $this->db->from('likes l')->join('users u', 'u.id = l.user_id')
             ->where('l.target_type', 'user')->where('l.target_id', $user_id)
             ->where('l.status', 'pending')->where('u.deleted_at', null)
+            ->where('l.created_at >=', date('Y-m-d H:i:s', strtotime('-30 days')))
+            ->where("u.id NOT IN (SELECT blocked_id FROM blocks WHERE user_id = $user_id)", null, false)
+            ->where("u.id NOT IN (SELECT user_id FROM blocks WHERE blocked_id = $user_id)", null, false)
             ->count_all_results();
     }
 
@@ -267,30 +277,42 @@ class M_interaction extends CI_Model
         }
 
         $this->db->query(
-            "INSERT INTO profile_views (viewer_id, owner_id, viewed_at) VALUES (?, ?, NOW())
-             ON DUPLICATE KEY UPDATE viewed_at = NOW()",
+            "INSERT INTO profile_views (viewer_id, owner_id, viewed_at, view_count) VALUES (?, ?, NOW(), 1)
+             ON DUPLICATE KEY UPDATE viewed_at = NOW(), view_count = view_count + 1",
             array($viewer_id, $owner_id)
         );
     }
 
-    /** Ai đã xem hồ sơ của tôi, mới nhất trước. */
-    public function viewers($owner_id, $limit = 30)
+    /**
+     * Ai đã xem hồ sơ của tôi, mới nhất trước.
+     * Chỉ tính trong $ngay ngày gần đây và bỏ những người đã chặn nhau.
+     */
+    public function viewers($owner_id, $limit = 30, $ngay = 7)
     {
-        return $this->db->select('u.*, p.name AS province_name, v.viewed_at')
+        $owner_id = (int) $owner_id;
+        return $this->db->select('u.*, p.name AS province_name, v.viewed_at, v.view_count')
             ->from('profile_views v')
             ->join('users u', 'u.id = v.viewer_id')
             ->join('provinces p', 'p.id = u.province_id', 'left')
-            ->where('v.owner_id', (int) $owner_id)
+            ->where('v.owner_id', $owner_id)
+            ->where('v.viewed_at >=', date('Y-m-d H:i:s', strtotime('-' . (int) $ngay . ' days')))
             ->where('u.deleted_at', null)
+            ->where("u.id NOT IN (SELECT blocked_id FROM blocks WHERE user_id = $owner_id)", null, false)
+            ->where("u.id NOT IN (SELECT user_id FROM blocks WHERE blocked_id = $owner_id)", null, false)
             ->order_by('v.viewed_at', 'DESC')->limit($limit)
             ->get()->result_array();
     }
 
-    public function viewer_count($owner_id)
+    public function viewer_count($owner_id, $ngay = 7)
     {
+        $owner_id = (int) $owner_id;
         return (int) $this->db->from('profile_views v')
             ->join('users u', 'u.id = v.viewer_id')
-            ->where('v.owner_id', (int) $owner_id)->where('u.deleted_at', null)
+            ->where('v.owner_id', $owner_id)
+            ->where('v.viewed_at >=', date('Y-m-d H:i:s', strtotime('-' . (int) $ngay . ' days')))
+            ->where('u.deleted_at', null)
+            ->where("u.id NOT IN (SELECT blocked_id FROM blocks WHERE user_id = $owner_id)", null, false)
+            ->where("u.id NOT IN (SELECT user_id FROM blocks WHERE blocked_id = $owner_id)", null, false)
             ->count_all_results();
     }
 

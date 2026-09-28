@@ -33,8 +33,35 @@ class Cron extends CI_Controller
 
     /* ===================== Gửi thư trong hàng đợi ===================== */
 
+    /**
+     * Chỉ cho một tiến trình chạy tại một thời điểm.
+     *
+     * worker hẹn mỗi phút, mà gửi qua SMTP thì có lúc lâu hơn một phút. Không
+     * khoá lại thì cron chạy chồng lên nhau, hai tiến trình cùng bốc một thư
+     * trong hàng đợi và người nhận lãnh hai bản giống hệt.
+     *
+     * @return resource|false giữ lại để khoá không bị nhả sớm
+     */
+    private function khoa($ten)
+    {
+        $f = fopen(sys_get_temp_dir() . '/cupid-cron-' . $ten . '.lock', 'c');
+        if (!$f) {
+            return false;   // không tạo được khoá thì cứ chạy, còn hơn đứng im
+        }
+        if (!flock($f, LOCK_EX | LOCK_NB)) {
+            fclose($f);
+            return false;
+        }
+        return $f;
+    }
+
     public function worker($limit = 50)
     {
+        $khoa = $this->khoa('worker');
+        if ($khoa === false) {
+            return;   // lượt trước còn đang chạy, để yên cho nó làm nốt
+        }
+
         $cho = $this->m_email->den_han((int) $limit);
         if (!$cho) {
             return;   // im lặng khi không có gì, tránh rác log cron
@@ -279,6 +306,67 @@ class Cron extends CI_Controller
             }
         }
         $this->noi("gom lượt xem hồ sơ: xếp hàng $gui thư");
+    }
+
+    /* ===================== Gợi ý mỗi ngày ===================== */
+
+    /**
+     * Chốt gợi ý hôm nay cho từng người còn hoạt động trong 30 ngày.
+     * Chạy 8h sáng. Chạy lại trong ngày cũng không sinh trùng vì bảng có khoá
+     * duy nhất trên (user_id, match_date).
+     */
+    public function goi_y_ngay()
+    {
+        $this->load->model('m_daily');
+
+        $het = $this->m_daily->het_han();
+        $ds = $this->db->select('id')->from('users')
+            ->where('status', 'active')->where('role', 'member')->where('deleted_at', null)
+            ->where('last_active_at >=', date('Y-m-d H:i:s', strtotime('-30 days')))
+            ->get()->result_array();
+
+        $tao = $da_co = 0;
+        foreach ($ds as $u) {
+            $this->m_daily->tao_cho($u['id']);
+            // Phân biệt "vừa chốt mới" với "hôm nay đã có rồi", để chạy lại cron
+            // không báo con số sai lệch.
+            $this->m_daily->vua_tao ? $tao++ : $da_co++;
+        }
+        $this->noi("gợi ý hôm nay: chốt mới $tao, đã có sẵn $da_co / " . count($ds)
+            . " người; đánh dấu hết hạn $het gợi ý cũ");
+    }
+
+    /* ===================== Nhắc giữ chuỗi ===================== */
+
+    /**
+     * Nhắc những ai đang có chuỗi mà hôm nay chưa ghé — chạy 20h.
+     *
+     * Chỉ nhắc người thật sự sắp mất cái gì đó (chuỗi từ 2 ngày trở lên), để
+     * lời nhắc còn có sức nặng. Người mới có 1 ngày thì mất cũng chẳng tiếc,
+     * nhắc chỉ thành phiền.
+     */
+    public function nhac_chuoi()
+    {
+        $this->load->model(array('m_streak', 'm_notification'));
+
+        $ds = $this->db->select('u.id, u.display_name, u.nickname, s.current_streak')
+            ->from('user_streaks s')
+            ->join('users u', 'u.id = s.user_id')
+            ->where('u.status', 'active')->where('u.deleted_at', null)
+            ->where('s.current_streak >=', 2)
+            ->where('s.last_active_date <', date('Y-m-d'))
+            ->get()->result_array();
+
+        $gui = 0;
+        foreach ($ds as $u) {
+            $this->m_notification->push($u['id'], 'system',
+                'Chuỗi ' . (int) $u['current_streak'] . ' ngày của bạn sắp mất!',
+                'Ghé vào trước nửa đêm để giữ chuỗi nhé.',
+                site_url('tai-khoan/chuoi'));
+            $gui++;
+        }
+
+        $this->noi("nhắc giữ chuỗi: $gui người");
     }
 
     /* ===================== Kéo người vắng lâu quay lại ===================== */

@@ -132,6 +132,15 @@ $mxh = array_filter(array(
                     <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/>
                 </svg>
             </a>
+            <?php /* Chuỗi ngày hoạt động: chỉ hiện khi đã có chuỗi, để không
+                     làm rối thanh đầu trang với con số 0 */ ?>
+            <?php if ($user && !empty($streak['streak'])): ?>
+                <a class="hd-streak" href="<?= site_url('tai-khoan/chuoi') ?>"
+                   title="Bạn đã hoạt động <?= (int) $streak['streak'] ?> ngày liên tiếp">
+                    <span aria-hidden="true">🔥</span><b><?= (int) $streak['streak'] ?></b>
+                </a>
+            <?php endif; ?>
+
             <?php /* Chuông thông báo + khay xổ xuống; chỉ có nghĩa khi đã đăng nhập */ ?>
             <?php if ($user): ?>
                 <div class="hd-noti" id="hd-noti" data-base="<?= site_url() ?>">

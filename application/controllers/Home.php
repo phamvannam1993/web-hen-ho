@@ -6,7 +6,7 @@ class Home extends MY_Controller
     public function __construct()
     {
         parent::__construct();
-        $this->load->model(array('m_user', 'm_interaction'));
+        $this->load->model(array('m_user', 'm_interaction', 'm_daily'));
     }
 
     public function index()
@@ -21,6 +21,7 @@ class Home extends MY_Controller
             'province_count' => count($this->data['provinces']),
             'liked_me'       => array(),
             'liked_me_total' => 0,
+            'daily'          => null,
             'suggestions'    => array(),
             'matched_ids'    => array(),
         );
@@ -29,6 +30,9 @@ class Home extends MY_Controller
         // gợi ý ghép đôi tính theo hồ sơ của chính họ.
         if ($this->auth->check()) {
             $me = $this->auth->user();
+            // Gợi ý hôm nay: chưa có thì chốt luôn, để người mới đăng ký cũng
+            // thấy ngay trong ngày đầu chứ không phải chờ tới 8h sáng mai.
+            $data['daily']          = $this->m_daily->today($me['id']) ?: $this->m_daily->tao_cho($me['id']);
             $data['suggestions']    = $this->m_user->suggestions($me, 10);
             $data['liked_me']       = $this->m_interaction->liked_me($me['id'], 5);
             $data['liked_me_total'] = $this->m_interaction->liked_me_count($me['id']);

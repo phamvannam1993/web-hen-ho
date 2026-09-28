@@ -128,6 +128,21 @@ class Ajax extends MY_Controller
         redirect($result['ok'] ? 'tai-khoan/tin-nhan/' . $result['conversation_id'] : 'tai-khoan/tin-nhan');
     }
 
+    /** Trả lời gợi ý hôm nay: Thích hoặc Bỏ qua. */
+    public function daily_match()
+    {
+        if (!$this->require_login()) {
+            return;
+        }
+        $this->load->model('m_daily');
+
+        $id  = (int) $this->input->post('id');
+        $act = $this->input->post('action') === 'like' ? 'like' : 'skip';
+
+        $kq = $this->m_daily->tra_loi($this->auth->id(), $id, $act);
+        return $this->json($kq);
+    }
+
     /* ==================== Thông báo ==================== */
 
     /**

@@ -9,7 +9,11 @@
             <div class="account-stats">
                 <div><span><?= number_format($me['coin_balance']) ?></span>Xu</div>
                 <div><span><?= number_format($post_count) ?></span>Tin đăng</div>
-                <div><span><?= number_format(count($liked_me)) ?></span>Người thích bạn</div>
+                <?php /* Bấm được để đi thẳng tới trang tương ứng */ ?>
+                <a href="<?= site_url('tai-khoan/ai-thich-ban') ?>">
+                    <span><?= number_format($liked_count) ?></span>Người thích bạn</a>
+                <a href="<?= site_url('tai-khoan/ai-xem-ho-so') ?>">
+                    <span><?= number_format($viewer_count) ?></span>Xem hồ sơ bạn</a>
                 <div><span><?= number_format(count($matches)) ?></span>Ghép đôi</div>
                 <div><span><?= number_format($unread_msg) ?></span>Tin nhắn mới</div>
                 <div><span><?= number_format($unread_noti) ?></span>Thông báo</div>

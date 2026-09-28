@@ -19,6 +19,8 @@ class Account extends Member_Controller
             'me'            => $me,
             'post_count'    => $this->db->where('user_id', $me['id'])->where('deleted_at', null)->count_all_results('posts'),
             'liked_me'      => $this->m_interaction->liked_me($me['id'], 8),
+            'viewer_count'  => $this->m_interaction->viewer_count($me['id']),
+            'liked_count'   => $this->m_interaction->liked_me_count($me['id']),
             'matches'       => $this->m_interaction->matches($me['id'], 8),
             'unread_msg'    => $this->m_interaction->unread_count($me['id']),
             'unread_noti'   => $this->m_notification->unread_count($me['id']),
@@ -323,6 +325,70 @@ class Account extends Member_Controller
             'partner'       => $partner,
             'can_send'      => $can_send,
             'conversation_id' => $conversation_id,
+        ));
+    }
+
+    /* ============ Ai đã thích bạn ============ */
+
+    public function who_liked_me()
+    {
+        $me = $this->auth->user();
+        $this->render('account/who_liked_me', array(
+            'title'   => 'Ai đã thích bạn',
+            'list'    => $this->m_interaction->liked_me($me['id'], 60),
+            'tong'    => $this->m_interaction->liked_me_count($me['id']),
+            'la_vip'  => (bool) $this->auth->is_vip(),
+        ));
+    }
+
+    /** Lịch sử các gợi ý đã nhận. */
+    public function daily_history()
+    {
+        $me = $this->auth->user();
+        $this->load->model('m_daily');
+        $this->render('account/daily_history', array(
+            'title' => 'Lịch sử gợi ý',
+            'list'  => $this->m_daily->history($me['id'], 60),
+            'today' => $this->m_daily->today($me['id']),
+        ));
+    }
+
+    /* ============ Ai đã xem hồ sơ ============ */
+
+    public function profile_viewers()
+    {
+        $me = $this->auth->user();
+        $this->render('account/profile_viewers', array(
+            'title'  => 'Ai đã xem hồ sơ bạn',
+            'list'   => $this->m_interaction->viewers($me['id'], 60),
+            'tong'   => $this->m_interaction->viewer_count($me['id']),
+            'la_vip' => (bool) $this->auth->is_vip(),
+        ));
+    }
+
+    /* ============ Chuỗi ngày hoạt động ============ */
+
+    public function streak()
+    {
+        $me = $this->auth->user();
+        $this->load->model('m_streak');
+        $s = $this->m_streak->get($me['id']);
+
+        if ($this->input->method() === 'post') {
+            $kq = $this->input->post('mua')
+                ? $this->m_streak->mua_freeze($me['id'])
+                : $this->m_streak->dung_freeze($me['id']);
+            set_flash($kq['ok'] ? 'success' : 'danger', $kq['message']);
+            redirect('tai-khoan/chuoi');
+        }
+
+        $this->render('account/streak', array(
+            'title'     => 'Chuỗi hoạt động',
+            's'         => $s,
+            'badges'    => $this->m_streak->badges($me['id']),
+            'ke_tiep'   => $this->m_streak->moc_ke_tiep((int) $s['current_streak']),
+            'boost'     => $this->m_streak->boost($me['id']),
+            'tat_ca_moc' => M_streak::MOC,
         ));
     }
 
