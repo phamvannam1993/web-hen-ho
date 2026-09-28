@@ -560,12 +560,71 @@ CREATE TABLE `room_messages` (
   CONSTRAINT `fk_room_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+DROP TABLE IF EXISTS `api_tokens`;
+CREATE TABLE `api_tokens` (
+  `id`           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id`      BIGINT UNSIGNED NOT NULL,
+  `token_hash`   CHAR(64) NOT NULL COMMENT 'chỉ lưu bản băm, không lưu token gốc',
+  `device`       VARCHAR(120) DEFAULT NULL,
+  `last_used_at` DATETIME DEFAULT NULL,
+  `expires_at`   DATETIME NOT NULL,
+  `revoked_at`   DATETIME DEFAULT NULL,
+  `created_at`   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_api_token` (`token_hash`),
+  KEY `idx_api_user` (`user_id`,`revoked_at`),
+  CONSTRAINT `fk_api_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `daily_matches`;
+CREATE TABLE `daily_matches` (
+  `id`            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id`       BIGINT UNSIGNED NOT NULL,
+  `match_user_id` BIGINT UNSIGNED NOT NULL,
+  `match_date`    DATE NOT NULL,
+  `status`        ENUM('pending','liked','skipped','expired','matched') NOT NULL DEFAULT 'pending',
+  `score`         SMALLINT NOT NULL DEFAULT 0,
+  `expires_at`    DATETIME NOT NULL,
+  `created_at`    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  -- Mỗi người mỗi ngày đúng một gợi ý
+  UNIQUE KEY `uq_daily_user_date` (`user_id`,`match_date`),
+  KEY `idx_daily_user` (`user_id`,`match_date`),
+  CONSTRAINT `fk_daily_user`  FOREIGN KEY (`user_id`)       REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_daily_match` FOREIGN KEY (`match_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `user_streaks`;
+CREATE TABLE `user_streaks` (
+  `user_id`             BIGINT UNSIGNED NOT NULL,
+  `current_streak`      SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  `longest_streak`      SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  `last_active_date`    DATE DEFAULT NULL,
+  `streak_freeze_count` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `updated_at`          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`),
+  CONSTRAINT `fk_streak_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `streak_badges`;
+CREATE TABLE `streak_badges` (
+  `id`          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id`     BIGINT UNSIGNED NOT NULL,
+  `badge_code`  VARCHAR(50) NOT NULL,
+  `achieved_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  -- Huy hiệu đã đạt thì giữ mãi, kể cả khi chuỗi bị đứt
+  UNIQUE KEY `uq_badge` (`user_id`,`badge_code`),
+  CONSTRAINT `fk_badge_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 DROP TABLE IF EXISTS `profile_views`;
 CREATE TABLE `profile_views` (
   `id`         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `viewer_id`  BIGINT UNSIGNED NOT NULL COMMENT 'người xem',
   `owner_id`   BIGINT UNSIGNED NOT NULL COMMENT 'chủ hồ sơ',
   `viewed_at`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `view_count` INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'xem lại thì cộng dồn, không thêm dòng',
   PRIMARY KEY (`id`),
   -- Mỗi cặp chỉ giữ một dòng, xem lại thì cập nhật thời điểm: bảng không phình
   -- theo số lần bấm và đếm "bao nhiêu người đã xem" ra đúng số người.

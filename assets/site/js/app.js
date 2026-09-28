@@ -296,6 +296,74 @@
         });
     });
 
+    /* --- Gợi ý hôm nay: đếm ngược và hai nút trả lời --- */
+    (function () {
+        var wrap = document.querySelector('[data-daily]');
+        if (!wrap) { return; }
+
+        /* Đếm ngược tới lúc hết hạn, cập nhật mỗi phút */
+        var het = parseInt(wrap.getAttribute('data-expires'), 10) * 1000;
+        var oDem = document.getElementById('dm-countdown');
+
+        function veDem() {
+            if (!oDem) { return; }
+            var con = het - Date.now();
+            if (con <= 0) {
+                oDem.textContent = 'Đã hết hạn';
+                return;
+            }
+            var gio  = Math.floor(con / 3600000);
+            var phut = Math.floor(con % 3600000 / 60000);
+            oDem.textContent = 'Còn ' + gio + 'h ' + phut + 'p';
+            setTimeout(veDem, 60000);
+        }
+        veDem();
+
+        /* Thả tim / Bỏ qua */
+        var oNut = document.getElementById('dm-actions');
+        if (!oNut) { return; }
+
+        oNut.addEventListener('click', function (e) {
+            var btn = e.target.closest('[data-daily-act]');
+            if (!btn) { return; }
+
+            var act = btn.getAttribute('data-daily-act');
+            oNut.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
+
+            post(base + 'ajax/goi-y-hom-nay', {
+                id: wrap.getAttribute('data-daily'), action: act
+            }).then(function (res) {
+                if (!res.ok) {
+                    oNut.querySelectorAll('button').forEach(function (b) { b.disabled = false; });
+                    return showModal({ type: 'error', title: 'Không thực hiện được', message: res.message });
+                }
+
+                // Thay cụm nút bằng dòng trạng thái, không phải tải lại trang
+                oNut.textContent = '';
+                var p = document.createElement('p');
+                p.className = 'dm-state' + (res.matched ? ' is-ok' : '');
+                p.textContent = act === 'skip'
+                    ? 'Đã bỏ qua — hẹn gặp ngày mai.'
+                    : (res.matched ? 'Đã ghép đôi!' : 'Đã thả tim — đang chờ người ấy trả lời.');
+                oNut.appendChild(p);
+
+                if (res.matched) {
+                    var a = document.createElement('a');
+                    a.className = 'btn-hm btn-hm-solid';
+                    a.href = base + 'tai-khoan/tin-nhan';
+                    a.textContent = 'Nhắn tin ngay';
+                    oNut.appendChild(a);
+
+                    showModal({
+                        type: 'success', title: 'Ghép đôi thành công!',
+                        message: 'Hai bạn đã thích nhau. Vào mục Tin nhắn để bắt đầu trò chuyện.'
+                    });
+                }
+                if (oDem) { oDem.remove(); }
+            });
+        });
+    })();
+
     /* --- Trả lời lượt thích: Thích lại (ghép đôi) hoặc Bỏ qua --- */
     document.addEventListener('click', function (e) {
         var btn = e.target.closest('[data-like-reply]');
@@ -303,7 +371,7 @@
 
         var action = btn.getAttribute('data-like-reply');
         var id     = btn.getAttribute('data-user');
-        var box    = btn.closest('[data-like-request]');
+        var box    = btn.closest('[data-like-request], .liker');
         var nutBam = box ? box.querySelectorAll('button') : [btn];
 
         nutBam.forEach(function (b) { b.disabled = true; });

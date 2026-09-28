@@ -15,7 +15,7 @@ class Discover extends MY_Controller
     public function __construct()
     {
         parent::__construct();
-        $this->load->model(array('m_user', 'm_interaction'));
+        $this->load->model(array('m_user', 'm_interaction', 'm_daily'));
         $this->load->helper('cookie');
     }
 
@@ -51,6 +51,7 @@ class Discover extends MY_Controller
             'title'      => 'Khám phá',
             'candidates' => $this->m_user->deck($me, $view, $filters, $this->per_page),
             'remaining'  => $this->m_user->count_deck($me, $view, $filters),
+            'daily'      => $me ? ($this->m_daily->today($me['id']) ?: $this->m_daily->tao_cho($me['id'])) : null,
             'view'       => $view,
             'need_pick'  => !$me && !$view,          // khách chưa chọn nhóm -> hỏi ngay
             'filters'    => $filters,

@@ -16,6 +16,33 @@ $route['email/huy/(:any)']        = 'email/unsubscribe/$1';
 $route['email/mo/(:num)']         = 'email/open/$1';
 $route['email/bam/(:num)']        = 'email/click/$1';
 $route['tai-khoan/email']         = 'account/email_prefs';
+$route['tai-khoan/ai-thich-ban']  = 'account/who_liked_me';
+$route['tai-khoan/ai-xem-ho-so'] = 'account/profile_viewers';
+$route['tai-khoan/chuoi']        = 'account/streak';
+$route['tai-khoan/goi-y']        = 'account/daily_history';
+$route['ajax/goi-y-hom-nay']     = 'ajax/daily_match';
+
+/* ---------------- API cho ứng dụng di động ----------------
+   Xác thực bằng header: Authorization: Bearer <token> */
+$route['api/auth/login']                  = 'api/auth/login';
+$route['api/auth/logout']                 = 'api/auth/logout';
+$route['api/auth/me']                     = 'api/auth/me';
+
+$route['api/daily-match/today']           = 'api/daily_match/today';
+$route['api/daily-match/history']         = 'api/daily_match/history';
+$route['api/daily-match/(:num)/like']     = 'api/daily_match/like/$1';
+$route['api/daily-match/(:num)/skip']     = 'api/daily_match/skip/$1';
+
+$route['api/who-liked-me']                = 'api/engagement/who_liked_me';
+$route['api/who-liked-me/count']          = 'api/engagement/who_liked_me_count';
+$route['api/who-liked-me/(:num)/like']    = 'api/engagement/respond/$1/like';
+$route['api/who-liked-me/(:num)/skip']    = 'api/engagement/respond/$1/skip';
+
+$route['api/profile-viewers']             = 'api/engagement/viewers';
+$route['api/profile-viewers/count']       = 'api/engagement/viewers_count';
+
+$route['api/streak']                      = 'api/engagement/streak';
+$route['api/streak/freeze']               = 'api/engagement/streak_freeze';
 $route['xac-thuc']                = 'auth/verify';
 $route['xac-thuc/gui-lai']        = 'auth/resend';
 $route['quen-mat-khau']           = 'auth/forgot';

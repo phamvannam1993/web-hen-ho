@@ -52,6 +52,9 @@ $hero_img = setting('home_hero_image') ?: 'assets/images/banner.png';
     </div>
 </section>
 
+<?php /* Thẻ gợi ý hôm nay đặt ngay dưới khối mở đầu cho dễ thấy */ ?>
+<?php if ($user) { $this->load->view('_daily_card', array('daily' => $daily)); } ?>
+
 <?php /* ===================== Vì sao chọn ===================== */ ?>
 <section class="hm-sec">
     <div class="container">

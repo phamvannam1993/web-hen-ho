@@ -1149,10 +1149,14 @@ select {
 .content-box + .content-box { margin-top: 20px; }
 
 .account-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 20px; }
-.account-stats > div {
+/* Ô số liệu: có ô là thẻ <a> bấm được, có ô chỉ để xem */
+.account-stats > div, .account-stats > a {
     background: #faf7f9; border: 1px solid var(--line); border-radius: 8px;
     padding: 16px; text-align: center; color: var(--muted); font-size: 14px;
+    display: block; text-decoration: none;
 }
+.account-stats > a { transition: border-color .15s, background .15s; }
+.account-stats > a:hover { background: #fdf0f2; border-color: #f3c8d0; text-decoration: none; }
 .account-stats span { display: block; font-size: 26px; font-weight: 700; color: var(--pink); }
 
 .profile-avatar { display: flex; gap: 20px; align-items: center; margin-bottom: 10px; }
@@ -4224,3 +4228,136 @@ body.is-bare .chat-widget {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
     padding: 12px 16px; border: 1px solid #e8eaee; border-radius: 12px;
 }
+
+/* ==========================================================================
+   Gợi ý hôm nay, Ai đã thích bạn, Ai đã xem, Chuỗi hoạt động
+   ========================================================================== */
+
+/* ---------------- Thẻ gợi ý hôm nay ---------------- */
+.dm-wrap { background: #fdf0f4; padding: 34px 0; }
+.dm-card {
+    background: #fff; border-radius: 18px; padding: 26px 28px;
+    box-shadow: 0 6px 26px rgba(31, 42, 55, .1);
+    border: 1px solid #f7d7de;
+}
+.dm-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.dm-head h2 { margin: 0; font-size: 22px; font-weight: 800; color: var(--hm-ink, #1f2a37); }
+.dm-sub { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+/* Đồng hồ đếm ngược: nổi bật vì đây là thứ tạo cảm giác gấp */
+.dm-countdown {
+    flex: 0 0 auto; padding: 7px 16px; border-radius: 999px;
+    background: var(--pink); color: #fff; font-size: 14px; font-weight: 700; white-space: nowrap;
+}
+
+.dm-body { display: flex; gap: 26px; align-items: flex-start; }
+.dm-photo { flex: 0 0 auto; }
+.dm-photo img {
+    width: 180px; height: 180px; border-radius: 16px; object-fit: cover; display: block;
+    box-shadow: 0 4px 16px rgba(31, 42, 55, .14);
+}
+.dm-info { flex: 1; min-width: 0; }
+.dm-info h3 { margin: 0 0 12px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 21px; }
+.dm-info h3 a { color: var(--hm-ink, #1f2a37); font-weight: 800; }
+.dm-info h3 a:hover { color: var(--pink); text-decoration: none; }
+
+.dm-chips, .dm-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+.dm-chips span { background: #f2f5f9; color: #566374; border-radius: 8px; padding: 6px 12px; font-size: 13.5px; }
+.dm-tags span { background: #fde8ec; color: var(--pink-dark); border-radius: 8px; padding: 5px 11px; font-size: 13px; }
+.dm-bio { margin: 0 0 12px; color: #46505f; font-size: 15px; line-height: 1.6; }
+
+.dm-actions { display: flex; align-items: center; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+.dm-state { margin: 0; color: var(--muted); font-size: 15px; font-weight: 600; }
+.dm-state.is-ok { color: #17804a; }
+
+/* ---------------- Lưới người đã thích / đã xem ---------------- */
+.liker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 22px 16px; margin-top: 8px; }
+.liker { text-align: center; transition: opacity .28s, transform .28s; }
+.liker.card-gone { opacity: 0; transform: scale(.96); }
+.liker-photo { display: block; }
+.liker-photo img {
+    width: 104px; height: 104px; border-radius: 50%; object-fit: cover; margin: 0 auto;
+    border: 3px solid var(--pink); padding: 3px; background: #fff; display: block;
+}
+.liker b { display: block; margin-top: 11px; font-size: 15px; color: var(--ink); }
+.liker small { display: block; margin-top: 2px; color: var(--muted); font-size: 13px; }
+.liker-actions { display: flex; gap: 8px; margin-top: 12px; }
+.liker-actions .btn-hm { flex: 1; padding: 8px 10px; font-size: 13.5px; }
+/* Bản thường: ảnh làm mờ, tên thay bằng chữ chung */
+.liker.is-blur .liker-photo img { filter: blur(9px); border-color: #e8eaee; }
+.liker.is-blur .liker-hidden { color: var(--muted); }
+
+/* ---------------- Chuỗi hoạt động ---------------- */
+.streak-hero {
+    display: flex; align-items: center; gap: 26px; flex-wrap: wrap;
+    padding: 24px 26px; margin: 6px 0 26px;
+    background: linear-gradient(135deg, #fff4e6, #fde8ec); border-radius: 16px;
+}
+.streak-now { display: flex; align-items: baseline; gap: 8px; }
+.streak-fire { font-size: 34px; line-height: 1; }
+.streak-now b { font-size: 46px; font-weight: 800; line-height: 1; color: var(--pink-dark); }
+.streak-now small { font-size: 15px; color: var(--muted); }
+.streak-meta { flex: 1; min-width: 220px; }
+.streak-meta p { margin: 0 0 6px; font-size: 15px; color: #46505f; }
+.streak-sub { margin: 26px 0 12px; font-size: 18px; font-weight: 800; color: var(--ink); }
+
+.badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.badge {
+    text-align: center; padding: 18px 12px; border-radius: 14px;
+    border: 1px solid #e8eaee; background: #fafafb; opacity: .6;
+}
+/* Đã đạt thì sáng lên, chưa đạt thì mờ để thấy rõ còn gì phía trước */
+.badge.is-on { opacity: 1; background: #fff; border-color: #f3c8d0; box-shadow: 0 3px 12px rgba(209,39,63,.1); }
+.badge-ic { display: block; font-size: 30px; line-height: 1; margin-bottom: 8px; }
+.badge b { display: block; font-size: 15px; color: var(--ink); }
+.badge small { display: block; margin-top: 3px; color: var(--muted); font-size: 13px; }
+.streak-form { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+
+@media (max-width: 720px) {
+    .dm-wrap { padding: 22px 0; }
+    .dm-card { padding: 18px; border-radius: 14px; }
+    .dm-head { flex-direction: column; gap: 10px; }
+    .dm-head h2 { font-size: 19px; }
+    .dm-body { flex-direction: column; gap: 16px; }
+    .dm-photo img { width: 100%; height: 240px; }
+    .dm-actions .btn-hm { flex: 1; }
+    .liker-grid { grid-template-columns: repeat(2, 1fr); gap: 18px 12px; }
+    .liker-photo img { width: 88px; height: 88px; }
+    .streak-now b { font-size: 38px; }
+}
+
+/* Chuỗi ngày hoạt động trên thanh đầu trang */
+.hd-streak {
+    display: inline-flex; align-items: center; gap: 5px; flex: 0 0 auto;
+    height: 42px; padding: 0 14px; border-radius: 999px;
+    border: 1px solid #f6d9a8; background: #fff8ec; color: #b4600c;
+    font-size: 14.5px; font-weight: 700; text-decoration: none;
+    transition: background .15s, border-color .15s;
+}
+.hd-streak:hover { background: #fdeed6; border-color: #f0c88a; text-decoration: none; color: #8c4a08; }
+.hd-streak span { font-size: 16px; line-height: 1; }
+
+/* ---------------- Lịch sử gợi ý ---------------- */
+.dh-list { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+.dh-row {
+    display: flex; align-items: center; gap: 14px; padding: 12px 16px;
+    background: #fff; border: 1px solid #eef0f3; border-radius: 12px;
+}
+.dh-photo img { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; display: block; }
+.dh-info { flex: 1; min-width: 0; }
+.dh-info b { display: block; font-size: 15px; }
+.dh-info b a { color: var(--ink); }
+.dh-info small { display: block; margin-top: 2px; color: var(--muted); font-size: 13px; }
+.dh-status {
+    flex: 0 0 auto; padding: 5px 13px; border-radius: 999px;
+    font-size: 12.5px; font-weight: 700; background: #f2f5f9; color: #566374;
+}
+.dh-status.is-matched { background: #dff5e6; color: #17804a; }
+.dh-status.is-liked   { background: #fde8ec; color: var(--pink-dark); }
+.dh-status.is-expired { background: #f2f3f6; color: #9aa0a6; }
+
+/* Không tìm được ai phù hợp cho hôm nay */
+.dm-empty {
+    background: #fff; border: 1px dashed #f0c6cf; border-radius: 16px;
+    padding: 26px; text-align: center; color: var(--muted);
+}
+.dm-empty b { display: block; margin-bottom: 6px; font-size: 17px; color: var(--ink); }

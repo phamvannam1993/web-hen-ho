@@ -329,11 +329,74 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS `profile_views` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 echo "  Đã có bảng profile_views.\n";
 
-echo "\n== 10. Hồ sơ thành viên ==\n";
+echo "\n== 10. Gợi ý mỗi ngày, chuỗi hoạt động ==\n";
+$pdo->exec("CREATE TABLE IF NOT EXISTS `daily_matches` (
+  `id`            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id`       BIGINT UNSIGNED NOT NULL,
+  `match_user_id` BIGINT UNSIGNED NOT NULL,
+  `match_date`    DATE NOT NULL,
+  `status`        ENUM('pending','liked','skipped','expired','matched') NOT NULL DEFAULT 'pending',
+  `score`         SMALLINT NOT NULL DEFAULT 0,
+  `expires_at`    DATETIME NOT NULL,
+  `created_at`    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_daily_user_date` (`user_id`,`match_date`),
+  KEY `idx_daily_user` (`user_id`,`match_date`),
+  CONSTRAINT `fk_daily_user`  FOREIGN KEY (`user_id`)       REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_daily_match` FOREIGN KEY (`match_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+$pdo->exec("CREATE TABLE IF NOT EXISTS `user_streaks` (
+  `user_id`             BIGINT UNSIGNED NOT NULL,
+  `current_streak`      SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  `longest_streak`      SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  `last_active_date`    DATE DEFAULT NULL,
+  `streak_freeze_count` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `updated_at`          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`),
+  CONSTRAINT `fk_streak_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+$pdo->exec("CREATE TABLE IF NOT EXISTS `streak_badges` (
+  `id`          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id`     BIGINT UNSIGNED NOT NULL,
+  `badge_code`  VARCHAR(50) NOT NULL,
+  `achieved_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_badge` (`user_id`,`badge_code`),
+  CONSTRAINT `fk_badge_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+$co = $pdo->query("SHOW COLUMNS FROM profile_views LIKE 'view_count'")->fetch();
+if (!$co) {
+    $pdo->exec("ALTER TABLE profile_views ADD COLUMN `view_count` INT UNSIGNED NOT NULL DEFAULT 1 AFTER viewed_at");
+    echo "  + thêm cột view_count\n";
+}
+echo "  Đã có ba bảng daily_matches, user_streaks, streak_badges.\n";
+
+// Token cho ứng dụng di động gọi API. Tách khỏi user_tokens vì cần thêm
+// thông tin thiết bị và thời điểm dùng gần nhất để thu hồi khi mất máy.
+$pdo->exec("CREATE TABLE IF NOT EXISTS `api_tokens` (
+  `id`           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id`      BIGINT UNSIGNED NOT NULL,
+  `token_hash`   CHAR(64) NOT NULL COMMENT 'chỉ lưu bản băm, không lưu token gốc',
+  `device`       VARCHAR(120) DEFAULT NULL,
+  `last_used_at` DATETIME DEFAULT NULL,
+  `expires_at`   DATETIME NOT NULL,
+  `revoked_at`   DATETIME DEFAULT NULL,
+  `created_at`   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_api_token` (`token_hash`),
+  KEY `idx_api_user` (`user_id`,`revoked_at`),
+  CONSTRAINT `fk_api_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+echo "  Đã có bảng api_tokens.\n";
+
+echo "\n== 11. Hồ sơ thành viên ==\n";
 require $root . '/database/fill_member_profiles.php';
 
 if ($demo > 0) {
-    echo "\n== 11. Thành viên mẫu ==\n";
+    echo "\n== 12. Thành viên mẫu ==\n";
     // seed_demo_users.php đọc số lượng từ $argv[1] nên truyền thẳng tham số qua
     $argv[1] = $demo;
     require $root . '/database/seed_demo_users.php';
