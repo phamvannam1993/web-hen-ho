@@ -81,7 +81,9 @@ nap_env(__DIR__ . '/.env');
  *
  * NOTE: If you change these, also change the error_reporting() code below
  */
-	define('ENVIRONMENT', isset($_SERVER['CI_ENV']) ? $_SERVER['CI_ENV'] : 'development');
+	// Thứ tự: CI_ENV của máy chủ web > APP_ENV trong .env > production.
+	// Mặc định production để không lộ mã OTP / liên kết đặt lại mật khẩu khi quên cấu hình.
+	define('ENVIRONMENT', isset($_SERVER['CI_ENV']) ? $_SERVER['CI_ENV'] : (getenv('APP_ENV') ?: 'production'));
 
 /*
  *---------------------------------------------------------------
