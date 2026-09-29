@@ -299,7 +299,7 @@ echo "  Đã có hai bảng email_prefs và email_queue.\n";
 
 // Ai chưa có dòng cài đặt thì tạo sẵn, kèm mã huỷ đăng ký riêng
 $st = $pdo->prepare("INSERT IGNORE INTO email_prefs (user_id, token)
-        SELECT u.id, SHA1(CONCAT(u.id, '-', u.uuid, '-', RAND()))
+        SELECT u.id, LEFT(SHA2(CONCAT(u.id, '-', u.uuid, '-', RAND()), 256), 40)
           FROM users u WHERE u.deleted_at IS NULL");
 $st->execute();
 echo '  Tạo cài đặt email cho ' . $st->rowCount() . " thành viên.\n";
