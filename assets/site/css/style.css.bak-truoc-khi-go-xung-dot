@@ -4228,6 +4228,7 @@ body.is-bare .chat-widget {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
     padding: 12px 16px; border: 1px solid #e8eaee; border-radius: 12px;
 }
+<<<<<<< HEAD
 /* =========================================================
    FIX iPHONE / iOS SAFARI
    CW-BACK + CW-CLOSE
@@ -4366,6 +4367,7 @@ button.cw-close {
         transform: translateZ(1px);
     }
 }
+=======
 
 /* ==========================================================================
    Gợi ý hôm nay, Ai đã thích bạn, Ai đã xem, Chuỗi hoạt động
@@ -4499,6 +4501,7 @@ button.cw-close {
     padding: 26px; text-align: center; color: var(--muted);
 }
 .dm-empty b { display: block; margin-bottom: 6px; font-size: 17px; color: var(--ink); }
+>>>>>>> c24550556aaad9f88c9f61be461c6f010f3f6bd5
 
 /* ── Ô chuỗi 🔥: đổi chỗ theo khổ màn ──────────────────────────────────────
  *

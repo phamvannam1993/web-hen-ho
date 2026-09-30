@@ -7,9 +7,9 @@ $loai = array(
 );
 $da_huy = !empty($p['disabled_at']);
 ?>
-<div class="container tk-shell">
-    <?php $this->load->view('account/_nav'); ?>
-        <div>
+<div class="container page-layout">
+    <div>
+        <?php $this->load->view('account/_nav'); ?>
 
         <div class="content-box">
             <h2 class="section-title">Cài đặt email</h2>
@@ -55,7 +55,7 @@ $da_huy = !empty($p['disabled_at']);
         </div>
     </div>
 
-    <aside class="tk-right">
+    <aside>
         <div class="sidebar-box">
             <h3>Chúng tôi gửi thư khi nào?</h3>
             <p>Chỉ gửi những việc liên quan trực tiếp tới bạn: có người nhắn tin, có người thích bạn,

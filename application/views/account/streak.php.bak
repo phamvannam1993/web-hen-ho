@@ -2,9 +2,9 @@
 /** @var array $s @var array $badges @var array|null $ke_tiep @var int $boost @var array $tat_ca_moc */
 $da_dat = array_column($badges, 'ma');
 ?>
-<div class="container tk-shell">
-    <?php $this->load->view('account/_nav'); ?>
-        <div>
+<div class="container page-layout">
+    <div>
+        <?php $this->load->view('account/_nav'); ?>
 
         <div class="content-box">
             <h2 class="section-title">Chuỗi hoạt động</h2>
@@ -53,7 +53,7 @@ $da_dat = array_column($badges, 'ma');
         </div>
     </div>
 
-    <aside class="tk-right">
+    <aside>
         <div class="sidebar-box">
             <h3>Chuỗi hoạt động là gì?</h3>
             <p>Mỗi ngày bạn ghé vào là chuỗi cộng thêm một. Vào nhiều lần trong ngày

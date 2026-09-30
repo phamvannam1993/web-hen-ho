@@ -2,9 +2,9 @@
 /** @var array $list @var int $tong @var bool $la_vip */
 $so_ro = $la_vip ? count($list) : 2;
 ?>
-<div class="container tk-shell">
-    <?php $this->load->view('account/_nav'); ?>
-        <div>
+<div class="container page-layout">
+    <div>
+        <?php $this->load->view('account/_nav'); ?>
 
         <div class="content-box">
             <h2 class="section-title"><?= number_format($tong) ?> người đã xem hồ sơ bạn</h2>
@@ -50,7 +50,7 @@ $so_ro = $la_vip ? count($list) : 2;
         </div>
     </div>
 
-    <aside class="tk-right">
+    <aside>
         <div class="sidebar-box">
             <h3>Ai đang để ý bạn?</h3>
             <p>Người đã ghé xem hồ sơ thường là người đang cân nhắc. Thả tim trước

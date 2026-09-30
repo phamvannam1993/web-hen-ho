@@ -1,7 +1,7 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
-<div class="container tk-shell">
-    <?php $this->load->view('account/_nav'); ?>
-        <div>
+<div class="container page-layout">
+    <div>
+        <?php $this->load->view('account/_nav'); ?>
 
         <div class="chat-layout">
             <div class="chat-list">
@@ -98,7 +98,7 @@
         </div>
     </div>
 
-    <aside class="tk-right">
+    <aside>
         <div class="sidebar-box">
             <h3>An toàn khi trò chuyện</h3>
             <p>Không chuyển tiền hoặc cung cấp thông tin tài khoản cho người lạ. Gặp dấu hiệu lừa đảo,

@@ -3,9 +3,9 @@
 // Người thường thấy rõ 2 người đầu để tin là thật, còn lại làm mờ
 $so_ro = $la_vip ? count($list) : 2;
 ?>
-<div class="container tk-shell">
-    <?php $this->load->view('account/_nav'); ?>
-        <div>
+<div class="container page-layout">
+    <div>
+        <?php $this->load->view('account/_nav'); ?>
 
         <div class="content-box">
             <h2 class="section-title"><?= number_format($tong) ?> người đã thích bạn</h2>
@@ -60,7 +60,7 @@ $so_ro = $la_vip ? count($list) : 2;
         </div>
     </div>
 
-    <aside class="tk-right">
+    <aside>
         <div class="sidebar-box">
             <h3>Vì sao nên thả tim lại?</h3>
             <p>Những người này đã bày tỏ quan tâm trước. Chỉ cần bạn thả tim lại là

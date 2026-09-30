@@ -4,9 +4,9 @@ $nhan = array(
     'skipped' => 'Bạn đã bỏ qua', 'matched' => 'Đã ghép đôi', 'expired' => 'Hết hạn',
 );
 ?>
-<div class="container tk-shell">
-    <?php $this->load->view('account/_nav'); ?>
-        <div>
+<div class="container page-layout">
+    <div>
+        <?php $this->load->view('account/_nav'); ?>
 
         <div class="content-box">
             <h2 class="section-title">Lịch sử gợi ý</h2>
@@ -36,7 +36,7 @@ $nhan = array(
         </div>
     </div>
 
-    <aside class="tk-right">
+    <aside>
         <div class="sidebar-box">
             <h3>Gợi ý mỗi ngày</h3>
             <p>Mỗi 8h sáng hệ thống chọn ra một người hợp tiêu chí nhất với bạn.

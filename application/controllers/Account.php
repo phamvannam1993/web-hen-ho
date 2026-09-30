@@ -8,7 +8,7 @@ class Account extends Member_Controller
     {
         parent::__construct();
         $this->load->model(array('m_user', 'm_post', 'm_category', 'm_interaction',
-                                 'm_notification', 'm_billing', 'm_job'));
+                                 'm_notification', 'm_billing', 'm_job', 'm_daily'));
     }
 
     public function index()
@@ -25,6 +25,14 @@ class Account extends Member_Controller
             'unread_msg'    => $this->m_interaction->unread_count($me['id']),
             'unread_noti'   => $this->m_notification->unread_count($me['id']),
             'recent_posts'  => $this->m_post->by_user($me['id'], null, 5),
+            /* Hai khối bổ sung cho trang Tổng quan (theo bản thiết kế SaigonCupid).
+               Dùng lại model sẵn có, không thêm truy vấn mới nào ngoài hai dòng này. */
+            'hoat_dong'     => $this->m_notification->for_user($me['id'], 5),
+            'goi_y_hom_nay' => $this->m_daily->today($me['id']),
+            /* `M_daily::today()` chỉ trả MỘT người mỗi ngày (đúng luật của tính năng
+               ghép đôi hằng ngày), nên lưới gợi ý lấy từ `suggestions()` — cùng bộ
+               lọc mà trang Khám phá đang dùng. */
+            'goi_y_them'    => $this->m_user->suggestions($me, 3),
         ));
     }
 
