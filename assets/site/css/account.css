@@ -1,0 +1,408 @@
+/* Giao diện khu "Tài khoản của tôi".
+ *
+ * Bộ màu, bo góc và đổ bóng lấy nguyên từ bản thiết kế SaigonCupid (dự án
+ * lovable) để hai bên nhìn như một. Viết CSS thuần, KHÔNG kéo Tailwind về —
+ * site này đã có style.css 4.500 dòng, thêm một framework nữa là hai hệ đá nhau.
+ *
+ * Mọi lớp đều mang tiền tố `tk-` và nằm trong `.tk-shell`, nên tệp này không
+ * chạm được vào bất kỳ trang nào khác của site.
+ */
+
+.tk-shell {
+  /* Token gốc — chép từ src/styles.css của bản thiết kế */
+  --tk-bg: oklch(0.986 0.009 356);
+  --tk-fg: oklch(0.255 0.016 300);
+  --tk-card: #fff;
+  --tk-primary: oklch(0.654 0.203 13.5);
+  --tk-primary-soft: oklch(0.729 0.161 10.8);
+  --tk-primary-tint: oklch(0.955 0.024 8);
+  --tk-muted: oklch(0.966 0.008 340);
+  --tk-muted-fg: oklch(0.55 0.021 320);
+  --tk-border: oklch(0.925 0.012 350);
+  --tk-success: oklch(0.64 0.14 155);
+  --tk-warning: oklch(0.78 0.145 75);
+  --tk-gold: oklch(0.8 0.13 85);
+  --tk-gold-fg: oklch(0.3 0.05 85);
+
+  --tk-r: 1.125rem;
+  --tk-r-sm: calc(var(--tk-r) - 8px);
+  --tk-r-lg: calc(var(--tk-r) + 4px);
+  --tk-shadow: 0 1px 2px oklch(0.55 0.2 12 / 6%), 0 8px 24px -12px oklch(0.55 0.2 12 / 14%);
+  --tk-shadow-float: 0 12px 40px -16px oklch(0.55 0.2 12 / 28%);
+  --tk-grad-brand: linear-gradient(135deg, oklch(0.654 0.203 13.5), oklch(0.75 0.155 6));
+  --tk-grad-blush: linear-gradient(160deg, oklch(0.975 0.018 4), oklch(0.985 0.012 340));
+
+  display: grid;
+  grid-template-columns: 264px minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+  padding: 22px 0 40px;
+  color: var(--tk-fg);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+/* Phần tử lưới mặc định `min-width: auto` nên KHÔNG co nhỏ hơn nội dung —
+   thanh điều hướng cuộn ngang vì thế đẩy cả trang rộng 1943px ở màn 768px.
+   Đặt `min-width: 0` là điều kiện để `overflow-x: auto` bên trong có tác dụng. */
+.tk-shell > * { min-width: 0; }
+.tk-shell a { text-decoration: none; }
+.tk-shell :focus-visible { outline: 2px solid var(--tk-primary); outline-offset: 2px; border-radius: 8px; }
+
+/* ── Cột trái ─────────────────────────────────────────────────────────── */
+
+.tk-side {
+  position: sticky;
+  /* Header của site cao ~120px và dính trên cùng — trừ ra để sidebar không chui xuống dưới nó */
+  top: 132px;
+  background: var(--tk-card);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-r-lg);
+  box-shadow: var(--tk-shadow);
+  padding: 14px;
+  align-self: start;
+}
+
+.tk-me {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--tk-grad-blush);
+  border-radius: var(--tk-r);
+  padding: 12px;
+  margin-bottom: 14px;
+}
+.tk-me__av {
+  width: 44px; height: 44px; flex: 0 0 44px;
+  border-radius: 999px; object-fit: cover;
+  box-shadow: 0 0 0 2px oklch(0.654 0.203 13.5 / 40%);
+  background: var(--tk-muted);
+}
+.tk-me__name { font-weight: 700; margin: 0; }
+/* Tên dài phải cắt, nếu không thẻ tràn ngang cả sidebar */
+.tk-me__b { min-width: 0; }
+.tk-me__name, .tk-me__coin { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tk-me__coin { font-size: 12.5px; color: var(--tk-muted-fg); margin: 2px 0 0; }
+
+.tk-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 700; line-height: 1;
+  padding: 4px 8px; border-radius: 999px;
+  background: var(--tk-muted); color: var(--tk-muted-fg);
+}
+.tk-pill--gold { background: oklch(0.8 0.13 85 / 22%); color: var(--tk-gold-fg); }
+.tk-pill--brand { background: var(--tk-primary-tint); color: var(--tk-primary); }
+
+.tk-nav__group { margin-top: 12px; }
+.tk-nav__label {
+  font-size: 10.5px; font-weight: 800; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--tk-muted-fg);
+  padding: 0 10px; margin-bottom: 4px;
+}
+.tk-nav ul { list-style: none; margin: 0; padding: 0; }
+.tk-nav a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: var(--tk-r-sm);
+  color: var(--tk-fg); font-weight: 600;
+  transition: background .15s, color .15s;
+}
+.tk-nav a:hover { background: var(--tk-primary-tint); color: var(--tk-primary); }
+.tk-nav a.is-active { background: var(--tk-primary-tint); color: var(--tk-primary); }
+.tk-nav a.is-active .tk-ic { color: var(--tk-primary); }
+.tk-nav__txt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.tk-ic { width: 18px; height: 18px; flex: 0 0 18px; color: var(--tk-muted-fg); }
+
+.tk-badge {
+  min-width: 18px; height: 18px; padding: 0 5px;
+  display: grid; place-items: center;
+  border-radius: 999px; background: var(--tk-primary); color: #fff;
+  font-size: 11px; font-weight: 800; line-height: 1;
+}
+
+/* ── Thẻ chung ────────────────────────────────────────────────────────── */
+
+.tk-card {
+  background: var(--tk-card);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-r-lg);
+  box-shadow: var(--tk-shadow);
+  padding: 20px;
+}
+.tk-card + .tk-card { margin-top: 18px; }
+.tk-card__t { font-size: 16px; font-weight: 800; margin: 0; }
+.tk-card__d { color: var(--tk-muted-fg); font-size: 13px; margin: 3px 0 0; }
+.tk-card__h { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+
+/* ── Thẻ chào ─────────────────────────────────────────────────────────── */
+
+.tk-hero {
+  background: var(--tk-grad-brand);
+  color: #fff;
+  border-radius: var(--tk-r-lg);
+  box-shadow: var(--tk-shadow-float);
+  padding: 22px;
+  display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+}
+.tk-hero__av {
+  width: 74px; height: 74px; flex: 0 0 74px;
+  border-radius: 20px; object-fit: cover;
+  box-shadow: 0 0 0 3px rgb(255 255 255 / 45%);
+  background: rgb(255 255 255 / 25%);
+}
+.tk-hero__b { flex: 1 1 260px; min-width: 0; }
+.tk-hero__hi { font-size: 13px; opacity: .9; margin: 0; }
+.tk-hero__name { font-size: 26px; font-weight: 800; margin: 2px 0 8px; }
+.tk-hero .tk-pill { background: rgb(255 255 255 / 22%); color: #fff; }
+.tk-hero__acts { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+
+.tk-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 18px; border-radius: 999px;
+  font-weight: 700; font-size: 14px; border: 0; cursor: pointer;
+  transition: transform .12s, box-shadow .15s, background .15s;
+}
+.tk-btn:hover { transform: translateY(-1px); }
+.tk-btn--gold { background: var(--tk-gold); color: var(--tk-gold-fg); }
+.tk-btn--ghost { background: rgb(255 255 255 / 18%); color: #fff; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 45%); }
+.tk-btn--brand { background: var(--tk-primary); color: #fff; }
+.tk-btn--soft { background: var(--tk-primary-tint); color: var(--tk-primary); }
+
+/* ── Ô số liệu ────────────────────────────────────────────────────────── */
+
+.tk-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
+.tk-stat {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--tk-card);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-r);
+  box-shadow: var(--tk-shadow);
+  padding: 14px;
+  color: inherit;
+  transition: border-color .15s, transform .12s;
+}
+a.tk-stat:hover { border-color: var(--tk-primary-soft); transform: translateY(-2px); }
+.tk-stat__ic {
+  width: 38px; height: 38px; flex: 0 0 38px;
+  display: grid; place-items: center;
+  border-radius: 13px; background: var(--tk-primary-tint); color: var(--tk-primary);
+}
+.tk-stat__ic .tk-ic { width: 19px; height: 19px; flex: 0 0 19px; color: inherit; }
+.tk-stat__n { font-size: 20px; font-weight: 800; line-height: 1.15; }
+.tk-stat__l { font-size: 12px; color: var(--tk-muted-fg); }
+
+/* ── Hoàn thiện hồ sơ ─────────────────────────────────────────────────── */
+
+/* `align-items: start` để thẻ ngắn không bị kéo cao bằng thẻ dài bên cạnh */
+.tk-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 18px; align-items: start; }
+.tk-two > .tk-card + .tk-card { margin-top: 0; }
+
+.tk-pc__n { font-size: 34px; font-weight: 800; color: var(--tk-primary); line-height: 1; }
+.tk-pc__bar { height: 9px; border-radius: 999px; background: var(--tk-muted); overflow: hidden; margin: 10px 0 14px; }
+.tk-pc__fill { height: 100%; border-radius: 999px; background: var(--tk-grad-brand); }
+.tk-pc__row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 9px 0; border-top: 1px solid var(--tk-border); font-weight: 600;
+}
+.tk-pc__miss { color: var(--tk-primary); font-size: 12.5px; font-weight: 700; }
+.tk-pc__done { color: var(--tk-success); font-size: 12.5px; font-weight: 700; }
+
+/* ── Dòng hoạt động ───────────────────────────────────────────────────── */
+
+.tk-feed { list-style: none; margin: 0; padding: 0; }
+.tk-feed li { display: flex; gap: 11px; padding: 10px 0; }
+.tk-feed li + li { border-top: 1px solid var(--tk-border); }
+.tk-feed__ic {
+  width: 32px; height: 32px; flex: 0 0 32px;
+  display: grid; place-items: center;
+  border-radius: 11px; background: var(--tk-primary-tint); color: var(--tk-primary);
+}
+.tk-feed__ic .tk-ic { width: 16px; height: 16px; flex: 0 0 16px; color: inherit; }
+.tk-feed__tx { margin: 0; font-weight: 600; }
+.tk-feed__ti { margin: 2px 0 0; font-size: 12px; color: var(--tk-muted-fg); }
+
+/* ── Lưới gợi ý ───────────────────────────────────────────────────────── */
+
+.tk-sug { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.tk-sug__c {
+  border: 1px solid var(--tk-border); border-radius: var(--tk-r);
+  overflow: hidden; background: var(--tk-card);
+  transition: transform .12s, box-shadow .15s;
+}
+.tk-sug__c:hover { transform: translateY(-2px); box-shadow: var(--tk-shadow); }
+.tk-sug__ph { position: relative; aspect-ratio: 3 / 4; background: var(--tk-muted); display: block; }
+.tk-sug__ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tk-sug__on {
+  position: absolute; top: 10px; left: 10px;
+  background: rgb(255 255 255 / 92%); color: var(--tk-success);
+  font-size: 11px; font-weight: 800; padding: 4px 9px; border-radius: 999px;
+}
+.tk-sug__b { padding: 12px; }
+.tk-sug__n { font-weight: 800; margin: 0 0 5px; }
+.tk-sug__m { display: flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--tk-muted-fg); margin: 0 0 3px; }
+.tk-sug__m .tk-ic { width: 14px; height: 14px; flex: 0 0 14px; }
+.tk-sug__act { display: flex; gap: 8px; margin-top: 11px; }
+.tk-sug__act .tk-btn { flex: 1; justify-content: center; padding: 8px 12px; font-size: 13px; }
+
+/* ── Trạng thái rỗng ──────────────────────────────────────────────────── */
+
+.tk-empty { text-align: center; padding: 28px 16px; color: var(--tk-muted-fg); }
+.tk-empty__ic {
+  width: 48px; height: 48px; margin: 0 auto 10px;
+  display: grid; place-items: center; border-radius: 16px;
+  background: var(--tk-primary-tint); color: var(--tk-primary);
+}
+.tk-empty__ic .tk-ic { width: 24px; height: 24px; flex: 0 0 24px; color: inherit; }
+
+/* ── Tiêu đề trang con ────────────────────────────────────────────────── */
+
+.tk-head { margin-bottom: 16px; }
+.tk-head h1 { font-size: 22px; font-weight: 800; margin: 0; }
+.tk-head p { color: var(--tk-muted-fg); margin: 4px 0 0; }
+
+/* ── Màn hẹp ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .tk-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tk-two { grid-template-columns: 1fr; }
+  .tk-sug { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 860px) {
+  /* Sidebar chuyển thành dải cuộn ngang trên đầu — giữ được mọi mục mà không
+     chiếm hết màn hình. Bỏ `position: sticky` vì dính hai thanh chồng nhau. */
+  .tk-shell { grid-template-columns: 1fr; gap: 16px; padding-top: 14px; }
+  .tk-side { position: static; padding: 12px; min-width: 0; overflow: hidden; }
+  .tk-me { margin-bottom: 10px; }
+  .tk-nav { display: flex; gap: 14px; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+  .tk-nav::-webkit-scrollbar { display: none; }
+  /* `flex: 0 0 auto` + nhãn khối làm nhóm phình theo nội dung rộng nhất; chốt
+     `width: max-content` để nhóm chỉ rộng bằng hàng mục của chính nó. */
+  .tk-nav__group { margin-top: 0; flex: 0 0 auto; width: max-content; }
+  .tk-nav__label { width: auto; }
+  .tk-nav ul { display: flex; gap: 6px; }
+  .tk-nav a { white-space: nowrap; }
+  .tk-hero { padding: 18px; }
+  .tk-hero__name { font-size: 22px; }
+}
+
+@media (max-width: 560px) {
+  .tk-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .tk-stat { padding: 11px; gap: 9px; }
+  .tk-stat__ic { width: 32px; height: 32px; flex: 0 0 32px; border-radius: 11px; }
+  .tk-stat__n { font-size: 17px; }
+  .tk-sug { grid-template-columns: 1fr; }
+  .tk-hero__av { width: 58px; height: 58px; flex: 0 0 58px; }
+  .tk-card { padding: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tk-btn, .tk-stat, .tk-sug__c { transition: none; }
+  .tk-btn:hover, a.tk-stat:hover, .tk-sug__c:hover { transform: none; }
+}
+
+/* ══ Khoác áo mới cho các lớp CŨ của 13 trang con ═══════════════════════════
+ *
+ * Các trang Hồ sơ, Ảnh, Ví, Chuỗi… đang dùng `.content-box`, `.section-title`,
+ * `.sidebar-box`, `.btn`… từ style.css. Thay vì sửa markup của từng tệp (dễ
+ * làm vỡ form và logic PHP xen kẽ), ta chỉ định nghĩa lại dáng của chúng KHI
+ * nằm trong `.tk-shell`. Ngoài khu tài khoản, mọi lớp này giữ nguyên như cũ.
+ */
+
+.tk-shell .content-box,
+.tk-shell .sidebar-box,
+.tk-shell .form-card {
+  background: var(--tk-card);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-r-lg);
+  box-shadow: var(--tk-shadow);
+  padding: 20px;
+}
+.tk-shell .content-box + .content-box,
+.tk-shell .form-card + .form-card { margin-top: 18px; }
+
+.tk-shell .section-title,
+.tk-shell .form-card-title {
+  font-size: 16px; font-weight: 800; margin: 0 0 12px;
+  color: var(--tk-fg); border: 0; padding: 0; text-align: left;
+}
+.tk-shell .sidebar-box h3 { font-size: 15px; font-weight: 800; margin: 0 0 10px; }
+.tk-shell .section-hint { color: var(--tk-muted-fg); font-size: 13px; margin: -6px 0 12px; }
+.tk-shell .auth-title { font-size: 22px; font-weight: 800; margin: 0 0 14px; text-align: left; font-style: normal; }
+
+/* Cột phải của các trang con */
+.tk-shell > .tk-right { display: grid; gap: 18px; align-self: start; }
+.tk-shell:has(> .tk-right) { grid-template-columns: 264px minmax(0, 1fr) 286px; }
+
+/* Biểu mẫu */
+.tk-shell .field { margin-bottom: 14px; }
+.tk-shell label { display: block; font-weight: 700; font-size: 13px; margin-bottom: 6px; }
+.tk-shell .req { color: var(--tk-primary); }
+.tk-shell input[type="text"], .tk-shell input[type="email"], .tk-shell input[type="password"],
+.tk-shell input[type="number"], .tk-shell input[type="date"], .tk-shell input[type="tel"],
+.tk-shell select, .tk-shell textarea {
+  width: 100%; padding: 10px 12px;
+  border: 1px solid var(--tk-border); border-radius: var(--tk-r-sm);
+  background: #fff; color: var(--tk-fg); font: inherit;
+  transition: border-color .15s, box-shadow .15s;
+}
+.tk-shell input:focus, .tk-shell select:focus, .tk-shell textarea:focus {
+  outline: 0; border-color: var(--tk-primary-soft);
+  box-shadow: 0 0 0 3px oklch(0.654 0.203 13.5 / 14%);
+}
+.tk-shell .form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+
+/* Nút — giữ nguyên tên lớp cũ, đổi dáng cho khớp thiết kế */
+.tk-shell .btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 18px; border-radius: 999px;
+  font-weight: 700; font-size: 14px; border: 0; cursor: pointer;
+  transition: transform .12s, background .15s;
+}
+.tk-shell .btn:hover { transform: translateY(-1px); }
+.tk-shell .btn-primary, .tk-shell .btn-hm-solid { background: var(--tk-primary); color: #fff; }
+.tk-shell .btn-ghost, .tk-shell .btn-hm {
+  background: var(--tk-primary-tint); color: var(--tk-primary); box-shadow: none;
+}
+
+/* Bảng */
+.tk-shell .simple-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.tk-shell .simple-table th {
+  text-align: left; font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--tk-muted-fg); padding: 0 10px 8px; border-bottom: 1px solid var(--tk-border);
+}
+.tk-shell .simple-table td { padding: 11px 10px; border-bottom: 1px solid var(--tk-border); }
+.tk-shell .simple-table tr:last-child td { border-bottom: 0; }
+
+/* Lưới thành viên + ảnh người thích */
+.tk-shell .member-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.tk-shell .liker-photo { border-radius: var(--tk-r); overflow: hidden; }
+
+/* Rỗng / cảnh báo */
+.tk-shell .empty { text-align: center; padding: 26px 16px; color: var(--tk-muted-fg); }
+.tk-shell .alert {
+  border: 1px solid var(--tk-border); border-radius: var(--tk-r-sm);
+  padding: 12px 14px; margin-bottom: 14px; background: var(--tk-muted);
+}
+.tk-shell .alert-warning { background: oklch(0.78 0.145 75 / 16%); border-color: oklch(0.78 0.145 75 / 40%); }
+.tk-shell .alert-danger  { background: oklch(0.585 0.22 25 / 12%); border-color: oklch(0.585 0.22 25 / 35%); }
+.tk-shell .alert-success { background: oklch(0.64 0.14 155 / 14%); border-color: oklch(0.64 0.14 155 / 38%); }
+
+@media (max-width: 1180px) {
+  /* Ba cột không vừa nữa — cột phải xuống dưới phần nội dung */
+  .tk-shell:has(> .tk-right) { grid-template-columns: 264px minmax(0, 1fr); }
+  .tk-shell > .tk-right { grid-column: 2; }
+}
+@media (max-width: 860px) {
+  .tk-shell:has(> .tk-right) { grid-template-columns: 1fr; }
+  .tk-shell > .tk-right { grid-column: 1; }
+  .tk-shell .form-row { grid-template-columns: 1fr; }
+  .tk-shell .member-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* `input[type=file]` có bề rộng tự nhiên do trình duyệt quy định và KHÔNG co
+   theo cha. Ở màn 390px, hàng avatar (ảnh + ô chọn tệp) rộng 420px nên đẩy cả
+   trang cuộn ngang. Cho hàng xuống dòng và chốt bề rộng ô chọn tệp. */
+.tk-shell .profile-avatar { flex-wrap: wrap; }
+.tk-shell input[type="file"] { max-width: 100%; }
+@media (max-width: 560px) {
+  .tk-shell input[type="file"] { width: 100%; font-size: 12px; }
+}

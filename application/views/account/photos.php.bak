@@ -1,7 +1,7 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
-<div class="container tk-shell">
-    <?php $this->load->view('account/_nav'); ?>
-        <div>
+<div class="container page-layout">
+    <div>
+        <?php $this->load->view('account/_nav'); ?>
 
         <form class="content-box auth-form" method="post" enctype="multipart/form-data">
             <h1 class="section-title">Ảnh của tôi</h1>
@@ -36,7 +36,7 @@
         </div>
     </div>
 
-    <aside class="tk-right">
+    <aside>
         <div class="sidebar-box">
             <h3>Quy định ảnh</h3>
             <p>Chỉ đăng ảnh của chính bạn, không phản cảm. Ảnh được kiểm duyệt trước khi hiển thị công khai.</p>

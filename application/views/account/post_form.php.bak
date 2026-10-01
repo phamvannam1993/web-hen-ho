@@ -1,9 +1,9 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
 $v = function ($k, $d = '') use ($p) { return e($p[$k] ?? $d); };
 ?>
-<div class="container tk-shell">
-    <?php $this->load->view('account/_nav'); ?>
-        <div>
+<div class="container page-layout">
+    <div>
+        <?php $this->load->view('account/_nav'); ?>
 
         <form class="post-form auth-form" method="post" enctype="multipart/form-data">
             <header class="form-head">
@@ -208,7 +208,7 @@ $v = function ($k, $d = '') use ($p) { return e($p[$k] ?? $d); };
         </form>
     </div>
 
-    <aside class="tk-right">
+    <aside>
         <div class="sidebar-box">
             <h3>Quy định đăng tin</h3>
             <p>Không đăng ảnh phản cảm, thông tin sai sự thật hoặc mời chào dịch vụ. Tin vi phạm sẽ bị gỡ

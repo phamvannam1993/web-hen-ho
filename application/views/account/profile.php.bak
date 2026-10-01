@@ -21,9 +21,9 @@ $chon = function ($k, $gt, $d = '') use ($goc) {
     return $goc($k, $d) === (string) $gt ? 'selected' : '';
 };
 ?>
-<div class="container tk-shell">
-    <?php $this->load->view('account/_nav'); ?>
-        <div>
+<div class="container page-layout">
+    <div>
+        <?php $this->load->view('account/_nav'); ?>
 
         <form class="content-box auth-form" method="post" enctype="multipart/form-data">
             <h1 class="auth-title">Hồ sơ của tôi</h1>
@@ -54,8 +54,7 @@ $chon = function ($k, $gt, $d = '') use ($goc) {
                 <div>
                     <label for="avatar">Ảnh đại diện <b class="req">*</b></label>
                     <input type="file" id="avatar" name="avatar" accept="image/*">
-                    <?php /* Dùng chung hàm với trang Tổng quan — cột profile_score trong DB hay cũ */ ?>
-                    <p>Hoàn thiện hồ sơ: <b><?= tk_ho_so_day_du($me)['phan_tram'] ?>%</b></p>
+                    <p>Hoàn thiện hồ sơ: <b><?= (int) $me['profile_score'] ?>%</b></p>
                 </div>
             </div>
 
@@ -255,7 +254,7 @@ $chon = function ($k, $gt, $d = '') use ($goc) {
         </form>
     </div>
 
-    <aside class="tk-right">
+    <aside>
         <div class="sidebar-box">
             <h3>Mẹo tăng tương tác</h3>
             <ul class="sidebar-list">

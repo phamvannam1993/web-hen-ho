@@ -137,11 +137,13 @@ $mxh = array_filter(array(
                 </svg>
             </a>
             <?php /* Chuỗi ngày hoạt động: chỉ hiện khi đã có chuỗi, để không
-                     làm rối thanh đầu trang với con số 0.
-                     Trên điện thoại ô này ẩn đi và hiện lại TRONG ngăn kéo menu
-                     (xem `.hd-streak--head` / `--drawer` ở style.css): thanh đầu
-                     trang ở khổ hẹp đã chật vì logo, tìm kiếm, chuông và nút menu. */ ?>
-            <?php $this->load->view('layouts/_streak_pill', array('tk_lop' => 'hd-streak--head')); ?>
+                     làm rối thanh đầu trang với con số 0 */ ?>
+            <?php if ($user && !empty($streak['streak'])): ?>
+                <a class="hd-streak" href="<?= site_url('tai-khoan/chuoi') ?>"
+                   title="Bạn đã hoạt động <?= (int) $streak['streak'] ?> ngày liên tiếp">
+                    <span aria-hidden="true">🔥</span><b><?= (int) $streak['streak'] ?></b>
+                </a>
+            <?php endif; ?>
 
             <?php /* Chuông thông báo + khay xổ xuống; chỉ có nghĩa khi đã đăng nhập */ ?>
             <?php if ($user): ?>
@@ -185,10 +187,6 @@ $mxh = array_filter(array(
             <span class="drawer-title">Menu</span>
             <button type="button" class="drawer-close" id="drawer-close" aria-label="Đóng menu">&times;</button>
         </div>
-
-        <?php /* Bản dành cho điện thoại của ô chuỗi — chỉ hiện khi ngăn kéo là
-                 panel trượt (≤900px). Cùng partial với bản ở thanh đầu trang. */ ?>
-        <?php $this->load->view('layouts/_streak_pill', array('tk_lop' => 'hd-streak--drawer', 'tk_nhan' => true)); ?>
 
         <?php
         // Đánh dấu mục đang xem theo đường dẫn hiện tại.

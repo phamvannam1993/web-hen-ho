@@ -1,7 +1,7 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
-<div class="container tk-shell">
-    <?php $this->load->view('account/_nav'); ?>
-        <div>
+<div class="container page-layout">
+    <div>
+        <?php $this->load->view('account/_nav'); ?>
 
         <div class="content-box">
             <h1 class="section-title">Thông báo</h1>
@@ -23,4 +23,5 @@
             <?php endif; ?>
         </div>
     </div>
+    <aside></aside>
 </div>
