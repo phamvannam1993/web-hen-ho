@@ -137,7 +137,7 @@ $route['sitemap-khuvuc\.xml']   = 'sitemap/khuvuc';
 $route['sitemap-posts\.xml']    = 'sitemap/posts';
 
 // Phân trang khu quản trị: /admin/{muc}/trang/{n}
-$route['admin/(users|posts|articles|orders|reports|codes)/trang/(:num)'] = 'admin/$1/index/$2';
+$route['admin/(users|posts|photos|articles|orders|reports|codes)/trang/(:num)'] = 'admin/$1/index/$2';
 
 $route['admin']                 = 'admin/dashboard/index';
 $route['admin/dang-nhap']       = 'admin/auth/login';

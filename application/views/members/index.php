@@ -68,6 +68,7 @@ $with = function ($key, $value) use ($base_url) {
                 <?php if ($g('q')): ?><input type="hidden" name="q" value="<?= e($g('q')) ?>"><?php endif; ?>
                 <input type="hidden" name="view" value="<?= e($view_mode) ?>">
 
+                <div class="filter-panel-body">
                 <div class="filter-head">
                     <h2>
                         <svg viewBox="0 0 24 24" class="ic"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>
@@ -82,8 +83,8 @@ $with = function ($key, $value) use ($base_url) {
                         <svg viewBox="0 0 24 24" class="ic caret"><path d="M6 15l6-6 6 6"/></svg>
                     </button>
                     <div class="filter-group-body">
-                        <label class="filter-label">Giới tính</label>
-                        <select name="gender">
+                        <label class="filter-label" for="filter-gender">Giới tính</label>
+                        <select name="gender" id="filter-gender">
                             <option value="">Tất cả</option>
                             <option value="male" <?= $sel('gender', 'male') ?>>Nam</option>
                             <option value="female" <?= $sel('gender', 'female') ?>>Nữ</option>
@@ -96,14 +97,14 @@ $with = function ($key, $value) use ($base_url) {
                             <input type="number" name="age_max" min="18" max="80" placeholder="Đến 70" value="<?= e($g('age_max')) ?>">
                         </div>
 
-                        <label class="filter-label">Khu vực</label>
+                        <label class="filter-label"<?= !$province ? ' for="filter-province"' : '' ?>>Khu vực</label>
                         <?php if ($province): ?>
                             <div class="filter-fixed">
                                 <span><?= e($province['name']) ?></span>
                                 <a href="<?= site_url('khu-vuc') ?>">Đổi</a>
                             </div>
                         <?php else: ?>
-                            <select name="province_id">
+                            <select name="province_id" id="filter-province" data-searchable data-allow-empty data-search-placeholder="Tìm tỉnh/thành...">
                                 <option value="">Tất cả tỉnh/thành</option>
                                 <?php foreach ($provinces as $p): ?>
                                     <option value="<?= (int) $p['id'] ?>" <?= $sel('province_id', $p['id']) ?>><?= e($p['name']) ?></option>
@@ -126,8 +127,8 @@ $with = function ($key, $value) use ($base_url) {
                             <input type="number" name="height_max" min="130" max="220" placeholder="Đến 200" value="<?= e($g('height_max')) ?>">
                         </div>
 
-                        <label class="filter-label">Tình trạng hôn nhân</label>
-                        <select name="marital">
+                        <label class="filter-label" for="filter-marital">Tình trạng hôn nhân</label>
+                        <select name="marital" id="filter-marital">
                             <option value="">Tất cả</option>
                             <?php foreach ($labels_marital as $k => $v): ?>
                                 <option value="<?= $k ?>" <?= $sel('marital', $k) ?>><?= $v ?></option>
@@ -176,8 +177,8 @@ $with = function ($key, $value) use ($base_url) {
                         <svg viewBox="0 0 24 24" class="ic caret"><path d="M6 15l6-6 6 6"/></svg>
                     </button>
                     <div class="filter-group-body" <?= $open_advanced ? '' : 'hidden' ?>>
-                        <label class="filter-label">Học vấn</label>
-                        <select name="education">
+                        <label class="filter-label" for="filter-education">Học vấn</label>
+                        <select name="education" id="filter-education">
                             <option value="">Tất cả</option>
                             <?php foreach (array('thpt' => 'THPT', 'trung_cap' => 'Trung cấp', 'cao_dang' => 'Cao đẳng',
                                                  'dai_hoc' => 'Đại học', 'sau_dai_hoc' => 'Sau đại học') as $k => $v): ?>
@@ -185,8 +186,8 @@ $with = function ($key, $value) use ($base_url) {
                             <?php endforeach; ?>
                         </select>
 
-                        <label class="filter-label">Con cái</label>
-                        <select name="has_children">
+                        <label class="filter-label" for="filter-children">Con cái</label>
+                        <select name="has_children" id="filter-children">
                             <option value="">Tất cả</option>
                             <option value="0" <?= $g('has_children') === '0' ? 'selected' : '' ?>>Chưa có con</option>
                             <option value="1" <?= $g('has_children') === '1' ? 'selected' : '' ?>>Đã có con</option>
@@ -199,7 +200,10 @@ $with = function ($key, $value) use ($base_url) {
                     </div>
                 </section>
 
-                <button class="btn-apply" type="submit">Áp dụng bộ lọc</button>
+                </div>
+                <div class="filter-panel-footer">
+                    <button class="btn-apply" type="submit">Áp dụng bộ lọc</button>
+                </div>
             </form>
         </aside>
 

@@ -67,6 +67,8 @@
     var lastId  = 0;     // id tin cuối đã vẽ của hội thoại đang mở
     var timer   = null;  // chu kỳ tải tin mới
     var listTimer = null;
+    var sending = false;
+    var renderedIds = new Set();
 
     var RT = window.Realtime || null;
     function rtLive() { return !!(RT && RT.connected); }
@@ -362,6 +364,7 @@
 
     function veLai(messages) {
         bodyEl.textContent = '';
+        renderedIds.clear();
         ngayCuoi = null;
         nguoiCuoi = null;
 
@@ -375,11 +378,19 @@
             return;
         }
 
-        messages.forEach(function (m) { bodyEl.appendChild(renderMessage(m)); });
+        messages.forEach(function (m) {
+            var id = String(m.id);
+            if (renderedIds.has(id)) { return; }
+            renderedIds.add(id);
+            bodyEl.appendChild(renderMessage(m));
+        });
         scrollDown();
     }
 
     function themTin(m) {
+        var id = String(m.id);
+        if (renderedIds.has(id)) { return; }
+        renderedIds.add(id);
         var trong = bodyEl.querySelector('.cw-empty');
         if (trong) { trong.remove(); }
 
@@ -400,6 +411,7 @@
 
     /** Mở phòng chat chung. */
     function moPhong() {
+        renderedIds.clear();
         dang_mo = { kind: 'room' };
         lastId = 0;
         clearInterval(timer);
@@ -423,6 +435,7 @@
 
     /** Mở một hội thoại riêng. */
     function moChat(info) {
+        renderedIds.clear();
         dang_mo = Object.assign({ kind: 'chat' }, info);
         lastId = 0;
         clearInterval(timer);
@@ -512,7 +525,7 @@
     if (formEl) {
         formEl.addEventListener('submit', function (e) {
             e.preventDefault();
-            if (!dang_mo) { return; }
+            if (!dang_mo || sending) { return; }
 
             var text = (inputEl.value || '').trim();
             var coAnh = fileEl && fileEl.files && fileEl.files.length;
@@ -531,6 +544,7 @@
             var data = new FormData(formEl);
             var url  = dang_mo.kind === 'room' ? 'ajax/phong-chat/gui' : 'ajax/send-message';
 
+            sending = true;
             inputEl.value = '';
             // Tải ảnh lên mất vài giây, phải cho thấy là máy đang làm việc chứ
             // không để người dùng bấm đi bấm lại vì tưởng hỏng.
@@ -558,7 +572,7 @@
                         message: 'Mất kết nối khi đang gửi. Bạn thử lại nhé.'
                     });
                 }
-            });
+            }).finally(function () { sending = false; });
         });
     }
 
@@ -631,6 +645,7 @@
         var moRa = panel.hidden;
         panel.hidden = !moRa;
         root.classList.toggle('open', moRa);
+        bubble.setAttribute('aria-expanded', String(moRa));
 
         if (moRa) {
             // Mở ra là thấy danh sách trước, không nhảy thẳng vào phòng chung
@@ -650,16 +665,23 @@
         }
     });
 
-    root.querySelectorAll('[data-close]').forEach(function (b) {
-        b.addEventListener('click', function () {
+    function dongChat() {
             panel.hidden = true;
+            bubble.setAttribute('aria-expanded', 'false');
             root.classList.remove('open', 'is-chat');
             clearInterval(timer);
             clearInterval(listTimer);
             dang_mo = null;
             convoEl.hidden = true;
             if (idleEl) { idleEl.hidden = false; }
-        });
+    }
+
+    root.querySelectorAll('[data-close]').forEach(function (b) {
+        b.addEventListener('click', dongChat);
+    });
+
+    document.addEventListener('pointerdown', function (e) {
+        if (!panel.hidden && !root.contains(e.target)) { dongChat(); }
     });
 
     if (rowRoom) { rowRoom.addEventListener('click', moPhong); }
@@ -679,10 +701,12 @@
     document.querySelectorAll('[data-chat-with]').forEach(function (btn) {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
+            if (btn.hasAttribute('data-chat-needs-match')) { return; }
             api('ajax/mo-chat/' + btn.getAttribute('data-chat-with')).then(function (res) {
                 if (res.ok) {
                     panel.hidden = false;
                     root.classList.add('open');
+                    bubble.setAttribute('aria-expanded', 'true');
                     loadList();
                     return moChat(res);
                 }

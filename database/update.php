@@ -408,4 +408,5 @@ if ($demo > 0) {
     echo "\n(Bỏ qua bước thêm thành viên mẫu. Muốn thêm thì chạy: php database/update.php 30)\n";
 }
 
+require __DIR__ . '/migrate_notification_actors.php';
 echo "\nHoàn tất. Nhớ xoá cache trình duyệt (Ctrl+Shift+R) để nạp lại CSS mới.\n";

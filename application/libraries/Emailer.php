@@ -43,19 +43,9 @@ class Emailer
         );
     }
 
-    /**
-     * Có tin nhắn mới. Xếp hàng chờ 5 phút rồi mới gửi — lúc đó worker kiểm
-     * tra lại: người nhận đọc rồi hoặc đang online thì thôi không gửi nữa.
-     */
-    public function new_message($receiver_id, $sender, $conversation_id, $content, $type = 'text')
+    /** Mỗi tin nhắn tạo một email thông báo, không chứa nội dung tin nhắn. */
+    public function new_message($receiver_id, $sender, $conversation_id)
     {
-        // Một cuộc hội thoại chỉ báo tối đa một lần mỗi giờ
-        if ($this->CI->m_email->da_gui_gan_day($receiver_id, 'new_message', $conversation_id, 1)) {
-            return false;
-        }
-
-        $xem_truoc = $type === 'image' ? 'Đã gửi một ảnh' : mb_substr(trim((string) $content), 0, 150);
-
         return $this->CI->m_email->enqueue(
             $receiver_id, 'new_message',
             $this->ten($sender) . ' đã nhắn tin cho bạn',
@@ -63,10 +53,9 @@ class Emailer
             array(
                 'sender'  => $this->ten($sender),
                 'avatar'  => avatar_url($sender['avatar'] ?? null, $sender['gender'] ?? 'other'),
-                'preview' => $xem_truoc,
                 'link'    => site_url('tai-khoan/tin-nhan/' . (int) $conversation_id),
             ),
-            array('delay_minutes' => 5, 'related_id' => $conversation_id)
+            array('related_id' => $conversation_id)
         );
     }
 

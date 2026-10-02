@@ -52,7 +52,14 @@ $link = function ($url) {
                 <?php $url = $link($n['url']); $tag = $url ? 'a' : 'div'; ?>
                 <li data-g="<?= $nhom($n['type']) ?>"<?= $n['read_at'] ? '' : ' data-unread' ?>>
                     <<?= $tag ?> class="tk-tb-item<?= $n['read_at'] ? '' : ' is-unread' ?>"<?= $url ? ' href="' . e($url) . '"' : '' ?>>
-                        <span class="tk-tb-ic"><?= tk_icon(tk_noti_icon($n['type'])) ?></span>
+                        <span class="tk-tb-ic<?= !empty($n['actor']) ? ' has-avatar' : '' ?>">
+                            <?php if (!empty($n['actor'])): ?>
+                                <img src="<?= e($n['actor']['avatar']) ?>" alt="<?= e($n['actor']['name']) ?>">
+                                <span class="tk-tb-type"><?= tk_icon(tk_noti_icon($n['type'])) ?></span>
+                            <?php else: ?>
+                                <?= tk_icon(tk_noti_icon($n['type'])) ?>
+                            <?php endif; ?>
+                        </span>
                         <span class="tk-tb-b">
                             <span class="tk-tb-t"><?= e($n['title']) ?></span>
                             <?php if ($n['body']): ?><span class="tk-tb-d"><?= e($n['body']) ?></span><?php endif; ?>

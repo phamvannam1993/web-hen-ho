@@ -46,12 +46,13 @@ $gio_ngan = function ($t) {
                 <?php foreach ($conversations as $c): ?>
                     <?php
                     $ten = display_name($c);
-                    $cuoi = $c['last_type'] === 'image' ? 'Đã gửi một ảnh' : excerpt($c['last_content'], 60);
+                    $cuoi = !$c['last_message_id'] ? 'Bắt đầu trò chuyện'
+                        : ($c['last_type'] === 'image' ? 'Đã gửi một ảnh' : excerpt($c['last_content'], 60));
                     if ((int) $c['last_sender_id'] === (int) $user['id']) $cuoi = 'Bạn: ' . $cuoi;
                     ?>
                     <li data-name="<?= e(mb_strtolower($ten)) ?>">
                         <a class="tk-ms-item<?= $conversation_id == $c['id'] ? ' is-active' : '' ?>"
-                           href="<?= site_url('tai-khoan/tin-nhan/' . $c['id']) ?>">
+                           href="<?= site_url('tai-khoan/tin-nhan/' . $c['id']) ?>"<?= $conversation_id == $c['id'] ? ' aria-current="page"' : '' ?>>
                             <span class="tk-ms-av">
                                 <img src="<?= e(avatar_url($c['avatar'], $c['gender'])) ?>" alt="<?= e($ten) ?>" loading="lazy">
                                 <?php if (is_online($c['last_active_at'])): ?><span class="tk-ms-online"></span><?php endif; ?>
@@ -102,6 +103,14 @@ $gio_ngan = function ($t) {
                 <div class="tk-ms-safe">
                     <span class="tk-pill tk-pill--warning"><?= tk_icon('shield-alert') ?>Không chuyển tiền cho người lạ và hạn chế chia sẻ thông tin cá nhân.</span>
                 </div>
+                <?php if (empty($messages) && $can_send): ?>
+                    <div class="tk-ms-hello" id="chat-hello">
+                        <span class="tk-ms-hello__icon" aria-hidden="true">👋</span>
+                        <strong>Bắt đầu bằng một lời chào</strong>
+                        <p id="chat-hello-hint">Bấm bên dưới để gửi 👋 cho <?= e(display_name($partner)) ?>.</p>
+                        <button class="tk-btn tk-btn--brand" type="button" id="chat-hello-send" aria-describedby="chat-hello-hint">Gửi lời chào 👋</button>
+                    </div>
+                <?php endif; ?>
                 <?php foreach ($messages as $m): ?>
                     <?php $mine = (int) $m['sender_id'] === (int) $user['id']; ?>
                     <div class="chat-msg <?= $mine ? 'mine' : '' ?> <?= $m['type'] === 'image' ? 'is-image' : '' ?>">

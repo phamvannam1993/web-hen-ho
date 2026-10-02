@@ -315,6 +315,10 @@ $hien_online = $da_gui ? $this->input->post('show_online')
     </section>
 
     <div class="tk-pf-save">
+        <div class="tk-pf-save__text">
+            <strong>Hồ sơ của bạn</strong>
+            <p>Lưu lại sau khi cập nhật thông tin nhé.</p>
+        </div>
         <button class="tk-btn tk-btn--brand tk-btn--lg" type="submit"><?= tk_icon('save') ?>Lưu hồ sơ</button>
     </div>
 </form>

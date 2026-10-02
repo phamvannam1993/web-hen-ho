@@ -58,6 +58,18 @@
             var ic = document.createElement('span');
             ic.className = 'noti-item-ic is-' + (n.type || 'system');
             ic.innerHTML = '<svg viewBox="0 0 24 24">' + (ICONS[n.type] || ICONS.system) + '</svg>';
+            if (n.actor && n.actor.avatar) {
+                ic.classList.add('has-avatar');
+                var avatar = document.createElement('img');
+                avatar.src = n.actor.avatar;
+                avatar.alt = n.actor.name || '';
+                var typeBadge = document.createElement('span');
+                typeBadge.className = 'noti-item-type';
+                typeBadge.innerHTML = ic.innerHTML;
+                ic.textContent = '';
+                ic.appendChild(avatar);
+                ic.appendChild(typeBadge);
+            }
 
             var text = document.createElement('span');
             text.className = 'noti-item-text';

@@ -336,9 +336,10 @@ class Account extends Member_Controller
             $this->m_interaction->mark_read($conversation_id, $me['id']);
         }
 
+        $conversations = $this->m_interaction->conversations($me['id']);
         $this->render('account/messages', array(
             'title'         => 'Tin nhắn',
-            'conversations' => $this->m_interaction->conversations($me['id']),
+            'conversations' => $conversations,
             'messages'      => $messages,
             'partner'       => $partner,
             'can_send'      => $can_send,

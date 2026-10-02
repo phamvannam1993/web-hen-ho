@@ -21,6 +21,7 @@ $o = isset($o) ? $o : array();
 $compact = !empty($o['compact']);
 $matched = !empty($o['matched']);
 $locked  = !empty($o['locked']);
+$liked   = !empty($p['liked']);
 $action  = $o['action'] ?? 'like';
 $label   = $o['label'] ?? 'Thích';
 $pass    = array_key_exists('pass', $o) ? (bool) $o['pass'] : !$matched;
@@ -88,8 +89,8 @@ $tieu_de = $locked ? 'Hồ sơ bị giới hạn' : $ten . ($tuoi ? ', ' . $tuoi
                 <?php elseif ($action === 'view'): ?>
                     <a class="tk-btn tk-btn--brand tk-btn--sm" href="<?= $link ?>"><?= tk_icon('eye') ?><?= e($label) ?></a>
                 <?php else: ?>
-                    <button type="button" class="tk-btn tk-btn--brand tk-btn--sm" data-card-action="like" data-like-label="<?= e($label) ?>">
-                        <?= tk_icon('heart') ?><span class="js-like-text"><?= e($label) ?></span>
+                    <button type="button" class="tk-btn tk-btn--brand tk-btn--sm<?= $liked ? ' is-liked' : '' ?>" data-card-action="like" data-like-label="<?= e($label) ?>">
+                        <?= tk_icon('heart') ?><span class="js-like-text"><?= $liked ? 'Đã thích' : e($label) ?></span>
                     </button>
                 <?php endif; ?>
                 <?php if ($pass && !$locked): ?>

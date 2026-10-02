@@ -19,6 +19,7 @@
 }
 .tk-ms-item:hover { background: var(--tk-secondary); }
 .tk-ms-item.is-active { background: var(--tk-accent); }
+.tk-ms-item.is-active .tk-ms-item__n { font-weight: 700; color: var(--tk-fg); }
 .tk-ms-av { position: relative; flex: 0 0 auto; display: block; }
 .tk-ms-av img { width: 40px; height: 40px; border-radius: 999px; object-fit: cover; display: block; background: var(--tk-muted); }
 .tk-ms-online {
@@ -61,6 +62,15 @@
   padding: 16px; background: var(--tk-grad-blush);
 }
 .tk-ms-safe { display: flex; justify-content: center; }
+.tk-ms-hello {
+  align-self: center; margin: auto 0; padding: 28px 20px; width: min(100%, 340px);
+  text-align: center; border: 1px solid var(--tk-border); border-radius: var(--tk-r);
+  background: rgb(255 255 255 / 85%); box-shadow: var(--tk-shadow);
+}
+.tk-ms-hello__icon { display: block; margin-bottom: 12px; font-size: 44px; line-height: 1.2; }
+.tk-ms-hello strong { display: block; font-size: 16px; }
+.tk-ms-hello p { margin: 8px 0 18px; font-size: 13px; line-height: 1.6; color: var(--tk-muted-fg); }
+.tk-ms-hello .tk-btn:disabled { opacity: .65; cursor: wait; }
 .tk-ms-safe .tk-pill { max-width: 448px; width: 100%; justify-content: center; text-align: center; padding: 8px 12px; white-space: normal; }
 
 /* Bong bóng tin nhắn */

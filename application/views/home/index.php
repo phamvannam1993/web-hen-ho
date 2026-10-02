@@ -104,7 +104,7 @@ $hero_img = setting('home_hero_image') ?: 'assets/images/banner.png';
             <?php endforeach; ?>
         </div>
         <div class="hm-center">
-            <a class="btn-hm btn-hm-soft btn-hm-lg" href="<?= site_url('swipe-match') ?>">Tìm ngay nửa kia</a>
+            <a class="btn-hm btn-hm-soft btn-hm-lg" href="<?= site_url('hen-ho') ?>">Tìm ngay nửa kia</a>
         </div>
     </div>
 </section>
@@ -206,7 +206,7 @@ $hero_img = setting('home_hero_image') ?: 'assets/images/banner.png';
         </div>
 
         <div class="hm-center">
-            <a class="hm-link" href="<?= site_url('swipe-match') ?>">Xem thêm đề xuất khác →</a>
+            <a class="hm-link" href="<?= site_url('thanh-vien') ?>">Xem thêm đề xuất khác →</a>
         </div>
     </div>
 </section>

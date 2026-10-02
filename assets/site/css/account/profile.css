@@ -52,16 +52,40 @@
 .tk-pf .ss-item { font-size: 14px; color: var(--tk-fg); }
 .tk-pf .ss-item:hover { background: var(--tk-secondary); }
 .tk-pf .ss-item.is-on { background: var(--tk-accent); color: var(--tk-accent-fg); }
+.tk-pf .ss-toggle:focus-visible,
+.tk-pf .ss-toggle[aria-expanded="true"] {
+  outline: 2px solid var(--tk-primary); outline-offset: 2px; border-color: var(--tk-primary);
+}
+.tk-pf .ss-panel { padding: 6px; margin-top: 4px; }
+.tk-pf .ss-list { scrollbar-width: thin; scrollbar-color: var(--tk-border) transparent; }
+.tk-pf .ss-item { border-radius: 8px; padding: 10px 12px; }
+.tk-pf .ss-item:focus-visible { outline: none; background: var(--tk-secondary); box-shadow: inset 0 0 0 1px var(--tk-primary); }
+.tk-pf .ss-item.is-on { font-weight: 600; }
+.tk-pf .ss-toggle:disabled, .tk-pf .ss-item:disabled { opacity: .5; cursor: not-allowed; }
 
-/* Nút lưu: tĩnh trên máy tính, dính đáy (trên thanh điều hướng) ở màn nhỏ */
+/* Thanh lưu nổi trong chiều rộng form, bám đáy khi cuộn trên máy tính. */
+.tk-pf-save {
+  position: sticky; bottom: 20px; z-index: 20;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  padding: 14px 18px; border: 1px solid var(--tk-border); border-radius: var(--tk-r-md);
+  background: rgb(255 255 255 / 94%);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgb(70 58 77 / 12%);
+}
+.tk-pf-save__text strong { display: block; font-size: 14px; font-weight: 600; color: var(--tk-fg); }
+.tk-pf-save__text p { margin-top: 3px; font-size: 13px; color: var(--tk-muted-fg); }
+.tk-pf-save .tk-btn { flex-shrink: 0; }
+
+/* Trên điện thoại, thanh lưu nằm phía trên điều hướng dưới. */
 @media (max-width: 1023.98px) {
   .tk-pf-save {
     /* sát mép trên thanh điều hướng dưới (cao ~52px) */
     position: sticky; bottom: calc(52px + env(safe-area-inset-bottom)); z-index: 20;
     margin: 0 -24px; padding: 12px 24px;
-    border-top: 1px solid var(--tk-border);
+    border: 0; border-top: 1px solid var(--tk-border); border-radius: 0; box-shadow: none;
     background: rgb(255 255 255 / 95%); backdrop-filter: blur(8px);
   }
+  .tk-pf-save__text { display: none; }
   .tk-pf-save .tk-btn { display: flex; width: 100%; }
 }
 

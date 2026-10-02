@@ -8,16 +8,6 @@ $sort_url = function ($key) use ($base_url) {
 };
 ?>
 <div class="container dating-page">
-    <nav class="breadcrumb">
-        <a href="<?= site_url() ?>">Trang chủ</a> ›
-        <?php if ($tab): ?>
-            <a href="<?= site_url('hen-ho') ?>">Hẹn hò</a> ›
-            <span><?= e($tabs[$tab]['label']) ?></span>
-        <?php else: ?>
-            <span>Hẹn hò</span>
-        <?php endif; ?>
-    </nav>
-
     <header class="dating-head">
         <h1><?= e($heading) ?></h1>
         <p><?= e($tabs[$tab]['desc']) ?></p>

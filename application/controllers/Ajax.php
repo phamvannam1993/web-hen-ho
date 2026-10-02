@@ -48,6 +48,9 @@ class Ajax extends MY_Controller
         }
 
         $result = $this->m_interaction->toggle_like($this->auth->id(), $type, $id);
+        if (isset($result['ok']) && !$result['ok']) {
+            return $this->json($result, 403);
+        }
         $result['ok'] = true;
         $result['message'] = $result['matched']
             ? 'Ghép đôi thành công! Hai bạn đã thích nhau.'
@@ -167,6 +170,7 @@ class Ajax extends MY_Controller
                 'url'    => $n['url'],
                 'time'   => time_ago($n['created_at']),
                 'unread' => empty($n['read_at']),
+                'actor'  => $n['actor'],
             );
         }
 
@@ -338,7 +342,7 @@ class Ajax extends MY_Controller
                 'name'    => display_name($r),
                 'avatar'  => avatar_url($r['avatar'], $r['gender']),
                 'online'  => (bool) is_online($r['last_active_at']),
-                'last'    => $this->tom_tat_tin($r['last_type'], $r['last_content'],
+                'last'    => !$r['last_message_id'] ? 'Bắt đầu trò chuyện' : $this->tom_tat_tin($r['last_type'], $r['last_content'],
                                                (int) $r['last_sender_id'] === (int) $me),
                 'time'    => $r['last_at'] ? time_ago($r['last_at']) : '',
                 'unread'  => (int) $r['unread'],

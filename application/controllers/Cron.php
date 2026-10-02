@@ -80,6 +80,10 @@ class Cron extends CI_Controller
         $gui = $bo = $hong = 0;
         foreach ($cho as $thu) {
             $payload = json_decode($thu['payload'], true) ?: array();
+            if ($thu['type'] === 'new_message') {
+                // Hàng đợi cũ có thể còn phần xem trước; bỏ trước khi dựng email.
+                unset($payload['preview']);
+            }
 
             // Tới giờ gửi mới kiểm tra lại điều kiện: hoàn cảnh có thể đã đổi
             $ly_do = $this->con_hop_le($thu);
@@ -125,24 +129,6 @@ class Cron extends CI_Controller
     {
         if (!$this->m_email->duoc_gui($thu['user_id'], $thu['type'])) {
             return 'Người nhận đã tắt loại thư này hoặc đã chạm trần thư trong ngày';
-        }
-
-        if ($thu['type'] === 'new_message' && $thu['related_id']) {
-            $u = $this->db->select('last_active_at')->where('id', $thu['user_id'])
-                ->get('users')->row_array();
-
-            // Đang online thì họ thấy tin trong ứng dụng rồi, khỏi gửi thư
-            if ($u && is_online($u['last_active_at'])) {
-                return 'Người nhận đang online';
-            }
-
-            $chua_doc = $this->db->where('conversation_id', (int) $thu['related_id'])
-                ->where('sender_id !=', (int) $thu['user_id'])
-                ->where('read_at', null)->where('deleted_at', null)
-                ->count_all_results('messages');
-            if ($chua_doc === 0) {
-                return 'Người nhận đã đọc tin rồi';
-            }
         }
 
         return true;

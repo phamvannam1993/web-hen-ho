@@ -7,16 +7,6 @@ $link = function ($key, $value) use ($base_url) {
 };
 ?>
 <div class="container confide-page">
-    <nav class="breadcrumb">
-        <a href="<?= site_url() ?>">Trang chủ</a> ›
-        <?php if ($tab): ?>
-            <a href="<?= site_url('tam-su') ?>">Tâm sự</a> ›
-            <span><?= e($tabs[$tab]['label']) ?></span>
-        <?php else: ?>
-            <span>Tâm sự</span>
-        <?php endif; ?>
-    </nav>
-
     <header class="confide-head">
         <h1><?= e($heading) ?></h1>
         <p><?= e($tabs[$tab]['desc']) ?></p>

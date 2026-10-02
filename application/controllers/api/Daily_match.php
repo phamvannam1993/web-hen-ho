@@ -59,7 +59,7 @@ class Daily_match extends Api_Controller
 
         return $kq['ok']
             ? $this->ok(array('matched' => $kq['matched'], 'message' => $kq['message']))
-            : $this->loi($kq['message'], 409);
+            : $this->loi($kq['message'], ($kq['need'] ?? '') === 'profile' ? 403 : 409, $kq);
     }
 
     /** GET /api/daily-match/history */

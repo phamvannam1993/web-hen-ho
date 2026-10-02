@@ -686,6 +686,7 @@ DROP TABLE IF EXISTS `notifications`;
 CREATE TABLE `notifications` (
   `id`         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `user_id`    BIGINT UNSIGNED NOT NULL,
+  `actor_user_id` BIGINT UNSIGNED DEFAULT NULL,
   `type`       VARCHAR(50) NOT NULL COMMENT 'like|match|message|post_approved|system',
   `title`      VARCHAR(255) NOT NULL,
   `body`       VARCHAR(500) DEFAULT NULL,

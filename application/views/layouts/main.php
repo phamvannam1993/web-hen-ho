@@ -128,12 +128,13 @@ $mxh = array_filter(array(
 
         <?php /* Ô tìm kiếm gọn ở giữa hàng trên, lấp khoảng trống giữa logo và nhóm nút.
                  Chỉ hiện trên màn rộng; màn hẹp dùng bộ lọc trong trang Thành viên. */ ?>
-        <form class="header-search" method="get" action="<?= site_url('tim-kiem') ?>" role="search">
+        <form id="header-search" class="header-search" method="get" action="<?= site_url('tim-kiem') ?>" role="search">
             <svg viewBox="0 0 24 24" class="ic" aria-hidden="true">
                 <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/>
             </svg>
             <input type="text" name="q" value="<?= e($this->input->get('q')) ?>"
                    placeholder="Tìm theo tên, khu vực hoặc nghề nghiệp..." aria-label="Tìm thành viên">
+            <button class="header-search-submit" type="submit">Tìm</button>
         </form>
 
         <?php /* Nhóm nút cạnh nút mở menu: tìm kiếm (chỉ mobile) + chuông thông báo.
@@ -143,11 +144,11 @@ $mxh = array_filter(array(
                  Chuyển hẳn chứ không nhân bản: hai khối cùng id (#noti-toggle,
                  #noti-panel) thì JS bắt nhầm phần tử, khay không xổ được. */ ?>
         <div class="hd-mini">
-            <a class="hd-mini-btn" href="<?= site_url('tim-kiem') ?>" aria-label="Tìm kiếm">
+            <button type="button" id="header-search-toggle" class="hd-mini-btn" aria-label="Tìm kiếm" aria-controls="header-search" aria-expanded="false">
                 <svg viewBox="0 0 24 24" class="ic" aria-hidden="true">
                     <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/>
                 </svg>
-            </a>
+            </button>
             <?php /* Chuỗi ngày hoạt động: chỉ hiện khi đã có chuỗi, để không
                      làm rối thanh đầu trang với con số 0.
                      Trên điện thoại ô này ẩn đi và hiện lại TRONG ngăn kéo menu
@@ -262,7 +263,7 @@ $mxh = array_filter(array(
     <?php endif; ?>
 </div>
 
-<main>
+<main<?= empty($bare) && $content_view !== 'home/index' ? ' class="site-page-content"' : '' ?>>
     <?php $this->load->view($content_view); ?>
 </main>
 <?php endif; ?>
@@ -381,9 +382,9 @@ $mxh = array_filter(array(
      data-ws-url="<?= e($ws_url ?? '') ?>" data-ws-token="<?= e($ws_token ?? '') ?>"
      data-guest="<?= $user ? '0' : '1' ?>"
      data-need-verify="<?= !empty($chua_xac_thuc) ? '1' : '0' ?>">
-    <button type="button" class="cw-tab" id="cw-bubble" aria-label="Mở trò chuyện">
+    <button type="button" class="cw-tab" id="cw-bubble" aria-label="Mở Chat" aria-expanded="false" aria-controls="cw-panel">
         <span class="cw-tab-arrow" aria-hidden="true">&laquo;</span>
-        <span class="cw-tab-label">Trò chuyện</span>
+        <span class="cw-tab-label">Chat</span>
         <span class="cw-tab-online" id="cw-tab-online" hidden><i class="cw-tab-dot"></i><b id="cw-tab-count"></b></span>
         <span class="cw-tab-icons" aria-hidden="true">
             <svg viewBox="0 0 40 32" class="cw-tab-bubbles">
@@ -418,7 +419,7 @@ $mxh = array_filter(array(
                     </span>
                     <span class="cw-row-text">
                         <span class="cw-row-top">
-                            <b><span class="cw-row-name">Phòng chat chung</span><i class="cw-tag">Cộng đồng</i></b>
+                            <b><span class="cw-row-name">Phòng chung</span><i class="cw-tag">Cộng đồng</i></b>
                             <small id="cw-room-time"></small>
                         </span>
                         <span class="cw-row-last" id="cw-room-last">Đang tải…</span>
@@ -512,7 +513,8 @@ $mxh = array_filter(array(
 </div>
 
 <script src="<?= base_url('assets/site/js/password-toggle.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/password-toggle.js') ?>"></script>
-<script src="<?= base_url('assets/site/js/app.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/app.js') ?>"></script>
+<script src="<?= base_url('assets/site/js/app.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/app.js') ?>" data-base="<?= e(rtrim(site_url(), '/') . '/') ?>"></script>
+<script src="<?= base_url('assets/site/js/date-select.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/date-select.js') ?>"></script>
 <script src="<?= base_url('assets/site/js/searchable-select.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/searchable-select.js') ?>"></script>
 <script src="<?= base_url('assets/site/js/notifications.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/notifications.js') ?>"></script>
 <!-- Chat nạp cho cả khách: xem được phòng chung, muốn gửi thì phải đăng nhập -->

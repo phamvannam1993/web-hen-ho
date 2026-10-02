@@ -92,6 +92,9 @@ class Discover extends MY_Controller
         }
 
         $result = $this->m_interaction->toggle_like($me['id'], 'user', $target_id);
+        if (isset($result['ok']) && !$result['ok']) {
+            return $this->json($result, 403);
+        }
         $doi    = $this->m_user->find($target_id);
 
         return $this->json(array(

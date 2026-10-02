@@ -105,6 +105,7 @@ class Members extends MY_Controller
             'prefs'      => $this->db->where('user_id', $member['id'])
                 ->get('user_preferences')->row_array(),
             'liked'      => $me ? $this->m_interaction->has_liked($me['id'], 'user', $member['id']) : false,
+            'liked_me'   => $me ? $this->m_interaction->has_liked($member['id'], 'user', $me['id']) : false,
             'like_count' => $this->m_interaction->count_likes('user', $member['id']),
             'matched'    => $me ? $this->m_interaction->is_matched($me['id'], $member['id']) : false,
             // Liên kết nhanh dẫn sang các khu vực, thay cho danh mục tin đăng đã ngưng

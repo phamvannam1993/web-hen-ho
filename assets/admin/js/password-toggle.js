@@ -53,15 +53,5 @@
             }
         });
 
-        // Rời khỏi ô thì tự ẩn lại cho an toàn, tránh để lộ trên màn hình
-        input.addEventListener('blur', function () {
-            setTimeout(function () {
-                if (document.activeElement !== btn && input.type === 'text') {
-                    input.type = 'password';
-                    btn.textContent = EYE_SHOW;
-                    btn.classList.remove('on');
-                }
-            }, 120);
-        });
     });
 })();

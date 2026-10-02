@@ -5,6 +5,7 @@ $menu  = array(
     'dashboard'    => array('Tổng quan', 'admin'),
     'posts'        => array('Tin đăng', 'admin/posts'),
     'users'        => array('Thành viên', 'admin/users'),
+    'photos'       => array('Duyệt ảnh', 'admin/photos'),
     'categories'   => array('Danh mục', 'admin/categories'),
     'provinces'    => array('Tỉnh/thành', 'admin/provinces'),
     'jobs'         => array('Nghề nghiệp', 'admin/jobs'),

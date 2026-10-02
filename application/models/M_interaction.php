@@ -4,6 +4,27 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 /** Thích / ghép đôi / chặn / hội thoại / tin nhắn. */
 class M_interaction extends CI_Model
 {
+    /** Return a profile-completion error before creating an outgoing like. */
+    public function like_profile_error($user_id)
+    {
+        $this->load->model('m_user');
+        $this->load->helper('app');
+        $user = $this->m_user->find($user_id);
+        $missing = $user ? $this->m_user->thieu_thong_tin($user_id) : array('Hồ sơ');
+        if ($user) {
+            $completion = tk_ho_so_day_du($user);
+            $missing = array_unique(array_merge($missing, array_values($completion['thieu'])));
+        }
+        if (!$missing) {
+            return null;
+        }
+        return array(
+            'ok' => false, 'liked' => false, 'matched' => false,
+            'need' => 'profile', 'url' => site_url('tai-khoan/ho-so'),
+            'missing' => array_values($missing),
+            'message' => 'Bạn cần hoàn thiện hồ sơ trước khi thả tim. Còn thiếu: ' . implode(', ', $missing) . '.',
+        );
+    }
     /* ------------------------- Thích ------------------------- */
 
     /** Bật/tắt lượt thích. Trả về ['liked'=>bool,'matched'=>bool,'count'=>int]. */
@@ -22,6 +43,10 @@ class M_interaction extends CI_Model
                 $this->unmatch($user_id, $target_id);
             }
         } else {
+            $error = $this->like_profile_error($user_id);
+            if ($error) {
+                return $error;
+            }
             $this->db->insert('likes', array(
                 'user_id'     => $user_id,
                 'target_type' => $target_type,
@@ -43,7 +68,7 @@ class M_interaction extends CI_Model
             if (!$matched) {
                 $this->m_notification->push($target_id, 'like', 'Có 1 người vừa thích bạn',
                     'Thích lại để ghép đôi và mở khung trò chuyện.',
-                    site_url('tai-khoan/quan-tam'));
+                    site_url('tai-khoan/quan-tam'), $user_id);
             }
         }
 
@@ -161,8 +186,10 @@ class M_interaction extends CI_Model
         $this->db->insert('matches', array('user_low_id' => $low, 'user_high_id' => $high));
         $this->load->model('m_notification');
         foreach (array($user_id, $other_id) as $uid) {
+            $partner_id = (int) $uid === (int) $user_id ? $other_id : $user_id;
             $this->m_notification->push($uid, 'match', 'Ghép đôi thành công!',
-                'Hai bạn đã thích nhau, hãy bắt đầu trò chuyện.', site_url('tai-khoan/tin-nhan'));
+                'Hai bạn đã thích nhau, hãy bắt đầu trò chuyện.',
+                site_url('tai-khoan/tin-nhan') . '?to=' . (int) $partner_id, $partner_id);
         }
 
         // Ghép đôi là tin đáng báo ngay, không gom vào lô cuối ngày
@@ -197,6 +224,10 @@ class M_interaction extends CI_Model
         }
 
         if ($action === 'accept') {
+            $error = $this->like_profile_error($user_id);
+            if ($error) {
+                return $error;
+            }
             if ($this->is_blocked($user_id, $other_id)) {
                 return array('ok' => false, 'matched' => false,
                     'message' => 'Không thể ghép đôi với người dùng này.');
@@ -361,14 +392,13 @@ class M_interaction extends CI_Model
     /**
      * Danh sách hội thoại kèm người đối diện và tin nhắn cuối.
      *
-     * Dùng JOIN chứ không LEFT JOIN: hội thoại chưa có tin nhắn nào (tạo ra khi
-     * mở khung chat rồi đóng luôn) thì không liệt kê, tránh đầy danh sách
-     * những dòng "Bắt đầu trò chuyện" rỗng.
+     * Giữ cả hội thoại vừa mở chưa có tin nhắn để người dùng thấy ngay
+     * người đang trò chuyện trong danh sách.
      */
     public function conversations($user_id)
     {
         return $this->db->query(
-            "SELECT c.*, u.id AS other_id, u.display_name, u.slug AS user_slug, u.avatar,
+            "SELECT c.*, u.id AS other_id, u.display_name, u.nickname, u.slug AS user_slug, u.avatar,
                     u.gender, u.last_active_at,
                     m.content AS last_content, m.sender_id AS last_sender_id,
                     m.type AS last_type, m.created_at AS last_at,
@@ -376,7 +406,7 @@ class M_interaction extends CI_Model
                       WHERE x.conversation_id = c.id AND x.sender_id <> ? AND x.read_at IS NULL) AS unread
                FROM conversations c
                JOIN users u ON u.id = IF(c.user_low_id = ?, c.user_high_id, c.user_low_id)
-               JOIN messages m ON m.id = c.last_message_id
+               LEFT JOIN messages m ON m.id = c.last_message_id
               WHERE ? IN (c.user_low_id, c.user_high_id) AND u.deleted_at IS NULL
               ORDER BY c.last_message_at DESC, c.id DESC",
             array($user_id, $user_id, $user_id)
@@ -427,14 +457,14 @@ class M_interaction extends CI_Model
 
         $this->load->model('m_notification');
         $this->m_notification->push($receiver_id, 'message', 'Tin nhắn mới',
-            excerpt($content, 80), site_url('tai-khoan/tin-nhan/' . $conv['id']));
+            excerpt($content, 80), site_url('tai-khoan/tin-nhan/' . $conv['id']), $sender_id);
 
-        // Báo qua email nếu 5 phút nữa người nhận vẫn chưa đọc và không online
+        // Mỗi tin nhắn xếp một email chỉ có tên, avatar và liên kết mở hội thoại.
         $this->load->library('emailer');
         $nguoi_gui = $this->db->select('id, display_name, nickname, avatar, gender')
             ->where('id', $sender_id)->get('users')->row_array();
         if ($nguoi_gui) {
-            $this->emailer->new_message($receiver_id, $nguoi_gui, $conv['id'], $content, $type);
+            $this->emailer->new_message($receiver_id, $nguoi_gui, $conv['id']);
         }
 
         return array('ok' => true, 'conversation_id' => (int) $conv['id'], 'message_id' => $message_id);
