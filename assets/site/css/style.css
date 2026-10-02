@@ -3032,6 +3032,39 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
 
 }
 
+/* Hẹn hò trên mobile: ảnh bên trái, thông tin và hành động bên phải. */
+@media (max-width: 720px) {
+    .dating-page .member-grid { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+    .dating-page .pcard {
+        flex-direction: row; align-items: flex-start;
+        padding: 10px; gap: 10px; min-width: 0;
+    }
+    .dating-page .pcard-photo {
+        flex: 0 0 clamp(80px, 25vw, 112px);
+        width: clamp(80px, 25vw, 112px);
+        border-radius: 6px; overflow: hidden;
+    }
+    .dating-page .pcard-photo img { aspect-ratio: 1 / 1; max-height: none; }
+    .dating-page .pcard-gender { display: none; }
+    .dating-page .pcard-gender-inline {
+        display: inline-flex; width: 20px; height: 20px;
+    }
+    .dating-page .pcard-gender-inline .ic { width: 12px; height: 12px; }
+    .dating-page .pcard-body { min-width: 0; padding: 0; }
+    .dating-page .pcard-name {
+        margin-bottom: 5px; font-size: 16px; overflow-wrap: anywhere;
+    }
+    .dating-page .pcard-meta { font-size: 12px; line-height: 1.4; gap: 4px 8px; }
+    .dating-page .pcard-meta .mi {
+        min-width: 0; margin-right: 0; white-space: normal; overflow-wrap: anywhere;
+    }
+    .dating-page .pcard-meta .ic { width: 14px; height: 14px; flex-basis: 14px; }
+    .dating-page .pcard-bio,
+    .dating-page .pcard-chips { display: none; }
+    .dating-page .pcard-actions { margin-top: 6px; gap: 6px; }
+    .dating-page .btn-swipe { min-height: 44px; padding: 8px 4px; font-size: 12px; }
+}
+
 .block-sub { text-align: center; color: var(--muted); margin: -8px 0 14px; }
 
 
