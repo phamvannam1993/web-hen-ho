@@ -1,0 +1,44 @@
+/* Ai đã thích bạn (account/who_liked_me.php) — thẻ chờ trả lời giống trang Quan tâm */
+
+
+/* Thẻ người đang chờ trả lời: thẻ hồ sơ + hàng nút Thích lại / Bỏ qua
+   gói chung một khung để app.js gỡ cả khối sau khi trả lời */
+.tk-wl-req {
+  display: flex; flex-direction: column; min-width: 0; overflow: hidden;
+  background: var(--tk-card); border: 1px solid var(--tk-border);
+  border-radius: var(--tk-r-xl); box-shadow: var(--tk-shadow);
+  transition: box-shadow .15s, opacity .28s, transform .28s;
+}
+.tk-wl-req:hover { box-shadow: var(--tk-shadow-float); }
+.tk-wl-req.card-gone { opacity: 0; transform: scale(.96); }
+.tk-wl-req > .tk-person { flex: 1; border: 0; border-radius: 0; box-shadow: none; }
+.tk-wl-req__act { display: flex; gap: 8px; padding: 4px 12px 12px; }
+.tk-wl-req__act > .tk-btn:first-child { flex: 1; min-width: 0; }
+.tk-wl-req--compact .tk-wl-req__act { padding: 0 10px 10px 86px; gap: 6px; }
+
+/* Dải tóm tắt nền hồng nhạt */
+.tk-card.tk-wl-ban {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 20px; background: var(--tk-grad-blush);
+}
+.tk-wl-ban__b { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1 1 280px; }
+.tk-wl-ban__ic {
+  width: 48px; height: 48px; flex: 0 0 48px; display: grid; place-items: center;
+  border-radius: var(--tk-r-2xl); background: var(--tk-grad-brand); color: #fff;
+}
+.tk-wl-ban__ic .tk-ic { width: 24px; height: 24px; }
+.tk-wl-ban__t { font-size: 18px; line-height: 28px; font-weight: 700; }
+.tk-wl-ban__d { font-size: 14px; line-height: 20px; color: var(--tk-muted-fg); }
+
+.tk-wl-more { margin-top: 20px; display: flex; justify-content: center; }
+
+@media (max-width: 639.98px) {
+  .tk-card.tk-wl-ban { padding: 16px; gap: 12px; }
+  .tk-wl-ban__ic { width: 40px; height: 40px; flex-basis: 40px; border-radius: var(--tk-r-xl); }
+  .tk-wl-ban__ic .tk-ic { width: 20px; height: 20px; }
+  .tk-wl-ban__t { font-size: 15px; line-height: 22px; }
+  .tk-wl-ban__d { font-size: 12px; line-height: 16px; }
+  .tk-wl-ban > .tk-btn { width: 100%; }
+  .tk-wl-more { margin-top: 12px; }
+  .tk-wl-more .tk-btn { width: 100%; white-space: normal; height: auto; min-height: 40px; }
+}

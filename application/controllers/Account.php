@@ -9,6 +9,16 @@ class Account extends Member_Controller
         parent::__construct();
         $this->load->model(array('m_user', 'm_post', 'm_category', 'm_interaction',
                                  'm_notification', 'm_billing', 'm_job', 'm_daily'));
+
+        // Số liệu cho khung chung của khu Tài khoản (cột trái, thanh trên và
+        // thanh dưới trên điện thoại) — trang nào cũng cần nên nạp một lần ở đây.
+        $id = $this->auth->id();
+        $this->data['tk'] = array(
+            'me'    => $this->m_user->find($id),
+            'liked' => (int) $this->m_interaction->liked_me_count($id),
+            'msg'   => (int) $this->m_interaction->unread_count($id),
+            'noti'  => (int) $this->data['unread_noti'],
+        );
     }
 
     public function index()

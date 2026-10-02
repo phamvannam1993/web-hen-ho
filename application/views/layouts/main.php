@@ -50,12 +50,24 @@ $can_index = $force_allow_index || !$site_blocked;
 <link rel="apple-touch-icon" sizes="180x180" href="<?= base_url('assets/site/img/apple-touch-icon.png?V=1243324243') ?>">
 
 <link rel="stylesheet" href="<?= base_url('assets/site/css/style.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/style.css') ?>">
-<?php /* Giao diện khu Tài khoản — chỉ nạp ở đúng khu đó, khỏi bắt mọi trang tải thêm */ ?>
-<?php if (!empty($content_view) && strpos($content_view, 'account/') === 0): ?>
+<?php
+/* Khu Tài khoản bọc nội dung trong khung riêng (cột trái + thanh dưới trên điện
+   thoại) theo bản thiết kế SaigonCupid, nằm giữa đầu trang và chân trang của site. */
+$tk_app = !empty($tk) && !empty($content_view) && strpos($content_view, 'account/') === 0;
+?>
+<?php if ($tk_app): ?>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="<?= base_url('assets/site/css/account.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/account.css') ?>">
+<?php /* Phần riêng của từng trang (nếu có): assets/site/css/account/<tên view>.css */ ?>
+<?php $tk_css = 'assets/site/css/account/' . basename($content_view) . '.css'; ?>
+<?php if (is_file(FCPATH . $tk_css)): ?>
+<link rel="stylesheet" href="<?= base_url($tk_css) ?>?v=<?= @filemtime(FCPATH . $tk_css) ?>">
+<?php endif; ?>
 <?php endif; ?>
 </head>
-<body class="<?= !empty($bare) ? 'is-bare' : '' ?>">
+<body class="<?= !empty($bare) ? 'is-bare' : '' ?><?= $tk_app ? 'tk-app' : '' ?>">
 
 <!-- Dải mảnh trên cùng: khẩu hiệu + hotline -->
 <?php /* Chế độ toàn màn hình (trang Khám phá): bỏ thanh trên, menu và chân trang */ ?>
@@ -239,6 +251,10 @@ $mxh = array_filter(array(
 </header>
 <?php endif; ?>
 
+<?php if ($tk_app): ?>
+<?php /* Khung khu Tài khoản tự hiện thông báo flash bên trong cột nội dung */ ?>
+<?php $this->load->view('account/_shell', array('flash' => $flash)); ?>
+<?php else: ?>
 <div class="container">
     <?php if ($flash): ?>
         <div class="alert alert-<?= e($flash['type']) ?>"><?= e($flash['message']) ?></div>
@@ -248,6 +264,7 @@ $mxh = array_filter(array(
 <main>
     <?php $this->load->view($content_view); ?>
 </main>
+<?php endif; ?>
 
 <?php if (empty($bare)): ?>
 <footer class="site-footer">

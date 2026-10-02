@@ -1122,11 +1122,13 @@
         var text = (input.value || '').trim();
         if (!text) { return; }
 
+        // Lấy dữ liệu form TRƯỚC khi xoá ô nhập, nếu không máy chủ nhận nội dung rỗng
+        var fd = new FormData(form);
         input.value = '';
         fetch(form.action, {
             method: 'POST',
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
-            body: new FormData(form)
+            body: fd
         })
         .then(function (r) { return r.json(); })
         .then(function (res) {

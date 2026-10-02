@@ -1,4 +1,8 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
+/**
+ * Trang Hồ sơ của tôi — dựng theo `src/routes/tai-khoan.ho-so.tsx`.
+ * Vẫn là MỘT biểu mẫu, giữ nguyên tên mọi ô như bản cũ.
+ */
 
 /* Khi lưu hỏng vì thiếu ô nào đó, biểu mẫu phải giữ nguyên những gì người dùng
    vừa nhập chứ không đổ lại dữ liệu cũ trong cơ sở dữ liệu — bắt gõ lại từ đầu
@@ -20,250 +24,295 @@ $pv  = function ($k, $d = '') use ($goc) { return e($goc($k, $d)); };
 $chon = function ($k, $gt, $d = '') use ($goc) {
     return $goc($k, $d) === (string) $gt ? 'selected' : '';
 };
+
+// Dùng chung hàm với trang Tổng quan — cột profile_score trong DB hay cũ
+$diem = tk_ho_so_day_du($me)['phan_tram'];
+$sao  = '<span class="tk-req">*</span>';
+
+// Sở thích: vừa gửi lên thì lấy đúng ô người dùng đã tích, không lấy lại trong CSDL
+$dang_chon = $da_gui ? array_map('intval', (array) $this->input->post('interests')) : $my_interests;
+
+$hien_online = $da_gui ? $this->input->post('show_online')
+                       : (!isset($pref['show_online']) || $pref['show_online']);
 ?>
-<div class="container tk-shell">
-    <?php $this->load->view('account/_nav'); ?>
-        <div>
-
-        <form class="content-box auth-form" method="post" enctype="multipart/form-data">
-            <h1 class="auth-title">Hồ sơ của tôi</h1>
-            <p class="form-note">Mục có dấu <b class="req">*</b> là bắt buộc. Các mục còn lại tuỳ chọn, khai thêm thì hồ sơ dễ được tìm thấy hơn.</p>
-            <?= validation_errors('<div class="alert alert-danger">', '</div>') ?>
-
-            <?php if (!empty($thieu)): ?>
-                <?php
-                // Thanh tiến độ cho thấy còn bao nhiêu mục nữa là xong
-                $tong = (int) ($tong_muc ?? 8);
-                $xong = max(0, $tong - count($thieu));
-                ?>
-                <div class="ho-so-nhac">
-                    <div class="ho-so-nhac-dau">
-                        <b>Hồ sơ chưa hoàn thiện</b>
-                        <span><?= $xong ?>/<?= $tong ?> mục</span>
-                    </div>
-                    <div class="ho-so-thanh"><i style="width: <?= round($xong / $tong * 100) ?>%"></i></div>
-                    <p>Bạn cần khai nốt <?= count($thieu) ?> mục dưới đây thì mới dùng được các trang khác:</p>
-                    <ul>
-                        <?php foreach ($thieu as $t): ?><li><?= e($t) ?></li><?php endforeach; ?>
-                    </ul>
-                </div>
-            <?php endif; ?>
-
-            <div class="profile-avatar">
-                <img src="<?= avatar_url($me['avatar'], $me['gender']) ?>" alt="Ảnh đại diện">
-                <div>
-                    <label for="avatar">Ảnh đại diện <b class="req">*</b></label>
-                    <input type="file" id="avatar" name="avatar" accept="image/*">
-                    <?php /* Dùng chung hàm với trang Tổng quan — cột profile_score trong DB hay cũ */ ?>
-                    <p>Hoàn thiện hồ sơ: <b><?= tk_ho_so_day_du($me)['phan_tram'] ?>%</b></p>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div>
-                    <label for="display_name">Họ và tên</label>
-                    <input type="text" id="display_name" name="display_name" value="<?= $v('display_name') ?>" required>
-                </div>
-                <div>
-                    <label for="nickname">Biệt danh</label>
-                    <input type="text" id="nickname" name="nickname" value="<?= $v('nickname') ?>"
-                           placeholder="VD: Bằng Lăng Tím" maxlength="60">
-                </div>
-            </div>
-            <small class="field-hint">Có biệt danh thì mọi nơi công khai sẽ hiện biệt danh thay cho họ tên.</small>
-
-            <div class="form-row">
-                <div>
-                    <label for="phone">Số điện thoại (Zalo) <b class="req">*</b></label>
-                    <input type="tel" id="phone" name="phone" value="<?= $v('phone') ?>"
-                           maxlength="15" inputmode="tel" placeholder="VD: 0912345678" required>
-                    <small class="field-hint">Số di động Việt Nam, 10 chữ số. Chỉ thành viên đã đăng nhập mới xem được.</small>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div>
-                    <label for="gender">Giới tính <b class="req">*</b></label>
-                    <select id="gender" name="gender" required>
-                        <option value="">-- Chọn --</option>
-                        <?php foreach (array('female' => 'Nữ', 'male' => 'Nam', 'other' => 'Khác') as $k => $t): ?>
-                            <option value="<?= $k ?>" <?= $chon('gender', $k) ?>><?= $t ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div>
-                    <label for="birthday">Ngày sinh <b class="req">*</b></label>
-                    <input type="date" id="birthday" name="birthday" required value="<?= $v('birthday') ?>">
-                </div>
-            </div>
-
-            <label for="province_id">Khu vực <b class="req">*</b></label>
-            <select id="province_id" name="province_id" required>
-                <option value="">-- Chọn tỉnh/thành --</option>
-                <?php foreach ($provinces as $p): ?>
-                    <option value="<?= (int) $p['id'] ?>" <?= $chon('province_id', $p['id']) ?>><?= e($p['name']) ?></option>
-                <?php endforeach; ?>
-            </select>
-
-            <div class="form-row">
-                <div><label for="height_cm">Chiều cao (cm)</label><input type="number" id="height_cm" name="height_cm" value="<?= $v('height_cm') ?>"></div>
-                <div><label for="weight_kg">Cân nặng (kg)</label><input type="number" id="weight_kg" name="weight_kg" value="<?= $v('weight_kg') ?>"></div>
-            </div>
-
-            <?php /* Ô chọn thường; JS nâng cấp thành ô chọn có tìm kiếm,
-                     tắt JS thì vẫn chọn được như select bình thường */ ?>
-            <label for="job">Nghề nghiệp</label>
-            <?php
-            // Nghề cũ đã bị gỡ khỏi danh mục vẫn phải hiện ra, kẻo lưu hồ sơ là mất
-            $nghe_hien = (string) ($me['job'] ?? '');
-            $ds_nghe   = ($nghe_hien !== '' && !in_array($nghe_hien, $jobs, true))
-                ? array_merge(array($nghe_hien), $jobs) : $jobs;
-            ?>
-            <select id="job" name="job" data-searchable data-search-placeholder="Tìm nghề...">
-                <option value="">-- Chọn nghề nghiệp --</option>
-                <?php foreach ($ds_nghe as $ten): ?>
-                    <option value="<?= e($ten) ?>" <?= $chon('job', $ten) ?>><?= e($ten) ?></option>
-                <?php endforeach; ?>
-            </select>
-
-            <div class="form-row">
-                <div>
-                    <label for="education">Học vấn</label>
-                    <select id="education" name="education">
-                        <option value="">-- Chọn --</option>
-                        <?php foreach (array('thpt' => 'THPT', 'trung_cap' => 'Trung cấp', 'cao_dang' => 'Cao đẳng',
-                                             'dai_hoc' => 'Đại học', 'sau_dai_hoc' => 'Sau đại học') as $k => $t): ?>
-                            <option value="<?= $k ?>" <?= $chon('education', $k) ?>><?= $t ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div>
-                    <label for="marital_status">Tình trạng hôn nhân</label>
-                    <select id="marital_status" name="marital_status">
-                        <option value="">-- Chọn --</option>
-                        <?php foreach (array('doc_than' => 'Độc thân', 'ly_hon' => 'Ly hôn', 'goa' => 'Goá', 'phuc_tap' => 'Phức tạp') as $k => $t): ?>
-                            <option value="<?= $k ?>" <?= $chon('marital_status', $k) ?>><?= $t ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div>
-                    <label for="has_children">Con cái</label>
-                    <select id="has_children" name="has_children">
-                        <option value="">-- Chọn --</option>
-                        <option value="0" <?= $chon('has_children', '0') ?>>Chưa có con</option>
-                        <option value="1" <?= $chon('has_children', '1') ?>>Đã có con</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="confide_topic">Chủ đề muốn tâm sự</label>
-                    <select id="confide_topic" name="confide_topic">
-                        <option value="">-- Chọn --</option>
-                        <?php foreach (array('lang_nghe' => 'Cần người lắng nghe', 'tro_chuyen' => 'Trò chuyện phiếm',
-                                             'cong_viec' => 'Chia sẻ công việc', 'gia_dinh' => 'Chuyện gia đình',
-                                             'tinh_cam' => 'Chuyện tình cảm', 'dem_khuya' => 'Trò chuyện đêm khuya') as $k => $t): ?>
-                            <option value="<?= $k ?>" <?= $chon('confide_topic', $k) ?>><?= $t ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div>
-                    <label for="smoking">Hút thuốc</label>
-                    <select id="smoking" name="smoking">
-                        <option value="">-- Chọn --</option>
-                        <?php foreach (array('khong' => 'Không', 'thinh_thoang' => 'Thỉnh thoảng', 'thuong_xuyen' => 'Thường xuyên') as $k => $t): ?>
-                            <option value="<?= $k ?>" <?= $chon('smoking', $k) ?>><?= $t ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div>
-                    <label for="drinking">Uống rượu bia</label>
-                    <select id="drinking" name="drinking">
-                        <option value="">-- Chọn --</option>
-                        <?php foreach (array('khong' => 'Không', 'thinh_thoang' => 'Thỉnh thoảng', 'thuong_xuyen' => 'Thường xuyên') as $k => $t): ?>
-                            <option value="<?= $k ?>" <?= $chon('drinking', $k) ?>><?= $t ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
-
-            <label>Sở thích <small>(chọn để được gợi ý chính xác hơn)</small></label>
-            <div class="pick-row interest-pick">
-                <?php foreach ($all_interests as $it): ?>
-                    <?php
-                    // Vừa gửi lên thì lấy đúng ô người dùng đã tích, không lấy lại trong CSDL
-                    $dang_chon = $da_gui
-                        ? array_map('intval', (array) $this->input->post('interests'))
-                        : $my_interests;
-                    $on = in_array((int) $it['id'], $dang_chon, true);
-                    ?>
-                    <label class="pick <?= $on ? 'on' : '' ?>">
-                        <input type="checkbox" name="interests[]" value="<?= (int) $it['id'] ?>" <?= $on ? 'checked' : '' ?>>
-                        <?= e($it['name']) ?>
-                    </label>
-                <?php endforeach; ?>
-            </div>
-
-            <label for="bio">Giới thiệu bản thân <b class="req">*</b></label>
-            <textarea id="bio" name="bio" rows="4" required><?= $v('bio') ?></textarea>
-
-            <h2 class="section-title">Tiêu chí tìm kiếm</h2>
-
-            <div class="form-row">
-                <div>
-                    <label for="seeking_gender">Muốn tìm <b class="req">*</b></label>
-                    <select id="seeking_gender" name="seeking_gender" required>
-                        <?php foreach (array('all' => 'Tất cả', 'female' => 'Nữ', 'male' => 'Nam') as $k => $t): ?>
-                            <option value="<?= $k ?>" <?= $chon('seeking_gender', $k, 'all') ?>><?= $t ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div>
-                    <label for="purpose">Mục đích <b class="req">*</b></label>
-                    <select id="purpose" name="purpose" required>
-                        <option value="">-- Chọn --</option>
-                        <?php foreach (array('ket_ban', 'hen_ho', 'nghiem_tuc', 'ket_hon') as $k): ?>
-                            <option value="<?= $k ?>" <?= $chon('purpose', $k) ?>><?= purpose_label($k) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div><label for="age_min">Tuổi từ</label><input type="number" id="age_min" name="age_min" value="<?= $pv('age_min', '18') ?>"></div>
-                <div><label for="age_max">Đến</label><input type="number" id="age_max" name="age_max" value="<?= $pv('age_max', '60') ?>"></div>
-            </div>
-
-            <?php /* Mọi tin nhắn đều đã yêu cầu ghép đôi, mục này chỉ để siết thêm */ ?>
-            <label for="allow_message">Ai được nhắn tin cho tôi</label>
-            <p class="section-hint">Chỉ người đã ghép đôi với bạn mới nhắn tin được. Bạn có thể siết thêm bên dưới.</p>
-            <select id="allow_message" name="allow_message">
-                <?php foreach (array('all' => 'Mọi người đã ghép đôi', 'vip' => 'Chỉ người đã ghép đôi và là VIP') as $k => $t): ?>
-                    <option value="<?= $k ?>" <?= $chon('allow_message', $k, 'all') ?>><?= $t ?></option>
-                <?php endforeach; ?>
-            </select>
-
-            <label class="checkbox">
-                <input type="checkbox" name="show_online" value="1"
-                       <?= ($da_gui ? $this->input->post('show_online')
-                                    : (!isset($pref['show_online']) || $pref['show_online'])) ? 'checked' : '' ?>>
-                Hiển thị trạng thái online
-            </label>
-
-            <div class="auth-actions">
-                <button class="btn btn-primary" type="submit">Lưu hồ sơ</button>
-                <a class="btn btn-ghost" href="<?= site_url('profile/' . $me['slug']) ?>">Xem trang cá nhân</a>
-            </div>
-        </form>
+<div class="tk-ph">
+    <div class="tk-ph__b">
+        <h1>Hồ sơ của tôi</h1>
+        <p>Thông tin càng đầy đủ, cơ hội ghép đôi càng cao. Trường có dấu * là bắt buộc.</p>
     </div>
-
-    <aside class="tk-right">
-        <div class="sidebar-box">
-            <h3>Mẹo tăng tương tác</h3>
-            <ul class="sidebar-list">
-                <li>Dùng ảnh thật, rõ mặt</li>
-                <li>Viết giới thiệu từ 100 chữ trở lên</li>
-                <li>Cập nhật khu vực và nghề nghiệp</li>
-                <li>Đăng nhập thường xuyên để lên đầu danh sách</li>
-            </ul>
-        </div>
-    </aside>
+    <a class="tk-btn tk-btn--outline tk-ph__act" href="<?= site_url('profile/' . $me['slug']) ?>"><?= tk_icon('eye') ?>Xem trước trang cá nhân</a>
 </div>
+
+<form class="tk-pf auth-form" method="post" enctype="multipart/form-data">
+    <?php if (validation_errors()): ?>
+        <div class="tk-alert tk-alert--danger"><?= validation_errors() ?></div>
+    <?php endif; ?>
+
+    <!-- Mức hoàn thiện -->
+    <section class="tk-card">
+        <div class="tk-pf-pc">
+            <span class="tk-pf-pc__t">Mức hoàn thiện hồ sơ</span>
+            <span class="tk-pf-pc__n"><?= $diem ?>%</span>
+        </div>
+        <div class="tk-progress" style="margin-top:8px" role="progressbar" aria-valuenow="<?= $diem ?>" aria-valuemin="0" aria-valuemax="100">
+            <i style="width:<?= max(0, min(100, $diem)) ?>%"></i>
+        </div>
+        <?php if (!empty($thieu)): ?>
+            <?php /* Thiếu mục bắt buộc thì các trang khác bị khoá, phải nói rõ */ ?>
+            <div class="tk-alert tk-alert--warning" style="margin-top:16px">
+                <p>Bạn cần khai nốt <?= count($thieu) ?> mục bắt buộc thì mới dùng được các trang khác:
+                    <b><?= e(implode(', ', $thieu)) ?></b>.</p>
+            </div>
+        <?php endif; ?>
+    </section>
+
+    <!-- Ảnh đại diện -->
+    <section class="tk-card">
+        <div class="tk-card__h">
+            <div>
+                <h2 class="tk-card__t">Ảnh đại diện <?= $sao ?></h2>
+                <p class="tk-card__d">Ảnh rõ mặt giúp hồ sơ được duyệt nhanh hơn</p>
+            </div>
+        </div>
+        <div class="tk-pf-av">
+            <img id="tk-pf-av-img" src="<?= e(avatar_url($me['avatar'] ?? null, $me['gender'] ?? 'other')) ?>" alt="Ảnh đại diện" width="96" height="96">
+            <div>
+                <?php /* Ô chọn tệp thật nằm trong nhãn, nhãn mang dáng nút */ ?>
+                <label class="tk-btn tk-btn--brand tk-pf-file" for="avatar">
+                    <?= tk_icon('camera') ?>Đổi ảnh đại diện
+                    <input type="file" id="avatar" name="avatar" accept="image/*" data-preview="#tk-pf-av-img">
+                </label>
+                <p class="tk-hint" style="margin-top:8px">JPG, PNG, WEBP hoặc GIF, tối đa 5MB.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Thông tin cơ bản -->
+    <section class="tk-card">
+        <div class="tk-card__h"><div><h2 class="tk-card__t">Thông tin cơ bản</h2></div></div>
+        <div class="tk-grid tk-grid--2">
+            <div class="tk-field">
+                <label for="display_name">Họ và tên <?= $sao ?></label>
+                <input type="text" id="display_name" name="display_name" value="<?= $v('display_name') ?>" required>
+                <p class="tk-hint">Có biệt danh thì mọi nơi công khai sẽ hiện biệt danh thay cho họ tên.</p>
+            </div>
+            <div class="tk-field">
+                <label for="nickname">Biệt danh</label>
+                <input type="text" id="nickname" name="nickname" value="<?= $v('nickname') ?>"
+                       placeholder="VD: Bằng Lăng Tím" maxlength="60">
+                <p class="tk-hint">Có thể dùng thay cho họ tên thật</p>
+            </div>
+            <div class="tk-field">
+                <label for="phone">Số điện thoại Zalo <?= $sao ?></label>
+                <input type="tel" id="phone" name="phone" value="<?= $v('phone') ?>"
+                       maxlength="15" inputmode="tel" placeholder="VD: 0912345678" required>
+                <p class="tk-hint">Số di động Việt Nam, 10 chữ số. Chỉ thành viên đã đăng nhập mới xem được.</p>
+            </div>
+            <div class="tk-field">
+                <label for="gender">Giới tính <?= $sao ?></label>
+                <select id="gender" name="gender" required>
+                    <option value="">-- Chọn --</option>
+                    <?php foreach (array('female' => 'Nữ', 'male' => 'Nam', 'other' => 'Khác') as $k => $t): ?>
+                        <option value="<?= $k ?>" <?= $chon('gender', $k) ?>><?= $t ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="tk-field">
+                <label for="birthday">Ngày sinh <?= $sao ?></label>
+                <input type="date" id="birthday" name="birthday" required value="<?= $v('birthday') ?>">
+            </div>
+            <div class="tk-field">
+                <label for="province_id">Khu vực <?= $sao ?></label>
+                <select id="province_id" name="province_id" required>
+                    <option value="">-- Chọn tỉnh/thành --</option>
+                    <?php foreach ($provinces as $p): ?>
+                        <option value="<?= (int) $p['id'] ?>" <?= $chon('province_id', $p['id']) ?>><?= e($p['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <!-- Thông tin cá nhân -->
+    <section class="tk-card">
+        <div class="tk-card__h"><div><h2 class="tk-card__t">Thông tin cá nhân</h2></div></div>
+        <div class="tk-grid tk-pf-g3">
+            <div class="tk-field">
+                <label for="height_cm">Chiều cao (cm)</label>
+                <input type="number" id="height_cm" name="height_cm" value="<?= $v('height_cm') ?>">
+            </div>
+            <div class="tk-field">
+                <label for="weight_kg">Cân nặng (kg)</label>
+                <input type="number" id="weight_kg" name="weight_kg" value="<?= $v('weight_kg') ?>">
+            </div>
+            <div class="tk-field">
+                <label for="job">Nghề nghiệp</label>
+                <?php
+                // Nghề cũ đã bị gỡ khỏi danh mục vẫn phải hiện ra, kẻo lưu hồ sơ là mất
+                $nghe_hien = (string) ($me['job'] ?? '');
+                $ds_nghe   = ($nghe_hien !== '' && !in_array($nghe_hien, $jobs, true))
+                    ? array_merge(array($nghe_hien), $jobs) : $jobs;
+                ?>
+                <?php /* Ô chọn thường; JS nâng cấp thành ô chọn có tìm kiếm */ ?>
+                <select id="job" name="job" data-searchable data-search-placeholder="Tìm nghề...">
+                    <option value="">-- Chọn nghề nghiệp --</option>
+                    <?php foreach ($ds_nghe as $ten): ?>
+                        <option value="<?= e($ten) ?>" <?= $chon('job', $ten) ?>><?= e($ten) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="tk-field">
+                <label for="education">Học vấn</label>
+                <select id="education" name="education">
+                    <option value="">-- Chọn --</option>
+                    <?php foreach (array('thpt' => 'THPT', 'trung_cap' => 'Trung cấp', 'cao_dang' => 'Cao đẳng',
+                                         'dai_hoc' => 'Đại học', 'sau_dai_hoc' => 'Sau đại học') as $k => $t): ?>
+                        <option value="<?= $k ?>" <?= $chon('education', $k) ?>><?= $t ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="tk-field">
+                <label for="marital_status">Tình trạng hôn nhân</label>
+                <select id="marital_status" name="marital_status">
+                    <option value="">-- Chọn --</option>
+                    <?php foreach (array('doc_than' => 'Độc thân', 'ly_hon' => 'Ly hôn', 'goa' => 'Goá', 'phuc_tap' => 'Phức tạp') as $k => $t): ?>
+                        <option value="<?= $k ?>" <?= $chon('marital_status', $k) ?>><?= $t ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="tk-field">
+                <label for="has_children">Con cái</label>
+                <select id="has_children" name="has_children">
+                    <option value="">-- Chọn --</option>
+                    <option value="0" <?= $chon('has_children', '0') ?>>Chưa có con</option>
+                    <option value="1" <?= $chon('has_children', '1') ?>>Đã có con</option>
+                </select>
+            </div>
+            <div class="tk-field">
+                <label for="confide_topic">Chủ đề muốn tâm sự</label>
+                <select id="confide_topic" name="confide_topic">
+                    <option value="">-- Chọn --</option>
+                    <?php foreach (array('lang_nghe' => 'Cần người lắng nghe', 'tro_chuyen' => 'Trò chuyện phiếm',
+                                         'cong_viec' => 'Chia sẻ công việc', 'gia_dinh' => 'Chuyện gia đình',
+                                         'tinh_cam' => 'Chuyện tình cảm', 'dem_khuya' => 'Trò chuyện đêm khuya') as $k => $t): ?>
+                        <option value="<?= $k ?>" <?= $chon('confide_topic', $k) ?>><?= $t ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="tk-field">
+                <label for="smoking">Hút thuốc</label>
+                <select id="smoking" name="smoking">
+                    <option value="">-- Chọn --</option>
+                    <?php foreach (array('khong' => 'Không', 'thinh_thoang' => 'Thỉnh thoảng', 'thuong_xuyen' => 'Thường xuyên') as $k => $t): ?>
+                        <option value="<?= $k ?>" <?= $chon('smoking', $k) ?>><?= $t ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="tk-field">
+                <label for="drinking">Uống rượu bia</label>
+                <select id="drinking" name="drinking">
+                    <option value="">-- Chọn --</option>
+                    <?php foreach (array('khong' => 'Không', 'thinh_thoang' => 'Thỉnh thoảng', 'thuong_xuyen' => 'Thường xuyên') as $k => $t): ?>
+                        <option value="<?= $k ?>" <?= $chon('drinking', $k) ?>><?= $t ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sở thích -->
+    <section class="tk-card">
+        <div class="tk-card__h">
+            <div>
+                <h2 class="tk-card__t">Sở thích</h2>
+                <p class="tk-card__d">Chọn nhiều sở thích để hệ thống gợi ý chính xác hơn</p>
+            </div>
+        </div>
+        <div class="tk-chips">
+            <?php foreach ($all_interests as $it): ?>
+                <?php $on = in_array((int) $it['id'], $dang_chon, true); ?>
+                <label class="tk-chip">
+                    <input type="checkbox" name="interests[]" value="<?= (int) $it['id'] ?>" <?= $on ? 'checked' : '' ?>>
+                    <?= e($it['name']) ?>
+                </label>
+            <?php endforeach; ?>
+        </div>
+    </section>
+
+    <!-- Giới thiệu -->
+    <section class="tk-card">
+        <div class="tk-card__h"><div><h2 class="tk-card__t">Giới thiệu bản thân</h2></div></div>
+        <div class="tk-field">
+            <label for="bio">Vài dòng về bạn <?= $sao ?></label>
+            <textarea id="bio" name="bio" rows="5" required
+                      placeholder="Mình thích những buổi sáng yên tĩnh và một ly cà phê đen..."><?= $v('bio') ?></textarea>
+        </div>
+    </section>
+
+    <!-- Tiêu chí tìm kiếm -->
+    <section class="tk-card">
+        <div class="tk-card__h"><div><h2 class="tk-card__t">Tiêu chí tìm kiếm</h2></div></div>
+        <div class="tk-grid tk-grid--2">
+            <div class="tk-field">
+                <label for="seeking_gender">Giới tính muốn tìm <?= $sao ?></label>
+                <select id="seeking_gender" name="seeking_gender" required>
+                    <?php foreach (array('all' => 'Tất cả', 'female' => 'Nữ', 'male' => 'Nam') as $k => $t): ?>
+                        <option value="<?= $k ?>" <?= $chon('seeking_gender', $k, 'all') ?>><?= $t ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="tk-field">
+                <label for="purpose">Mục đích kết nối <?= $sao ?></label>
+                <select id="purpose" name="purpose" required>
+                    <option value="">-- Chọn --</option>
+                    <?php foreach (array('ket_ban', 'hen_ho', 'nghiem_tuc', 'ket_hon') as $k): ?>
+                        <option value="<?= $k ?>" <?= $chon('purpose', $k) ?>><?= purpose_label($k) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="tk-field">
+                <label for="age_min">Tuổi từ</label>
+                <input type="number" id="age_min" name="age_min" value="<?= $pv('age_min', '18') ?>">
+            </div>
+            <div class="tk-field">
+                <label for="age_max">Tuổi đến</label>
+                <input type="number" id="age_max" name="age_max" value="<?= $pv('age_max', '60') ?>">
+            </div>
+        </div>
+    </section>
+
+    <!-- Quyền riêng tư -->
+    <section class="tk-card">
+        <div class="tk-card__h"><div><h2 class="tk-card__t">Quyền riêng tư</h2></div></div>
+        <div class="tk-toggles">
+            <?php /* Mọi tin nhắn đều đã yêu cầu ghép đôi, mục này chỉ để siết thêm */ ?>
+            <div class="tk-toggle tk-pf-sel">
+                <span class="tk-toggle__b">
+                    <label class="tk-toggle__t" for="allow_message">Ai được nhắn tin cho tôi</label>
+                    <span class="tk-toggle__d">Chỉ người đã ghép đôi với bạn mới nhắn tin được. Bạn có thể siết thêm ở đây.</span>
+                </span>
+                <span class="tk-field">
+                    <select id="allow_message" name="allow_message">
+                        <?php foreach (array('all' => 'Mọi người đã ghép đôi', 'vip' => 'Chỉ người đã ghép đôi và là VIP') as $k => $t): ?>
+                            <option value="<?= $k ?>" <?= $chon('allow_message', $k, 'all') ?>><?= $t ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </span>
+            </div>
+            <label class="tk-toggle">
+                <span class="tk-toggle__b">
+                    <span class="tk-toggle__t">Hiển thị trạng thái online</span>
+                    <span class="tk-toggle__d">Người khác thấy bạn đang hoạt động.</span>
+                </span>
+                <span class="tk-switch">
+                    <input type="checkbox" name="show_online" value="1" <?= $hien_online ? 'checked' : '' ?>>
+                    <span class="tk-switch__track"></span><span class="tk-switch__knob"></span>
+                </span>
+            </label>
+        </div>
+    </section>
+
+    <div class="tk-pf-save">
+        <button class="tk-btn tk-btn--brand tk-btn--lg" type="submit"><?= tk_icon('save') ?>Lưu hồ sơ</button>
+    </div>
+</form>

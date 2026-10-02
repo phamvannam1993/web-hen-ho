@@ -1,0 +1,76 @@
+/* Trang Hồ sơ của tôi (account/profile.php) — theo tai-khoan.ho-so.tsx */
+
+/* Biểu mẫu bọc nhiều thẻ: giữ khoảng cách như các khối cấp trên */
+.tk-pf { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.tk-pf > * { min-width: 0; }
+
+/* Form mang lớp `auth-form` (để app.js báo lỗi bắt buộc bằng tiếng Việt),
+   gỡ dáng nhãn của style.css cho nhãn bên trong */
+.tk-layout .tk-pf label { margin: 0; font-weight: inherit; }
+.tk-layout .tk-pf .tk-field > label { font-weight: 500; }
+.tk-layout .tk-pf .tk-chip { display: inline-flex; font-weight: 500; }
+.tk-layout .tk-pf .tk-toggle { display: flex; }
+.tk-layout .tk-pf .tk-toggle__t { display: block; font-weight: 600; }
+.tk-layout .tk-pf .tk-btn { display: inline-flex; }
+
+/* Mức hoàn thiện */
+.tk-pf-pc { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.tk-pf-pc__t { font-size: 14px; line-height: 20px; font-weight: 600; }
+.tk-pf-pc__n { font-size: 14px; line-height: 20px; font-weight: 700; color: var(--tk-primary); }
+
+/* Ảnh đại diện + nút chọn tệp */
+.tk-pf-av { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; }
+.tk-pf-av img {
+  width: 96px; height: 96px; flex: 0 0 96px; border-radius: 24px; object-fit: cover; display: block;
+  box-shadow: 0 0 0 2px oklch(0.654 0.203 13.5 / 30%);
+}
+.tk-pf-file { position: relative; cursor: pointer; }
+.tk-pf-file input[type="file"] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 0; }
+.tk-pf-file:has(input:focus-visible) { outline: 2px solid var(--tk-primary); outline-offset: 2px; }
+
+/* Lưới 3 cột: 1 cột trên điện thoại, 2 từ sm, 3 từ xl */
+.tk-pf-g3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 1280px) { .tk-pf-g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* Hàng "Ai được nhắn tin": như SettingToggle nhưng bên phải là ô chọn */
+.tk-pf-sel { cursor: default; align-items: center; }
+.tk-pf-sel .tk-field { flex: 0 0 280px; }
+
+/* Ô chọn có tìm kiếm (searchable-select.js) mang dáng ô nhập của bộ kit */
+.tk-pf .ss-toggle {
+  height: 44px; padding: 0 36px 0 14px; border: 1px solid var(--tk-border); border-radius: var(--tk-r-md);
+  font-size: 14px; line-height: 42px; color: var(--tk-fg);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23463a4d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-size: 16px; background-position: right 12px center;
+}
+.tk-pf .ss-toggle:hover { border-color: var(--tk-primary-soft); }
+.tk-pf .ss-toggle.is-empty { color: var(--tk-muted-fg); }
+.tk-pf .ss-panel { border-color: var(--tk-border); border-radius: var(--tk-r-md); box-shadow: var(--tk-shadow-float); }
+.tk-layout .tk-pf .tk-field .ss-search {
+  height: 40px; border: 0; border-bottom: 1px solid var(--tk-border); border-radius: 0; outline: none;
+}
+.tk-pf .ss-item { font-size: 14px; color: var(--tk-fg); }
+.tk-pf .ss-item:hover { background: var(--tk-secondary); }
+.tk-pf .ss-item.is-on { background: var(--tk-accent); color: var(--tk-accent-fg); }
+
+/* Nút lưu: tĩnh trên máy tính, dính đáy (trên thanh điều hướng) ở màn nhỏ */
+@media (max-width: 1023.98px) {
+  .tk-pf-save {
+    /* sát mép trên thanh điều hướng dưới (cao ~52px) */
+    position: sticky; bottom: calc(52px + env(safe-area-inset-bottom)); z-index: 20;
+    margin: 0 -24px; padding: 12px 24px;
+    border-top: 1px solid var(--tk-border);
+    background: rgb(255 255 255 / 95%); backdrop-filter: blur(8px);
+  }
+  .tk-pf-save .tk-btn { display: flex; width: 100%; }
+}
+
+@media (max-width: 639.98px) {
+  .tk-pf { gap: 16px; }
+  .tk-pf-g3 { grid-template-columns: minmax(0, 1fr); }
+  .tk-pf-av { gap: 16px; }
+  .tk-pf-sel { flex-direction: column; align-items: stretch; }
+  .tk-pf-sel .tk-field { flex: none; }
+  .tk-pf .ss-toggle { height: 40px; line-height: 38px; padding-left: 12px; }
+  .tk-pf-save { margin: 0 -12px; padding: 12px; }
+}

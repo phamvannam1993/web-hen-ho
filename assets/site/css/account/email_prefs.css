@@ -1,0 +1,17 @@
+/* Trang Cài đặt email (account/email_prefs.php) — theo tai-khoan.email.tsx */
+
+.tk-em { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.tk-em > * { min-width: 0; }
+.tk-em-acts { gap: 12px; }
+
+.tk-em-tip {
+  margin-top: 16px; display: flex; gap: 8px; padding: 12px;
+  border-radius: var(--tk-r-md); background: oklch(0.966 0.012 350 / 70%);
+  font-size: 12px; line-height: 16px; color: var(--tk-muted-fg);
+}
+.tk-em-tip .tk-ic { width: 16px; height: 16px; margin-top: 0; }
+
+@media (max-width: 639.98px) {
+  .tk-em { gap: 16px; }
+  .tk-em-acts .tk-btn { flex: 1 1 auto; }
+}
