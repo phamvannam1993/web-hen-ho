@@ -155,6 +155,10 @@ class Members extends MY_Controller
             set_flash('warning', 'Vui lòng đăng nhập để bình luận.');
             redirect('dang-nhap');
         }
+        if (!$this->auth->da_xac_thuc()) {
+            set_flash('warning', 'Bạn cần xác thực email trước khi bình luận.');
+            redirect('xac-thuc');
+        }
         $member = $this->m_user->by_slug($slug);
         if (!$member) {
             show_404();

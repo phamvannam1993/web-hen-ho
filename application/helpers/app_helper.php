@@ -439,34 +439,42 @@ function tk_icon($ten, $lop = 'tk-ic')
 /**
  * Phần trăm hoàn thiện hồ sơ, tính TẠI CHỖ từ dữ liệu người dùng.
  *
- * Cột `users.profile_score` chỉ được ghi lại khi người dùng bấm lưu hồ sơ, nên
- * dữ liệu cũ hay lệch: đã gặp hồ sơ khai đủ 8/8 trường mà cột vẫn ghi 76%,
- * khiến trang Tổng quan hiện "76% · Đã đầy đủ" tự mâu thuẫn, còn trang Hồ sơ
- * lại nói một con số khác. Tính tại chỗ thì mọi nơi nói cùng một chuyện.
+ * Cột `users.profile_score` chỉ được ghi lại khi lưu hồ sơ nên hay lệch; tính
+ * tại chỗ thì Tổng quan, trang Hồ sơ và banner nhắc nói cùng một con số.
+ * `M_user::recalc_profile_score()` cũng gọi hàm này, nên hai bên không lệch.
  *
- * Tám trường dưới đây PHẢI trùng với `M_user::recalc_profile_score()`.
- * Trả về mảng: `phan_tram`, `thieu` (mã trường → nhãn tiếng Việt).
+ * Trọng số theo mức ảnh hưởng tới việc được thích lại: ảnh 30, sở thích 30,
+ * giới thiệu 20, khu vực 20. Sở thích nằm ở bảng riêng — truyền sẵn số lượng
+ * vào $so_so_thich để khỏi truy vấn lại, bỏ trống thì hàm tự đếm.
+ *
+ * Trả về mảng: `phan_tram`, `thieu` (mã mục → nhãn tiếng Việt).
  */
-function tk_ho_so_day_du(array $u)
+function tk_ho_so_day_du(array $u, $so_so_thich = null)
 {
-    $truong = array(
-        'avatar'         => 'Ảnh đại diện',
-        'bio'            => 'Giới thiệu bản thân',
-        'birthday'       => 'Ngày sinh',
-        'province_id'    => 'Tỉnh/thành',
-        'job'            => 'Nghề nghiệp',
-        'height_cm'      => 'Chiều cao',
-        'marital_status' => 'Tình trạng hôn nhân',
-        'education'      => 'Học vấn',
-    );
-    $thieu = array();
-    foreach ($truong as $k => $nhan) {
-        if (empty($u[$k])) $thieu[$k] = $nhan;
+    if ($so_so_thich === null) {
+        $CI =& get_instance();
+        $so_so_thich = empty($u['id']) ? 0
+            : (int) $CI->db->where('user_id', (int) $u['id'])->count_all_results('user_interests');
     }
-    return array(
-        'phan_tram' => (int) round((count($truong) - count($thieu)) / count($truong) * 100),
-        'thieu'     => $thieu,
+
+    $muc = array(
+        // mã => array(nhãn, trọng số, đã có chưa)
+        'avatar'      => array('Ảnh đại diện',        30, !empty($u['avatar'])),
+        'bio'         => array('Giới thiệu bản thân', 20, trim((string) ($u['bio'] ?? '')) !== ''),
+        'province_id' => array('Khu vực',             20, !empty($u['province_id'])),
+        'interests'   => array('Sở thích',            30, $so_so_thich > 0),
     );
+
+    $diem  = 0;
+    $thieu = array();
+    foreach ($muc as $k => $m) {
+        if ($m[2]) {
+            $diem += $m[1];
+        } else {
+            $thieu[$k] = $m[0];
+        }
+    }
+    return array('phan_tram' => $diem, 'thieu' => $thieu);
 }
 
 /** Biểu tượng (tên trong tk_icon) cho từng loại thông báo. */

@@ -58,10 +58,11 @@ $hien_online = $da_gui ? $this->input->post('show_online')
             <i style="width:<?= max(0, min(100, $diem)) ?>%"></i>
         </div>
         <?php if (!empty($thieu)): ?>
-            <?php /* Thiếu mục bắt buộc thì các trang khác bị khoá, phải nói rõ */ ?>
+            <?php /* Thiếu mục cần để hiện công khai: không khoá gì, chỉ báo hồ sơ đang bị ẩn */ ?>
             <div class="tk-alert tk-alert--warning" style="margin-top:16px">
-                <p>Bạn cần khai nốt <?= count($thieu) ?> mục bắt buộc thì mới dùng được các trang khác:
-                    <b><?= e(implode(', ', $thieu)) ?></b>.</p>
+                <p>Hồ sơ của bạn <b>chưa hiển thị với mọi người</b>. Thêm
+                    <b><?= e(mb_strtolower(implode(', ', $thieu))) ?></b> để xuất hiện trong danh sách
+                    Hẹn hò, Ghép đôi ẩn và Thành viên.</p>
             </div>
         <?php endif; ?>
     </section>
@@ -70,8 +71,8 @@ $hien_online = $da_gui ? $this->input->post('show_online')
     <section class="tk-card">
         <div class="tk-card__h">
             <div>
-                <h2 class="tk-card__t">Ảnh đại diện <?= $sao ?></h2>
-                <p class="tk-card__d">Ảnh rõ mặt giúp hồ sơ được duyệt nhanh hơn</p>
+                <h2 class="tk-card__t">Ảnh đại diện</h2>
+                <p class="tk-card__d">Cần có ảnh thì hồ sơ mới hiện với mọi người. Ảnh rõ mặt nhận nhiều lượt thích hơn.</p>
             </div>
         </div>
         <div class="tk-pf-av">
@@ -103,10 +104,10 @@ $hien_online = $da_gui ? $this->input->post('show_online')
                 <p class="tk-hint">Có thể dùng thay cho họ tên thật</p>
             </div>
             <div class="tk-field">
-                <label for="phone">Số điện thoại Zalo <?= $sao ?></label>
+                <label for="phone">Số điện thoại Zalo</label>
                 <input type="tel" id="phone" name="phone" value="<?= $v('phone') ?>"
-                       maxlength="15" inputmode="tel" placeholder="VD: 0912345678" required>
-                <p class="tk-hint">Số di động Việt Nam, 10 chữ số. Chỉ thành viên đã đăng nhập mới xem được.</p>
+                       maxlength="15" inputmode="tel" autocomplete="tel" placeholder="VD: 0912345678">
+                <p class="tk-hint">Không bắt buộc. Có số thì người đã mở liên hệ với bạn mới xem được.</p>
             </div>
             <div class="tk-field">
                 <label for="gender">Giới tính <?= $sao ?></label>
@@ -122,8 +123,9 @@ $hien_online = $da_gui ? $this->input->post('show_online')
                 <input type="date" id="birthday" name="birthday" required value="<?= $v('birthday') ?>">
             </div>
             <div class="tk-field">
-                <label for="province_id">Khu vực <?= $sao ?></label>
-                <select id="province_id" name="province_id" required>
+                <label for="province_id">Khu vực</label>
+                <?php /* 34 tỉnh thành cuộn rất mỏi trên điện thoại — cho gõ để tìm */ ?>
+                <select id="province_id" name="province_id" data-searchable data-search-placeholder="Tìm tỉnh/thành...">
                     <option value="">-- Chọn tỉnh/thành --</option>
                     <?php foreach ($provinces as $p): ?>
                         <option value="<?= (int) $p['id'] ?>" <?= $chon('province_id', $p['id']) ?>><?= e($p['name']) ?></option>
@@ -243,8 +245,8 @@ $hien_online = $da_gui ? $this->input->post('show_online')
     <section class="tk-card">
         <div class="tk-card__h"><div><h2 class="tk-card__t">Giới thiệu bản thân</h2></div></div>
         <div class="tk-field">
-            <label for="bio">Vài dòng về bạn <?= $sao ?></label>
-            <textarea id="bio" name="bio" rows="5" required
+            <label for="bio">Vài dòng về bạn</label>
+            <textarea id="bio" name="bio" rows="5" maxlength="500"
                       placeholder="Mình thích những buổi sáng yên tĩnh và một ly cà phê đen..."><?= $v('bio') ?></textarea>
         </div>
     </section>

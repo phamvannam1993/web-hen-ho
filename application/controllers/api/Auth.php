@@ -22,11 +22,8 @@ class Auth extends Api_Controller
             return $this->loi('Email/SĐT hoặc mật khẩu không đúng.', 401);
         }
 
-        // Chưa xác thực email thì chưa cấp token, giống hệt luồng web
-        if (setting('otp_register', '1') === '1' && empty($u['email_verified_at']) && !empty($u['email'])) {
-            return $this->loi('Email chưa được xác thực. Vui lòng xác thực trước khi đăng nhập.', 403,
-                array('need_verify' => true));
-        }
+        // Chưa xác thực email vẫn đăng nhập được, giống luồng web — chỉ thả tim và
+        // nhắn tin bị khoá tới khi bấm link trong thư.
 
         // Token gốc chỉ xuất hiện đúng một lần ở đây, DB chỉ giữ bản băm
         $token = bin2hex(random_bytes(32));
@@ -41,6 +38,8 @@ class Auth extends Api_Controller
             'token'      => $token,
             'expires_at' => date('c', strtotime('+90 days')),
             'user'       => $this->ho_so($u, true),
+            // false: ứng dụng nên nhắc bấm link xác thực trong thư; thả tim và nhắn tin đang bị khoá
+            'email_verified' => setting('otp_register', '1') !== '1' || !empty($u['email_verified_at']) || empty($u['email']),
         ));
     }
 

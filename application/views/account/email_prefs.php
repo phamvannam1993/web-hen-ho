@@ -6,7 +6,7 @@ $loai = array(
     'new_message'   => array('Tin nhắn mới', 'Báo khi có người nhắn mà bạn chưa đọc sau 5 phút.'),
     'notification'  => array('Ghép đôi & lượt thích', 'Ghép đôi báo ngay; lượt thích và lượt xem gom lại gửi một lần mỗi tối.'),
     'match_suggest' => array('Gợi ý người phù hợp', 'Chúng tôi chọn sẵn một người hợp tiêu chí và gửi tới bạn.'),
-    're_engage'     => array('Nhắc quay lại', 'Chỉ gửi khi bạn đã lâu không ghé, tối đa một lần mỗi tuần.'),
+    're_engage'     => array('Nhắc nhở', 'Nhắc khi bạn đã lâu không ghé (tối đa mỗi tuần một lần) và hai lần nhắc hoàn thiện hồ sơ sau khi đăng ký.'),
 );
 $da_huy = !empty($p['disabled_at']);
 ?>

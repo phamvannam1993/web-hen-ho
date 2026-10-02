@@ -227,17 +227,19 @@ class M_user extends CI_Model
         return implode(' AND ', $dk);
     }
 
-    /**
-     * Những mục hồ sơ còn bỏ trống, dùng để chặn người mới đăng ký đi tiếp
-     * khi chưa khai xong. Trả về mảng tên mục theo đúng thứ tự trên biểu mẫu;
-     * mảng rỗng nghĩa là hồ sơ đã đầy đủ.
-     */
-    /** Tổng số mục bắt buộc, dùng cho thanh tiến độ ở trang hồ sơ. */
+    /** Tổng số mục cần để hồ sơ hiện công khai, dùng cho thanh tiến độ ở trang hồ sơ. */
     public function so_muc_bat_buoc()
     {
-        return 8;   // 6 mục trong users + 2 mục tiêu chí tìm kiếm
+        return 7;   // 5 mục trong users + 2 mục tiêu chí tìm kiếm
     }
 
+    /**
+     * Những mục còn thiếu để hồ sơ được HIỆN CÔNG KHAI (danh sách Hẹn hò, Ghép
+     * đôi ẩn, Thành viên, gợi ý…). Thiếu thì người dùng vẫn dùng web bình thường,
+     * chỉ là hồ sơ bị ẩn và có banner nhắc. Mảng rỗng nghĩa là đã đủ.
+     *
+     * PHẢI khớp với dieu_kien_ho_so_du() — hai bên là một luật.
+     */
     public function thieu_thong_tin($user_id)
     {
         $u = $this->db->where('id', $user_id)->get('users')->row_array();
@@ -246,16 +248,14 @@ class M_user extends CI_Model
         }
         $pref = $this->db->where('user_id', $user_id)->get('user_preferences')->row_array();
 
-        // Chỉ những mục thật sự cần để hồ sơ dùng được và ghép đôi được.
-        // Các mục còn lại (chiều cao, nghề nghiệp, học vấn, thói quen, sở thích,
-        // ảnh đại diện...) là tuỳ chọn, khai thêm thì hồ sơ đẹp hơn thôi.
+        // Ảnh và khu vực lên đầu: hai mục người mới đăng ký luôn còn thiếu
+        // (đăng ký chỉ hỏi tên, giới tính, ngày sinh).
         $can = array(
+            'avatar'       => 'Ảnh đại diện',
+            'province_id'  => 'Khu vực',
             'display_name' => 'Tên hiển thị',
             'gender'       => 'Giới tính',
             'birthday'     => 'Ngày sinh',
-            'province_id'  => 'Khu vực',
-            'bio'          => 'Giới thiệu bản thân',
-            'avatar'       => 'Ảnh đại diện',
         );
 
         $thieu = array();
@@ -649,17 +649,15 @@ class M_user extends CI_Model
         ));
     }
 
-    /** Tính % hoàn thiện hồ sơ để ưu tiên hiển thị. */
+    /**
+     * Tính % hoàn thiện hồ sơ để ưu tiên hiển thị. Cùng công thức với
+     * tk_ho_so_day_du() — gọi lại sau khi lưu sở thích để tính cả mục đó.
+     */
     public function recalc_profile_score($id)
     {
         $u = $this->db->where('id', $id)->get('users')->row_array();
         if (!$u) return 0;
-        $fields = array('avatar', 'bio', 'birthday', 'province_id', 'job', 'height_cm', 'marital_status', 'education');
-        $filled = 0;
-        foreach ($fields as $f) {
-            if (!empty($u[$f])) $filled++;
-        }
-        $score = (int) round($filled / count($fields) * 100);
+        $score = tk_ho_so_day_du($u)['phan_tram'];
         $this->db->where('id', $id)->update('users', array('profile_score' => $score));
         return $score;
     }

@@ -111,8 +111,9 @@ class M_daily extends CI_Model
                 AND u2.status = 'active' AND u2.role = 'member' AND u2.deleted_at IS NULL
                 AND (? = 'all' OR u2.gender = ?)
                 AND u2.last_active_at >= ?
-                -- Đặc tả yêu cầu hồ sơ phải có ít nhất một ảnh
+                -- Chỉ gợi ý hồ sơ đang hiện công khai: có ảnh và khu vực
                 AND (u2.avatar IS NOT NULL AND u2.avatar <> '')
+                AND u2.province_id IS NOT NULL
                 AND u2.id NOT IN (SELECT target_id FROM likes
                                    WHERE user_id = ? AND target_type = 'user')
                 AND u2.id NOT IN (SELECT passed_id FROM user_passes WHERE user_id = ?)

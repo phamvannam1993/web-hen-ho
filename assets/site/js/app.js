@@ -59,7 +59,22 @@
         var actions = el.querySelector('.modal-actions');
         actions.textContent = '';
 
-        if (typeof opts.onConfirm === 'function') {
+        if (opts.actionUrl) {
+            // Modal mời làm một việc cụ thể (xác thực email, thêm ảnh…): nút chính là link
+            var later = document.createElement('button');
+            later.type = 'button';
+            later.className = 'btn btn-ghost';
+            later.textContent = opts.laterText || 'Để sau';
+            later.addEventListener('click', function () { el.classList.remove('open'); });
+
+            var go = document.createElement('a');
+            go.className = 'btn btn-primary';
+            go.href = opts.actionUrl;
+            go.textContent = opts.actionText || 'Tiếp tục';
+
+            actions.appendChild(later);
+            actions.appendChild(go);
+        } else if (typeof opts.onConfirm === 'function') {
             var cancel = document.createElement('button');
             cancel.type = 'button';
             cancel.className = 'btn btn-ghost';
@@ -90,6 +105,31 @@
     }
 
     window.appModal = showModal;
+
+    /**
+     * Máy chủ trả về `need: 'verify'` (chưa xác thực email nên chưa thả tim /
+     * nhắn tin được) hoặc `nudge` (vd. thích xong mà chưa có ảnh) thì hiện modal
+     * có nút đi thẳng tới việc cần làm. Trả về true nếu đã xử lý.
+     */
+    function appNeed(res) {
+        if (!res) { return false; }
+        if (res.need === 'verify') {
+            showModal({
+                type: 'info', title: 'Xác thực email để tiếp tục',
+                message: res.message, actionUrl: res.url, actionText: 'Xác thực email'
+            });
+            return true;
+        }
+        if (res.nudge) {
+            showModal({
+                type: 'info', title: res.nudge.title, message: res.nudge.message,
+                actionUrl: res.nudge.url, actionText: res.nudge.action
+            });
+            return true;
+        }
+        return false;
+    }
+    window.appNeed = appNeed;
 
     /* Nút có data-confirm: hỏi bằng modal thay cho hộp thoại của trình duyệt */
     document.addEventListener('click', function (e) {
@@ -269,7 +309,14 @@
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: new URLSearchParams(data || {})
-        }).then(function (r) { return r.json(); });
+        }).then(function (r) { return r.json(); }).then(function (res) {
+            // Hiện SAU trình xử lý riêng của từng nút (chúng có thể mở modal lỗi chung),
+            // để lời mời xác thực / thêm ảnh luôn là thứ người dùng thấy cuối cùng.
+            if (res && (res.need === 'verify' || res.nudge)) {
+                setTimeout(function () { appNeed(res); }, 0);
+            }
+            return res;
+        });
     }
 
     /* --- Thích thành viên --- */
@@ -1134,6 +1181,7 @@
         .then(function (res) {
             if (!res.ok) {
                 input.value = text;
+                if (window.appNeed && window.appNeed(res)) { return; }
                 if (window.appModal) {
                     window.appModal({ type: 'error', title: 'Không gửi được', message: res.message });
                 }

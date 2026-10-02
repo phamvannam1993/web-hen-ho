@@ -171,6 +171,35 @@ class Emailer
         );
     }
 
+    /**
+     * Nhắc hoàn thiện hồ sơ — gửi sau 1 ngày (lần 1) và 3 ngày (lần 2) kể từ
+     * khi đăng ký, nếu hồ sơ vẫn chưa đủ để hiện công khai. Nói lợi ích, không
+     * nói nghĩa vụ.
+     *
+     * @param array $thieu nhãn các mục còn thiếu (M_user::thieu_thong_tin)
+     */
+    public function profile_nudge($user_id, $lan, array $thieu)
+    {
+        $u = $this->CI->m_user->find($user_id);
+        if (!$u || !$thieu) { return false; }
+
+        $tieu_de = $lan <= 1
+            ? $this->ten($u) . ' ơi, thêm một tấm ảnh để mọi người thấy bạn nhé'
+            : 'Hồ sơ của ' . $this->ten($u) . ' vẫn đang bị ẩn — chỉ cần 1 phút';
+
+        return $this->CI->m_email->enqueue(
+            $user_id, 'profile_nudge',
+            $tieu_de,
+            'profile_nudge',
+            array(
+                'name'  => $this->ten($u),
+                'lan'   => (int) $lan,
+                'thieu' => array_values($thieu),
+                'link'  => site_url('tai-khoan/bat-dau'),
+            )
+        );
+    }
+
     /** Kéo người đã lâu không vào quay lại. */
     public function re_engage($user_id, $so_thich, array $avatars)
     {

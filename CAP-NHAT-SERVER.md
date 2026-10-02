@@ -141,6 +141,9 @@ của bạn**:
     # Nhắc người sắp mất chuỗi ngày hoạt động — 20h
     0 20 * * * cd /var/www/web-hen-ho && /usr/bin/php index.php cron nhac_chuoi >> /var/log/cupid-mail.log 2>&1
 
+    # Nhắc người mới hoàn thiện hồ sơ (sau 1 ngày và 3 ngày, tối đa 2 thư) — 9h
+    0 9 * * *  cd /var/www/web-hen-ho && /usr/bin/php index.php cron nhac_ho_so >> /var/log/cupid-mail.log 2>&1
+
 Lưu lại rồi kiểm tra đã nhận chưa:
 
     crontab -l

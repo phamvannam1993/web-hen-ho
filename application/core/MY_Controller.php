@@ -40,8 +40,13 @@ class MY_Controller extends CI_Controller
         // Ghi nhận hoạt động ở MỌI trang, không chỉ khu vực tài khoản. Trước đây
         // chỉ các trang bắt buộc đăng nhập mới gọi, nên người đang duyệt trang chủ
         // hay khám phá không được tính là đang online.
-        // Hồ sơ chưa khai đủ thì khoá mọi tính năng, kể cả chat thời gian thực
-        $this->data['ho_so_chua_xong'] = false;
+        //
+        // Hồ sơ chưa đủ KHÔNG còn khoá người dùng ở trang Hồ sơ nữa (hoàn thiện dần):
+        // dùng web bình thường, chỉ chưa hiện ra danh sách công khai, kèm banner nhắc.
+        // Chưa xác thực email thì chỉ khoá thả tim và nhắn tin (Userauth::da_xac_thuc).
+        $this->data['chua_xac_thuc'] = false;
+        $this->data['ho_so_an']      = array();   // mục còn thiếu để hồ sơ được hiện công khai
+        $this->data['ho_so_pt']      = 100;       // % hoàn thiện, cho thanh tiến độ trên banner
         if ($this->auth->check()) {
             $this->auth->touch_active();
 
@@ -53,58 +58,37 @@ class MY_Controller extends CI_Controller
             $me = $this->auth->user();
             if (!in_array($me['role'], array('admin', 'moderator'), true)) {
                 $this->load->model('m_user');
-                $this->data['ho_so_chua_xong'] = (bool) $this->m_user->thieu_thong_tin($me['id']);
+                $this->data['chua_xac_thuc'] = !$this->auth->da_xac_thuc();
+                $this->data['ho_so_an']      = $this->m_user->thieu_thong_tin($me['id']);
+                $this->data['ho_so_pt']      = tk_ho_so_day_du($me)['phan_tram'];
             }
-            if ($this->data['ho_so_chua_xong']) {
-                // Không cấp mã WebSocket thì khung chat không kết nối được,
+            if ($this->data['chua_xac_thuc']) {
+                // Không cấp mã WebSocket thì khung chat không gửi được,
                 // chặn tận gốc thay vì chỉ giấu giao diện
                 $this->data['ws_token'] = '';
                 $this->data['ws_url']   = '';
             }
-
-            $this->chan_khi_ho_so_chua_xong();
         }
     }
 
     /**
-     * Người mới đăng ký phải khai xong hồ sơ mới được đi tiếp — cách các trang
-     * hẹn hò lớn vẫn làm, vì hồ sơ trống thì không ghép đôi được cho ai.
-     *
-     * Một số đường dẫn phải chừa ra để không rơi vào vòng lặp chuyển hướng:
-     * chính trang sửa hồ sơ, đăng xuất, các lời gọi ajax và tệp cho máy tìm kiếm.
+     * Lời nhắc thêm ảnh ngay lúc vừa thả tim mà hồ sơ chưa có ảnh — nhắc đúng
+     * lúc người dùng thấy lợi ích, thay vì chặn từ đầu. Mỗi phiên nhắc một lần.
      */
-    protected function chan_khi_ho_so_chua_xong()
+    protected function nhac_them_anh()
     {
         $me = $this->auth->user();
-
-        // Ban quản trị không bị chặn, họ không dùng hồ sơ để ghép đôi
-        if (in_array($me['role'], array('admin', 'moderator'), true)) {
-            return;
+        if (!empty($me['avatar']) || $this->session->userdata('da_nhac_anh')) {
+            return null;
         }
-
-        $uri  = uri_string();
-        $chua = array(
-            'tai-khoan/ho-so', 'dang-xuat', 'dang-nhap', 'dang-ky',
-            'robots.txt', 'sitemap',
+        $this->session->set_userdata('da_nhac_anh', 1);
+        return array(
+            'title'   => 'Thêm ảnh để người ấy thấy bạn',
+            'message' => 'Đã gửi lượt thích! Nhưng hồ sơ chưa có ảnh nên người ấy khó thích lại — '
+                       . 'hồ sơ có ảnh nhận nhiều lượt thích lại hơn hẳn. Thêm một ảnh chỉ mất vài giây.',
+            'url'     => site_url('tai-khoan/bat-dau'),
+            'action'  => 'Thêm ảnh',
         );
-        foreach ($chua as $bo) {
-            if ($uri === $bo || strpos($uri, $bo) === 0) {
-                return;
-            }
-        }
-        if (strpos($uri, 'ajax') === 0 || $this->input->is_ajax_request()) {
-            return;
-        }
-
-        if (empty($this->data['ho_so_chua_xong'])) {
-            return;
-        }
-        $thieu = $this->m_user->thieu_thong_tin($me['id']);
-
-        set_flash('warning', 'Bạn cần hoàn thiện hồ sơ trước khi dùng tiếp: '
-            . implode(', ', array_slice($thieu, 0, 4))
-            . (count($thieu) > 4 ? ' và ' . (count($thieu) - 4) . ' mục nữa.' : '.'));
-        redirect('tai-khoan/ho-so');
     }
 
     /** Render layout frontend. */

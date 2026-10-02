@@ -249,6 +249,7 @@ $mxh = array_filter(array(
         <div class="nav-overlay" id="nav-overlay" hidden></div>
     </div>
 </header>
+<?php $this->load->view('layouts/_nudge'); ?>
 <?php endif; ?>
 
 <?php if ($tk_app): ?>
@@ -378,8 +379,8 @@ $mxh = array_filter(array(
      Thành viên chưa khai xong hồ sơ cũng chỉ được xem như khách. -->
 <div id="chat-widget" class="chat-widget" data-base="<?= site_url() ?>"
      data-ws-url="<?= e($ws_url ?? '') ?>" data-ws-token="<?= e($ws_token ?? '') ?>"
-     data-guest="<?= ($user && empty($ho_so_chua_xong)) ? '0' : '1' ?>"
-     data-need-profile="<?= !empty($ho_so_chua_xong) ? '1' : '0' ?>">
+     data-guest="<?= $user ? '0' : '1' ?>"
+     data-need-verify="<?= !empty($chua_xac_thuc) ? '1' : '0' ?>">
     <button type="button" class="cw-tab" id="cw-bubble" aria-label="Mở trò chuyện">
         <span class="cw-tab-arrow" aria-hidden="true">&laquo;</span>
         <span class="cw-tab-label">Trò chuyện</span>

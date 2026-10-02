@@ -10,30 +10,27 @@ class Ajax extends MY_Controller
         $this->load->model(array('m_interaction', 'm_report', 'm_post'));
     }
 
-    private function require_login()
+    /**
+     * Bắt đăng nhập. $can_xac_thuc = true với những việc gửi tới người khác
+     * (thả tim, nhắn tin, bình luận): tài khoản chưa xác thực email vẫn dùng web,
+     * chỉ bị chặn đúng nhóm này — đủ hạn chế tài khoản rác.
+     *
+     * Hồ sơ chưa đủ KHÔNG còn bị chặn ở đây nữa (hoàn thiện hồ sơ dần dần).
+     */
+    private function require_login($can_xac_thuc = false)
     {
         if (!$this->auth->check()) {
             $this->json(array('ok' => false, 'message' => 'Vui lòng đăng nhập để thực hiện.'), 401);
             return false;
         }
-
-        // Hồ sơ chưa khai đủ thì không dùng được tính năng nào: thích, nhắn tin,
-        // bình luận, báo cáo. Cổng chặn ở MY_Controller không bắt được nhóm này
-        // vì các lời gọi ajax được chừa ra để không nhận về HTML thay cho JSON.
-        $me = $this->auth->user();
-        if (!in_array($me['role'], array('admin', 'moderator'), true)) {
-            $this->load->model('m_user');
-            $thieu = $this->m_user->thieu_thong_tin($me['id']);
-            if ($thieu) {
-                $this->json(array(
-                    'ok'      => false,
-                    'need'    => 'profile',
-                    'url'     => site_url('tai-khoan/ho-so'),
-                    'message' => 'Bạn cần hoàn thiện hồ sơ (còn thiếu '
-                        . count($thieu) . ' mục) trước khi dùng tính năng này.',
-                ), 403);
-                return false;
-            }
+        if ($can_xac_thuc && !$this->auth->da_xac_thuc()) {
+            $this->json(array(
+                'ok'      => false,
+                'need'    => 'verify',
+                'url'     => site_url('xac-thuc'),
+                'message' => 'Bạn cần xác thực email (bấm link trong thư chúng tôi đã gửi) để thả tim và nhắn tin.',
+            ), 403);
+            return false;
         }
         return true;
     }
@@ -41,7 +38,7 @@ class Ajax extends MY_Controller
     /** Thích / bỏ thích thành viên hoặc tin đăng. */
     public function like()
     {
-        if (!$this->require_login()) {
+        if (!$this->require_login(true)) {
             return;
         }
         $type = $this->input->post('type') === 'post' ? 'post' : 'user';
@@ -55,6 +52,10 @@ class Ajax extends MY_Controller
         $result['message'] = $result['matched']
             ? 'Ghép đôi thành công! Hai bạn đã thích nhau.'
             : ($result['liked'] ? 'Đã gửi lượt thích.' : 'Đã bỏ thích.');
+        // Ghép đôi đã có hộp chúc mừng riêng, không chen lời nhắc vào
+        if ($type === 'user' && $result['liked'] && !$result['matched']) {
+            $result['nudge'] = $this->nhac_them_anh();
+        }
 
         return $this->json($result);
     }
@@ -64,7 +65,7 @@ class Ajax extends MY_Controller
      */
     public function respond_like()
     {
-        if (!$this->require_login()) {
+        if (!$this->require_login(true)) {
             return;
         }
         $id     = (int) $this->input->post('id');
@@ -79,7 +80,7 @@ class Ajax extends MY_Controller
 
     public function send_message()
     {
-        if (!$this->require_login()) {
+        if (!$this->require_login(true)) {
             return;
         }
 
@@ -131,7 +132,7 @@ class Ajax extends MY_Controller
     /** Trả lời gợi ý hôm nay: Thích hoặc Bỏ qua. */
     public function daily_match()
     {
-        if (!$this->require_login()) {
+        if (!$this->require_login(true)) {
             return;
         }
         $this->load->model('m_daily');
@@ -147,9 +148,6 @@ class Ajax extends MY_Controller
 
     /**
      * Danh sách thông báo cho khay xổ xuống ở chuông.
-     *
-     * Không dùng require_login() vì cổng đó còn bắt hồ sơ phải khai đủ; người
-     * chưa khai xong vẫn cần đọc được thông báo nhắc họ hoàn thiện hồ sơ.
      */
     public function notifications()
     {
@@ -287,7 +285,7 @@ class Ajax extends MY_Controller
     /** Gửi tin vào phòng chat chung. */
     public function room_send()
     {
-        if (!$this->require_login()) {
+        if (!$this->require_login(true)) {
             return;
         }
         $me      = $this->auth->id();
@@ -381,7 +379,7 @@ class Ajax extends MY_Controller
     /** Mở (hoặc tạo) hội thoại với một người, dùng cho nút "Nhắn tin". */
     public function open_conversation($user_id)
     {
-        if (!$this->require_login()) {
+        if (!$this->require_login(true)) {
             return;
         }
         if ((int) $user_id === (int) $this->auth->id()) {
@@ -490,6 +488,10 @@ class Ajax extends MY_Controller
         if (!$this->auth->check()) {
             set_flash('warning', 'Vui lòng đăng nhập để bình luận.');
             redirect('dang-nhap');
+        }
+        if (!$this->auth->da_xac_thuc()) {
+            set_flash('warning', 'Bạn cần xác thực email trước khi bình luận.');
+            redirect('xac-thuc');
         }
         $post = $this->m_post->find($post_id);
         if (!$post) {

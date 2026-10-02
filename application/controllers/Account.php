@@ -50,6 +50,10 @@ class Account extends Member_Controller
     /** Số điện thoại phải là số di động Việt Nam và chưa ai dùng. */
     public function dien_thoai_hop_le($so)
     {
+        // Không bắt buộc: bỏ trống là hợp lệ, có nhập thì phải đúng
+        if (trim((string) $so) === '') {
+            return true;
+        }
         $chuan = chuan_hoa_dien_thoai($so);
         if ($chuan === '') {
             $this->form_validation->set_message('dien_thoai_hop_le',
@@ -69,34 +73,27 @@ class Account extends Member_Controller
         $me = $this->auth->user();
 
         if ($this->input->method() === 'post') {
-            // Chỉ bắt buộc nhóm thông tin cần thiết, giống cách các trang hẹn hò
-            // khác vẫn làm: khai đủ nhóm này là hồ sơ dùng được, phần còn lại
-            // (nghề nghiệp, học vấn, thói quen, sở thích, ảnh...) để tuỳ chọn.
+            // Hoàn thiện hồ sơ dần dần: chỉ bắt những mục mà đăng ký đã có sẵn
+            // (để không ai xoá trắng được) và tiêu chí ghép đôi. Ảnh, khu vực,
+            // giới thiệu, số điện thoại… khai lúc nào cũng được — thiếu ảnh hoặc
+            // khu vực thì hồ sơ chỉ bị ẩn khỏi danh sách công khai, có banner nhắc.
             $bat_buoc = array(
                 'display_name'   => 'Tên hiển thị',
-                'phone'          => 'Số điện thoại',
                 'gender'         => 'Giới tính',
                 'birthday'       => 'Ngày sinh',
-                'province_id'    => 'Khu vực',
-                'bio'            => 'Giới thiệu bản thân',
                 'seeking_gender' => 'Muốn tìm',
                 'purpose'        => 'Mục đích',
             );
             foreach ($bat_buoc as $o => $ten) {
                 $this->form_validation->set_rules($o, $ten, 'required');
             }
-            $this->form_validation->set_rules('phone', 'Số điện thoại',
-                'required|callback_dien_thoai_hop_le');
-
-            // Ảnh đại diện bắt buộc, nhưng chỉ đòi với người chưa từng tải lên
-            if (empty($me['avatar']) && empty($_FILES['avatar']['name'])) {
-                $this->form_validation->set_rules('avatar', 'Ảnh đại diện', 'required');
-            }
+            $this->form_validation->set_rules('phone', 'Số điện thoại', 'trim|callback_dien_thoai_hop_le');
+            $this->form_validation->set_rules('bio', 'Giới thiệu bản thân', 'max_length[500]');
 
             if ($this->form_validation->run()) {
                 $data = array(
                     'display_name'   => $this->input->post('display_name', true),
-                    'phone'          => chuan_hoa_dien_thoai($this->input->post('phone')),
+                    'phone'          => chuan_hoa_dien_thoai($this->input->post('phone')) ?: null,
                     'nickname'       => $this->input->post('nickname', true) ?: null,
                     'gender'         => $this->input->post('gender'),
                     'birthday'       => $this->input->post('birthday') ?: null,
@@ -147,6 +144,9 @@ class Account extends Member_Controller
                     $pref['user_id'] = $me['id'];
                     $this->db->insert('user_preferences', $pref);
                 }
+
+                // Tính lại sau khi đã lưu sở thích (sở thích là một mục của điểm)
+                $this->m_user->recalc_profile_score($me['id']);
 
                 set_flash('success', 'Đã cập nhật hồ sơ.');
                 redirect('tai-khoan/ho-so');
@@ -516,6 +516,56 @@ class Account extends Member_Controller
             'max_size'      => 5120,
             'encrypt_name'  => true,
         );
+    }
+
+    /**
+     * Bước "Bắt đầu" ngay sau đăng ký: ba việc nhỏ (thêm ảnh, chọn khu vực,
+     * viết một câu giới thiệu), việc nào làm cũng được, có nút "Bỏ qua, để sau".
+     * Thay cho cơ chế cũ bắt khai đủ hồ sơ mới cho đi tiếp.
+     */
+    public function onboarding()
+    {
+        $me = $this->m_user->find($this->auth->id());
+
+        if ($this->input->method() === 'post') {
+            $this->form_validation->set_rules('bio', 'Giới thiệu bản thân', 'trim|max_length[500]');
+            $this->form_validation->set_rules('province_id', 'Khu vực', 'integer');
+
+            if ($this->form_validation->run()) {
+                $data = array();
+                $avatar = $this->upload_image('avatar');
+                if ($avatar) {
+                    $data['avatar'] = $avatar;
+                }
+                $tinh = (int) $this->input->post('province_id');
+                if ($tinh > 0 && $this->m_province->find($tinh)) {
+                    $data['province_id'] = $tinh;
+                }
+                $bio = trim((string) $this->input->post('bio', true));
+                if ($bio !== '') {
+                    $data['bio'] = $bio;
+                }
+
+                if ($data) {
+                    $this->m_user->update_profile($me['id'], $data);
+                }
+                // upload_image() tự đặt flash khi ảnh lỗi — giữ người dùng ở lại sửa
+                if (!empty($_FILES['avatar']['name']) && !$avatar) {
+                    redirect('tai-khoan/bat-dau');
+                }
+                if ($this->m_user->thieu_thong_tin($me['id'])) {
+                    set_flash('success', 'Đã lưu! Còn vài bước nữa là hồ sơ hiện với mọi người — làm tiếp lúc nào cũng được.');
+                } else {
+                    set_flash('success', 'Tuyệt! Hồ sơ của bạn đã hiển thị với mọi người.');
+                }
+                redirect('tai-khoan');
+            }
+        }
+
+        $this->render('account/onboarding', array(
+            'title' => 'Bắt đầu',
+            'me'    => $me,
+        ));
     }
 
     private function upload_image($field)

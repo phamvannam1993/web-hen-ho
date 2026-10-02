@@ -4528,3 +4528,68 @@ button.cw-close {
     .hd-streak--drawer b { font-size: 17px; }
     .hd-streak__nhan { font-weight: 600; font-size: 13px; opacity: .85; }
 }
+
+/* ==========================================================================
+   Đăng ký rút gọn + banner nhắc (xác thực email, hoàn thiện hồ sơ)
+   ========================================================================== */
+
+.auth-card--narrow { max-width: 520px; }
+.auth-sub { text-align: center; color: var(--muted); margin: -18px 0 8px; }
+.auth-hint { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
+
+/* Giới tính: ba nút bấm một chạm thay cho ô chọn */
+.gender-pick { border: 0; padding: 0; margin: 18px 0 0; min-width: 0; }
+.gender-pick legend { font-weight: 700; margin-bottom: 8px; padding: 0; }
+.gender-pick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.gender-pick legend { grid-column: 1 / -1; }
+.auth-form .gender-pick label { margin: 0; font-weight: 600; position: relative; }
+.gender-pick input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.gender-pick span {
+    display: flex; align-items: center; justify-content: center; height: 48px;
+    border: 1px solid #ccc; border-radius: 6px; background: #fff; cursor: pointer;
+    transition: border-color .15s, background-color .15s, color .15s;
+}
+.gender-pick input:checked + span { border-color: var(--pink); background: #fdecef; color: var(--pink-dark); }
+.gender-pick input:focus-visible + span { outline: 2px solid var(--pink); outline-offset: 2px; }
+
+/* Banner nhắc ngay dưới đầu trang — không chặn trang, tắt tạm được */
+.nudge-bar { background: #fff; border-bottom: 1px solid var(--line); }
+.nudge-bar__in {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding-top: 12px; padding-bottom: 12px;
+}
+.nudge-bar--verify { background: #fff8e6; border-bottom-color: #f3dfaa; }
+.nudge-bar--profile { background: #fdf0f2; border-bottom-color: #f6d3da; }
+.nudge-bar__ic {
+    width: 36px; height: 36px; flex: 0 0 36px; display: grid; place-items: center;
+    border-radius: 50%; background: #fff; font-size: 18px;
+}
+.nudge-bar__b { flex: 1 1 280px; min-width: 0; font-size: 14.5px; line-height: 1.45; }
+.nudge-bar__b b { display: block; font-size: 15px; }
+.nudge-bar__b small { color: var(--muted); font-size: 13px; }
+.nudge-bar__bar { height: 6px; border-radius: 99px; background: #f6d3da; overflow: hidden; margin-top: 6px; max-width: 260px; }
+.nudge-bar__bar i { display: block; height: 100%; background: var(--pink); border-radius: 99px; }
+.nudge-bar__acts { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.nudge-bar__acts form { margin: 0; }
+.nudge-bar__btn {
+    display: inline-flex; align-items: center; height: 36px; padding: 0 16px; border: 0;
+    border-radius: 99px; background: var(--pink); color: #fff; font: inherit;
+    font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.nudge-bar__btn:hover { background: var(--pink-dark); color: #fff; text-decoration: none; }
+.nudge-bar__btn--ghost { background: #fff; color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+.nudge-bar__btn--ghost:hover { background: #fff; color: var(--pink); }
+.nudge-bar__x {
+    width: 32px; height: 32px; border: 0; border-radius: 50%; background: transparent;
+    color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer;
+}
+.nudge-bar__x:hover { background: rgba(0,0,0,.06); color: var(--ink); }
+@media (max-width: 640px) {
+    .nudge-bar__in { gap: 10px; }
+    .nudge-bar__ic { display: none; }
+    .nudge-bar__acts { width: 100%; }
+    .nudge-bar__acts .nudge-bar__btn { flex: 1; justify-content: center; }
+}
+
+/* Modal: nút dạng link (vd "Thêm ảnh", "Xác thực email") */
+.modal-actions a.btn { text-decoration: none; }

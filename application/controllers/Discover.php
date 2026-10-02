@@ -79,6 +79,13 @@ class Discover extends MY_Controller
         if (!$this->require_login()) {
             return;
         }
+        // Chưa xác thực email thì xem hồ sơ được, nhưng chưa thả tim được
+        if (!$this->auth->da_xac_thuc()) {
+            return $this->json(array(
+                'ok' => false, 'need' => 'verify', 'url' => site_url('xac-thuc'),
+                'message' => 'Bạn cần xác thực email (bấm link trong thư chúng tôi đã gửi) để thả tim.',
+            ), 403);
+        }
         $me = $this->auth->user();
         if ((int) $target_id === (int) $me['id']) {
             return $this->json(array('ok' => false, 'message' => 'Không thể tự thích hồ sơ của mình.'));
@@ -98,6 +105,8 @@ class Discover extends MY_Controller
                 'slug'   => $doi['slug'],
             ) : null,
             'me_avatar' => avatar_url($me['avatar'], $me['gender']),
+            // Thích mà chưa có ảnh thì nhắc thêm ảnh ngay lúc đó (mỗi phiên một lần)
+            'nudge'   => ($result['liked'] && !$result['matched']) ? $this->nhac_them_anh() : null,
             'message' => $result['matched']
                 ? 'Ghép đôi thành công! Hai bạn đã thích nhau.'
                 : ($result['liked'] ? 'Đã gửi lượt thích.' : 'Đã bỏ thích.'),

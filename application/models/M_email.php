@@ -36,6 +36,8 @@ class M_email extends CI_Model
         'notify_view'   => 'notification',
         'match_suggest' => 'match_suggest',
         're_engage'     => 're_engage',
+        // Hai thư nhắc hoàn thiện hồ sơ sau đăng ký dùng chung công tắc "Nhắc quay lại"
+        'profile_nudge' => 're_engage',
     );
 
     /* ===================== Cài đặt của người dùng ===================== */

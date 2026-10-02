@@ -17,7 +17,8 @@
 
     var base    = root.getAttribute('data-base');
     var isGuest = root.getAttribute('data-guest') === '1';
-    var canHoSo = root.getAttribute('data-need-profile') === '1';
+    // Chưa xác thực email: xem phòng chat được, nhưng chưa gửi tin được
+    var canXacThuc = root.getAttribute('data-need-verify') === '1';
 
     /* Icon chia nhóm để bảng chọn có tab, mỗi tab một biểu tượng đại diện */
     var EMOJI_GROUPS = [
@@ -517,11 +518,11 @@
             var coAnh = fileEl && fileEl.files && fileEl.files.length;
             if (!text && !coAnh) { return; }
 
-            if (canHoSo) {
-                if (window.appModal) {
-                    window.appModal({
-                        type: 'info', title: 'Cần hoàn thiện hồ sơ',
-                        message: 'Bạn cần khai đủ hồ sơ trước khi nhắn tin.'
+            if (canXacThuc) {
+                if (window.appNeed) {
+                    window.appNeed({
+                        need: 'verify', url: base + 'xac-thuc',
+                        message: 'Xác thực email (bấm link trong thư chúng tôi đã gửi) để bắt đầu nhắn tin.'
                     });
                 }
                 return;
@@ -539,6 +540,7 @@
                 formEl.classList.remove('is-sending');
                 if (fileEl) { fileEl.value = ''; }
                 if (!res.ok) {
+                    if (window.appNeed && window.appNeed(res)) { return; }
                     if (window.appModal) {
                         window.appModal({ type: 'error', title: 'Không gửi được', message: res.message });
                     }

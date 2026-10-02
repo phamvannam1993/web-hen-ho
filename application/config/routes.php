@@ -45,6 +45,7 @@ $route['api/streak']                      = 'api/engagement/streak';
 $route['api/streak/freeze']               = 'api/engagement/streak_freeze';
 $route['xac-thuc']                = 'auth/verify';
 $route['xac-thuc/gui-lai']        = 'auth/resend';
+$route['xac-thuc-email/(:any)']  = 'auth/verify_link/$1';
 $route['quen-mat-khau']           = 'auth/forgot';
 $route['dat-lai-mat-khau/(:any)'] = 'auth/reset/$1';
 
@@ -92,6 +93,7 @@ $route['thanh-vien/(:any)']       = 'members/legacy_profile/$1';
 
 $route['tai-khoan']               = 'account/index';
 $route['tai-khoan/ho-so']         = 'account/profile';
+$route['tai-khoan/bat-dau']       = 'account/onboarding';
 $route['tai-khoan/anh']           = 'account/photos';
 $route['tai-khoan/tin-dang']      = 'account/posts';
 $route['tai-khoan/sua-tin/(:num)']= 'account/edit_post/$1';

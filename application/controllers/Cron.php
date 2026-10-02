@@ -12,6 +12,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  *   0 8 * * *  php index.php cron goi_y       # gợi ý ghép đôi, 8h sáng
  *   0 10 * * * php index.php cron keo_lai     # kéo người vắng lâu, 10h sáng
  *   0 20 * * * php index.php cron gom_thong_bao  # gom lượt thích/xem, 20h
+ *   0 9 * * *  php index.php cron nhac_ho_so  # nhắc hoàn thiện hồ sơ (sau 1 và 3 ngày), 9h
  */
 class Cron extends CI_Controller
 {
@@ -403,5 +404,46 @@ class Cron extends CI_Controller
         }
 
         $this->noi("kéo lại người vắng: xếp hàng $gui thư");
+    }
+
+    /* ===================== Nhắc hoàn thiện hồ sơ ===================== */
+
+    /**
+     * Hai thư nhắc nhẹ cho người mới mà hồ sơ vẫn bị ẩn (thiếu ảnh, khu vực…):
+     * lần 1 sau 1 ngày, lần 2 sau 3 ngày kể từ lúc đăng ký. Không bao giờ quá 2.
+     * Chạy mỗi ngày một lần, giờ nào cũng được.
+     */
+    public function nhac_ho_so()
+    {
+        $rows = $this->db->query(
+            "SELECT u.id, u.created_at FROM users u
+              WHERE u.status = 'active' AND u.role = 'member' AND u.deleted_at IS NULL
+                AND u.email IS NOT NULL AND u.email <> ''
+                AND u.created_at <= ? AND u.created_at >= ?",
+            array(date('Y-m-d H:i:s', strtotime('-1 day')), date('Y-m-d H:i:s', strtotime('-10 days')))
+        )->result_array();
+
+        $gui = 0;
+        foreach ($rows as $u) {
+            $thieu = $this->m_user->thieu_thong_tin($u['id']);
+            if (!$thieu) {
+                continue;
+            }
+            $da_gui = (int) $this->db->where('user_id', $u['id'])->where('type', 'profile_nudge')
+                ->count_all_results('email_queue');
+            $so_ngay = (time() - strtotime($u['created_at'])) / 86400;
+
+            $lan = 0;
+            if ($da_gui === 0 && $so_ngay >= 1) {
+                $lan = 1;
+            } elseif ($da_gui === 1 && $so_ngay >= 3) {
+                $lan = 2;
+            }
+            if ($lan && $this->emailer->profile_nudge($u['id'], $lan, $thieu)) {
+                $gui++;
+            }
+        }
+
+        $this->noi("nhắc hoàn thiện hồ sơ: xếp hàng $gui thư");
     }
 }

@@ -69,7 +69,7 @@ $la_vip   = !empty($me['is_vip']) && (empty($me['vip_expired_at']) || strtotime(
 $dem      = function ($n) { return $n > 99 ? '99+' : (int) $n; };
 
 // Tên trang đang xem, in trên dải menu của điện thoại
-$trang_nay = 'Tổng quan';
+$trang_nay = $current === 'bat-dau' ? 'Bắt đầu' : 'Tổng quan';
 foreach ($groups as $items) {
     if (isset($items[$current])) { $trang_nay = $items[$current][0]; }
 }

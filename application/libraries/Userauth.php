@@ -141,6 +141,23 @@ class Userauth
         return $user && in_array($user['role'], array('admin', 'moderator'), true);
     }
 
+    /**
+     * Đã xác thực email chưa — chưa thì vẫn dùng web bình thường, chỉ bị khoá
+     * thả tim và nhắn tin (đủ chặn tài khoản rác mà không chặn từ cửa vào).
+     * Tắt `otp_register` trong Cấu hình thì coi như ai cũng đã xác thực.
+     */
+    public function da_xac_thuc()
+    {
+        $user = $this->user();
+        if (!$user) {
+            return false;
+        }
+        return setting('otp_register', '1') !== '1'
+            || !empty($user['email_verified_at'])
+            || empty($user['email'])
+            || in_array($user['role'], array('admin', 'moderator'), true);
+    }
+
     public function is_vip()
     {
         $user = $this->user();

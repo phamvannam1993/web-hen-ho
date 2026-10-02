@@ -49,6 +49,12 @@ class Daily_match extends Api_Controller
         if (!$this->can_auth()) {
             return;
         }
+        // Giống web: chưa xác thực email thì chưa thả tim được
+        if ($act === 'like' && setting('otp_register', '1') === '1'
+            && empty($this->me['email_verified_at']) && !empty($this->me['email'])) {
+            return $this->loi('Bạn cần xác thực email (bấm link trong thư) để thả tim.', 403,
+                array('need_verify' => true));
+        }
         $kq = $this->m_daily->tra_loi($this->me['id'], (int) $id, $act);
 
         return $kq['ok']
