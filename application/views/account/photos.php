@@ -55,12 +55,12 @@ $so_duyet = count(array_filter($photos, function ($ph) { return $ph['status'] ==
                 <?php $tt = $trang_thai[$ph['status']] ?? $trang_thai['pending']; ?>
                 <?php $src = base_url(ltrim($ph['path'], '/')); ?>
                 <figure class="tk-ap-ph">
-                    <div class="tk-ap-ph__img">
+                    <button type="button" class="tk-ap-ph__img profile-image-trigger" data-profile-image aria-label="Xem ảnh lớn hơn">
                         <img src="<?= e($src) ?>" alt="Ảnh <?= (int) $ph['id'] ?>" loading="lazy" width="768" height="960">
                         <span class="tk-ap-ph__tag"><span class="tk-pill tk-pill--<?= $tt[1] ?>"><?= $tt[0] ?></span></span>
-                    </div>
+                    </button>
                     <figcaption class="tk-ap-ph__acts">
-                        <a class="tk-btn tk-btn--ghost tk-btn--icon-sm" href="<?= e($src) ?>" target="_blank" rel="noopener"
+                        <a class="tk-btn tk-btn--ghost tk-btn--icon-sm" href="<?= e($src) ?>" data-profile-image
                            aria-label="Xem ảnh" title="Xem ảnh"><?= tk_icon('eye') ?></a>
                         <a class="tk-btn tk-btn--ghost tk-btn--icon-sm tk-ap-ph__del" href="<?= site_url('tai-khoan/xoa-anh/' . $ph['id']) ?>"
                            data-confirm="Xoá ảnh này?" data-confirm-danger aria-label="Xoá ảnh" title="Xoá ảnh"><?= tk_icon('trash') ?></a>

@@ -11,7 +11,7 @@
         <h1 class="auth-title">Xác thực email</h1>
 
         <p class="otp-lead">
-            Chúng tôi đã gửi một link xác thực tới <b><?= e($email) ?></b>.
+            Email cần xác thực: <b><?= e($email) ?></b>. Bấm “Gửi lại email xác thực” để nhận thư.
             Bấm vào link trong thư là xong, link dùng được trong <?= (int) $gio_song ?> giờ.
         </p>
 

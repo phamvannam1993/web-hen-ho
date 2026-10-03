@@ -10,7 +10,12 @@
 $da_gui = ($this->input->method() === 'post');
 
 /** Giá trị nên hiện ra: ưu tiên thứ vừa gửi lên, chưa gửi thì lấy trong CSDL. */
-$goc = function ($k, $mac_dinh = '') use ($da_gui, $me, $pref) {
+$email_bi_trung = !empty($email_bi_trung);
+$loi_email = strip_tags(form_error('email', '', ''));
+$goc = function ($k, $mac_dinh = '') use ($da_gui, $me, $pref, $email_bi_trung) {
+    if ($k === 'email' && $email_bi_trung) {
+        return (string) ($me['email'] ?? '');
+    }
     if ($da_gui) {
         return isset($_POST[$k]) ? (string) $_POST[$k] : '';
     }
@@ -76,7 +81,9 @@ $hien_online = $da_gui ? $this->input->post('show_online')
             </div>
         </div>
         <div class="tk-pf-av">
-            <img id="tk-pf-av-img" src="<?= e(avatar_url($me['avatar'] ?? null, $me['gender'] ?? 'other')) ?>" alt="Ảnh đại diện" width="96" height="96">
+            <button type="button" class="profile-image-trigger" data-profile-image aria-label="Xem ảnh đại diện lớn hơn">
+                <img id="tk-pf-av-img" src="<?= e(avatar_url($me['avatar'] ?? null, $me['gender'] ?? 'other')) ?>" alt="Ảnh đại diện" width="96" height="96">
+            </button>
             <div>
                 <?php /* Ô chọn tệp thật nằm trong nhãn, nhãn mang dáng nút */ ?>
                 <label class="tk-btn tk-btn--brand tk-pf-file" for="avatar">
@@ -102,6 +109,23 @@ $hien_online = $da_gui ? $this->input->post('show_online')
                 <input type="text" id="nickname" name="nickname" value="<?= $v('nickname') ?>"
                        placeholder="VD: Bằng Lăng Tím" maxlength="60">
                 <p class="tk-hint">Có thể dùng thay cho họ tên thật</p>
+            </div>
+            <div class="tk-field">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" value="<?= $v('email') ?>"
+                       maxlength="190" autocomplete="email" data-email-check="<?= e(site_url('tai-khoan/kiem-tra-email')) ?>"
+                       data-original-email="<?= e($me['email'] ?? '') ?>" <?= !empty($me['email']) ? 'required' : '' ?>
+                       <?php if ($loi_email): ?>aria-invalid="true" aria-describedby="email-error" autofocus<?php endif; ?>>
+                <div id="email-error" class="tk-alert tk-alert--danger" role="alert" <?= $loi_email ? '' : 'hidden' ?>><?= e($loi_email) ?></div>
+                <p id="email-check-status" class="tk-hint" role="status" hidden></p>
+                <p class="tk-hint">Có thể sửa nếu bạn nhập sai. Email mới dùng để đăng nhập và nhận thư; sau khi đổi cần xác thực lại.</p>
+                <?php if (!empty($me['email']) && setting('otp_register', '1') === '1'): ?>
+                    <p class="tk-hint">Trạng thái: <?= !empty($me['email_verified_at']) ? 'Đã xác thực email' : 'Chưa xác thực email' ?>.</p>
+                <?php endif; ?>
+                <?php if (!empty($me['email']) && empty($me['email_verified_at'])): ?>
+                    <p class="tk-hint"><button type="submit" form="profile-resend-email" class="tk-btn tk-btn--outline">Gửi lại email xác thực</button></p>
+                    <p class="tk-hint">Thư được gửi tới email đã lưu. Nếu đổi email, hãy lưu hồ sơ trước.</p>
+                <?php endif; ?>
             </div>
             <div class="tk-field">
                 <label for="phone">Số điện thoại Zalo</label>
@@ -322,3 +346,94 @@ $hien_online = $da_gui ? $this->input->post('show_online')
         <button class="tk-btn tk-btn--brand tk-btn--lg" type="submit"><?= tk_icon('save') ?>Lưu hồ sơ</button>
     </div>
 </form>
+<form id="profile-resend-email" method="post" action="<?= site_url('xac-thuc/gui-lai') ?>" hidden>
+    <input type="hidden" name="from_profile" value="1">
+</form>
+<script>
+(function () {
+    var input = document.getElementById('email');
+    var form = input.form;
+    var error = document.getElementById('email-error');
+    var button = form.querySelector('.tk-pf-save button[type="submit"]');
+    var timer, version = 0, checked = null, pending = null;
+    var endpoint = input.dataset.emailCheck;
+    var status = document.getElementById('email-check-status');
+
+    function message(text) {
+        error.textContent = text;
+        error.hidden = !text;
+        if (text) {
+            input.setAttribute('aria-invalid', 'true');
+            input.setAttribute('aria-describedby', 'email-error');
+        } else {
+            input.removeAttribute('aria-invalid');
+            input.removeAttribute('aria-describedby');
+        }
+    }
+
+    function check() {
+        var value = input.value.trim();
+        if (pending && pending.value === value) return pending.promise;
+        input.setCustomValidity('');
+        if (!input.checkValidity()) {
+            message('Vui lòng nhập email đúng định dạng.');
+            button.disabled = true;
+            status.hidden = true;
+            return Promise.resolve(false);
+        }
+        var requestVersion = ++version;
+        button.disabled = true;
+        status.textContent = 'Đang kiểm tra email…';
+        status.hidden = false;
+        var promise = fetch(endpoint + '?email=' + encodeURIComponent(value), {
+            credentials: 'same-origin', cache: 'no-store', headers: { 'Accept': 'application/json' }
+        }).then(function (response) {
+            if (!response.ok) throw new Error('Email check failed');
+            return response.json();
+        }).then(function (data) {
+            if (requestVersion !== version || input.value.trim() !== value) return false;
+            if (typeof data.available !== 'boolean') throw new Error('Invalid response');
+            checked = data.available ? value : null;
+            message(data.available ? '' : 'Email này đã được dùng cho tài khoản khác. Vui lòng chọn email khác. Email hiện tại của bạn vẫn được giữ nguyên.');
+            button.disabled = !data.available;
+            return data.available;
+        }).catch(function () {
+            if (requestVersion === version) {
+                message('Chưa kiểm tra được email. Vui lòng thử lại.');
+                button.disabled = true;
+            }
+            return false;
+        }).finally(function () {
+            if (requestVersion === version) {
+                pending = null;
+                status.hidden = true;
+            }
+        });
+        pending = { value: value, promise: promise };
+        return promise;
+    }
+
+    input.addEventListener('input', function () {
+        clearTimeout(timer);
+        ++version;
+        checked = null;
+        pending = null;
+        message('');
+        button.disabled = true;
+        status.textContent = 'Đang kiểm tra email…';
+        status.hidden = false;
+        timer = setTimeout(check, 350);
+    });
+    input.addEventListener('blur', function () { clearTimeout(timer); check(); });
+    form.addEventListener('submit', function (event) {
+        if (checked === input.value.trim()) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        clearTimeout(timer);
+        check().then(function (available) {
+            if (available && checked === input.value.trim()) form.requestSubmit(button);
+            else input.focus();
+        });
+    }, true);
+})();
+</script>

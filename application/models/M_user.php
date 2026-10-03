@@ -77,7 +77,18 @@ class M_user extends CI_Model
 
     public function update_profile($id, array $data)
     {
+        $this->db->trans_start();
+        if (array_key_exists('email', $data)) {
+            $current = $this->find($id);
+            if ((string) $data['email'] !== (string) ($current['email'] ?? '')) {
+                $data['email_verified_at'] = null;
+                $this->db->where('user_id', $id)
+                    ->where_in('type', array('verify_email', 'reset_password', 'otp'))
+                    ->delete('user_tokens');
+            }
+        }
         $this->db->where('id', $id)->update('users', $data);
+        $this->db->trans_complete();
         $this->recalc_profile_score($id);
     }
 
