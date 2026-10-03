@@ -2255,6 +2255,7 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
     pointer-events: none;
 }
 .sw-controls > * { pointer-events: auto; }
+.sw-controls[hidden] { display: none; }
 .sw-controls { transition: opacity .18s ease, visibility .18s ease; }
 .sw-controls.is-scroll-hidden { opacity: 0; visibility: hidden; }
 .sw-controls.is-scroll-hidden > * { pointer-events: none; }
@@ -2304,11 +2305,21 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
 .sw-tabbar a.on svg { fill: currentColor; stroke: none; }
 
 /* ---- Hết hồ sơ ---- */
-.sw-none { text-align: center; padding: 30vh 20px; }
+.sw-none {
+    flex: 1 1 0; min-height: 0; overflow-y: auto;
+    display: flex; flex-direction: column; justify-content: safe center;
+    box-sizing: border-box; text-align: center; padding: 24px 20px;
+}
+.sw-none[hidden] { display: none; }
+.sw-none > * { flex-shrink: 0; }
 .sw-none h2 { margin: 0 0 8px; font-size: 20px; font-weight: 800; color: var(--ink); }
 .sw-none p { margin: 0 auto 18px; max-width: 340px; color: var(--muted); font-size: 14.5px; line-height: 1.6; }
-.sw-none-actions { display: flex; flex-direction: column; gap: 10px; max-width: 260px; margin: 0 auto; }
-.sw-none-actions .btn { padding: 12px 20px; border-radius: 999px; text-align: center; }
+.sw-none-actions { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 260px; margin: 0 auto; }
+.sw-none-actions .btn {
+    display: flex; align-items: center; justify-content: center;
+    box-sizing: border-box; width: 100%; min-height: 46px;
+    padding: 12px 20px; border-radius: 999px; text-align: center; line-height: 1.5;
+}
 .sw-radar { position: relative; width: 90px; height: 90px; margin: 0 auto 20px; }
 .sw-radar span {
     position: absolute; inset: 0; margin: auto;

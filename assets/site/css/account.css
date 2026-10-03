@@ -672,6 +672,11 @@ a.tk-stat:hover { box-shadow: var(--tk-shadow-float); }
   .tk-ph { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
   .tk-ph h1 { font-size: 18px; line-height: 28px; }
   .tk-ph p { font-size: 12px; line-height: 16px; }
+  .tk-ph--profile { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .tk-ph--profile .tk-ph__act {
+    justify-self: start; max-width: 100%; height: auto; min-height: 36px;
+    padding: 8px 16px; white-space: normal; text-align: center;
+  }
 
   .tk-card { padding: 12px; }
   .tk-card__h { margin-bottom: 12px; display: grid; grid-template-columns: minmax(0, 1fr) auto; }
