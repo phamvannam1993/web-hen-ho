@@ -122,7 +122,7 @@ $mxh = array_filter(array(
 <header class="site-header">
     <div class="container header-inner">
         <a class="brand" href="<?= site_url() ?>">
-    <img src="https://saigoncupid.com/assets/images/logo.png" alt="<?= e($settings['site_name'] ?? 'Saigon Cupid') ?>" class="brand-logo">
+    <img src="/assets/images/logo.png" alt="<?= e($settings['site_name'] ?? 'Saigon Cupid') ?>" class="brand-logo">
     <span class="brand-text"><?= e($settings['site_name'] ?? 'Saigon Cupid') ?></span>
 </a>
 
