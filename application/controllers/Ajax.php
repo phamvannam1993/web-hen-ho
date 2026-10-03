@@ -10,30 +10,27 @@ class Ajax extends MY_Controller
         $this->load->model(array('m_interaction', 'm_report', 'm_post'));
     }
 
-    private function require_login()
+    /**
+     * Bắt đăng nhập. $can_xac_thuc = true với những việc gửi tới người khác
+     * (thả tim, nhắn tin, bình luận): tài khoản chưa xác thực email vẫn dùng web,
+     * chỉ bị chặn đúng nhóm này — đủ hạn chế tài khoản rác.
+     *
+     * Hồ sơ chưa đủ KHÔNG còn bị chặn ở đây nữa (hoàn thiện hồ sơ dần dần).
+     */
+    private function require_login($can_xac_thuc = false)
     {
         if (!$this->auth->check()) {
             $this->json(array('ok' => false, 'message' => 'Vui lòng đăng nhập để thực hiện.'), 401);
             return false;
         }
-
-        // Hồ sơ chưa khai đủ thì không dùng được tính năng nào: thích, nhắn tin,
-        // bình luận, báo cáo. Cổng chặn ở MY_Controller không bắt được nhóm này
-        // vì các lời gọi ajax được chừa ra để không nhận về HTML thay cho JSON.
-        $me = $this->auth->user();
-        if (!in_array($me['role'], array('admin', 'moderator'), true)) {
-            $this->load->model('m_user');
-            $thieu = $this->m_user->thieu_thong_tin($me['id']);
-            if ($thieu) {
-                $this->json(array(
-                    'ok'      => false,
-                    'need'    => 'profile',
-                    'url'     => site_url('tai-khoan/ho-so'),
-                    'message' => 'Bạn cần hoàn thiện hồ sơ (còn thiếu '
-                        . count($thieu) . ' mục) trước khi dùng tính năng này.',
-                ), 403);
-                return false;
-            }
+        if ($can_xac_thuc && !$this->auth->da_xac_thuc()) {
+            $this->json(array(
+                'ok'      => false,
+                'need'    => 'verify',
+                'url'     => site_url('xac-thuc'),
+                'message' => 'Bạn cần xác thực email (bấm link trong thư chúng tôi đã gửi) để thả tim và nhắn tin.',
+            ), 403);
+            return false;
         }
         return true;
     }
@@ -41,7 +38,7 @@ class Ajax extends MY_Controller
     /** Thích / bỏ thích thành viên hoặc tin đăng. */
     public function like()
     {
-        if (!$this->require_login()) {
+        if (!$this->require_login(true)) {
             return;
         }
         $type = $this->input->post('type') === 'post' ? 'post' : 'user';
@@ -51,10 +48,17 @@ class Ajax extends MY_Controller
         }
 
         $result = $this->m_interaction->toggle_like($this->auth->id(), $type, $id);
+        if (isset($result['ok']) && !$result['ok']) {
+            return $this->json($result, 403);
+        }
         $result['ok'] = true;
         $result['message'] = $result['matched']
             ? 'Ghép đôi thành công! Hai bạn đã thích nhau.'
             : ($result['liked'] ? 'Đã gửi lượt thích.' : 'Đã bỏ thích.');
+        // Ghép đôi đã có hộp chúc mừng riêng, không chen lời nhắc vào
+        if ($type === 'user' && $result['liked'] && !$result['matched']) {
+            $result['nudge'] = $this->nhac_them_anh();
+        }
 
         return $this->json($result);
     }
@@ -64,7 +68,7 @@ class Ajax extends MY_Controller
      */
     public function respond_like()
     {
-        if (!$this->require_login()) {
+        if (!$this->require_login(true)) {
             return;
         }
         $id     = (int) $this->input->post('id');
@@ -79,7 +83,7 @@ class Ajax extends MY_Controller
 
     public function send_message()
     {
-        if (!$this->require_login()) {
+        if (!$this->require_login(true)) {
             return;
         }
 
@@ -128,6 +132,67 @@ class Ajax extends MY_Controller
         redirect($result['ok'] ? 'tai-khoan/tin-nhan/' . $result['conversation_id'] : 'tai-khoan/tin-nhan');
     }
 
+    /** Trả lời gợi ý hôm nay: Thích hoặc Bỏ qua. */
+    public function daily_match()
+    {
+        if (!$this->require_login(true)) {
+            return;
+        }
+        $this->load->model('m_daily');
+
+        $id  = (int) $this->input->post('id');
+        $act = $this->input->post('action') === 'like' ? 'like' : 'skip';
+
+        $kq = $this->m_daily->tra_loi($this->auth->id(), $id, $act);
+        return $this->json($kq);
+    }
+
+    /* ==================== Thông báo ==================== */
+
+    /**
+     * Danh sách thông báo cho khay xổ xuống ở chuông.
+     */
+    public function notifications()
+    {
+        if (!$this->auth->check()) {
+            return $this->json(array('ok' => false, 'message' => 'Vui lòng đăng nhập.'), 401);
+        }
+        $this->load->model('m_notification');
+        $me = $this->auth->id();
+
+        $items = array();
+        foreach ($this->m_notification->for_user($me, 15) as $n) {
+            $items[] = array(
+                'id'     => (int) $n['id'],
+                'type'   => $n['type'],
+                'title'  => $n['title'],
+                'body'   => $n['body'],
+                'url'    => $n['url'],
+                'time'   => time_ago($n['created_at']),
+                'unread' => empty($n['read_at']),
+                'actor'  => $n['actor'],
+            );
+        }
+
+        return $this->json(array(
+            'ok'     => true,
+            'items'  => $items,
+            'unread' => $this->m_notification->unread_count($me),
+        ));
+    }
+
+    /** Đánh dấu đã đọc toàn bộ thông báo. */
+    public function notifications_read()
+    {
+        if (!$this->auth->check()) {
+            return $this->json(array('ok' => false, 'message' => 'Vui lòng đăng nhập.'), 401);
+        }
+        $this->load->model('m_notification');
+        $this->m_notification->mark_all_read($this->auth->id());
+
+        return $this->json(array('ok' => true));
+    }
+
     /* ==================== Phòng chat chung ==================== */
 
     /**
@@ -140,13 +205,23 @@ class Ajax extends MY_Controller
         $me    = $this->auth->id();   // null nếu là khách
         $after = (int) $this->input->get('after');
 
-        // Thẻ "Trò chuyện" ngoài rìa màn hình chỉ cần con số người đang online,
-        // gọi kèm ?only=online để khỏi kéo về cả danh sách tin nhắn.
+        // Thẻ "Trò chuyện" và dòng phòng chung trong danh sách chỉ cần con số
+        // online + tin cuối, gọi kèm ?only=online để khỏi kéo cả danh sách tin.
         if ($this->input->get('only') === 'online') {
+            $cuoi = $this->db->select('r.type, r.content, r.created_at, u.display_name, u.nickname')
+                ->from('room_messages r')->join('users u', 'u.id = r.user_id')
+                ->where('r.deleted_at', null)
+                ->order_by('r.id', 'DESC')->limit(1)
+                ->get()->row_array();
+
             return $this->json(array(
                 'ok'       => true,
                 'messages' => array(),
                 'online'   => $this->online_count(),
+                'last'     => $cuoi
+                    ? display_name($cuoi) . ': ' . $this->tom_tat_tin($cuoi['type'], $cuoi['content'])
+                    : 'Chưa có tin nhắn nào',
+                'time'     => $cuoi ? time_ago($cuoi['created_at']) : '',
             ));
         }
 
@@ -174,9 +249,11 @@ class Ajax extends MY_Controller
                 'name'    => display_name($r),
                 'avatar'  => avatar_url($r['avatar'], $r['gender']),
                 'slug'    => $r['slug'],
+                'user_id' => (int) $r['user_id'],
                 'type'    => $r['type'],
                 'content' => $r['type'] === 'image' ? base_url(ltrim($r['content'], '/')) : $r['content'],
-                'time'    => date('H:i d/m', strtotime($r['created_at'])),
+                'time'    => date('H:i', strtotime($r['created_at'])),
+                'day'     => $this->nhan_ngay($r['created_at']),
             );
         }
 
@@ -186,6 +263,19 @@ class Ajax extends MY_Controller
             'messages' => $messages,
             'online'   => $this->online_count(),
         ));
+    }
+
+    /** Nhãn ngày để chèn vạch ngăn khi cuộn qua ngày khác. */
+    private function nhan_ngay($datetime)
+    {
+        $ngay = date('Y-m-d', strtotime($datetime));
+        if ($ngay === date('Y-m-d')) {
+            return 'Hôm nay';
+        }
+        if ($ngay === date('Y-m-d', strtotime('-1 day'))) {
+            return 'Hôm qua';
+        }
+        return date('d/m/Y', strtotime($datetime));
     }
 
     /** Số thành viên hoạt động trong 5 phút gần nhất; không tính tài khoản đã xoá mềm. */
@@ -199,7 +289,7 @@ class Ajax extends MY_Controller
     /** Gửi tin vào phòng chat chung. */
     public function room_send()
     {
-        if (!$this->require_login()) {
+        if (!$this->require_login(true)) {
             return;
         }
         $me      = $this->auth->id();
@@ -252,7 +342,9 @@ class Ajax extends MY_Controller
                 'name'    => display_name($r),
                 'avatar'  => avatar_url($r['avatar'], $r['gender']),
                 'online'  => (bool) is_online($r['last_active_at']),
-                'last'    => $r['last_content'] ? excerpt($r['last_content'], 38) : 'Bắt đầu trò chuyện',
+                'last'    => !$r['last_message_id'] ? 'Bắt đầu trò chuyện' : $this->tom_tat_tin($r['last_type'], $r['last_content'],
+                                               (int) $r['last_sender_id'] === (int) $me),
+                'time'    => $r['last_at'] ? time_ago($r['last_at']) : '',
                 'unread'  => (int) $r['unread'],
             );
         }
@@ -264,10 +356,34 @@ class Ajax extends MY_Controller
         ));
     }
 
+    /**
+     * Một dòng xem trước cho tin nhắn cuối.
+     *
+     * Tin ảnh lưu đường dẫn tệp trong cột content, đem hiện thẳng ra danh sách
+     * thì người dùng thấy "uploads/chat/2026/09/..." chứ không hiểu gì.
+     */
+    private function tom_tat_tin($type, $content, $cua_minh = false)
+    {
+        $dau = $cua_minh ? 'Bạn: ' : '';
+
+        if ($type === 'image') {
+            return $dau . 'Đã gửi một ảnh';
+        }
+        if ($type === 'system') {
+            return excerpt((string) $content, 38);
+        }
+
+        $chu = trim((string) $content);
+        if ($chu === '') {
+            return $dau . 'Đã gửi một tệp';
+        }
+        return $dau . excerpt($chu, 38);
+    }
+
     /** Mở (hoặc tạo) hội thoại với một người, dùng cho nút "Nhắn tin". */
     public function open_conversation($user_id)
     {
-        if (!$this->require_login()) {
+        if (!$this->require_login(true)) {
             return;
         }
         if ((int) $user_id === (int) $this->auth->id()) {
@@ -330,12 +446,16 @@ class Ajax extends MY_Controller
 
         $messages = array();
         foreach ($rows as $r) {
+            $la_cua_toi = (int) $r['sender_id'] === (int) $me;
             $messages[] = array(
                 'id'      => (int) $r['id'],
-                'mine'    => (int) $r['sender_id'] === (int) $me,
+                'mine'    => $la_cua_toi,
                 'type'    => $r['type'],
                 'content' => $r['type'] === 'image' ? base_url(ltrim($r['content'], '/')) : $r['content'],
-                'time'    => date('H:i d/m', strtotime($r['created_at'])),
+                'time'    => date('H:i', strtotime($r['created_at'])),
+                'day'     => $this->nhan_ngay($r['created_at']),
+                // Chỉ tin của mình mới cần nhãn "Đã xem"
+                'seen'    => $la_cua_toi && !empty($r['read_at']),
             );
         }
 
@@ -372,6 +492,10 @@ class Ajax extends MY_Controller
         if (!$this->auth->check()) {
             set_flash('warning', 'Vui lòng đăng nhập để bình luận.');
             redirect('dang-nhap');
+        }
+        if (!$this->auth->da_xac_thuc()) {
+            set_flash('warning', 'Bạn cần xác thực email trước khi bình luận.');
+            redirect('xac-thuc');
         }
         $post = $this->m_post->find($post_id);
         if (!$post) {

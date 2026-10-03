@@ -1,0 +1,47 @@
+/* Ảnh của tôi — account/photos.php (theo tai-khoan.anh.tsx) */
+
+/* Ô kéo thả: bg-gradient-blush rounded-xl border-2 border-dashed p-8 text-center */
+.tk-ap-drop {
+  padding: 32px; text-align: center;
+  background: var(--tk-grad-blush);
+  border: 2px dashed var(--tk-border); border-radius: var(--tk-r-xl);
+  transition: border-color .15s, background-color .15s;
+}
+.tk-ap-drop.is-drag { border-color: var(--tk-primary); background: var(--tk-accent); }
+.tk-ap-drop.is-busy { opacity: .7; pointer-events: none; }
+.tk-ap-drop__ic {
+  width: 56px; height: 56px; margin: 0 auto; display: grid; place-items: center;
+  border-radius: 999px; background: var(--tk-accent); color: var(--tk-primary);
+}
+.tk-ap-drop__ic .tk-ic { width: 28px; height: 28px; }
+.tk-ap-drop__t { margin-top: 16px; font-size: 16px; line-height: 24px; font-weight: 600; }
+.tk-ap-drop__d { margin-top: 4px; font-size: 14px; line-height: 20px; color: var(--tk-muted-fg); }
+.tk-ap-drop__pick { position: relative; display: inline-flex; margin-top: 20px; cursor: pointer; }
+.tk-ap-drop__pick .tk-btn { pointer-events: none; }
+.tk-ap-drop__pick:has(input:focus-visible) .tk-btn { outline: 2px solid var(--tk-primary); outline-offset: 2px; }
+.tk-ap-drop__busy { margin-top: 12px; font-size: 13px; font-weight: 600; color: var(--tk-primary); }
+
+/* Lưới ảnh: grid-cols-2 gap-4 sm:3 xl:4 */
+.tk-ap-grid { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 640px) { .tk-ap-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1280px) { .tk-ap-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+.tk-ap-ph { overflow: hidden; border: 1px solid var(--tk-border); border-radius: var(--tk-r); background: var(--tk-card); }
+.tk-ap-ph__img { position: relative; aspect-ratio: 4 / 5; background: var(--tk-muted); }
+.tk-ap-ph__img img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.tk-ap-ph__tag { position: absolute; left: 8px; top: 8px; }
+.tk-ap-ph__tag .tk-pill { background-color: rgb(255 255 255 / 90%); backdrop-filter: blur(6px); }
+.tk-ap-ph__acts { display: flex; align-items: center; gap: 4px; padding: 8px; }
+.tk-ap-ph__del { margin-left: auto; color: var(--tk-danger); }
+.tk-ap-ph__del:hover { background: oklch(0.585 0.22 25 / 10%); color: var(--tk-danger); }
+
+/* Quy định: space-y-2 text-sm text-muted-foreground, biểu tượng xanh */
+.tk-ap-rules { display: grid; gap: 8px; font-size: 14px; line-height: 20px; color: var(--tk-muted-fg); }
+.tk-ap-rules li { display: flex; gap: 8px; }
+.tk-ap-rules .tk-ic { width: 16px; height: 16px; margin-top: 2px; color: var(--tk-success); }
+.tk-ap-rules strong { color: var(--tk-fg); font-weight: 600; }
+
+@media (max-width: 639.98px) {
+  .tk-ap-drop { padding: 24px 16px; }
+  .tk-ap-grid { gap: 12px; }
+}

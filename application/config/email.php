@@ -24,6 +24,9 @@ $config['smtp_port'] = $mail_port;
 $config['smtp_user'] = getenv('MAIL_USERNAME') ?: '';
 $config['smtp_pass'] = getenv('MAIL_PASSWORD') ?: '';
 $config['smtp_crypto'] = ($mail_enc === 'tls') ? 'tls' : '';
+
+// Máy chủ mail dùng chứng chỉ tự ký thì đặt MAIL_VERIFY_PEER=false trong .env
+$config['smtp_verify_peer'] = strtolower((string) getenv('MAIL_VERIFY_PEER')) !== 'false';
 $config['smtp_timeout'] = 15;
 $config['smtp_keepalive'] = TRUE;
 

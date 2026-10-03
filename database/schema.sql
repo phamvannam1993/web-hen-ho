@@ -315,6 +315,7 @@ CREATE TABLE `user_tokens` (
   `type`       ENUM('verify_email','reset_password','remember','otp') NOT NULL,
   `token`      VARCHAR(128) NOT NULL,
   `expires_at` DATETIME NOT NULL,
+  `attempts`   TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'số lần nhập sai mã OTP',
   `used_at`    DATETIME DEFAULT NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -559,10 +560,133 @@ CREATE TABLE `room_messages` (
   CONSTRAINT `fk_room_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+DROP TABLE IF EXISTS `api_tokens`;
+CREATE TABLE `api_tokens` (
+  `id`           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id`      BIGINT UNSIGNED NOT NULL,
+  `token_hash`   CHAR(64) NOT NULL COMMENT 'chỉ lưu bản băm, không lưu token gốc',
+  `device`       VARCHAR(120) DEFAULT NULL,
+  `last_used_at` DATETIME DEFAULT NULL,
+  `expires_at`   DATETIME NOT NULL,
+  `revoked_at`   DATETIME DEFAULT NULL,
+  `created_at`   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_api_token` (`token_hash`),
+  KEY `idx_api_user` (`user_id`,`revoked_at`),
+  CONSTRAINT `fk_api_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `daily_matches`;
+CREATE TABLE `daily_matches` (
+  `id`            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id`       BIGINT UNSIGNED NOT NULL,
+  `match_user_id` BIGINT UNSIGNED NOT NULL,
+  `match_date`    DATE NOT NULL,
+  `status`        ENUM('pending','liked','skipped','expired','matched') NOT NULL DEFAULT 'pending',
+  `score`         SMALLINT NOT NULL DEFAULT 0,
+  `expires_at`    DATETIME NOT NULL,
+  `created_at`    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  -- Mỗi người mỗi ngày đúng một gợi ý
+  UNIQUE KEY `uq_daily_user_date` (`user_id`,`match_date`),
+  KEY `idx_daily_user` (`user_id`,`match_date`),
+  CONSTRAINT `fk_daily_user`  FOREIGN KEY (`user_id`)       REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_daily_match` FOREIGN KEY (`match_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `user_streaks`;
+CREATE TABLE `user_streaks` (
+  `user_id`             BIGINT UNSIGNED NOT NULL,
+  `current_streak`      SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  `longest_streak`      SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  `last_active_date`    DATE DEFAULT NULL,
+  `streak_freeze_count` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `updated_at`          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`),
+  CONSTRAINT `fk_streak_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `streak_badges`;
+CREATE TABLE `streak_badges` (
+  `id`          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id`     BIGINT UNSIGNED NOT NULL,
+  `badge_code`  VARCHAR(50) NOT NULL,
+  `achieved_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  -- Huy hiệu đã đạt thì giữ mãi, kể cả khi chuỗi bị đứt
+  UNIQUE KEY `uq_badge` (`user_id`,`badge_code`),
+  CONSTRAINT `fk_badge_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS `profile_views`;
+CREATE TABLE `profile_views` (
+  `id`         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `viewer_id`  BIGINT UNSIGNED NOT NULL COMMENT 'người xem',
+  `owner_id`   BIGINT UNSIGNED NOT NULL COMMENT 'chủ hồ sơ',
+  `viewed_at`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `view_count` INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'xem lại thì cộng dồn, không thêm dòng',
+  PRIMARY KEY (`id`),
+  -- Mỗi cặp chỉ giữ một dòng, xem lại thì cập nhật thời điểm: bảng không phình
+  -- theo số lần bấm và đếm "bao nhiêu người đã xem" ra đúng số người.
+  UNIQUE KEY `uq_view_pair` (`viewer_id`,`owner_id`),
+  KEY `idx_view_owner` (`owner_id`,`viewed_at`),
+  CONSTRAINT `fk_view_viewer` FOREIGN KEY (`viewer_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_view_owner`  FOREIGN KEY (`owner_id`)  REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------
+-- Hệ thống email: cài đặt của từng người + hàng đợi kiêm nhật ký gửi
+-- ---------------------------------------------------------------------
+DROP TABLE IF EXISTS `email_prefs`;
+CREATE TABLE `email_prefs` (
+  `user_id`       BIGINT UNSIGNED NOT NULL,
+  `welcome`       TINYINT(1) NOT NULL DEFAULT 1,
+  `new_message`   TINYINT(1) NOT NULL DEFAULT 1,
+  `notification`  TINYINT(1) NOT NULL DEFAULT 1,
+  `match_suggest` TINYINT(1) NOT NULL DEFAULT 1,
+  `re_engage`     TINYINT(1) NOT NULL DEFAULT 1,
+  `match_every_days` TINYINT UNSIGNED NOT NULL DEFAULT 2 COMMENT 'gửi gợi ý ghép đôi mỗi N ngày',
+  `token`         CHAR(40) NOT NULL COMMENT 'mã huỷ đăng ký, dùng trong link ở chân thư',
+  `bounce_count`  TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `disabled_at`   DATETIME DEFAULT NULL COMMENT 'ngừng gửi hẳn: người dùng huỷ hoặc gửi hỏng nhiều lần',
+  `updated_at`    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `uq_email_prefs_token` (`token`),
+  CONSTRAINT `fk_email_prefs_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Vừa là hàng đợi (chờ gửi, thử lại) vừa là nhật ký (đã gửi, mở, bấm)
+DROP TABLE IF EXISTS `email_queue`;
+CREATE TABLE `email_queue` (
+  `id`         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id`    BIGINT UNSIGNED NOT NULL,
+  `type`       VARCHAR(40) NOT NULL COMMENT 'welcome|new_message|notify_match|notify_like|notify_view|match_suggest|re_engage',
+  `to_email`   VARCHAR(190) NOT NULL,
+  `subject`    VARCHAR(255) NOT NULL,
+  `variant`    CHAR(1) DEFAULT NULL COMMENT 'nhánh A/B của tiêu đề, NULL nếu không thử nghiệm',
+  `view`       VARCHAR(60) NOT NULL COMMENT 'tên view trong application/views/emails/',
+  `payload`    TEXT DEFAULT NULL COMMENT 'dữ liệu cho view, dạng JSON',
+  `related_id` BIGINT UNSIGNED DEFAULT NULL COMMENT 'id hội thoại / người được gợi ý…',
+  `send_after` DATETIME NOT NULL COMMENT 'sớm nhất được gửi lúc nào',
+  `status`     ENUM('pending','sent','failed','skipped') NOT NULL DEFAULT 'pending',
+  `attempts`   TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `error`      VARCHAR(255) DEFAULT NULL,
+  `sent_at`    DATETIME DEFAULT NULL,
+  `opened_at`  DATETIME DEFAULT NULL,
+  `clicked_at` DATETIME DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_email_due` (`status`,`send_after`),
+  KEY `idx_email_user_type` (`user_id`,`type`,`status`,`sent_at`),
+  KEY `idx_email_related` (`type`,`related_id`,`sent_at`),
+  CONSTRAINT `fk_email_queue_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 DROP TABLE IF EXISTS `notifications`;
 CREATE TABLE `notifications` (
   `id`         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `user_id`    BIGINT UNSIGNED NOT NULL,
+  `actor_user_id` BIGINT UNSIGNED DEFAULT NULL,
   `type`       VARCHAR(50) NOT NULL COMMENT 'like|match|message|post_approved|system',
   `title`      VARCHAR(255) NOT NULL,
   `body`       VARCHAR(500) DEFAULT NULL,

@@ -15,7 +15,7 @@ class Discover extends MY_Controller
     public function __construct()
     {
         parent::__construct();
-        $this->load->model(array('m_user', 'm_interaction'));
+        $this->load->model(array('m_user', 'm_interaction', 'm_daily'));
         $this->load->helper('cookie');
     }
 
@@ -51,7 +51,7 @@ class Discover extends MY_Controller
             'title'      => 'Khám phá',
             'candidates' => $this->m_user->deck($me, $view, $filters, $this->per_page),
             'remaining'  => $this->m_user->count_deck($me, $view, $filters),
-            'matches'    => $me ? $this->m_interaction->matches($me['id'], 6) : array(),
+            'daily'      => $me ? ($this->m_daily->today($me['id']) ?: $this->m_daily->tao_cho($me['id'])) : null,
             'view'       => $view,
             'need_pick'  => !$me && !$view,          // khách chưa chọn nhóm -> hỏi ngay
             'filters'    => $filters,
@@ -79,12 +79,22 @@ class Discover extends MY_Controller
         if (!$this->require_login()) {
             return;
         }
+        // Chưa xác thực email thì xem hồ sơ được, nhưng chưa thả tim được
+        if (!$this->auth->da_xac_thuc()) {
+            return $this->json(array(
+                'ok' => false, 'need' => 'verify', 'url' => site_url('xac-thuc'),
+                'message' => 'Bạn cần xác thực email (bấm link trong thư chúng tôi đã gửi) để thả tim.',
+            ), 403);
+        }
         $me = $this->auth->user();
         if ((int) $target_id === (int) $me['id']) {
             return $this->json(array('ok' => false, 'message' => 'Không thể tự thích hồ sơ của mình.'));
         }
 
         $result = $this->m_interaction->toggle_like($me['id'], 'user', $target_id);
+        if (isset($result['ok']) && !$result['ok']) {
+            return $this->json($result, 403);
+        }
         $doi    = $this->m_user->find($target_id);
 
         return $this->json(array(
@@ -98,6 +108,8 @@ class Discover extends MY_Controller
                 'slug'   => $doi['slug'],
             ) : null,
             'me_avatar' => avatar_url($me['avatar'], $me['gender']),
+            // Thích mà chưa có ảnh thì nhắc thêm ảnh ngay lúc đó (mỗi phiên một lần)
+            'nudge'   => ($result['liked'] && !$result['matched']) ? $this->nhac_them_anh() : null,
             'message' => $result['matched']
                 ? 'Ghép đôi thành công! Hai bạn đã thích nhau.'
                 : ($result['liked'] ? 'Đã gửi lượt thích.' : 'Đã bỏ thích.'),

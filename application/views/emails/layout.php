@@ -23,7 +23,7 @@
 
         <!-- Đầu thư -->
         <tr>
-            <td align="center" style="background:#e91e8c; padding:26px 24px;">
+            <td align="center" style="background:#d1273f; padding:26px 24px;">
                 <span style="display:inline-block; width:42px; height:42px; line-height:42px;
                              border-radius:50%; background:rgba(255,255,255,.22);
                              color:#ffffff; font-size:21px;">&#9829;</span>
@@ -39,20 +39,37 @@
             </td>
         </tr>
 
-        <!-- Chân thư -->
+        <!-- Chân thư: bắt buộc theo CAN-SPAM, GDPR và Nghị định 13/2023/NĐ-CP —
+             phải nói rõ vì sao nhận thư, cho đường huỷ đăng ký và địa chỉ công ty -->
         <tr>
             <td style="background:#fafafb; border-top:1px solid #eeeef2;
-                       padding:20px 30px; color:#8a8a94; font-size:12.5px; line-height:1.6;">
-                Thư này được gửi tự động, vui lòng không trả lời.<br>
-                &copy; <?= date('Y') ?> <?= e($site_name) ?>
-                <?php if (setting('hotline')): ?>
-                    &nbsp;&middot;&nbsp; Hỗ trợ: <?= e(setting('hotline')) ?>
+                       padding:20px 30px; color:#8a8a94; font-size:12.5px; line-height:1.7;">
+                <?php if (!empty($ly_do)): ?>
+                    <div style="margin-bottom:10px;"><?= e($ly_do) ?></div>
                 <?php endif; ?>
+
+                <?php if (!empty($link_huy)): ?>
+                    <div style="margin-bottom:10px;">
+                        <a href="<?= $link_cai_dat ?>" style="color:#b21f35;">Quản lý email nhận</a>
+                        &nbsp;&middot;&nbsp;
+                        <a href="<?= $link_huy ?>" style="color:#b21f35;">Huỷ nhận email</a>
+                    </div>
+                <?php endif; ?>
+
+                Thư này được gửi tự động, vui lòng không trả lời.<br>
+                <?= e(setting('company_name') ?: $site_name) ?><?php if (setting('address')): ?>
+                    &nbsp;&middot;&nbsp; <?= e(setting('address')) ?><?php endif; ?><br>
+                &copy; <?= date('Y') ?> <?= e($site_name) ?><?php if (setting('hotline')): ?>
+                    &nbsp;&middot;&nbsp; Hỗ trợ: <?= e(setting('hotline')) ?><?php endif; ?>
             </td>
         </tr>
     </table>
 
 </td></tr>
 </table>
+<?php /* Ảnh ẩn 1x1: tải được nghĩa là thư đã được mở */ ?>
+<?php if (!empty($link_mo)): ?>
+    <img src="<?= $link_mo ?>" width="1" height="1" alt="" style="display:block; border:0;">
+<?php endif; ?>
 </body>
 </html>

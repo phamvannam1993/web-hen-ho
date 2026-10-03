@@ -85,6 +85,11 @@ class Members extends MY_Controller
         }
         $this->auth->touch_active();
 
+        // Ghi lượt xem để gom thành thông báo "N người đã xem hồ sơ bạn"
+        if ($me) {
+            $this->m_interaction->record_view($me['id'], $member['id']);
+        }
+
         $this->render('members/profile', array(
             'title'      => $member['display_name'],
             'meta_desc'  => excerpt($member['bio'], 160),
@@ -100,6 +105,7 @@ class Members extends MY_Controller
             'prefs'      => $this->db->where('user_id', $member['id'])
                 ->get('user_preferences')->row_array(),
             'liked'      => $me ? $this->m_interaction->has_liked($me['id'], 'user', $member['id']) : false,
+            'liked_me'   => $me ? $this->m_interaction->has_liked($member['id'], 'user', $me['id']) : false,
             'like_count' => $this->m_interaction->count_likes('user', $member['id']),
             'matched'    => $me ? $this->m_interaction->is_matched($me['id'], $member['id']) : false,
             // Liên kết nhanh dẫn sang các khu vực, thay cho danh mục tin đăng đã ngưng
@@ -149,6 +155,10 @@ class Members extends MY_Controller
         if (!$this->auth->check()) {
             set_flash('warning', 'Vui lòng đăng nhập để bình luận.');
             redirect('dang-nhap');
+        }
+        if (!$this->auth->da_xac_thuc()) {
+            set_flash('warning', 'Bạn cần xác thực email trước khi bình luận.');
+            redirect('xac-thuc');
         }
         $member = $this->m_user->by_slug($slug);
         if (!$member) {

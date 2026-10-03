@@ -5,8 +5,13 @@ $items = array(
     'ho-so'     => 'Hồ sơ của tôi',
     'anh'       => 'Ảnh của tôi',
     'quan-tam'  => 'Quan tâm & ghép đôi',
+    'ai-thich-ban'  => 'Ai đã thích bạn',
+    'ai-xem-ho-so'  => 'Ai đã xem hồ sơ',
+    'chuoi'         => 'Chuỗi hoạt động',
+    'goi-y'         => 'Lịch sử gợi ý',
     'tin-nhan'  => 'Tin nhắn',
     'thong-bao' => 'Thông báo',
+    'email'     => 'Cài đặt email',
     'nap-xu'    => 'Nạp xu / VIP',
     'doi-mat-khau' => 'Đổi mật khẩu',
 );

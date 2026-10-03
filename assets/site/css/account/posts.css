@@ -1,0 +1,34 @@
+/* Tin đăng của tôi — account/posts.php */
+
+.tk-ps-item { align-items: flex-start !important; }
+.tk-ps-item__ph {
+  width: 64px; height: 80px; flex: 0 0 64px; overflow: hidden; display: grid; place-items: center;
+  border-radius: var(--tk-r-sm); background: var(--tk-accent); color: var(--tk-primary-soft);
+}
+.tk-ps-item__ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tk-ps-item__ph .tk-ic { width: 24px; height: 24px; }
+.tk-ps-item__b { flex: 1; min-width: 0; }
+.tk-ps-item__top { display: flex; align-items: flex-start; gap: 8px; }
+.tk-ps-item__t {
+  flex: 1; min-width: 0; font-size: 14px; line-height: 20px; font-weight: 600;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.tk-ps-item__t:hover { color: var(--tk-primary); }
+.tk-ps-item__m { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; line-height: 16px; color: var(--tk-muted-fg); }
+.tk-ps-item__m span { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+.tk-ps-item__m .tk-ic { width: 13px; height: 13px; }
+.tk-ps-item__why {
+  margin-top: 8px; display: flex; gap: 6px; padding: 8px 10px; border-radius: var(--tk-r-sm);
+  background: oklch(0.585 0.22 25 / 8%); color: oklch(0.48 0.19 25); font-size: 12px; line-height: 16px;
+}
+.tk-ps-item__why .tk-ic { width: 14px; height: 14px; margin-top: 1px; }
+.tk-ps-item__acts { flex: 0 0 auto; display: flex; align-items: center; gap: 4px; }
+.tk-ps-del { color: var(--tk-danger); }
+.tk-ps-del:hover { background: oklch(0.585 0.22 25 / 10%); color: var(--tk-danger); }
+
+@media (max-width: 639.98px) {
+  .tk-ps-item { flex-wrap: wrap; }
+  .tk-ps-item__ph { width: 56px; height: 70px; flex-basis: 56px; }
+  .tk-ps-item__b { flex-basis: calc(100% - 68px); }
+  .tk-ps-item__acts { width: 100%; justify-content: flex-end; }
+}

@@ -8,7 +8,17 @@ class Account extends Member_Controller
     {
         parent::__construct();
         $this->load->model(array('m_user', 'm_post', 'm_category', 'm_interaction',
-                                 'm_notification', 'm_billing', 'm_job'));
+                                 'm_notification', 'm_billing', 'm_job', 'm_daily'));
+
+        // Số liệu cho khung chung của khu Tài khoản (cột trái, thanh trên và
+        // thanh dưới trên điện thoại) — trang nào cũng cần nên nạp một lần ở đây.
+        $id = $this->auth->id();
+        $this->data['tk'] = array(
+            'me'    => $this->m_user->find($id),
+            'liked' => (int) $this->m_interaction->liked_me_count($id),
+            'msg'   => (int) $this->m_interaction->unread_count($id),
+            'noti'  => (int) $this->data['unread_noti'],
+        );
     }
 
     public function index()
@@ -19,10 +29,20 @@ class Account extends Member_Controller
             'me'            => $me,
             'post_count'    => $this->db->where('user_id', $me['id'])->where('deleted_at', null)->count_all_results('posts'),
             'liked_me'      => $this->m_interaction->liked_me($me['id'], 8),
+            'viewer_count'  => $this->m_interaction->viewer_count($me['id']),
+            'liked_count'   => $this->m_interaction->liked_me_count($me['id']),
             'matches'       => $this->m_interaction->matches($me['id'], 8),
             'unread_msg'    => $this->m_interaction->unread_count($me['id']),
             'unread_noti'   => $this->m_notification->unread_count($me['id']),
             'recent_posts'  => $this->m_post->by_user($me['id'], null, 5),
+            /* Hai khối bổ sung cho trang Tổng quan (theo bản thiết kế SaigonCupid).
+               Dùng lại model sẵn có, không thêm truy vấn mới nào ngoài hai dòng này. */
+            'hoat_dong'     => $this->m_notification->for_user($me['id'], 5),
+            'goi_y_hom_nay' => $this->m_daily->today($me['id']),
+            /* `M_daily::today()` chỉ trả MỘT người mỗi ngày (đúng luật của tính năng
+               ghép đôi hằng ngày), nên lưới gợi ý lấy từ `suggestions()` — cùng bộ
+               lọc mà trang Khám phá đang dùng. */
+            'goi_y_them'    => $this->m_user->suggestions($me, 3),
         ));
     }
 
@@ -30,6 +50,10 @@ class Account extends Member_Controller
     /** Số điện thoại phải là số di động Việt Nam và chưa ai dùng. */
     public function dien_thoai_hop_le($so)
     {
+        // Không bắt buộc: bỏ trống là hợp lệ, có nhập thì phải đúng
+        if (trim((string) $so) === '') {
+            return true;
+        }
         $chuan = chuan_hoa_dien_thoai($so);
         if ($chuan === '') {
             $this->form_validation->set_message('dien_thoai_hop_le',
@@ -49,34 +73,27 @@ class Account extends Member_Controller
         $me = $this->auth->user();
 
         if ($this->input->method() === 'post') {
-            // Chỉ bắt buộc nhóm thông tin cần thiết, giống cách các trang hẹn hò
-            // khác vẫn làm: khai đủ nhóm này là hồ sơ dùng được, phần còn lại
-            // (nghề nghiệp, học vấn, thói quen, sở thích, ảnh...) để tuỳ chọn.
+            // Hoàn thiện hồ sơ dần dần: chỉ bắt những mục mà đăng ký đã có sẵn
+            // (để không ai xoá trắng được) và tiêu chí ghép đôi. Ảnh, khu vực,
+            // giới thiệu, số điện thoại… khai lúc nào cũng được — thiếu ảnh hoặc
+            // khu vực thì hồ sơ chỉ bị ẩn khỏi danh sách công khai, có banner nhắc.
             $bat_buoc = array(
                 'display_name'   => 'Tên hiển thị',
-                'phone'          => 'Số điện thoại',
                 'gender'         => 'Giới tính',
                 'birthday'       => 'Ngày sinh',
-                'province_id'    => 'Khu vực',
-                'bio'            => 'Giới thiệu bản thân',
                 'seeking_gender' => 'Muốn tìm',
                 'purpose'        => 'Mục đích',
             );
             foreach ($bat_buoc as $o => $ten) {
                 $this->form_validation->set_rules($o, $ten, 'required');
             }
-            $this->form_validation->set_rules('phone', 'Số điện thoại',
-                'required|callback_dien_thoai_hop_le');
-
-            // Ảnh đại diện bắt buộc, nhưng chỉ đòi với người chưa từng tải lên
-            if (empty($me['avatar']) && empty($_FILES['avatar']['name'])) {
-                $this->form_validation->set_rules('avatar', 'Ảnh đại diện', 'required');
-            }
+            $this->form_validation->set_rules('phone', 'Số điện thoại', 'trim|callback_dien_thoai_hop_le');
+            $this->form_validation->set_rules('bio', 'Giới thiệu bản thân', 'max_length[500]');
 
             if ($this->form_validation->run()) {
                 $data = array(
                     'display_name'   => $this->input->post('display_name', true),
-                    'phone'          => chuan_hoa_dien_thoai($this->input->post('phone')),
+                    'phone'          => chuan_hoa_dien_thoai($this->input->post('phone')) ?: null,
                     'nickname'       => $this->input->post('nickname', true) ?: null,
                     'gender'         => $this->input->post('gender'),
                     'birthday'       => $this->input->post('birthday') ?: null,
@@ -127,6 +144,9 @@ class Account extends Member_Controller
                     $pref['user_id'] = $me['id'];
                     $this->db->insert('user_preferences', $pref);
                 }
+
+                // Tính lại sau khi đã lưu sở thích (sở thích là một mục của điểm)
+                $this->m_user->recalc_profile_score($me['id']);
 
                 set_flash('success', 'Đã cập nhật hồ sơ.');
                 redirect('tai-khoan/ho-so');
@@ -277,6 +297,7 @@ class Account extends Member_Controller
             'liked_me' => $this->m_interaction->liked_me($me['id']),
             'my_likes' => $this->m_interaction->my_likes($me['id']),
             'matches'  => $this->m_interaction->matches($me['id']),
+            'viewers'  => $this->m_interaction->viewers($me['id'], 12),
         ));
     }
 
@@ -315,13 +336,111 @@ class Account extends Member_Controller
             $this->m_interaction->mark_read($conversation_id, $me['id']);
         }
 
+        $conversations = $this->m_interaction->conversations($me['id']);
         $this->render('account/messages', array(
             'title'         => 'Tin nhắn',
-            'conversations' => $this->m_interaction->conversations($me['id']),
+            'conversations' => $conversations,
             'messages'      => $messages,
             'partner'       => $partner,
             'can_send'      => $can_send,
             'conversation_id' => $conversation_id,
+        ));
+    }
+
+    /* ============ Ai đã thích bạn ============ */
+
+    public function who_liked_me()
+    {
+        $me = $this->auth->user();
+        $this->render('account/who_liked_me', array(
+            'title'   => 'Ai đã thích bạn',
+            'list'    => $this->m_interaction->liked_me($me['id'], 60),
+            'tong'    => $this->m_interaction->liked_me_count($me['id']),
+            'la_vip'  => (bool) $this->auth->is_vip(),
+        ));
+    }
+
+    /** Lịch sử các gợi ý đã nhận. */
+    public function daily_history()
+    {
+        $me = $this->auth->user();
+        $this->load->model('m_daily');
+        $this->render('account/daily_history', array(
+            'title' => 'Lịch sử gợi ý',
+            'list'  => $this->m_daily->history($me['id'], 60),
+            'today' => $this->m_daily->today($me['id']),
+        ));
+    }
+
+    /* ============ Ai đã xem hồ sơ ============ */
+
+    public function profile_viewers()
+    {
+        $me = $this->auth->user();
+        $this->render('account/profile_viewers', array(
+            'title'  => 'Ai đã xem hồ sơ bạn',
+            'list'   => $this->m_interaction->viewers($me['id'], 60),
+            'tong'   => $this->m_interaction->viewer_count($me['id']),
+            'la_vip' => (bool) $this->auth->is_vip(),
+        ));
+    }
+
+    /* ============ Chuỗi ngày hoạt động ============ */
+
+    public function streak()
+    {
+        $me = $this->auth->user();
+        $this->load->model('m_streak');
+        $s = $this->m_streak->get($me['id']);
+
+        if ($this->input->method() === 'post') {
+            $kq = $this->input->post('mua')
+                ? $this->m_streak->mua_freeze($me['id'])
+                : $this->m_streak->dung_freeze($me['id']);
+            set_flash($kq['ok'] ? 'success' : 'danger', $kq['message']);
+            redirect('tai-khoan/chuoi');
+        }
+
+        $this->render('account/streak', array(
+            'title'     => 'Chuỗi hoạt động',
+            's'         => $s,
+            'badges'    => $this->m_streak->badges($me['id']),
+            'ke_tiep'   => $this->m_streak->moc_ke_tiep((int) $s['current_streak']),
+            'boost'     => $this->m_streak->boost($me['id']),
+            'tat_ca_moc' => M_streak::MOC,
+        ));
+    }
+
+    /** Trang cài đặt email: bật/tắt từng loại và chọn tần suất gợi ý. */
+    public function email_prefs()
+    {
+        $me = $this->auth->user();
+        $this->load->model('m_email');
+
+        if ($this->input->method() === 'post') {
+            if ($this->input->post('huy_tat_ca')) {
+                $this->m_email->unsubscribe_all($me['id']);
+                set_flash('success', 'Đã huỷ nhận toàn bộ email.');
+                redirect('tai-khoan/email');
+            }
+
+            $this->m_email->save_prefs($me['id'], array(
+                'new_message'      => (int) (bool) $this->input->post('new_message'),
+                'notification'     => (int) (bool) $this->input->post('notification'),
+                'match_suggest'    => (int) (bool) $this->input->post('match_suggest'),
+                're_engage'        => (int) (bool) $this->input->post('re_engage'),
+                // Tần suất chỉ nhận 2 hoặc 3 ngày như đặc tả
+                'match_every_days' => in_array((int) $this->input->post('match_every_days'), array(2, 3), true)
+                    ? (int) $this->input->post('match_every_days') : 2,
+                'disabled_at'      => null,
+            ));
+            set_flash('success', 'Đã lưu cài đặt email.');
+            redirect('tai-khoan/email');
+        }
+
+        $this->render('account/email_prefs', array(
+            'title' => 'Cài đặt email',
+            'p'     => $this->m_email->prefs($me['id']),
         ));
     }
 
@@ -398,6 +517,56 @@ class Account extends Member_Controller
             'max_size'      => 5120,
             'encrypt_name'  => true,
         );
+    }
+
+    /**
+     * Bước "Bắt đầu" ngay sau đăng ký: ba việc nhỏ (thêm ảnh, chọn khu vực,
+     * viết một câu giới thiệu), việc nào làm cũng được, có nút "Bỏ qua, để sau".
+     * Thay cho cơ chế cũ bắt khai đủ hồ sơ mới cho đi tiếp.
+     */
+    public function onboarding()
+    {
+        $me = $this->m_user->find($this->auth->id());
+
+        if ($this->input->method() === 'post') {
+            $this->form_validation->set_rules('bio', 'Giới thiệu bản thân', 'trim|max_length[500]');
+            $this->form_validation->set_rules('province_id', 'Khu vực', 'integer');
+
+            if ($this->form_validation->run()) {
+                $data = array();
+                $avatar = $this->upload_image('avatar');
+                if ($avatar) {
+                    $data['avatar'] = $avatar;
+                }
+                $tinh = (int) $this->input->post('province_id');
+                if ($tinh > 0 && $this->m_province->find($tinh)) {
+                    $data['province_id'] = $tinh;
+                }
+                $bio = trim((string) $this->input->post('bio', true));
+                if ($bio !== '') {
+                    $data['bio'] = $bio;
+                }
+
+                if ($data) {
+                    $this->m_user->update_profile($me['id'], $data);
+                }
+                // upload_image() tự đặt flash khi ảnh lỗi — giữ người dùng ở lại sửa
+                if (!empty($_FILES['avatar']['name']) && !$avatar) {
+                    redirect('tai-khoan/bat-dau');
+                }
+                if ($this->m_user->thieu_thong_tin($me['id'])) {
+                    set_flash('success', 'Đã lưu! Còn vài bước nữa là hồ sơ hiện với mọi người — làm tiếp lúc nào cũng được.');
+                } else {
+                    set_flash('success', 'Tuyệt! Hồ sơ của bạn đã hiển thị với mọi người.');
+                }
+                redirect('tai-khoan');
+            }
+        }
+
+        $this->render('account/onboarding', array(
+            'title' => 'Bắt đầu',
+            'me'    => $me,
+        ));
     }
 
     private function upload_image($field)
