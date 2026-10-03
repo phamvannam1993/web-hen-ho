@@ -45,3 +45,11 @@
     border-top: 1px solid #e2e2e2;
 }
 .site-mobile-nav--swipe a { height: 51px; }
+@media (min-width: 1024px) {
+    .site-mobile-nav--swipe {
+        width: 560px;
+        max-width: 100%;
+        left: 50%; right: auto;
+        transform: translateX(-50%);
+    }
+}
