@@ -201,7 +201,6 @@
         var toggle = document.getElementById('header-search-toggle');
         var form = document.getElementById('header-search');
         if (!toggle || !form) { return; }
-        var input = form.querySelector('input[name="q"]');
         function close() {
             form.classList.remove('is-open');
             toggle.setAttribute('aria-expanded', 'false');
@@ -210,7 +209,6 @@
             var open = !form.classList.contains('is-open');
             form.classList.toggle('is-open', open);
             toggle.setAttribute('aria-expanded', String(open));
-            if (open && input) { input.focus(); }
         });
         form.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
@@ -298,6 +296,14 @@
         });
 
         overlay.addEventListener('click', closeDrawer);
+        // Chạm ngoài panel cũng đóng, kể cả vùng header nằm trên lớp phủ.
+        document.addEventListener('click', function (e) {
+            if (!isMobile() || !drawer.classList.contains('open') ||
+                drawer.contains(e.target) || toggle.contains(e.target)) { return; }
+            e.preventDefault();
+            e.stopPropagation();
+            closeDrawer();
+        }, true);
         if (closeBtn) { closeBtn.addEventListener('click', closeDrawer); }
 
         document.addEventListener('keydown', function (e) {

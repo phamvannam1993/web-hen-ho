@@ -66,6 +66,7 @@ $tk_app = !empty($tk) && !empty($content_view) && strpos($content_view, 'account
 <link rel="stylesheet" href="<?= base_url($tk_css) ?>?v=<?= @filemtime(FCPATH . $tk_css) ?>">
 <?php endif; ?>
 <?php endif; ?>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/mobile-nav.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/mobile-nav.css') ?>">
 </head>
 <body class="<?= !empty($bare) ? 'is-bare' : '' ?><?= $tk_app ? 'tk-app' : '' ?>">
 
@@ -162,8 +163,8 @@ $mxh = array_filter(array(
                     <button type="button" class="hd-bell" id="noti-toggle"
                             aria-label="Thông báo" aria-expanded="false" aria-haspopup="dialog">
                         <svg viewBox="0 0 24 24" class="ic" aria-hidden="true">
-                            <path d="M18 16.5V11a6 6 0 1 0-12 0v5.5L4.5 18.5h15z"/>
-                            <path d="M10 21.2a2.2 2.2 0 0 0 4 0"/>
+                            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+                            <path d="M10 21a2 2 0 0 0 4 0"/>
                         </svg>
                         <span class="hd-bell-badge" id="noti-badge"
                               <?= empty($unread_noti) ? 'hidden' : '' ?>><?= $unread_noti > 99 ? '99+' : (int) $unread_noti ?></span>
@@ -521,5 +522,6 @@ $mxh = array_filter(array(
 <script src="<?= base_url('assets/site/js/realtime.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/realtime.js') ?>"></script>
 <script src="<?= base_url('assets/site/js/chat-widget.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/chat-widget.js') ?>"></script>
 
+<?php $this->load->view('layouts/_mobile_nav'); ?>
 </body>
 </html>
