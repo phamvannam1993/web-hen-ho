@@ -112,6 +112,12 @@ class MY_Controller extends CI_Controller
     protected function render($view, $data = array())
     {
         $data = array_merge($this->data, $data);
+        // Giao diện phụ thuộc phiên đăng nhập, kể cả khi đang xem hồ sơ công khai.
+        // Không dùng lại HTML dành cho khách từ cache sau khi đăng nhập.
+        $this->output->set_header('Cache-Control: private, no-store, no-cache, must-revalidate')
+            ->set_header('Pragma: no-cache')
+            ->set_header('Expires: 0');
+        $data['user'] = $this->auth->user();
         $data['content_view'] = $view;
         $this->load->view('layouts/main', $data);
     }

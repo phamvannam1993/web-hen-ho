@@ -264,7 +264,7 @@ $mxh = array_filter(array(
 </div>
 
 <main<?= empty($bare) && $content_view !== 'home/index' ? ' class="site-page-content"' : '' ?>>
-    <?php $this->load->view($content_view); ?>
+    <?php $this->load->view($content_view, array('user' => $user)); ?>
 </main>
 <?php endif; ?>
 
