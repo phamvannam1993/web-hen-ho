@@ -32,6 +32,9 @@ $stats = array(
 <!-- Thẻ chào -->
 <section class="tk-card tk-hero">
     <div class="tk-hero__in">
+        <a class="tk-hero__profile" href="<?= e(site_url('profile/' . $me['slug'])) ?>" aria-label="Xem trang cá nhân của tôi">
+            <?= tk_icon('eye') ?><span>Xem trang cá nhân</span>
+        </a>
         <div class="tk-hero__top">
             <img class="tk-hero__av" src="<?= e(avatar_url($me['avatar'] ?? null, $me['gender'] ?? 'other')) ?>"
                  alt="<?= e(display_name($me)) ?>" width="80" height="80">

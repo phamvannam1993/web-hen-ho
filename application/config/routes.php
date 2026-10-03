@@ -93,6 +93,7 @@ $route['thanh-vien/(:any)']       = 'members/legacy_profile/$1';
 
 $route['tai-khoan']               = 'account/index';
 $route['tai-khoan/ho-so']         = 'account/profile';
+$route['tai-khoan/kiem-tra-email'] = 'account/check_profile_email';
 $route['tai-khoan/bat-dau']       = 'account/onboarding';
 $route['tai-khoan/anh']           = 'account/photos';
 $route['tai-khoan/tin-dang']      = 'account/posts';

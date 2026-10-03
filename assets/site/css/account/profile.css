@@ -98,3 +98,7 @@
   .tk-pf .ss-toggle { height: 40px; line-height: 38px; padding-left: 12px; }
   .tk-pf-save { margin: 0 -12px; padding: 12px; }
 }
+.tk-layout .tk-field input#email[aria-invalid="true"] {
+  border-color: var(--tk-danger);
+  box-shadow: 0 0 0 2px oklch(0.585 0.22 25 / 15%);
+}

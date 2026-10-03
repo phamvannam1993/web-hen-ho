@@ -608,7 +608,16 @@ a.tk-stat:hover { box-shadow: var(--tk-shadow-float); }
 /* ── Tổng quan (trang tai-khoan.index) ────────────────────────────────── */
 
 .tk-card.tk-hero { overflow: hidden; padding: 0; }
-.tk-hero__in { background: var(--tk-grad-brand); color: #fff; padding: 32px; }
+.tk-hero__in { position: relative; background: var(--tk-grad-brand); color: #fff; padding: 52px 32px 32px; }
+.tk-hero__profile {
+  position: absolute; top: 12px; right: 16px; display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 10px; border: 1px solid rgb(255 255 255 / 55%); border-radius: 999px;
+  color: #fff; background: rgb(255 255 255 / 12%); font-size: 12px; line-height: 18px;
+  text-decoration: none; white-space: nowrap;
+}
+.tk-hero__profile svg { width: 14px; height: 14px; }
+.tk-hero__profile:hover { background: rgb(255 255 255 / 25%); color: #fff; }
+.tk-hero__profile:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 .tk-hero__top { display: flex; align-items: center; gap: 16px; min-width: 0; }
 .tk-hero__av {
   width: 80px; height: 80px; flex: 0 0 auto; border-radius: var(--tk-r-2xl);
@@ -698,7 +707,8 @@ a.tk-stat:hover { box-shadow: var(--tk-shadow-float); }
   .tk-grid--2, .tk-grid--3 { grid-template-columns: minmax(0, 1fr); }
   .tk-grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 
-  .tk-hero__in { padding: 20px 16px; }
+  .tk-hero__in { padding: 48px 16px 20px; }
+  .tk-hero__profile { top: 8px; right: 12px; padding: 4px 8px; font-size: 11px; }
   .tk-hero__top { gap: 12px; }
   .tk-hero__av { width: 48px; height: 48px; border-radius: var(--tk-r-xl); }
   .tk-hero__hi { font-size: 12px; line-height: 16px; }

@@ -14,7 +14,9 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
                 $p_new    = !empty($m['created_at']) && strtotime($m['created_at']) > strtotime('-7 days');
                 ?>
                 <div class="profile-photo">
-    <img src="<?= avatar_url($m['avatar'], $m['gender']) ?>" alt="<?= e(display_name($m)) ?>">
+    <button type="button" class="profile-image-trigger" data-profile-image aria-label="Xem ảnh đại diện lớn hơn">
+        <img src="<?= avatar_url($m['avatar'], $m['gender']) ?>" alt="<?= e(display_name($m)) ?>">
+    </button>
     <?php if ($p_online): ?>
         <span class="dot-online" title="Đang hoạt động"></span>
     <?php endif; ?>
@@ -175,7 +177,7 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
                     <h2 class="info-heading">Album ảnh</h2>
                     <div class="photo-grid">
                         <?php foreach ($photos as $ph): ?>
-                            <figure><img src="<?= base_url(ltrim($ph['path'], '/')) ?>" alt="" loading="lazy"></figure>
+                            <figure><button type="button" class="profile-image-trigger" data-profile-image aria-label="Xem ảnh trong album lớn hơn"><img src="<?= e(base_url(ltrim($ph['path'], '/'))) ?>" alt="Ảnh trong album" loading="lazy"></button></figure>
                         <?php endforeach; ?>
                     </div>
                 </section>
@@ -242,9 +244,9 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
                                 <?php endif; ?>
                             </div>
                             <?php if (!empty($c['image'])): ?>
-                                <a class="comment-image" href="<?= base_url(ltrim($c['image'], '/')) ?>" target="_blank">
+                                <button class="comment-image" type="button" data-comment-image aria-label="Xem ảnh bình luận lớn hơn">
                                     <img src="<?= base_url(ltrim($c['image'], '/')) ?>" alt="Ảnh bình luận" loading="lazy">
-                                </a>
+                                </button>
                             <?php endif; ?>
                             <div class="comment-tools">
                                 <time><?= time_ago($c['created_at']) ?></time>

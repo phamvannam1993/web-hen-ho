@@ -5,6 +5,52 @@
     var scriptBase = document.currentScript && document.currentScript.getAttribute('data-base');
     var base = scriptBase || (document.querySelector('base') ? document.querySelector('base').href : '/');
 
+    /* View profile photos and comment attachments in a shared dialog. */
+    var commentImageViewer;
+    document.addEventListener('click', function (event) {
+        var trigger = event.target.closest('[data-comment-image], [data-profile-image]');
+        if (!trigger) { return; }
+        var thumbnail = trigger.querySelector('img');
+        if (!thumbnail && !trigger.getAttribute('href')) { return; }
+        event.preventDefault();
+        if (!commentImageViewer) {
+            commentImageViewer = document.createElement('dialog');
+            commentImageViewer.className = 'comment-image-viewer';
+            commentImageViewer.setAttribute('aria-label', 'Xem ảnh lớn');
+            var closeButton = document.createElement('button');
+            closeButton.type = 'button';
+            closeButton.className = 'comment-image-viewer-close';
+            closeButton.setAttribute('aria-label', 'Đóng');
+            closeButton.textContent = '×';
+            closeButton.addEventListener('click', function () { commentImageViewer.close(); });
+            commentImageViewer.appendChild(closeButton);
+            commentImageViewer.appendChild(document.createElement('img'));
+            commentImageViewer.addEventListener('click', function (e) {
+                if (e.target !== commentImageViewer) { return; }
+                var bounds = commentImageViewer.getBoundingClientRect();
+                if (e.clientX < bounds.left || e.clientX > bounds.right ||
+                    e.clientY < bounds.top || e.clientY > bounds.bottom) {
+                    commentImageViewer.close();
+                }
+            });
+            var previousOverflow;
+            commentImageViewer.addEventListener('close', function () {
+                document.body.style.overflow = previousOverflow;
+                commentImageViewer.querySelector('img').removeAttribute('src');
+            });
+            commentImageViewer.lockScroll = function () {
+                previousOverflow = document.body.style.overflow;
+                document.body.style.overflow = 'hidden';
+            };
+            document.body.appendChild(commentImageViewer);
+        }
+        var fullImage = commentImageViewer.querySelector('img');
+        fullImage.src = thumbnail ? (thumbnail.currentSrc || thumbnail.src) : trigger.href;
+        fullImage.alt = thumbnail ? thumbnail.alt : 'Ảnh trong album';
+        commentImageViewer.showModal();
+        commentImageViewer.lockScroll();
+    });
+
     /* ------------------------- Modal dùng chung ------------------------- */
 
     function ensureModal() {

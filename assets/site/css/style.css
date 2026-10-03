@@ -1145,12 +1145,36 @@ a.btn.btn-primary {
 .comment-bar .btn { margin-top: 0; }
 
 /* Ảnh đính kèm hiển thị trong bình luận */
-.comment-image { display: inline-block; margin-top: 8px; border-radius: 12px; overflow: hidden; }
+.comment-image {
+    display: block; width: fit-content; max-width: 100%; margin-top: 8px;
+    padding: 0; border: 0; background: transparent; cursor: zoom-in;
+    border-radius: 12px; overflow: hidden;
+}
 .comment-image img {
-    max-width: 300px; max-height: 300px; border: 1px solid var(--line);
-    object-fit: cover; transition: transform .25s ease;
+    display: block; width: auto; height: auto; max-width: min(220px, 100%); max-height: 220px;
+    border: 1px solid var(--line); object-fit: contain; transition: transform .25s ease;
 }
 .comment-image:hover img { transform: scale(1.03); }
+.profile-image-trigger {
+    display: block; padding: 0; border: 0; background: transparent; cursor: zoom-in;
+}
+.profile-image-trigger:focus-visible { outline: 3px solid var(--primary, #e94057); outline-offset: 4px; }
+.photo-grid .profile-image-trigger,
+.tk-ap-ph__img.profile-image-trigger { width: 100%; }
+.comment-image-viewer {
+    max-width: calc(100vw - 32px); max-height: calc(100dvh - 32px);
+    padding: 48px 12px 12px; border: 0; border-radius: 16px; background: #fff;
+}
+.comment-image-viewer::backdrop { background: rgba(0, 0, 0, .78); }
+.comment-image-viewer img {
+    display: block; width: auto; height: auto;
+    max-width: calc(100vw - 56px); max-height: calc(100dvh - 100px); object-fit: contain;
+}
+.comment-image-viewer-close {
+    position: absolute; top: 8px; right: 12px; width: 32px; height: 32px;
+    padding: 0; border: 0; border-radius: 50%; background: #f2f3f5;
+    color: var(--ink); font-size: 26px; line-height: 1; cursor: pointer;
+}
 .comment-form .file-preview img { max-width: 160px; height: 120px; border-radius: 12px; }
 
 .reply-form { margin: 12px 0 0; }
@@ -3159,7 +3183,7 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
     .dating-page .pcard-bio,
     .dating-page .pcard-chips { display: none; }
     .dating-page .pcard-actions { margin-top: 6px; gap: 6px; }
-    .dating-page .btn-swipe { min-height: 44px; padding: 8px 4px; font-size: 12px; }
+    .dating-page .btn-swipe { min-height: 24px; padding: 8px 4px; font-size: 12px; }
 }
 
 .block-sub { text-align: center; color: var(--muted); margin: -8px 0 14px; }

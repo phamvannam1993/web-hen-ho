@@ -68,6 +68,35 @@ class Account extends Member_Controller
         return true;
     }
 
+    public function email_hop_le($email)
+    {
+        if ($email === '') {
+            if (!empty($this->auth->user()['email'])) {
+                $this->form_validation->set_message('email_hop_le', 'Vui lòng nhập email mới, không được xoá email hiện tại.');
+                return false;
+            }
+            return true;
+        }
+        if ($this->m_user->email_exists($email, $this->auth->id())) {
+            $this->data['email_bi_trung'] = true;
+            $this->form_validation->set_message('email_hop_le',
+                'Email này đã được dùng cho tài khoản khác. Chưa lưu thay đổi; email hiện tại của bạn được giữ nguyên. Vui lòng chọn email khác.');
+            return false;
+        }
+        return true;
+    }
+
+    public function check_profile_email()
+    {
+        $email = trim((string) $this->input->get('email'));
+        $valid = ($email === '' && empty($this->auth->user()['email']))
+            || (strlen($email) <= 190 && filter_var($email, FILTER_VALIDATE_EMAIL)
+                && !$this->m_user->email_exists($email, $this->auth->id()));
+        $this->output->set_content_type('application/json')
+            ->set_header('Cache-Control: no-store')
+            ->set_output(json_encode(array('available' => (bool) $valid)));
+    }
+
     public function profile()
     {
         $me = $this->auth->user();
@@ -88,6 +117,9 @@ class Account extends Member_Controller
                 $this->form_validation->set_rules($o, $ten, 'required');
             }
             $this->form_validation->set_rules('phone', 'Số điện thoại', 'trim|callback_dien_thoai_hop_le');
+            if ($this->input->post('email') !== null) {
+                $this->form_validation->set_rules('email', 'Email', 'trim|max_length[190]|valid_email|callback_email_hop_le');
+            }
             $this->form_validation->set_rules('bio', 'Giới thiệu bản thân', 'max_length[500]');
 
             if ($this->form_validation->run()) {
@@ -109,6 +141,11 @@ class Account extends Member_Controller
                     'drinking'       => $this->input->post('drinking') ?: null,
                     'confide_topic'  => $this->input->post('confide_topic') ?: null,
                 );
+                $email_changed = false;
+                if ($this->input->post('email') !== null) {
+                    $data['email'] = trim((string) $this->input->post('email')) ?: null;
+                    $email_changed = (string) $data['email'] !== (string) ($me['email'] ?? '');
+                }
                 if ($this->input->post('has_children') !== null && $this->input->post('has_children') !== '') {
                     $data['has_children'] = (int) $this->input->post('has_children');
                 }
@@ -148,7 +185,12 @@ class Account extends Member_Controller
                 // Tính lại sau khi đã lưu sở thích (sở thích là một mục của điểm)
                 $this->m_user->recalc_profile_score($me['id']);
 
-                set_flash('success', 'Đã cập nhật hồ sơ.');
+                set_flash('success', $email_changed
+                    ? 'Đã cập nhật hồ sơ và email. Từ nay hãy dùng email mới để đăng nhập.'
+                        . (setting('otp_register', '1') === '1'
+                            ? ' Vui lòng bấm “Xác thực email / Gửi lại link xác thực” trong hồ sơ để xác thực email mới.'
+                            : '')
+                    : 'Đã cập nhật hồ sơ.');
                 redirect('tai-khoan/ho-so');
             }
         }
