@@ -55,15 +55,6 @@ if (!empty($settings['enable_posts'])) {
     $groups['Hồ sơ cá nhân']['tin-dang'] = array('Tin đăng của tôi', 'file');
 }
 
-/* Thanh dưới trên điện thoại. "Khám phá" dẫn tới trang vuốt hồ sơ thật của site. */
-$bottom = array(
-    array(site_url('tai-khoan'),          'Tổng quan', 'dashboard', $current === ''),
-    array(site_url('swipe-match'),        'Khám phá',  'match',     false),
-    array(site_url('tai-khoan/quan-tam'), 'Ghép đôi',  'sparkles',  $current === 'quan-tam'),
-    array(site_url('tai-khoan/tin-nhan'), 'Tin nhắn',  'message',   $current === 'tin-nhan', $tk['msg']),
-    array(site_url('tai-khoan/ho-so'),    'Tài khoản', 'user',      $current === 'ho-so'),
-);
-
 $so_xu    = number_format((int) ($me['coin_balance'] ?? 0));
 $la_vip   = !empty($me['is_vip']) && (empty($me['vip_expired_at']) || strtotime($me['vip_expired_at']) > time());
 $dem      = function ($n) { return $n > 99 ? '99+' : (int) $n; };
@@ -153,20 +144,6 @@ foreach ($groups as $items) {
         </div>
     </main>
 
-    <!-- Thanh dưới — chỉ hiện trên điện thoại -->
-    <nav class="tk-bnav" aria-label="Điều hướng nhanh">
-        <ul>
-            <?php foreach ($bottom as $b): ?>
-                <li>
-                    <a class="<?= $b[3] ? 'is-active' : '' ?>" href="<?= $b[0] ?>" <?= $b[3] ? 'aria-current="page"' : '' ?>>
-                        <?= tk_icon($b[2]) ?>
-                        <span><?= e($b[1]) ?></span>
-                        <?php if (!empty($b[4])): ?><span class="tk-dot-count"><?= $dem($b[4]) ?></span><?php endif; ?>
-                    </a>
-                </li>
-            <?php endforeach; ?>
-        </ul>
-    </nav>
 </div>
 
 <script>

@@ -1523,26 +1523,25 @@ a.btn.btn-primary {
 @media (max-width: 900px) {
     /* ---------- Menu mobile: ngăn kéo trượt từ phải ---------- */
 
-    /* Ba nút vuông bo góc, nền hồng nhạt — logo trái, nhóm nút phải. */
+    /* Nút nền nhẹ, icon nét mảnh và vùng bấm đủ rộng trên điện thoại. */
     .hd-mini > .hd-mini-btn { display: grid; }
 
-    /* Chuông đổi từ hình tròn viền xám sang vuông bo góc nền hồng cho đồng bộ
-       với hai nút bên cạnh. */
+    /* Cùng vùng bấm, nền trong suốt để header nhẹ và thoáng. */
     .hd-mini .hd-bell {
-        width: 42px; height: 42px; border-radius: 14px;
-        background: #fdecef; border-color: transparent; color: var(--pink);
+        width: 44px; height: 44px; border-radius: 12px;
+        background: transparent; border-color: transparent; color: #64535a;
     }
 
     .hd-mini-btn {
         position: relative; display: grid; place-items: center;
-        width: 42px; height: 42px; border-radius: 14px;
-        background: #fdecef; color: var(--pink); text-decoration: none;
+        width: 44px; height: 44px; border-radius: 12px;
+        background: transparent; color: #64535a; text-decoration: none;
         transition: background .15s;
     }
-    .hd-mini-btn:hover { background: #fbdae1; text-decoration: none; }
-    .hd-mini-btn .ic {
-        width: 21px; height: 21px; fill: none; stroke: currentColor;
-        stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    .hd-mini-btn:hover { background: #fdecef; text-decoration: none; }
+    .hd-mini-btn .ic, .hd-mini .hd-bell .ic {
+        width: 20px; height: 20px; fill: none; stroke: currentColor;
+        stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
     }
     .hd-mini-badge {
         position: absolute; top: -5px; right: -5px; min-width: 20px; height: 20px;
@@ -1561,10 +1560,25 @@ a.btn.btn-primary {
        menu. */
     .nav-toggle {
         display: flex; align-items: center; gap: 5px; order: 4;
-        width: 42px; height: 42px; padding: 0; margin-left: 8px;
-        border-radius: 14px; background: #fdecef;
+        width: 44px; height: 44px; padding: 0; margin-left: 8px;
+        border-radius: 12px; background: transparent; color: #64535a;
     }
-    .nav-toggle-bar { width: 19px; }
+    .nav-toggle-bar { width: 20px; height: 1.5px; background: currentColor; }
+    .nav-toggle.active .nav-toggle-bar:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+    .nav-toggle.active .nav-toggle-bar:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+    .hd-mini .hd-bell-badge {
+        top: 2px; right: 1px; min-width: 16px; height: 16px;
+        padding: 0 3px; font-size: 9px; line-height: 12px;
+    }
+    .hd-mini-btn, .hd-mini .hd-bell, .nav-toggle {
+        -webkit-appearance: none; appearance: none;
+        padding: 0; border: 0; flex-shrink: 0;
+        transition: background .18s ease, color .18s ease;
+    }
+    .nav-toggle:hover, .hd-mini .hd-bell:hover { background: #fdecef; }
+    .hd-mini-btn:focus-visible, .hd-mini .hd-bell:focus-visible, .nav-toggle:focus-visible {
+        outline: 2px solid var(--pink); outline-offset: 2px;
+    }
 
     /* Ẩn thanh trên cùng: hotline, khẩu hiệu và biểu tượng mạng xã hội chiếm
        một dải chiều cao mà trên điện thoại gần như không ai bấm. */
@@ -1585,7 +1599,8 @@ a.btn.btn-primary {
         display: flex; flex-direction: column;
         position: fixed; top: 0; right: 0; bottom: 0;
         width: min(320px, 86vw); background: #fff; z-index: 140;
-        box-shadow: -8px 0 30px rgba(0,0,0,.22);
+        box-shadow: -8px 0 32px rgba(35,25,30,.12);
+        border-radius: 20px 0 0 20px;
         transform: translateX(100%);
         transition: transform .28s cubic-bezier(.4,0,.2,1), visibility .28s;
         overflow-y: auto; overscroll-behavior: contain;
@@ -1596,22 +1611,22 @@ a.btn.btn-primary {
 
     .drawer-head {
         display: flex; align-items: center; justify-content: space-between;
-        padding: 16px 18px; flex: 0 0 auto;
-        background: linear-gradient(135deg, #e2596c, var(--pink) 60%, var(--pink-dark)); color: #fff;
+        padding: 18px 20px 12px; flex: 0 0 auto;
+        background: #fff; color: #342b30;
     }
-    .drawer-title { font-size: 17px; font-weight: 700; letter-spacing: .3px; }
+    .drawer-title { font-size: 18px; font-weight: 600; letter-spacing: 0; }
     .drawer-close {
     -webkit-appearance: none;
     appearance: none;
     padding: 0;
     min-width: 0;
     min-height: 0;
-    background: rgba(255,255,255,.2); 
+    background: #f7f4f5;
     border: 0; 
-    color: #fff; 
+    color: #827078;
     cursor: pointer;
-    width: 32px!important; 
-    height: 32px!important; 
+    width: 44px!important;
+    height: 44px!important;
     border-radius: 50%; 
     font-size: 24px; 
     line-height: 1;
@@ -1621,12 +1636,12 @@ a.btn.btn-primary {
     display: grid;         /* Căn giữa dấu X */
     place-items: center;   /* Căn giữa dấu X */
 }
-    .drawer-close:hover { background: rgba(255,255,255,.35); }
+    .drawer-close:hover { background: #fdecef; color: var(--pink); }
 
     /* Lớp phủ mờ phía sau ngăn kéo */
     .nav-overlay {
         position: fixed; inset: 0; z-index: 110;
-        background: rgba(18,18,22,.5); backdrop-filter: blur(2px);
+        background: rgba(30,24,28,.3); backdrop-filter: blur(2px);
         opacity: 0; transition: opacity .28s ease;
     }
     .nav-overlay.show { opacity: 1; }
@@ -1634,15 +1649,16 @@ a.btn.btn-primary {
 
     /* Danh sách menu trong ngăn kéo */
     .nav-list {
-        flex-direction: column; align-items: stretch; gap: 0;
-        padding: 8px 0; flex: 1 1 auto;
+        flex-direction: column; align-items: stretch; gap: 4px;
+        padding: 12px; flex: 1 1 auto;
     }
     .nav-list > li > a {
-        border-radius: 0; padding: 14px 18px; font-size: 13.5px;
-        border-bottom: 1px solid #f1f1f4; white-space: normal;
+        border-radius: 12px; padding: 12px 14px; font-size: 14px;
+        min-height: 44px; font-weight: 500; line-height: 1.5;
+        border-bottom: 0; white-space: normal; color: #5c5157;
         display: flex; align-items: center; justify-content: space-between;
     }
-    .nav-list > li > a.active { background: #fdf2f8; }
+    .nav-list > li > a.active { background: #fff1f4; color: var(--pink); font-weight: 600; }
     .nav-list > li > a.active::after { display: none; }
 
     /* Mũi tên của mục có danh mục con, xoay khi mở */
@@ -2603,7 +2619,7 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
     .confide-page .ccard-topic span { display: inline-block; vertical-align: top; padding: 4px 8px; font-size: 12px; }
     .confide-page .ccard-note { display: none; }
     .confide-page .ccard-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 6px; gap: 6px; }
-    .confide-page .btn-confide { min-height: 44px; padding: 8px 4px; font-size: 12px; }
+    .confide-page .btn-confide { min-height: 25px; padding: 8px 4px; font-size: 12px; }
 }
 
 /* ---------------------------- Trang Hẹn hò ----------------------------
@@ -3886,26 +3902,40 @@ body.is-bare .chat-widget {
 .header-search-submit { display: none; }
 
 @media (max-width: 900px) {
-    .header-inner:has(.header-search.is-open) { flex-wrap: wrap; }
+    .header-inner:has(.header-search.is-open) {
+        flex-wrap: wrap; align-content: flex-start;
+        padding-top: calc((var(--hd-h, 66px) - 44px) / 2);
+    }
     .header-search.is-open {
         display: flex; align-items: center; gap: 10px; order: 5;
-        flex: 0 0 100%; min-width: 0; margin: 12px 0 0;
-        padding: 8px 12px; border: 1px solid var(--pink); border-radius: 14px;
-        background: #fff;
+        flex: 0 0 100%; min-width: 0; margin: 10px 0 12px;
+        padding: 5px 5px 5px 14px; border: 1px solid #ece7e9; border-radius: 16px;
+        background: #faf8f9;
+        transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .header-search.is-open:focus-within {
+        background: #fff; border-color: #e6a5b1;
+        box-shadow: 0 0 0 3px rgba(209,39,63,.06);
     }
     .header-search .ic {
-        width: 20px; height: 20px; flex: 0 0 auto;
-        fill: none; stroke: var(--pink); stroke-width: 2;
+        width: 18px; height: 18px; flex: 0 0 auto;
+        fill: none; stroke: #86727b; stroke-width: 1.5;
+        stroke-linecap: round; stroke-linejoin: round;
     }
     .header-search input {
-        flex: 1; min-width: 0; width: 100%; padding: 8px 0;
-        border: 0; background: transparent; font-size: 16px;
+        flex: 1; min-width: 0; width: 100%; padding: 10px 0;
+        border: 0; outline: none; box-shadow: none; background: transparent;
+        font: inherit; font-size: 16px; line-height: 24px; color: var(--ink);
+        -webkit-appearance: none; appearance: none;
     }
+    .header-search input::placeholder { color: #8c8186; }
     .header-search-submit {
-        display: block; flex: 0 0 auto; padding: 8px 12px;
-        border: 0; border-radius: 10px; background: var(--pink); color: #fff;
-        font: inherit; cursor: pointer;
+        display: block; flex: 0 0 auto; min-height: 44px; padding: 0 16px;
+        border: 0; border-radius: 12px; background: var(--pink); color: #fff;
+        font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+        -webkit-appearance: none; appearance: none;
     }
+    .header-search-submit:focus-visible { outline: 2px solid var(--pink); outline-offset: 2px; }
     #header-search-toggle { border: 0; cursor: pointer; }
 }
 
@@ -4372,23 +4402,24 @@ body.is-bare .chat-widget {
         border-radius: 18px;
     }
     .hm-sug-photo img { width: 72px; height: 72px; }
-    .hm-sug-body { min-width: 0; }
+    .hm-sug-body { display: contents; }
 
-    /* Tên một dòng, nhãn xuống dòng dưới — cùng hàng thì tên bị bóp cụt. */
-    .hm-sug-top { display: block; margin: 0; }
-    .hm-sug-top h3 { font-size: 19px; line-height: 1.25; }
+    /* Tên dài được xuống dòng, nhãn tương hợp nằm riêng bên dưới. */
+    .hm-sug-top { display: block; grid-column: 2; min-width: 0; margin: 0; }
+    .hm-sug-top h3 { font-size: 19px; line-height: 1.4; overflow-wrap: anywhere; }
     .hm-sug-top .hm-pill { display: inline-block; margin-top: 7px; }
 
     /* Chips và nút trải hết hai cột, nằm dưới cụm ảnh + tên. */
-    .hm-sug-chips { grid-column: 1 / -1; gap: 8px; }
+    .hm-sug-chips { grid-column: 1 / -1; gap: 8px; margin: 0; }
+    .hm-sug-chips span { padding: 7px 11px; line-height: 1.5; overflow-wrap: anywhere; min-width: 0; }
     .hm-sug-actions { grid-column: 1 / -1; gap: 10px; }
 
-    /* Nút cao 50px cho ngón tay bấm dễ; hai nút chia đôi bề ngang, một nút thì
+    /* Nút cao 44px cho ngón tay bấm dễ; hai nút chia đôi bề ngang, một nút thì
        chiếm hết — giống hệt hai kiểu thẻ trong bản thiết kế. */
     .hm-sug-actions .btn-hm {
         flex: 1;
         justify-content: center;
-        min-height: 50px;
+        min-height: 44px;
         padding: 0 16px;
         font-size: 15.5px;
         border-radius: 14px;
