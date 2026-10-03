@@ -343,7 +343,7 @@ $hien_online = $da_gui ? $this->input->post('show_online')
             <strong>Hồ sơ của bạn</strong>
             <p>Lưu lại sau khi cập nhật thông tin nhé.</p>
         </div>
-        <button class="tk-btn tk-btn--brand tk-btn--lg" type="submit"><?= tk_icon('save') ?>Lưu hồ sơ</button>
+        <button class="tk-btn tk-btn--brand tk-btn--lg" type="submit" disabled><?= tk_icon('save') ?>Lưu hồ sơ</button>
     </div>
 </form>
 <form id="profile-resend-email" method="post" action="<?= site_url('xac-thuc/gui-lai') ?>" hidden>
@@ -355,9 +355,37 @@ $hien_online = $da_gui ? $this->input->post('show_online')
     var form = input.form;
     var error = document.getElementById('email-error');
     var button = form.querySelector('.tk-pf-save button[type="submit"]');
-    var timer, version = 0, checked = null, pending = null;
+    var timer, version = 0, checked = input.value.trim(), pending = null;
     var endpoint = input.dataset.emailCheck;
     var status = document.getElementById('email-check-status');
+
+    function values() {
+        return JSON.stringify(Array.from(form.elements).filter(function (field) {
+            return field.name && /^(INPUT|SELECT|TEXTAREA)$/.test(field.tagName) &&
+                !/^(hidden|submit|button|reset)$/.test(field.type);
+        }).map(function (field) {
+            if (field.type === 'file') {
+                return [field.name, Array.from(field.files).map(function (file) {
+                    return [file.name, file.size, file.lastModified];
+                })];
+            }
+            if (field.type === 'checkbox' || field.type === 'radio') {
+                return [field.name, field.value, field.checked];
+            }
+            if (field.multiple) {
+                return [field.name, Array.from(field.selectedOptions).map(function (option) { return option.value; })];
+            }
+            return [field.name, field.value];
+        }));
+    }
+    var initialValues = values();
+    function updateSave() {
+        button.disabled = values() === initialValues || checked !== input.value.trim() || !!pending;
+    }
+    form.addEventListener('input', updateSave);
+    form.addEventListener('change', updateSave);
+    form.addEventListener('reset', function () { setTimeout(updateSave, 0); });
+    updateSave();
 
     function message(text) {
         error.textContent = text;
@@ -373,6 +401,7 @@ $hien_online = $da_gui ? $this->input->post('show_online')
 
     function check() {
         var value = input.value.trim();
+        if (checked === value) { updateSave(); return Promise.resolve(true); }
         if (pending && pending.value === value) return pending.promise;
         input.setCustomValidity('');
         if (!input.checkValidity()) {
@@ -395,7 +424,7 @@ $hien_online = $da_gui ? $this->input->post('show_online')
             if (typeof data.available !== 'boolean') throw new Error('Invalid response');
             checked = data.available ? value : null;
             message(data.available ? '' : 'Email này đã được dùng cho tài khoản khác. Vui lòng chọn email khác. Email hiện tại của bạn vẫn được giữ nguyên.');
-            button.disabled = !data.available;
+            updateSave();
             return data.available;
         }).catch(function () {
             if (requestVersion === version) {
@@ -407,6 +436,7 @@ $hien_online = $da_gui ? $this->input->post('show_online')
             if (requestVersion === version) {
                 pending = null;
                 status.hidden = true;
+                updateSave();
             }
         });
         pending = { value: value, promise: promise };
@@ -426,6 +456,11 @@ $hien_online = $da_gui ? $this->input->post('show_online')
     });
     input.addEventListener('blur', function () { clearTimeout(timer); check(); });
     form.addEventListener('submit', function (event) {
+        if (values() === initialValues) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            return;
+        }
         if (checked === input.value.trim()) return;
         event.preventDefault();
         event.stopImmediatePropagation();

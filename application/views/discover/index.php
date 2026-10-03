@@ -72,14 +72,9 @@ $nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai', 'gay' => 'Gay', 
                 <span class="sw-key">↑</span> xem thêm</p>
         <?php endif; ?>
 
-<?php /* Thanh điều hướng nằm luôn trong khung */ ?>
-
     </div>
 
 </div>
-
-<?php /* Gợi ý hôm nay đặt ngay dưới khung vuốt */ ?>
-<?php if ($user) { $this->load->view('_daily_card', array('daily' => $daily)); } ?>
 
 <?php /* Khách chưa chọn nhóm: hỏi ngay khi vào trang */ ?>
 <?php if (!empty($need_pick)): ?>
