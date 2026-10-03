@@ -1601,6 +1601,11 @@ a.btn.btn-primary {
     }
     .drawer-title { font-size: 17px; font-weight: 700; letter-spacing: .3px; }
     .drawer-close {
+    -webkit-appearance: none;
+    appearance: none;
+    padding: 0;
+    min-width: 0;
+    min-height: 0;
     background: rgba(255,255,255,.2); 
     border: 0; 
     color: #fff; 
