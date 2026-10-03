@@ -40,7 +40,7 @@ $dang_chon = $da_gui ? array_map('intval', (array) $this->input->post('interests
 $hien_online = $da_gui ? $this->input->post('show_online')
                        : (!isset($pref['show_online']) || $pref['show_online']);
 ?>
-<div class="tk-ph">
+<div class="tk-ph tk-ph--profile">
     <div class="tk-ph__b">
         <h1>Hồ sơ của tôi</h1>
         <p>Thông tin càng đầy đủ, cơ hội ghép đôi càng cao. Trường có dấu * là bắt buộc.</p>
