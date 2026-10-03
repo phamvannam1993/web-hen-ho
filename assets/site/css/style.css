@@ -1616,11 +1616,7 @@ a.btn.btn-primary {
     .nav-drawer .hd-streak--drawer,
     .nav-drawer .header-actions > a,
     .nav-drawer .header-actions > button {
-        border-radius: 0;
-    }
-    .nav-drawer .header-actions > a,
-    .nav-drawer .header-actions > button {
-        border: 1px solid #eee7ea;
+        border-radius: 10px;
     }
 
     .drawer-head {
@@ -1668,13 +1664,12 @@ a.btn.btn-primary {
         padding: 12px; flex: 1 0 auto;
     }
     .nav-list > li > a {
-        border-radius: 0; padding: 12px 14px; font-size: 14px;
+        border-radius: 10px; padding: 12px 14px; font-size: 14px;
         min-height: 44px; font-weight: 500; line-height: 1.5;
-        border: 1px solid #f0eaed; white-space: normal; color: #5c5157;
+        border: 0; white-space: normal; color: #5c5157;
         display: flex; align-items: center; justify-content: space-between;
     }
-    .nav-list > li > a.active { background: #fff1f4; border-color: #f3d8df; color: var(--pink); font-weight: 600; }
-    .nav-list > li > a:hover { border-color: #ead5dc; }
+    .nav-list > li > a.active { background: #fff1f4; color: var(--pink); font-weight: 600; }
     .nav-list > li > a.active::after { display: none; }
 
     /* Mũi tên của mục có danh mục con, xoay khi mở */
