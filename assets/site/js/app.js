@@ -122,10 +122,11 @@
             actions.appendChild(later);
             actions.appendChild(go);
         } else if (typeof opts.onConfirm === 'function') {
-            var cancel = document.createElement('button');
-            cancel.type = 'button';
+            var cancel = document.createElement(opts.secondaryUrl ? 'a' : 'button');
+            if (opts.secondaryUrl) { cancel.href = opts.secondaryUrl; }
+            else { cancel.type = 'button'; }
             cancel.className = 'btn btn-ghost';
-            cancel.textContent = 'Huỷ';
+            cancel.textContent = opts.secondaryText || 'Huỷ';
             cancel.addEventListener('click', function () { el.classList.remove('open'); });
 
             var ok = document.createElement('button');
@@ -650,6 +651,8 @@
                 title: 'Cần đăng nhập',
                 message: 'Đăng nhập hoặc tạo tài khoản để gửi lượt thích và nhắn tin.',
                 confirmText: 'Đăng nhập',
+                secondaryText: 'Đăng ký',
+                secondaryUrl: stage.getAttribute('data-register'),
                 onConfirm: function () { window.location.href = stage.getAttribute('data-login'); }
             });
         }
