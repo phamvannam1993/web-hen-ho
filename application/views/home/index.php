@@ -45,9 +45,9 @@ $hero_img = setting('home_hero_image') ?: 'assets/images/banner.png';
         <a class="btn-hm btn-hm-solid btn-hm-lg hm-hero-cta" href="<?= site_url('swipe-match') ?>">Ghép Đôi Online</a>
 
         <ul class="hm-hero-stats">
-            <li><?= $ic($ic_userpl) ?><b><?= number_format(max(50000, $stats['total']), 0, ',', '.') ?>+</b> Thành viên</li>
-            <li><?= $ic($ic_heart) ?><b><?= number_format(max(5000, $couple_count), 0, ',', '.') ?>+</b> Cặp đôi</li>
-            <li><?= $ic($ic_star) ?><b>4.8/5</b> Đánh giá</li>
+            <li><?= $ic($ic_userpl) ?><b><?= number_format($stats['total'], 0, ',', '.') ?>+</b> Thành viên</li>
+            <li><?= $ic($ic_heart) ?><b><?= number_format($couple_count, 0, ',', '.') ?>+</b> Cặp đôi</li>
+            <li><?= $ic($ic_star) ?><b>18+</b> Cộng đồng trưởng thành</li>
         </ul>
     </div>
 </section>
@@ -63,7 +63,7 @@ $hero_img = setting('home_hero_image') ?: 'assets/images/banner.png';
             <?php
             $whys = array(
                 array($ic_heart,  'Kết nối chân thật',  'Chỉ những người thực sự quan tâm mới có thể match và nhắn tin với nhau.'),
-                array($ic_shield, 'An toàn &amp; Bảo mật', 'Thông tin cá nhân được mã hóa và bảo vệ tuyệt đối.'),
+                array($ic_shield, 'An toàn &amp; Bảo mật', 'Kết nối qua HTTPS. Chủ động bảo vệ thông tin cá nhân và báo cáo hồ sơ vi phạm.'),
                 array($ic_users,  'Cộng đồng đông đảo', 'Kết nối với hàng nghìn thành viên từ khắp các tỉnh thành.'),
                 array($ic_chat,   'Tìm kiếm thông minh', 'Gợi ý đối tượng phù hợp dựa trên sở thích và tính cách của bạn.'),
             );
@@ -250,13 +250,13 @@ $hero_img = setting('home_hero_image') ?: 'assets/images/banner.png';
     <div class="container">
         <ul class="hm-band-stats">
             <li><span class="hm-band-ic"><?= $ic($ic_userpl) ?></span>
-                <b><?= number_format(max(50000, $stats['total']), 0, ',', '.') ?>+</b><small>Thành viên đăng ký</small></li>
+                <b><?= number_format($stats['total'], 0, ',', '.') ?>+</b><small>Thành viên đăng ký</small></li>
             <li><span class="hm-band-ic"><?= $ic($ic_heart) ?></span>
-                <b><?= number_format(max(5000, $couple_count), 0, ',', '.') ?>+</b><small>Cặp đôi kết nối</small></li>
+                <b><?= number_format($couple_count, 0, ',', '.') ?>+</b><small>Cặp đôi kết nối</small></li>
             <li><span class="hm-band-ic"><?= $ic($ic_pin) ?></span>
                 <b><?= (int) $province_count ?></b><small>Tỉnh thành kết nối</small></li>
             <li><span class="hm-band-ic"><?= $ic($ic_star) ?></span>
-                <b>4.8/5</b><small>Đánh giá hài lòng</small></li>
+                <b>18+</b><small>Độ tuổi tham gia</small></li>
         </ul>
 
         <?php if (!$user): ?>

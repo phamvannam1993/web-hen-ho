@@ -2,6 +2,7 @@
 $nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai', 'gay' => 'Gay', 'les' => 'Les');
 ?>
 <div class="discover-page">
+    <h1 class="sr-only">Khám phá và ghép đôi tại Saigon Cupid</h1>
 
     <div class="sw-stage" id="sw-stage"
          data-guest="<?= $user ? '0' : '1' ?>"

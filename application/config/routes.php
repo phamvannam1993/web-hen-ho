@@ -111,6 +111,7 @@ $route['tin-tuc']                 = 'blog/index';
 $route['tin-tuc/trang/(:num)']    = 'blog/index/$1';
 $route['tin-tuc/(:any)']          = 'blog/detail/$1';
 $route['trang/(:any)']            = 'pages/view/$1';
+$route['(bao-mat|an-toan|lien-he)'] = 'pages/policy/$1';
 
 /* AJAX */
 $route['ajax/like']            = 'ajax/like';

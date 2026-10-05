@@ -26,7 +26,6 @@ class Sitemap extends MY_Controller
         foreach ($ten as $t) {
             $xml .= "  <sitemap>\n"
                   . '    <loc>' . site_url('sitemap-' . $t . '.xml') . "</loc>\n"
-                  . '    <lastmod>' . $this->moi_nhat($t) . "</lastmod>\n"
                   . "  </sitemap>\n";
         }
         $this->tra_ve($xml . '</sitemapindex>');
@@ -37,14 +36,15 @@ class Sitemap extends MY_Controller
     {
         $urls = array(
             array('tin-tuc',     null, 'daily',   '0.8'),
-            array('hen-ho',      null, 'daily',   '0.9'),
-            array('tam-su',      null, 'daily',   '0.9'),
-            array('thanh-vien',  null, 'always',  '0.7'),
+            array('',           null, 'daily',   '0.9'),
             array('swipe-match', null, 'weekly',  '0.6'),
+            array('bao-mat', null),
+            array('an-toan', null),
+            array('lien-he', null),
         );
         foreach ($this->db->select('slug, updated_at')->where('is_active', 1)
                      ->order_by('id')->get('pages')->result_array() as $p) {
-            $urls[] = array($p['slug'], $p['updated_at'], 'monthly', '0.5');
+            if (seo_indexable($p['slug'])) $urls[] = array($p['slug'], $p['updated_at'], 'monthly', '0.5');
         }
         $this->tra_ve($this->bo_url($urls));
     }
@@ -64,10 +64,7 @@ class Sitemap extends MY_Controller
     /** Trang khu vực tổng và từng tỉnh thành. */
     public function khuvuc()
     {
-        $urls = array(array('khu-vuc', null, 'weekly', '0.9'));
-        foreach ($this->m_province->all() as $t) {
-            $urls[] = array($t['slug'], null, 'daily', '0.8');
-        }
+        $urls = array(); // Thin province pages are noindex until enriched.
         $this->tra_ve($this->bo_url($urls));
     }
 
@@ -76,7 +73,7 @@ class Sitemap extends MY_Controller
     {
         $urls = array();
         foreach ($this->db->select('slug, updated_at, published_at')
-                     ->where('status', 'published')->order_by('id', 'DESC')
+                     ->where('status', 'published')->where('published_at <=', date('Y-m-d H:i:s'))->order_by('id', 'DESC')
                      ->get('articles')->result_array() as $a) {
             $urls[] = array('tin-tuc/' . $a['slug'],
                 $a['updated_at'] ?: $a['published_at'], 'monthly', '0.7');
@@ -101,13 +98,14 @@ class Sitemap extends MY_Controller
     {
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
              . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+        $seen = array();
         foreach ($urls as $u) {
-            $ngay = !empty($u[1]) ? date('Y-m-d', strtotime($u[1])) : date('Y-m-d');
+            if (isset($seen[$u[0]])) continue;
+            $seen[$u[0]] = true;
+            $ngay = !empty($u[1]) && strtotime($u[1]) !== false ? date('Y-m-d', strtotime($u[1])) : null;
             $xml .= "  <url>\n"
                   . '    <loc>' . htmlspecialchars(site_url($u[0]), ENT_XML1) . "</loc>\n"
-                  . '    <lastmod>' . $ngay . "</lastmod>\n"
-                  . '    <changefreq>' . $u[2] . "</changefreq>\n"
-                  . '    <priority>' . $u[3] . "</priority>\n"
+                  . ($ngay ? '    <lastmod>' . $ngay . "</lastmod>\n" : '')
                   . "  </url>\n";
         }
         return $xml . '</urlset>';

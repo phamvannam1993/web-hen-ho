@@ -226,7 +226,7 @@ class M_user extends CI_Model
      */
     public function dieu_kien_ho_so_du($a = 'u')
     {
-        $dk = array();
+        $dk = array("$a.birthday <= '" . date('Y-m-d', strtotime('-18 years')) . "'");
         foreach (array('display_name', 'gender', 'birthday', 'province_id', 'avatar') as $c) {
             $dk[] = "$a.$c IS NOT NULL";
         }
