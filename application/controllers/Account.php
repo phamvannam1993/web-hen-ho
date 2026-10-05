@@ -40,9 +40,9 @@ class Account extends Member_Controller
             'hoat_dong'     => $this->m_notification->for_user($me['id'], 5),
             'goi_y_hom_nay' => $this->m_daily->today($me['id']),
             /* `M_daily::today()` chỉ trả MỘT người mỗi ngày (đúng luật của tính năng
-               ghép đôi hằng ngày), nên lưới gợi ý lấy từ `suggestions()` — cùng bộ
-               lọc mà trang Khám phá đang dùng. */
-            'goi_y_them'    => $this->m_user->suggestions($me, 3),
+               ghép đôi hằng ngày). Lưới lấy các hồ sơ phù hợp từ bộ chấm điểm
+               hiện có và luân phiên mỗi ngày lúc 08:00 giờ Việt Nam. */
+            'goi_y_them'    => $this->m_user->account_suggestions($me, 3),
         ));
     }
 

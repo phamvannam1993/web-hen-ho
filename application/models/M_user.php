@@ -469,6 +469,33 @@ class M_user extends CI_Model
      *   +0-10 theo mức hoàn thiện hồ sơ
      * Loại trừ: chính mình, người đã chặn/bị chặn, người tôi đã thích hoặc đã bỏ qua.
      */
+    /** Rotate a shortlist of suitable profiles at 08:00 Vietnam time. */
+    public function account_suggestions($user, $limit = 3, $now = null)
+    {
+        $limit = max(1, (int) $limit);
+        $candidates = $this->suggestions($user, max(30, $limit));
+        if (!$candidates) return array();
+
+        // Stable per-member order; no random reshuffle on page reload.
+        $member_id = (int) $user['id'];
+        usort($candidates, function ($a, $b) use ($member_id) {
+            return strcmp(hash('sha256', $member_id . ':' . $a['id']),
+                hash('sha256', $member_id . ':' . $b['id']));
+        });
+        $clock = (new DateTimeImmutable('@' . ($now ?? time())))
+            ->setTimezone(new DateTimeZone('Asia/Ho_Chi_Minh'));
+        $cycle = $clock->modify('-8 hours')->format('Y-m-d');
+        $day = (int) floor((new DateTimeImmutable($cycle, new DateTimeZone('UTC')))->getTimestamp() / 86400);
+        $count = count($candidates);
+        // Advance one position each day so a pool larger than the display count changes.
+        $start = (($day % $count) + $count) % $count;
+        $selected = array();
+        for ($i = 0; $i < min($limit, $count); $i++) {
+            $selected[] = $candidates[($start + $i) % $count];
+        }
+        return $selected;
+    }
+
     public function suggestions($user, $limit = 12, $offset = 0)
     {
         $me   = (int) $user['id'];

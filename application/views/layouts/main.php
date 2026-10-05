@@ -398,14 +398,17 @@ $mxh = seo_social_urls($settings);
 
             <div class="cw-side-list" id="cw-side-list">
                 <?php /* Phòng chung luôn đứng đầu, ai cũng vào được kể cả khách */ ?>
-                <button type="button" class="cw-row is-room" id="cw-row-room" data-name="Phòng chat chung">
+                <button type="button" class="cw-row is-room" id="cw-row-room" data-name="Nhóm Hẹn Hò 4 Phương">
                     <span class="cw-row-avatar cw-row-room-ic" aria-hidden="true">
                         <svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><path d="M16.2 5.8a3.2 3.2 0 0 1 0 5.4M17.5 19a6 6 0 0 0-1.6-4"/></svg>
                     </span>
                     <span class="cw-row-text">
-                        <span class="cw-row-top">
-                            <b><span class="cw-row-name">Phòng chung</span><i class="cw-tag">Cộng đồng</i></b>
+                        <span class="cw-room-meta">
+                            <i class="cw-tag">Cộng đồng</i>
                             <small id="cw-room-time"></small>
+                        </span>
+                        <span class="cw-row-top">
+                            <b><span class="cw-row-name">Nhóm Hẹn Hò 4 Phương</span></b>
                         </span>
                         <span class="cw-row-last" id="cw-room-last">Đang tải…</span>
                     </span>
