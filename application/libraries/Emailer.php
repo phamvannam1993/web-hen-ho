@@ -28,6 +28,21 @@ class Emailer
 
     /* ===================== Các loại email ===================== */
 
+    /** A useful next step for members who have not activated or finished setup. */
+    public function activation_nudge($user_id, $verify, array $missing = array())
+    {
+        $u = $this->CI->m_user->find($user_id);
+        if (!$u) return false;
+        $review = !$verify && !$missing && $u['status'] === 'pending';
+        return $this->CI->m_email->enqueue($user_id, 'activation_nudge',
+            $verify ? 'Xác nhận email để bắt đầu kết nối tại Saigon Cupid'
+                    : ($review ? 'Theo dõi trạng thái tài khoản Saigon Cupid của bạn' : 'Hoàn thiện hồ sơ để tìm người phù hợp với bạn'),
+            'activation_nudge', array('name' => $this->ten($u), 'verify' => (bool) $verify,
+                'review' => $review,
+                'missing' => array_values($missing),
+                'link' => site_url($verify ? 'xac-thuc' : ($review ? 'tai-khoan' : 'tai-khoan/bat-dau'))));
+    }
+
     /** Chào mừng người mới, gửi sau 1 phút. */
     public function welcome($user_id)
     {
@@ -198,7 +213,7 @@ class Emailer
         list($tieu_de, $nhanh) = $this->CI->m_email->chon_nhanh($user_id, array(
             'A' => $so_thich > 0
                 ? $this->ten($u) . ' ơi, có ' . (int) $so_thich . ' người mới thích bạn!'
-                : $this->ten($u) . ' ơi, có người đang chờ bạn quay lại!',
+                : $this->ten($u) . ' ơi, quay lại khám phá những kết nối mới nhé',
             'B' => $so_thich > 0
                 ? 'Bạn đang bỏ lỡ ' . (int) $so_thich . ' người quan tâm mình'
                 : 'Lâu rồi không gặp — có gì mới cho bạn đây',

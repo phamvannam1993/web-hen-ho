@@ -454,6 +454,25 @@ $mxh = seo_social_urls($settings);
 
                 <div class="cw-body-wrap">
                     <div class="cw-body" id="cw-body"></div>
+                    <button type="button" class="cw-online-toggle" id="cw-online-toggle" hidden
+                            aria-expanded="false" aria-controls="cw-online-panel">
+                        <span class="cw-online-toggle-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 19v-1a6 6 0 0 1 12 0v1M16 5a3 3 0 0 1 0 6M18 14a5 5 0 0 1 3 5"/></svg>
+                        </span>
+                        <span class="cw-online-toggle-text">
+                            <b id="cw-online-toggle-count">Đang cập nhật…</b>
+                            <small>Bấm để xem danh sách</small>
+                        </span>
+                        <span class="cw-online-toggle-arrow" aria-hidden="true">›</span>
+                    </button>
+                    <aside class="cw-online-panel" id="cw-online-panel" hidden aria-labelledby="cw-online-title">
+                        <div class="cw-online-head">
+                            <b id="cw-online-title">Đang online</b>
+                            <button type="button" id="cw-online-close" aria-label="Đóng danh sách online">×</button>
+                        </div>
+                        <p class="cw-online-hint">Hoạt động trong 5 phút gần đây</p>
+                        <div class="cw-online-list" id="cw-online-list" aria-live="polite"></div>
+                    </aside>
                     <button type="button" class="cw-jump" id="cw-jump" hidden>
                         <span class="cw-jump-arrow" aria-hidden="true">&raquo;</span>
                         <b class="cw-jump-text">Tin nhắn mới</b>

@@ -31,8 +31,11 @@ class EmailTestRenderer {
     }
 }
 class EmailTestCron extends Cron {
-    public $m_email;
+    public $m_email, $m_user;
     function __construct() {}
+}
+class EmailTestRecipient {
+    function find($id) { return array('id' => $id, 'status' => 'active', 'deleted_at' => null, 'email' => 'member@example.test'); }
 }
 function verify($ok, $label) { if (!$ok) throw new Exception($label); }
 $emailTestCI = (object) array('load' => new EmailTestLoader(), 'm_email' => new EmailTestQueue());
@@ -58,8 +61,9 @@ verify(strpos($html, 'Xem tin nhắn') !== false && strpos($html, $payload['avat
 $emailer->new_message(7, array('display_name' => 'Bạn mới', 'gender' => 'male'), 42);
 verify(strpos($emailTestCI->m_email->rows[2]['payload']['avatar'], 'avatar-male.svg') !== false, 'Fallback avatar');
 $cron = new EmailTestCron(); $cron->m_email = $emailTestCI->m_email;
+$cron->m_user = new EmailTestRecipient();
 $validate = new ReflectionMethod(Cron::class, 'con_hop_le'); $validate->setAccessible(true);
-verify($validate->invoke($cron, array('user_id' => 7, 'type' => 'new_message', 'related_id' => 42)) === true, 'Do not suppress emails for online/read users');
+verify($validate->invoke($cron, array('user_id' => 7, 'type' => 'new_message', 'related_id' => 42, 'to_email' => 'member@example.test')) === true, 'Do not suppress emails for online/read users');
 $cron->m_email->allowed = false;
-verify($validate->invoke($cron, array('user_id' => 7, 'type' => 'new_message', 'related_id' => 42)) !== true, 'Respect email opt-out');
+verify($validate->invoke($cron, array('user_id' => 7, 'type' => 'new_message', 'related_id' => 42, 'to_email' => 'member@example.test')) !== true, 'Respect email opt-out');
 echo "PASS: per-message emails, sender/avatar, exact inbox link, no previews, no delay, preferences respected.\n";

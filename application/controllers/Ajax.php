@@ -286,6 +286,34 @@ class Ajax extends MY_Controller
             ->count_all_results('users');
     }
 
+    /** Public presence only; no email, phone, bio or private activity timestamps. */
+    public function online_members()
+    {
+        $after = max(0, (int) $this->input->get('after'));
+        $me = (int) $this->auth->id();
+        $this->db->select('id, display_name, nickname, avatar, gender, slug')
+            ->from('users')->where('status', 'active')->where('deleted_at', null)
+            ->where('last_active_at >', date('Y-m-d H:i:s', time() - 300))
+            ->where('birthday <=', date('Y-m-d', strtotime('-18 years')))
+            ->where_in('role', array('member', 'admin', 'moderator'))
+            ->where('id >', $after);
+        if ($me) {
+            $this->db->where("id NOT IN (SELECT blocked_id FROM blocks WHERE user_id = $me)", null, false)
+                ->where("id NOT IN (SELECT user_id FROM blocks WHERE blocked_id = $me)", null, false);
+        }
+        $rows = $this->db->order_by('id', 'ASC')->limit(61)->get()->result_array();
+        $more = count($rows) > 60;
+        $rows = array_slice($rows, 0, 60);
+        $members = array();
+        foreach ($rows as $row) {
+            $members[] = array('id' => (int) $row['id'], 'name' => display_name($row),
+                'avatar' => avatar_url($row['avatar'], $row['gender']),
+                'url' => site_url('profile/' . $row['slug']), 'mine' => (int) $row['id'] === $me);
+        }
+        return $this->json(array('ok' => true, 'members' => $members,
+            'next' => $more && $rows ? (int) end($rows)['id'] : null));
+    }
+
     /** Gửi tin vào phòng chat chung. */
     public function room_send()
     {
