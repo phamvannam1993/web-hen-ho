@@ -418,7 +418,7 @@
 
         if (avatarEl) { avatarEl.hidden = true; }
         if (avatarRm) { avatarRm.hidden = false; }
-        nameEl.textContent = 'Phòng chat chung';
+        nameEl.textContent = 'Nhóm Hẹn Hò 4 Phương';
         statusEl.textContent = 'Đang tải…';
         if (receiver) { receiver.value = ''; }
         if (inputEl) {

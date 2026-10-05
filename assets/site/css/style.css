@@ -3500,6 +3500,27 @@ body.is-bare .chat-widget {
     font-style: normal; letter-spacing: .3px; vertical-align: middle;
 }
 
+/* Tên nhóm có hàng riêng; nhãn và thời gian không chiếm chỗ của tên. */
+.cw-row.is-room .cw-row-name {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+    line-height: 1.4;
+}
+.cw-room-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    margin-bottom: 3px;
+}
+.cw-room-meta small {
+    margin-left: auto;
+    font-size: 11.5px;
+    color: #9aa0a6;
+}
+
 .cw-empty { padding: 28px 22px; text-align: center; color: var(--muted); font-size: 14px; line-height: 1.7; }
 .cw-foot {
     flex: 0 0 auto; padding: 11px; text-align: center;
