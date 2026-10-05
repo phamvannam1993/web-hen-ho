@@ -471,8 +471,8 @@ class Account extends Member_Controller
                 'notification'     => (int) (bool) $this->input->post('notification'),
                 'match_suggest'    => (int) (bool) $this->input->post('match_suggest'),
                 're_engage'        => (int) (bool) $this->input->post('re_engage'),
-                // Tần suất chỉ nhận 2 hoặc 3 ngày như đặc tả
-                'match_every_days' => in_array((int) $this->input->post('match_every_days'), array(2, 3), true)
+                // Tần suất chung của email gợi ý và nhắc quay lại.
+                'match_every_days' => in_array((int) $this->input->post('match_every_days'), array(1, 2, 3, 7), true)
                     ? (int) $this->input->post('match_every_days') : 2,
                 'disabled_at'      => null,
             ));

@@ -3578,6 +3578,132 @@ body.is-bare .chat-widget {
 
 /* ---------------- Khung tin nhắn ---------------- */
 .cw-body-wrap { position: relative; flex: 1; min-height: 0; display: flex; }
+.cw-online-panel { flex: 0 0 155px; width: 155px; min-height: 0; overflow-y: auto; padding: 12px 9px; background: #fff; border-left: 1px solid #e9e9f0; }
+.cw-online-panel[hidden], .cw-online-toggle[hidden] { display: none; }
+.cw-online-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; }
+.cw-online-head button { display: none; }
+.cw-online-hint { font-size: 11px; color: #858b98; margin: 5px 0 12px; }
+.cw-online-member { display: flex; align-items: center; gap: 8px; padding: 8px 0; color: var(--ink); font-size: 13px; text-decoration: none; }
+.cw-online-member img { width: 32px; height: 32px; flex: 0 0 32px; border-radius: 50%; object-fit: cover; border: 2px solid #31c05a; }
+.cw-online-member span { min-width: 0; overflow-wrap: anywhere; }
+.cw-online-member:hover { color: var(--pink); }
+.cw-online-toggle { display: none; }
+.cw-body { min-width: 0; }
+@media (min-width: 761px) {
+    .cw-panel:has(.cw-online-panel:not([hidden])) {
+        width: min(980px, 100vw);
+    }
+    .cw-panel:has(.cw-online-panel:not([hidden])) .cw-side {
+        flex-basis: 280px;
+    }
+    .cw-online-panel {
+        box-sizing: border-box;
+        flex: 0 0 184px;
+        width: 184px;
+        margin: 12px 12px 12px 0;
+        padding: 16px 10px;
+        border: 1px solid #e7e8f1;
+        border-radius: 18px;
+        background: linear-gradient(180deg, #fff 0%, #fafaff 100%);
+        box-shadow: 0 4px 18px rgba(55, 45, 90, .04);
+        scrollbar-width: thin;
+        scrollbar-color: #dddbea transparent;
+    }
+    .cw-online-head {
+        justify-content: flex-start;
+        gap: 7px;
+        padding: 0 5px;
+        color: #343047;
+        font-size: 14px;
+    }
+    .cw-online-head::before {
+        content: '';
+        width: 7px;
+        height: 7px;
+        flex: 0 0 7px;
+        border-radius: 50%;
+        background: #2bb673;
+        box-shadow: 0 0 0 4px #eaf8f0;
+    }
+    .cw-online-hint {
+        margin: 8px 5px 14px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid #eeeef5;
+        color: #9390a2;
+        font-size: 11.5px;
+        line-height: 1.55;
+    }
+    .cw-online-list { display: flex; flex-direction: column; gap: 5px; }
+    .cw-online-list > p { margin: 4px 5px; font-size: 13px; line-height: 1.6; color: #858092; }
+    .cw-online-member {
+        position: relative;
+        gap: 10px;
+        padding: 9px 7px;
+        border: 1px solid transparent;
+        border-radius: 12px;
+        color: #514b65;
+        font-size: 12.5px;
+        font-weight: 600;
+        line-height: 1.45;
+        transition: background .15s, border-color .15s, color .15s;
+    }
+    .cw-online-member img {
+        box-sizing: border-box;
+        width: 36px;
+        height: 36px;
+        flex-basis: 36px;
+        border: 2px solid #fff;
+        outline: 1px solid #d8eee1;
+        box-shadow: 0 2px 5px #3020440a;
+    }
+    .cw-online-member::after {
+        content: '';
+        position: absolute;
+        left: 34px;
+        top: 34px;
+        width: 9px;
+        height: 9px;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        background: #2bb673;
+    }
+    .cw-online-member:hover, .cw-online-member:focus-visible {
+        border-color: #e7defa;
+        background: #f3edff;
+        color: #7950b5;
+    }
+    .cw-online-member:focus-visible { outline: 2px solid #b99ae5; outline-offset: 1px; }
+    .cw-peer b { white-space: normal; line-height: 1.4; }
+}
+@media (min-width: 761px) and (max-width: 1024px) {
+    .cw-panel:has(.cw-online-panel:not([hidden])) .cw-side { flex-basis: 240px; }
+    .cw-online-panel { flex-basis: 164px; width: 164px; margin-right: 8px; padding: 14px 7px; }
+}
+@media (max-width: 760px) {
+    .cw-online-toggle {
+        display: flex; align-items: center; gap: 9px;
+        position: absolute; top: 10px; right: 10px; z-index: 3;
+        max-width: calc(100% - 20px); min-height: 54px; padding: 9px 12px;
+        border: 1px solid #ffffff80; border-radius: 16px;
+        background: linear-gradient(135deg, #168b63, #087957);
+        color: #fff; box-shadow: 0 5px 16px rgba(8, 121, 87, .24);
+        text-align: left; font-family: inherit; cursor: pointer;
+        transition: box-shadow .15s, transform .15s;
+    }
+    .cw-online-toggle-icon { display: grid; place-items: center; flex: 0 0 32px; width: 32px; height: 32px; border-radius: 11px; background: #ffffff24; }
+    .cw-online-toggle-icon svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .cw-online-toggle-text { min-width: 0; }
+    .cw-online-toggle-text b { display: block; font-size: 13px; font-weight: 750; line-height: 1.4; }
+    .cw-online-toggle-text small { display: block; margin-top: 2px; color: #e2fff1; font-size: 10.5px; line-height: 1.4; }
+    .cw-online-toggle-arrow { font-size: 25px; line-height: 1; opacity: .9; }
+    .cw-online-toggle:hover { box-shadow: 0 6px 20px rgba(8, 121, 87, .32); }
+    .cw-online-toggle:active { transform: scale(.98); }
+    .cw-online-toggle:focus-visible { outline: 3px solid #70d9b1; outline-offset: 3px; }
+    .cw-online-panel { display: none; position: absolute; z-index: 5; top: 8px; right: 8px; bottom: 8px; width: min(280px, calc(100% - 16px)); border: 1px solid #e9e9f0; border-radius: 14px; box-shadow: 0 8px 30px #0003; padding: 14px; }
+    .cw-online-panel.is-open { display: block; }
+    .cw-online-head button { display: block; width: 44px; height: 44px; border: 0; border-radius: 50%; background: #f4f5f7; font-size: 24px; cursor: pointer; }
+    .cw-online-member { min-height: 44px; font-size: 14px; }
+}
 .cw-body {
     flex: 1; overflow-y: auto; min-height: 0; padding: 18px 18px 22px;
     display: flex; flex-direction: column; gap: 4px;
@@ -3586,6 +3712,37 @@ body.is-bare .chat-widget {
 }
 .cw-body::-webkit-scrollbar { width: 6px; }
 .cw-body::-webkit-scrollbar-thumb { background: #d6d6dd; border-radius: 3px; }
+
+/* Thanh cuộn chat dùng màu chủ đạo của website, gồm cả popup online. */
+.chat-widget :is(.cw-body, .cw-side-list, .cw-online-panel, .cw-emoji-list),
+:is(.chat-body, .chat-list) {
+    scrollbar-width: thin;
+    scrollbar-color: #d98998 #f8edf0;
+}
+.chat-widget :is(.cw-body, .cw-side-list, .cw-online-panel, .cw-emoji-list)::-webkit-scrollbar,
+:is(.chat-body, .chat-list)::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+.chat-widget :is(.cw-body, .cw-side-list, .cw-online-panel, .cw-emoji-list)::-webkit-scrollbar-track,
+:is(.chat-body, .chat-list)::-webkit-scrollbar-track {
+    background: #f8edf0;
+    border-radius: 999px;
+}
+.chat-widget :is(.cw-body, .cw-side-list, .cw-online-panel, .cw-emoji-list)::-webkit-scrollbar-thumb,
+:is(.chat-body, .chat-list)::-webkit-scrollbar-thumb {
+    background: #d98998;
+    border: 1px solid #f8edf0;
+    border-radius: 999px;
+}
+.chat-widget :is(.cw-body, .cw-side-list, .cw-online-panel, .cw-emoji-list)::-webkit-scrollbar-thumb:hover,
+:is(.chat-body, .chat-list)::-webkit-scrollbar-thumb:hover {
+    background: var(--pink);
+}
+.chat-widget :is(.cw-body, .cw-side-list, .cw-online-panel, .cw-emoji-list)::-webkit-scrollbar-corner,
+:is(.chat-body, .chat-list)::-webkit-scrollbar-corner {
+    background: transparent;
+}
 
 /* Vạch ngăn ngày */
 .cw-day { display: flex; align-items: center; justify-content: center; margin: 14px 0 10px; }

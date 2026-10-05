@@ -129,11 +129,10 @@ của bạn**:
     # Chốt gợi ý mỗi ngày cho từng người + đánh dấu gợi ý cũ hết hạn — 8h sáng
     0 8 * * *  cd /var/www/web-hen-ho && /usr/bin/php index.php cron goi_y_ngay >> /var/log/cupid-mail.log 2>&1
 
-    # Email gợi ý người phù hợp — 8h05 sáng
+    # Email quay lại: xác nhận email / bổ sung hồ sơ / gợi ý / khám phá — 8h05 sáng
     5 8 * * *  cd /var/www/web-hen-ho && /usr/bin/php index.php cron goi_y >> /var/log/cupid-mail.log 2>&1
 
-    # Nhắc người đã 7 ngày không vào — 10h sáng
-    0 10 * * * cd /var/www/web-hen-ho && /usr/bin/php index.php cron keo_lai >> /var/log/cupid-mail.log 2>&1
+    # Không cần lịch keo_lai riêng: đã hợp nhất vào goi_y.
 
     # Gom lượt thích và lượt xem trong ngày — 20h
     0 20 * * * cd /var/www/web-hen-ho && /usr/bin/php index.php cron gom_thong_bao >> /var/log/cupid-mail.log 2>&1
@@ -141,8 +140,7 @@ của bạn**:
     # Nhắc người sắp mất chuỗi ngày hoạt động — 20h
     0 20 * * * cd /var/www/web-hen-ho && /usr/bin/php index.php cron nhac_chuoi >> /var/log/cupid-mail.log 2>&1
 
-    # Nhắc người mới hoàn thiện hồ sơ (sau 1 ngày và 3 ngày, tối đa 2 thư) — 9h
-    0 9 * * *  cd /var/www/web-hen-ho && /usr/bin/php index.php cron nhac_ho_so >> /var/log/cupid-mail.log 2>&1
+    # Không cần lịch nhac_ho_so riêng: đã hợp nhất vào goi_y.
 
 Lưu lại rồi kiểm tra đã nhận chưa:
 

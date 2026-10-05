@@ -10,9 +10,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * Lịch chạy đề nghị (giờ Việt Nam, GMT+7):
  *   * * * * *  php index.php cron worker      # gửi thư trong hàng đợi, mỗi phút
  *   0 8 * * *  php index.php cron goi_y       # gợi ý ghép đôi, 8h sáng
- *   0 10 * * * php index.php cron keo_lai     # kéo người vắng lâu, 10h sáng
+ *   # keo_lai và nhac_ho_so gọi lại goi_y; không cần lịch riêng.
  *   0 20 * * * php index.php cron gom_thong_bao  # gom lượt thích/xem, 20h
- *   0 9 * * *  php index.php cron nhac_ho_so  # nhắc hoàn thiện hồ sơ (sau 1 và 3 ngày), 9h
  */
 class Cron extends CI_Controller
 {
@@ -58,8 +57,8 @@ class Cron extends CI_Controller
 
     public function worker($limit = 50)
     {
-        $khoa = $this->khoa('worker');
-        if ($khoa === false) {
+        $worker_lock = $this->khoa('worker');
+        if ($worker_lock === false) {
             return;   // lượt trước còn đang chạy, để yên cho nó làm nốt
         }
 
@@ -88,9 +87,25 @@ class Cron extends CI_Controller
             // Tới giờ gửi mới kiểm tra lại điều kiện: hoàn cảnh có thể đã đổi
             $ly_do = $this->con_hop_le($thu);
             if ($ly_do !== true) {
+                if ($ly_do === 'daily_cap') {
+                    $this->db->where('id', $thu['id'])->update('email_queue', array(
+                        'send_after' => date('Y-m-d 08:05:00', strtotime('tomorrow'))));
+                    continue;
+                }
                 $this->m_email->danh_dau_bo_qua($thu['id'], $ly_do);
                 $bo++;
                 continue;
+            }
+
+            // A queued activation reminder follows the member's current next step.
+            if ($thu['type'] === 'activation_nudge') {
+                $recipient = $this->m_user->find($thu['user_id']);
+                $payload['verify'] = empty($recipient['email_verified_at']);
+                $payload['missing'] = array_values($this->m_user->thieu_thong_tin($recipient['id']));
+                $payload['review'] = !$payload['verify'] && !$payload['missing'] && $recipient['status'] === 'pending';
+                $payload['link'] = site_url($payload['verify'] ? 'xac-thuc' : ($payload['review'] ? 'tai-khoan' : 'tai-khoan/bat-dau'));
+                $thu['subject'] = $payload['verify'] ? 'Xác nhận email để bắt đầu kết nối tại Saigon Cupid'
+                    : ($payload['review'] ? 'Theo dõi trạng thái tài khoản Saigon Cupid của bạn' : 'Hoàn thiện hồ sơ để tìm người phù hợp với bạn');
             }
 
             // Mọi nút bấm đi vòng qua bộ đếm để biết thư nào thực sự kéo được
@@ -127,6 +142,22 @@ class Cron extends CI_Controller
      */
     private function con_hop_le(array $thu)
     {
+        $recipient = $this->m_user->find($thu['user_id']);
+        if (!$recipient || !empty($recipient['deleted_at'])
+            || !in_array($recipient['status'], array('active', 'pending'), true)
+            || !filter_var($recipient['email'] ?? '', FILTER_VALIDATE_EMAIL)) return 'Recipient unavailable';
+        if ($recipient['email'] !== $thu['to_email']) return 'Recipient email changed';
+        if ($thu['type'] === 'match_suggest'
+            && (!$this->tim_nguoi_hop($recipient, $thu['related_id'])
+                || empty($recipient['email_verified_at']) || $this->m_user->thieu_thong_tin($recipient['id']))) {
+            return 'Suggested profile or recipient no longer eligible';
+        }
+        if ($thu['type'] === 'activation_nudge'
+            && !empty($recipient['email_verified_at']) && !$this->m_user->thieu_thong_tin($recipient['id'])
+            && $recipient['status'] === 'active') return 'Setup already completed';
+        if ($thu['type'] === 'profile_nudge' && !$this->m_user->thieu_thong_tin($recipient['id'])) return 'Profile already completed';
+        if ($this->m_email->duoc_gui($thu['user_id'], $thu['type'], true)
+            && !$this->m_email->duoc_gui($thu['user_id'], $thu['type'])) return 'daily_cap';
         if (!$this->m_email->duoc_gui($thu['user_id'], $thu['type'])) {
             return 'Người nhận đã tắt loại thư này hoặc đã chạm trần thư trong ngày';
         }
@@ -138,44 +169,40 @@ class Cron extends CI_Controller
 
     public function goi_y()
     {
-        $ung_vien = $this->db->query(
-            "SELECT u.* FROM users u
-               JOIN email_prefs p ON p.user_id = u.id
-              WHERE u.status = 'active' AND u.role = 'member' AND u.deleted_at IS NULL
-                AND u.email IS NOT NULL AND u.email <> ''
-                AND p.match_suggest = 1 AND p.disabled_at IS NULL
-                AND u.last_active_at >= ?   -- còn hoạt động trong 30 ngày
-                AND u.last_active_at <  ?   -- nhưng không online trong 24h qua",
-            array(date('Y-m-d H:i:s', strtotime('-30 days')),
-                  date('Y-m-d H:i:s', strtotime('-24 hours')))
+        $lock = $this->khoa('retention');
+        if ($lock === false) return;
+        // LEFT JOIN includes legacy/new members without an email_prefs record.
+        // No verification/completion/activity cutoff: everyone is considered.
+        $members = $this->db->query(
+            "SELECT u.* FROM users u LEFT JOIN email_prefs p ON p.user_id = u.id
+              WHERE u.status IN ('active', 'pending') AND u.role = 'member'
+                AND u.deleted_at IS NULL AND u.email IS NOT NULL AND u.email <> ''
+                AND (p.user_id IS NULL OR p.disabled_at IS NULL)
+              ORDER BY u.id"
         )->result_array();
-
-        $gui = 0;
-        foreach ($ung_vien as $u) {
-            $p = $this->m_email->prefs($u['id']);
-
-            // Tôn trọng tần suất mỗi người tự chọn (mặc định 2 ngày)
-            $lan_cuoi = $this->m_email->lan_gui_cuoi($u['id'], 'match_suggest');
-            if ($lan_cuoi && $lan_cuoi > time() - (int) $p['match_every_days'] * 86400) {
+        $queued = 0;
+        foreach ($members as $u) {
+            $prefs = $this->m_email->prefs($u['id']);
+            $days = max(1, (int) ($prefs['match_every_days'] ?? 2));
+            $last_active = strtotime($u['last_active_at'] ?: $u['created_at']);
+            if ($last_active && $last_active < time() - 30 * 86400) $days = max(7, $days);
+            if (!$this->m_email->retention_due($u['id'], $days)) continue;
+            if (!filter_var($u['email'], FILTER_VALIDATE_EMAIL)) continue;
+            $missing = $this->m_user->thieu_thong_tin($u['id']);
+            $verify = empty($u['email_verified_at']);
+            if ($verify || $missing || $u['status'] === 'pending') {
+                if ($this->emailer->activation_nudge($u['id'], $verify, $missing)) $queued++;
                 continue;
             }
-
-            $goi_y = $this->tim_nguoi_hop($u);
-            if (!$goi_y) {
-                continue;
-            }
-
-            // Không gợi ý lại cùng một người trong vòng 7 ngày
-            if ($this->m_email->da_gui_gan_day($u['id'], 'match_suggest', $goi_y['id'], 24 * 7)) {
-                continue;
-            }
-
-            if ($this->emailer->match_suggest($u['id'], $goi_y, $goi_y['diem_phan_tram'])) {
-                $gui++;
+            if (empty($prefs['match_suggest'])) continue;
+            $match = $this->tim_nguoi_hop($u);
+            if ($match) {
+                if ($this->emailer->match_suggest($u['id'], $match, $match['diem_phan_tram'])) $queued++;
+            } elseif ($this->emailer->re_engage($u['id'], $this->m_interaction->liked_me_count($u['id']), array())) {
+                $queued++;
             }
         }
-
-        $this->noi("gợi ý ghép đôi: xếp hàng $gui thư / " . count($ung_vien) . ' ứng viên');
+        $this->noi('retention: queued ' . $queued . ' / considered ' . count($members));
     }
 
     /**
@@ -183,11 +210,22 @@ class Cron extends CI_Controller
      * Thang điểm theo đặc tả: cùng tỉnh +10, tuổi lệch ≤3 +5, mới hoạt động +5,
      * có ảnh +3.
      */
-    private function tim_nguoi_hop(array $u)
+    private function tim_nguoi_hop(array $u, $target_id = null)
     {
         $pref = $this->db->where('user_id', $u['id'])->get('user_preferences')->row_array();
         $muon = $pref['seeking_gender'] ?? 'all';
         $tuoi = age_from($u['birthday']) ?: 0;
+        $complete = $this->m_user->dieu_kien_ho_so_du('u2');
+        $age_min = max(18, (int) ($pref['age_min'] ?? 18));
+        $age_max = (int) ($pref['age_max'] ?? 60);
+        if ($age_max < $age_min) return null;
+        $purpose = $pref['purpose'] ?? '';
+        if (!in_array($muon, array('all', 'male', 'female'), true)) return null;
+        $target = $target_id !== null ? ' AND u2.id = ' . (int) $target_id : '';
+        $recent = $target_id === null ? " AND NOT EXISTS (SELECT 1 FROM email_queue q
+                   WHERE q.user_id = " . (int) $u['id'] . " AND q.type = 'match_suggest'
+                     AND q.related_id = u2.id AND q.status IN ('pending', 'sent')
+                     AND q.created_at >= '" . date('Y-m-d H:i:s', time() - 7 * 86400) . "')" : '';
 
         $rows = $this->db->query(
             "SELECT u2.*, p.name AS province_name,
@@ -204,6 +242,12 @@ class Cron extends CI_Controller
               WHERE u2.id <> ?
                 AND u2.status = 'active' AND u2.role = 'member' AND u2.deleted_at IS NULL
                 AND (? = 'all' OR u2.gender = ?)
+                AND TIMESTAMPDIFF(YEAR, u2.birthday, CURDATE()) BETWEEN ? AND ?
+                AND $complete
+                AND EXISTS (SELECT 1 FROM user_preferences candidate_pref WHERE candidate_pref.user_id = u2.id
+                            AND (? = '' OR candidate_pref.purpose = ?))
+                $target $recent
+                AND u2.id NOT IN (SELECT passed_id FROM user_passes WHERE user_id = ?)
                 AND u2.last_active_at >= ?
                 AND u2.id NOT IN (SELECT target_id FROM likes
                                    WHERE user_id = ? AND target_type = 'user')
@@ -215,8 +259,8 @@ class Cron extends CI_Controller
               LIMIT 1",
             array(
                 (int) $u['province_id'], $tuoi, $u['id'],
-                $muon, $muon,
-                date('Y-m-d H:i:s', strtotime('-7 days')),
+                $muon, $muon, $age_min, $age_max, $purpose, $purpose, $u['id'],
+                date('Y-m-d H:i:s', strtotime('-30 days')),
                 $u['id'], $u['id'], $u['id'], $u['id'], $u['id'],
             )
         )->result_array();
@@ -225,8 +269,8 @@ class Cron extends CI_Controller
             return null;
         }
         $m = $rows[0];
-        // Tổng điểm tối đa là 23, quy về phần trăm cho dễ đọc, sàn 70%
-        $m['diem_phan_tram'] = max(70, min(99, (int) round((int) $m['diem'] * 100 / 23)));
+        // Quy đổi điểm thực; không nâng điểm thấp lên một mức phần trăm giả.
+        $m['diem_phan_tram'] = max(0, min(100, (int) round((int) $m['diem'] * 100 / 23)));
         return $m;
     }
 
@@ -360,36 +404,7 @@ class Cron extends CI_Controller
 
     public function keo_lai()
     {
-        $rows = $this->db->query(
-            "SELECT u.* FROM users u
-               JOIN email_prefs p ON p.user_id = u.id
-              WHERE u.status = 'active' AND u.role = 'member' AND u.deleted_at IS NULL
-                AND u.email IS NOT NULL AND u.email <> ''
-                AND p.re_engage = 1 AND p.disabled_at IS NULL
-                AND u.last_active_at < ?",
-            array(date('Y-m-d H:i:s', strtotime('-7 days')))
-        )->result_array();
-
-        $gui = 0;
-        foreach ($rows as $u) {
-            // Mỗi người tối đa một thư loại này mỗi tuần
-            $lan_cuoi = $this->m_email->lan_gui_cuoi($u['id'], 're_engage');
-            if ($lan_cuoi && $lan_cuoi > time() - 7 * 86400) {
-                continue;
-            }
-
-            $ds = $this->m_interaction->liked_me($u['id'], 3);
-            $avatars = array();
-            foreach ($ds as $a) {
-                $avatars[] = avatar_url($a['avatar'], $a['gender']);
-            }
-
-            if ($this->emailer->re_engage($u['id'], $this->m_interaction->liked_me_count($u['id']), $avatars)) {
-                $gui++;
-            }
-        }
-
-        $this->noi("kéo lại người vắng: xếp hàng $gui thư");
+        $this->goi_y();
     }
 
     /* ===================== Nhắc hoàn thiện hồ sơ ===================== */
@@ -401,35 +416,6 @@ class Cron extends CI_Controller
      */
     public function nhac_ho_so()
     {
-        $rows = $this->db->query(
-            "SELECT u.id, u.created_at FROM users u
-              WHERE u.status = 'active' AND u.role = 'member' AND u.deleted_at IS NULL
-                AND u.email IS NOT NULL AND u.email <> ''
-                AND u.created_at <= ? AND u.created_at >= ?",
-            array(date('Y-m-d H:i:s', strtotime('-1 day')), date('Y-m-d H:i:s', strtotime('-10 days')))
-        )->result_array();
-
-        $gui = 0;
-        foreach ($rows as $u) {
-            $thieu = $this->m_user->thieu_thong_tin($u['id']);
-            if (!$thieu) {
-                continue;
-            }
-            $da_gui = (int) $this->db->where('user_id', $u['id'])->where('type', 'profile_nudge')
-                ->count_all_results('email_queue');
-            $so_ngay = (time() - strtotime($u['created_at'])) / 86400;
-
-            $lan = 0;
-            if ($da_gui === 0 && $so_ngay >= 1) {
-                $lan = 1;
-            } elseif ($da_gui === 1 && $so_ngay >= 3) {
-                $lan = 2;
-            }
-            if ($lan && $this->emailer->profile_nudge($u['id'], $lan, $thieu)) {
-                $gui++;
-            }
-        }
-
-        $this->noi("nhắc hoàn thiện hồ sơ: xếp hàng $gui thư");
+        $this->goi_y();
     }
 }

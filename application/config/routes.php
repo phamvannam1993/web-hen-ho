@@ -123,6 +123,7 @@ $route['ajax/send-message']    = 'ajax/send_message';
 $route['ajax/tin-nhan/(:num)'] = 'ajax/poll_messages/$1';
 $route['ajax/hoi-thoai']       = 'ajax/conversations';
 $route['ajax/phong-chat']      = 'ajax/room_messages';
+$route['ajax/online-members']  = 'ajax/online_members';
 $route['ajax/phong-chat/gui']  = 'ajax/room_send';
 $route['ajax/mo-chat/(:num)']  = 'ajax/open_conversation/$1';
 $route['ajax/report']          = 'ajax/report';

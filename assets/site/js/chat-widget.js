@@ -62,6 +62,103 @@
     var roomTimeEl = document.getElementById('cw-room-time');
     var rowRoom    = document.getElementById('cw-row-room');
 
+    var onlinePanel = document.getElementById('cw-online-panel');
+    var onlineList = document.getElementById('cw-online-list');
+    var onlineToggle = document.getElementById('cw-online-toggle');
+    var onlineToggleCount = document.getElementById('cw-online-toggle-count');
+    var onlineClose = document.getElementById('cw-online-close');
+    var onlineGeneration = 0;
+    var onlineLoading = false;
+    var onlineUpdated = 0;
+    var mobileOnline = window.matchMedia('(max-width: 760px)');
+
+    function closeOnline(restoreFocus) {
+        if (!onlinePanel) return;
+        onlinePanel.classList.remove('is-open');
+        onlinePanel.setAttribute('role', 'complementary');
+        onlineToggle.setAttribute('aria-expanded', 'false');
+        if (restoreFocus) onlineToggle.focus();
+    }
+
+    function showOnlineRoom(show) {
+        if (!onlinePanel) return;
+        onlinePanel.hidden = !show;
+        onlineToggle.hidden = !show;
+        closeOnline(false);
+        onlineGeneration++;
+        onlineLoading = false;
+        onlineUpdated = 0;
+        if (show) loadOnline();
+    }
+
+    function loadOnline(force) {
+        if (!onlinePanel || panel.hidden || !dang_mo || dang_mo.kind !== 'room'
+            || document.hidden || onlineLoading
+            || (mobileOnline.matches && !onlinePanel.classList.contains('is-open'))
+            || (!force && Date.now() - onlineUpdated < 30000)) return;
+        onlineLoading = true;
+        var generation = onlineGeneration;
+        var members = [];
+        function page(after) {
+            return api('ajax/online-members?after=' + after).then(function (res) {
+                if (generation !== onlineGeneration) return;
+                if (!res.ok || !Array.isArray(res.members)) throw new Error('Online list unavailable');
+                members = members.concat(res.members);
+                if (res.next && res.next > after) return page(res.next);
+                var fragment = document.createDocumentFragment();
+                members.forEach(function (member) {
+                    var link = document.createElement('a');
+                    link.className = 'cw-online-member';
+                    link.href = member.url;
+                    var avatar = document.createElement('img');
+                    avatar.src = member.avatar;
+                    avatar.alt = '';
+                    avatar.width = 32;
+                    avatar.height = 32;
+                    avatar.loading = 'lazy';
+                    var name = document.createElement('span');
+                    name.textContent = member.name + (member.mine ? ' (Bạn)' : '');
+                    link.appendChild(avatar);
+                    link.appendChild(name);
+                    fragment.appendChild(link);
+                });
+                if (!members.length) {
+                    var empty = document.createElement('p');
+                    empty.textContent = 'Chưa có thành viên online.';
+                    fragment.appendChild(empty);
+                }
+                onlineList.replaceChildren(fragment);
+                onlineUpdated = Date.now();
+            });
+        }
+        if (!onlineList.childNodes.length) onlineList.textContent = 'Đang tải…';
+        page(0).catch(function () {
+            if (generation === onlineGeneration && !onlineUpdated) onlineList.textContent = 'Chưa tải được danh sách. Vui lòng thử lại.';
+        }).finally(function () {
+            if (generation === onlineGeneration) onlineLoading = false;
+        });
+    }
+
+    if (onlineToggle && onlinePanel) {
+        onlineToggle.addEventListener('click', function () {
+            var open = !onlinePanel.classList.contains('is-open');
+            onlinePanel.classList.toggle('is-open', open);
+            onlineToggle.setAttribute('aria-expanded', String(open));
+            onlinePanel.setAttribute('role', open ? 'dialog' : 'complementary');
+            if (open) { loadOnline(true); onlineClose.focus(); }
+        });
+        onlineClose.addEventListener('click', function () { closeOnline(true); });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && onlinePanel.classList.contains('is-open')) {
+                event.preventDefault(); closeOnline(true);
+            }
+        });
+        document.addEventListener('pointerdown', function (event) {
+            if (mobileOnline.matches && !onlinePanel.contains(event.target) && !onlineToggle.contains(event.target)) closeOnline(false);
+        });
+        mobileOnline.addEventListener('change', function () { closeOnline(false); loadOnline(true); });
+    }
+
     /** Hội thoại đang mở: {kind:'room'} hoặc {kind:'chat', id, user_id, name, ...} */
     var dang_mo = null;
     var lastId  = 0;     // id tin cuối đã vẽ của hội thoại đang mở
@@ -225,6 +322,7 @@
 
     /** Tóm tắt phòng chung cho dòng đầu danh sách + số online trên thẻ dọc. */
     function loadRoomSummary() {
+        loadOnline();
         return api('ajax/phong-chat?only=online').then(function (res) {
             if (!res || !res.ok) { return; }
             setOnline(res.online);
@@ -236,6 +334,11 @@
     var tabCount  = document.getElementById('cw-tab-count');
     var tabOnline = document.getElementById('cw-tab-online');
     function setOnline(n) {
+        if (onlineToggleCount) {
+            var onlineLabel = Math.max(0, Number(n) || 0).toLocaleString('vi-VN') + ' người online';
+            onlineToggleCount.textContent = onlineLabel;
+            onlineToggle.setAttribute('aria-label', onlineLabel + '. Bấm để xem danh sách người đang online');
+        }
         if (statusEl && dang_mo && dang_mo.kind === 'room') {
             statusEl.textContent = n + ' người đang online';
         }
@@ -413,6 +516,7 @@
     function moPhong() {
         renderedIds.clear();
         dang_mo = { kind: 'room' };
+        showOnlineRoom(true);
         lastId = 0;
         clearInterval(timer);
 
@@ -435,6 +539,7 @@
 
     /** Mở một hội thoại riêng. */
     function moChat(info) {
+        showOnlineRoom(false);
         renderedIds.clear();
         dang_mo = Object.assign({ kind: 'chat' }, info);
         lastId = 0;
@@ -460,6 +565,7 @@
 
     /** Quay lại danh sách (màn hẹp). */
     function veDanhSach() {
+        closeOnline(false);
         root.classList.remove('is-chat');
         dang_mo = null;
         clearInterval(timer);
@@ -666,6 +772,7 @@
     });
 
     function dongChat() {
+            showOnlineRoom(false);
             panel.hidden = true;
             bubble.setAttribute('aria-expanded', 'false');
             root.classList.remove('open', 'is-chat');

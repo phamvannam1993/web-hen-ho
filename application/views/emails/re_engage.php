@@ -1,12 +1,12 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
 /** @var string $name @var int $so @var array $avatars @var string $link */ ?>
 <p style="margin:0 0 14px; font-size:19px; font-weight:700;">
-    <?= e($name) ?> ơi, lâu rồi không thấy bạn ghé!
+    <?= e($name) ?>, tiếp tục khám phá kết nối tại Saigon Cupid
 </p>
 <p style="margin:0 0 22px; color:#6d6d6d;">
     <?= $so > 0
-        ? 'Trong lúc bạn vắng mặt, có <b>' . (int) $so . ' người</b> đã thích hồ sơ của bạn. Họ vẫn đang chờ bạn trả lời đấy.'
-        : 'Có nhiều hồ sơ mới phù hợp với tiêu chí của bạn. Ghé xem thử nhé.' ?>
+        ? 'Bạn có <b>' . (int) $so . ' lượt thích</b>. Ghé xem và chọn người bạn muốn kết nối.'
+        : 'Ghé xem cộng đồng, cập nhật tiêu chí tìm bạn hoặc tham gia Nhóm Hẹn Hò 4 Phương để bắt đầu trò chuyện.' ?>
 </p>
 
 <?php if (!empty($avatars)): ?>
