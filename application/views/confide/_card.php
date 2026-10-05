@@ -34,7 +34,7 @@ $ic_verified = '<svg viewBox="0 0 24 24" class="ic"><path d="M12 3l7 3v6c0 4.4-3
         <?php /* Luôn giữ chỗ để các thẻ cùng hàng cao bằng nhau */ ?>
         <p class="ccard-topic"><?php if ($topic): ?><span><?= e($topic) ?></span><?php endif; ?></p>
 
-        <p class="ccard-note"><?= !empty($m['bio']) ? e(excerpt($m['bio'], 90)) : '' ?></p>
+        <p class="ccard-note"><?= $user && !empty($m['bio']) ? e(excerpt($m['bio'], 90)) : '' ?></p>
 
         <div class="ccard-actions">
             <?php if ($me && (int) $me['id'] !== (int) $m['id']): ?>

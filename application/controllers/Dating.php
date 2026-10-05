@@ -48,7 +48,7 @@ class Dating extends MY_Controller
             'gay' => array(
                 'label'   => 'Gay',
                 'filters' => array('gender' => 'male', 'seeking' => 'male'),
-                'title'   => 'Tìm Bạn Gay Hẹn Hò Nghiêm Túc Tại',
+                'title'   => 'Tìm Bạn Gay Hẹn Hò Nghiêm Túc',
                 'desc'    => 'Cộng đồng hẹn hò dành cho người đồng tính nam, kết bạn và '
                            . 'tìm mối quan hệ nghiêm túc trong môi trường tôn trọng, an toàn.',
                 'heading' => 'Tìm bạn gay hẹn hò nghiêm túc',
@@ -56,7 +56,7 @@ class Dating extends MY_Controller
             'les' => array(
                 'label'   => 'Les',
                 'filters' => array('gender' => 'female', 'seeking' => 'female'),
-                'title'   => 'Tìm Bạn Les Hẹn Hò Nghiêm Túc Tại',
+                'title'   => 'Tìm Bạn Les Hẹn Hò Nghiêm Túc',
                 'desc'    => 'Cộng đồng hẹn hò dành cho người đồng tính nữ, kết bạn và '
                            . 'tìm mối quan hệ nghiêm túc trong môi trường tôn trọng, an toàn.',
                 'heading' => 'Tìm bạn les hẹn hò nghiêm túc',

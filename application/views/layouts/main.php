@@ -13,7 +13,7 @@ $flash = $this->session->flashdata('flash');
   gtag('config', 'G-NXYG6XSVEK');
 </script>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <?php
 /*
  * Tiêu đề trang: nếu controller đặt sẵn $meta_title thì dùng nguyên văn,
@@ -24,32 +24,23 @@ $page_title = !empty($meta_title)
     ? $meta_title
     : (($title ?? 'Hẹn hò kết bạn') . ' - ' . $site_name);
 ?>
-<title><?= e($page_title) ?></title>
 <meta name="description" content="<?= e($meta_desc ?? '') ?>">
 <?php
-// Kiểm tra biến $allow_index hoặc $data['allow_index'] truyền từ controller
-$force_allow_index = (isset($allow_index) && $allow_index === true) 
-                  || (isset($data['allow_index']) && $data['allow_index'] === true);
-
-// Cấu hình chung của website
-$site_blocked = ($settings['site_noindex'] ?? '1') === '1';
-
-// Ưu tiên nếu controller chủ động bật allow_index = true thì LUÔN INDEX
-$can_index = $force_allow_index || !$site_blocked;
+$seo_path = trim(uri_string(), '/');
+$can_index = seo_indexable($seo_path);
+$canonical_url = site_url($seo_path);
+if (preg_match('~/trang/([0-9]+)$~', $seo_path, $match)) {
+    $page_title .= ' - Trang ' . (int) $match[1];
+}
+$this->load->view('layouts/seo', array('seo_path' => $seo_path, 'can_index' => $can_index,
+    'canonical_url' => $canonical_url, 'page_title' => $page_title, 'site_name' => $site_name,
+    'meta_desc' => $meta_desc ?? '', 'title' => $title ?? $site_name,
+    'settings' => $settings, 'article' => $article ?? null));
 ?>
-
-<?php if ($can_index): ?>
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="<?= current_url() ?>">
-<?php else: ?>
-    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
-    <meta name="googlebot" content="noindex, nofollow">
-<?php endif; ?>
 <link rel="stylesheet" href="<?= base_url('assets/site/css/style.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/style.css') ?>">
 <link rel="icon" type="image/x-icon" href="<?= base_url('assets/site/img/favicon.ico?v=1232312131') ?>">
 <link rel="apple-touch-icon" sizes="180x180" href="<?= base_url('assets/site/img/apple-touch-icon.png?V=1243324243') ?>">
 
-<link rel="stylesheet" href="<?= base_url('assets/site/css/style.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/style.css') ?>">
 <?php
 /* Khu Tài khoản bọc nội dung trong khung riêng (cột trái + thanh dưới trên điện
    thoại) theo bản thiết kế SaigonCupid, nằm giữa đầu trang và chân trang của site. */
@@ -76,12 +67,7 @@ $tk_app = !empty($tk) && !empty($content_view) && strpos($content_view, 'account
 <?php
 /* Thanh trên cùng: liên hệ bên trái, trang tĩnh và mạng xã hội bên phải.
    Mục nào chưa khai trong Quản trị -> Cấu hình thì tự ẩn đi. */
-$mxh = array_filter(array(
-    'facebook'  => $settings['facebook_url']  ?? '',
-    'instagram' => $settings['instagram_url'] ?? '',
-    'youtube'   => $settings['youtube_url']   ?? '',
-    'tiktok'    => $settings['tiktok_url']    ?? '',
-));
+$mxh = seo_social_urls($settings);
 ?>
 <div class="topbar">
     <div class="container topbar-inner">
@@ -281,8 +267,9 @@ $mxh = array_filter(array(
 
         <nav class="site-footer__policy-nav" aria-label="Liên kết chính sách">
             <a href="<?= site_url('gioi-thieu') ?>">Về chúng tôi</a>
-            <a href="<?= site_url('noi-quy') ?>">Người điều hành</a>
-            <a href="<?= site_url('dieu-khoan') ?>">Faqs</a>
+            <a href="<?= site_url('noi-quy') ?>">Nội quy cộng đồng</a>
+            <a href="<?= site_url('dieu-khoan') ?>">Điều khoản sử dụng</a>
+            <a href="<?= site_url('an-toan') ?>">Hẹn hò an toàn</a>
             <a href="<?= site_url('bao-mat') ?>">Chính sách bảo mật</a>
             <a href="<?= site_url('lien-he') ?>">Liên hệ</a>
         </nav>
@@ -326,12 +313,9 @@ $mxh = array_filter(array(
                 <div class="footer-col">
                     <h3 class="footer-col__title">Kết nối chúng tôi</h3>
                     <ul class="footer-col__list footer-col__list--social">
-                        <ul class="footer-col__list footer-col__list--social">
-            <li><a target="_blank" href="#"><span><img src="/assets/images/tiktok.png" alt="Tiktok" /></span> Tiktok</a></li>
-            <li><a target="_blank" href="#"><span><img src="/assets/images/youtube.png?v=345345435435" alt="Youtube" /></span> Youtube</a></li>
-            <li><a target="_blank" href="#"><span><img src="/assets/images/insta.png" alt="Instagram" /></span> Instagram</a></li>
-            <li><a target="_blank" href="#"><span><img src="/assets/images/facebook.png" alt="Facebook" /></span> Facebook</a></li>
-          </ul>
+                        <?php foreach ($mxh as $name => $url): ?>
+                        <li><a href="<?= e($url) ?>" target="_blank" rel="noopener noreferrer"><?= e(ucfirst($name)) ?></a></li>
+                        <?php endforeach; ?>
                         
                         
                     </ul>
@@ -454,7 +438,7 @@ $mxh = array_filter(array(
             <div class="cw-convo" id="cw-convo" hidden>
                 <header class="cw-head">
                     <button type="button" class="cw-back" id="cw-back" aria-label="Về danh sách">‹</button>
-                    <img class="cw-avatar" id="cw-avatar" src="" alt="" hidden>
+                    <img class="cw-avatar" id="cw-avatar" alt="" hidden>
                     <span class="cw-avatar cw-row-room-ic" id="cw-avatar-room" hidden aria-hidden="true">
                         <svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><path d="M16.2 5.8a3.2 3.2 0 0 1 0 5.4M17.5 19a6 6 0 0 0-1.6-4"/></svg>
                     </span>
@@ -513,14 +497,14 @@ $mxh = array_filter(array(
     </div>
 </div>
 
-<script src="<?= base_url('assets/site/js/password-toggle.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/password-toggle.js') ?>"></script>
-<script src="<?= base_url('assets/site/js/app.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/app.js') ?>" data-base="<?= e(rtrim(site_url(), '/') . '/') ?>"></script>
-<script src="<?= base_url('assets/site/js/date-select.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/date-select.js') ?>"></script>
-<script src="<?= base_url('assets/site/js/searchable-select.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/searchable-select.js') ?>"></script>
-<script src="<?= base_url('assets/site/js/notifications.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/notifications.js') ?>"></script>
+<script defer src="<?= base_url('assets/site/js/password-toggle.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/password-toggle.js') ?>"></script>
+<script defer src="<?= base_url('assets/site/js/app.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/app.js') ?>" data-base="<?= e(rtrim(site_url(), '/') . '/') ?>"></script>
+<script defer src="<?= base_url('assets/site/js/date-select.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/date-select.js') ?>"></script>
+<script defer src="<?= base_url('assets/site/js/searchable-select.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/searchable-select.js') ?>"></script>
+<script defer src="<?= base_url('assets/site/js/notifications.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/notifications.js') ?>"></script>
 <!-- Chat nạp cho cả khách: xem được phòng chung, muốn gửi thì phải đăng nhập -->
-<script src="<?= base_url('assets/site/js/realtime.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/realtime.js') ?>"></script>
-<script src="<?= base_url('assets/site/js/chat-widget.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/chat-widget.js') ?>"></script>
+<script defer src="<?= base_url('assets/site/js/realtime.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/realtime.js') ?>"></script>
+<script defer src="<?= base_url('assets/site/js/chat-widget.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/chat-widget.js') ?>"></script>
 
 <?php $this->load->view('layouts/_mobile_nav'); ?>
 </body>

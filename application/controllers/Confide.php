@@ -32,7 +32,7 @@ class Confide extends MY_Controller
             '' => array(
                 'label'   => 'Tất cả',
                 'filters' => array(),
-                'title'   => 'Tìm Bạn Tâm Sự, Trò Chuyện & Chia Sẻ - ' . $site,
+                'title'   => 'Tìm Bạn Tâm Sự, Trò Chuyện & Chia Sẻ',
                 'desc'    => 'Cộng đồng kết bạn tâm sự chân thành, kín đáo. Tìm bạn nam, nữ, LGBT '
                            . 'trò chuyện đêm khuya, chia sẻ niềm vui nỗi buồn hoàn toàn an toàn và '
                            . 'tôn trọng riêng tư.',
@@ -41,7 +41,7 @@ class Confide extends MY_Controller
             'nam' => array(
                 'label'   => 'Tìm bạn nam',
                 'filters' => array('gender' => 'male'),
-                'title'   => 'Tìm Bạn Nam Tâm Sự, Trò Chuyện - ' . $site,
+                'title'   => 'Tìm Bạn Nam Tâm Sự, Trò Chuyện',
                 'desc'    => 'Kết bạn với những người bạn nam sẵn sàng lắng nghe và chia sẻ. '
                            . 'Trò chuyện chân thành, kín đáo, tôn trọng riêng tư.',
                 'heading' => 'Tìm bạn nam tâm sự',
@@ -49,7 +49,7 @@ class Confide extends MY_Controller
             'nu' => array(
                 'label'   => 'Tìm bạn nữ',
                 'filters' => array('gender' => 'female'),
-                'title'   => 'Tìm Bạn Nữ Tâm Sự, Trò Chuyện - ' . $site,
+                'title'   => 'Tìm Bạn Nữ Tâm Sự, Trò Chuyện',
                 'desc'    => 'Kết bạn với những người bạn nữ sẵn sàng lắng nghe và chia sẻ. '
                            . 'Trò chuyện chân thành, kín đáo, tôn trọng riêng tư.',
                 'heading' => 'Tìm bạn nữ tâm sự',
@@ -57,7 +57,7 @@ class Confide extends MY_Controller
             'gay' => array(
                 'label'   => 'Tâm sự Gay',
                 'filters' => array('gender' => 'male', 'seeking' => 'male'),
-                'title'   => 'Tâm Sự Gay - Kết Bạn & Chia Sẻ - ' . $site,
+                'title'   => 'Tâm Sự Gay - Kết Bạn & Chia Sẻ',
                 'desc'    => 'Không gian trò chuyện dành cho cộng đồng đồng tính nam: lắng nghe, '
                            . 'chia sẻ và tôn trọng lẫn nhau.',
                 'heading' => 'Tâm sự cùng cộng đồng gay',
@@ -65,7 +65,7 @@ class Confide extends MY_Controller
             'les' => array(
                 'label'   => 'Les',
                 'filters' => array('gender' => 'female', 'seeking' => 'female'),
-                'title'   => 'Tâm Sự Les - Kết Bạn & Chia Sẻ - ' . $site,
+                'title'   => 'Tâm Sự Les - Kết Bạn & Chia Sẻ',
                 'desc'    => 'Không gian trò chuyện dành cho cộng đồng đồng tính nữ: lắng nghe, '
                            . 'chia sẻ và tôn trọng lẫn nhau.',
                 'heading' => 'Tâm sự cùng cộng đồng les',

@@ -57,7 +57,7 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
         <?php endif; ?>
 
         <?php /* Luôn giữ khối này kể cả khi trống để các thẻ cùng hàng cao bằng nhau */ ?>
-        <p class="pcard-bio"><?= !empty($m['bio']) ? e(excerpt($m['bio'], 110)) : '' ?></p>
+        <p class="pcard-bio"><?= $user && !empty($m['bio']) ? e(excerpt($m['bio'], 110)) : '' ?></p>
 
         <?php /* Luôn render để thẻ có sở thích và chưa có vẫn cao bằng nhau */ ?>
         <p class="pcard-chips">

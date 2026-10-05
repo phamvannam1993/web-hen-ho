@@ -69,7 +69,7 @@ $ic_flag  = $ic('<path d="M5 21V4"/><path d="M5 5h11l-1.6 3.2L16 12H5z"/>');
                 Thu gọn
             </button>
             <div class="sw-detail-body">
-            <?php if (!empty($c['bio'])): ?>
+            <?php if ($user && !empty($c['bio'])): ?>
                 <section>
                     <h4>Giới thiệu</h4>
                     <p class="sw-bio"><?= nl2br(e($c['bio'])) ?></p>
