@@ -311,15 +311,15 @@ $hien_online = $da_gui ? $this->input->post('show_online')
     <section class="tk-card">
         <div class="tk-card__h"><div><h2 class="tk-card__t">Quyền riêng tư</h2></div></div>
         <div class="tk-toggles">
-            <?php /* Mọi tin nhắn đều đã yêu cầu ghép đôi, mục này chỉ để siết thêm */ ?>
+            <?php /* Người dùng có thể chọn nhận tin từ mọi người hoặc chỉ từ VIP */ ?>
             <div class="tk-toggle tk-pf-sel">
                 <span class="tk-toggle__b">
                     <label class="tk-toggle__t" for="allow_message">Ai được nhắn tin cho tôi</label>
-                    <span class="tk-toggle__d">Chỉ người đã ghép đôi với bạn mới nhắn tin được. Bạn có thể siết thêm ở đây.</span>
+                    <span class="tk-toggle__d">Chọn ai có thể gửi tin nhắn cho bạn.</span>
                 </span>
                 <span class="tk-field">
                     <select id="allow_message" name="allow_message">
-                        <?php foreach (array('all' => 'Mọi người đã ghép đôi', 'vip' => 'Chỉ người đã ghép đôi và là VIP') as $k => $t): ?>
+                        <?php foreach (array('all' => 'Mọi người', 'vip' => 'Chỉ thành viên VIP') as $k => $t): ?>
                             <option value="<?= $k ?>" <?= $chon('allow_message', $k, 'all') ?>><?= $t ?></option>
                         <?php endforeach; ?>
                     </select>

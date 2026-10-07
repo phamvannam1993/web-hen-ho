@@ -49,13 +49,7 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
     </svg>
     <span class="js-like-text"><?= $liked ? 'Đã thích' : ($liked_me ? 'Thích lại' : 'Thích') ?></span>
 </button>
-                                <?php /* Chat chỉ mở khi hai bên đã ghép đôi */ ?>
-                                <?php if ($matched): ?>
                                     <button class="btn btn-blue-outline" type="button" data-chat-with="<?= (int) $m['id'] ?>">Nhắn tin</button>
-                                <?php else: ?>
-                                    <button class="btn btn-blue-outline" type="button" data-chat-with="<?= (int) $m['id'] ?>" data-chat-needs-match
-                                            title="Hai bạn cần thích nhau trước khi nhắn tin">Nhắn tin</button>
-                                <?php endif; ?>
                                 <button class="btn btn-ghost" type="button" data-report-user="<?= (int) $m['id'] ?>">Báo cáo</button>
                             <?php else: ?>
                                 <a class="btn btn-primary" href="<?= site_url('dang-nhap') ?>">Đăng nhập để kết nối</a>
@@ -66,8 +60,8 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
                         <?php elseif ($user): ?>
                             <p class="matched-note matched-note-wait">
                                 <?= $liked
-                                    ? 'Bạn đã gửi lượt thích. Khi ' . e(display_name($m)) . ' thích lại, khung chat sẽ mở ra.'
-                                    : 'Bấm Thích để gửi lời quan tâm. Hai bạn thích nhau thì mới nhắn tin được.' ?>
+                                    ? 'Bạn đã gửi lượt thích. Hãy nhắn tin để làm quen!'
+                                    : 'Bạn có thể nhắn tin ngay để làm quen hoặc bấm Thích để gửi lời quan tâm.' ?>
                             </p>
                         <?php endif; ?>
                     <?php else: ?>

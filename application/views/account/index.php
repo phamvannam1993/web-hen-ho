@@ -154,12 +154,12 @@ $stats = array(
             <div class="tk-empty__act"><a class="tk-btn tk-btn--brand" href="<?= site_url('tai-khoan/ho-so') ?>">Cập nhật tiêu chí</a></div>
         </div>
     <?php else: ?>
-        <div class="tk-stack tk-stack--sm tk-only-mobile">
+        <div class="tk-stack tk-stack--sm tk-only-mobile" data-account-suggestions="compact">
             <?php foreach ($goi_y_them as $g): ?>
                 <?php $this->load->view('account/_person', array('p' => $g, 'o' => array('compact' => true))); ?>
             <?php endforeach; ?>
         </div>
-        <div class="tk-people tk-people--3 tk-only-desktop">
+        <div class="tk-people tk-people--3 tk-only-desktop" data-account-suggestions="desktop">
             <?php foreach ($goi_y_them as $g): ?>
                 <?php $this->load->view('account/_person', array('p' => $g, 'o' => array())); ?>
             <?php endforeach; ?>

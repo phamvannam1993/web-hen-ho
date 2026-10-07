@@ -96,10 +96,12 @@ class Discover extends MY_Controller
             return $this->json($result, 403);
         }
         $doi    = $this->m_user->find($target_id);
+        $this->load->model('m_interest_badge');
 
         return $this->json(array(
             'ok'      => true,
             'liked'   => (bool) $result['liked'],
+            'account_counts' => $this->m_interest_badge->menu_counts($me['id']),
             'matched' => $result['matched'],
             // Dữ liệu để dựng hộp chúc mừng khi hai bên cùng thích
             'partner' => $result['matched'] ? array(

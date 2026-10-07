@@ -322,6 +322,14 @@ img { max-width: 100%; height: auto; display: block; }
 }
 .btn-account img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
 .btn-account:hover { background: #fdf0f7; color: var(--pink); text-decoration: none; }
+.account-total-badge {
+    display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+    min-width: 20px; padding: 2px 6px; border-radius: 999px;
+    background: var(--tk-primary, oklch(0.654 0.203 13.5)); color: #fff;
+    font-size: 11px; line-height: 16px; font-weight: 700;
+}
+.account-total-badge[hidden] { display: none; }
+.btn-account .account-total-badge:not([hidden]) { display: inline-flex; }
 
 /* Mega menu nhiều cột */
 .has-mega .mega-menu {
@@ -2661,6 +2669,73 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
 .dating-tabs a:hover { color: var(--ink); text-decoration: none; }
 .dating-tabs a.on { color: var(--pink); border-bottom-color: var(--pink); }
 
+.dating-filter-toggle { display: none; }
+.dating-distance-filter {
+    display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px;
+    margin: 0; padding: 20px; background: var(--card);
+    border-top: 1px solid var(--line);
+}
+.dating-distance-filter label {
+    display: flex; flex: 1 1 190px; flex-direction: column; gap: 7px;
+    min-width: 0; margin: 0; color: var(--ink); font-size: 13px; font-weight: 600;
+}
+.dating-distance-filter select {
+    width: 100%; min-height: 44px; margin: 0; padding: 10px 36px 10px 13px;
+    border: 1px solid var(--line); border-radius: 8px;
+    background-color: var(--card); color: var(--ink); font: inherit; font-size: 14px;
+    transition: border-color .15s, box-shadow .15s;
+}
+.dating-filter-button {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 44px; padding: 10px 18px; border: 1px solid transparent;
+    border-radius: 8px; font: inherit; font-size: 14px; font-weight: 600;
+    line-height: 1.4; cursor: pointer; transition: background .15s, border-color .15s;
+}
+.dating-filter-apply { background: var(--pink); color: #fff; }
+.dating-filter-apply:hover { background: var(--pink-dark); }
+.dating-filter-location { background: var(--bg); border-color: #f3c8d0; color: var(--pink); }
+.dating-filter-location:hover { background: #fbe4e9; border-color: var(--pink); }
+.dating-filter-location svg {
+    width: 18px; height: 18px; flex: 0 0 18px; fill: none; stroke: currentColor;
+    stroke-width: 1.8; stroke-linecap: round;
+}
+.dating-distance-filter select:focus-visible, .dating-filter-button:focus-visible {
+    outline: 2px solid var(--pink); outline-offset: 3px;
+}
+.dating-filter-button:disabled { opacity: .6; cursor: wait; }
+.dating-distance-filter p {
+    flex-basis: 100%; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.6;
+}
+@media (max-width: 600px) {
+    .dating-filter-panel.is-collapsible .dating-filter-toggle {
+        display: flex; align-items: center; gap: 8px; width: 100%; min-height: 48px;
+        padding: 12px 14px; border: 0; border-top: 1px solid var(--line);
+        background: var(--card); color: var(--ink); font: inherit;
+        font-size: 14px; font-weight: 600; text-align: left; cursor: pointer;
+    }
+    .dating-filter-toggle svg {
+        width: 18px; height: 18px; flex: 0 0 18px; fill: none;
+        stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .dating-filter-icon { color: var(--pink); }
+    .dating-filter-summary {
+        margin-left: auto; padding: 2px 9px; border-radius: 6px;
+        background: var(--bg); color: var(--pink); font-size: 12px;
+    }
+    .dating-filter-chevron { color: var(--muted); transition: transform .15s; }
+    .dating-filter-panel.is-expanded .dating-filter-chevron { transform: rotate(180deg); }
+    .dating-filter-toggle:focus-visible { outline: 2px solid var(--pink); outline-offset: -3px; }
+    .dating-filter-panel.is-collapsible:not(.is-expanded) .dating-filter-content { display: none; }
+    .dating-filter-panel.is-collapsible:not(.is-expanded) { margin-bottom: 20px; }
+    .dating-filter-panel.is-collapsible:not(.is-expanded) .dating-filter-toggle { border-radius: 0 0 14px 14px; }
+    .dating-distance-filter { padding: 16px 14px; gap: 12px; }
+    .dating-distance-filter label { flex-basis: calc(50% - 6px); }
+    .dating-filter-button { flex: 1 1 auto; padding-inline: 12px; }
+}
+@media (max-width: 360px) {
+    .dating-distance-filter label, .dating-filter-button { flex-basis: 100%; }
+}
+
 .dating-bar {
     display: flex; align-items: center; justify-content: space-between;
     flex-wrap: wrap; gap: 12px;
@@ -3807,11 +3882,8 @@ body.is-bare .chat-widget {
 .cw-msg-col a:hover .cw-msg-image { opacity: .92; }
 
 .cw-msg-time { display: block; margin-top: 3px; padding: 0 5px; font-size: 11px; color: #9aa0a6; }
-/* Giờ của tin nối tiếp chỉ hiện khi rê chuột, đỡ rối mắt khi đọc một mạch.
-   Riêng dòng có nhãn "Đã xem" thì luôn hiện vì đó là thông tin cần thấy. */
-.cw-msg.is-cont .cw-msg-time { opacity: 0; transition: opacity .15s; }
-.cw-msg.is-cont:hover .cw-msg-time,
-.cw-msg.is-cont .cw-msg-time.has-seen { opacity: 1; }
+/* Thời gian và trạng thái đọc chỉ hiện ở tin cuối mỗi chuỗi cùng người gửi. */
+.cw-msg-time[hidden] { display: none; }
 .cw-seen { font-style: normal; margin-left: 6px; color: #4f6ef7; font-weight: 600; }
 
 /* Nút "N tin nhắn mới": chỉ hiện khi đang xem tin cũ ở trên */
@@ -4520,38 +4592,39 @@ body.is-bare .chat-widget {
     .hm-title.is-left { text-align: left; }
     .hm-sub { font-size: 15px; }
 
-    /* Ô tìm kiếm xếp dọc: chữ một dòng, nút chiếm hết bề ngang bên dưới */
+    /* Ô nhập và nút tìm kiếm nằm cùng hàng trên điện thoại. */
     .hm-hero-search {
     display: flex;
-    flex-direction: column; /* SỬA: Đổi từ column thành row để icon và input nằm ngang */
-    align-items: stretch; /* Căn giữa theo chiều dọc */
-    gap: 12px;
-    padding: 16px;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 6px 6px 12px;
     border-radius: 18px;
     position: relative;
 }
 
 .hm-hero-search-ic {
-        position: absolute; /* Đưa icon trở lại nằm trong ô input */
-        left: 16px;
-        top: 20px; /* Điều chỉnh số này cho khớp với ô input */
+        position: static;
 }
 
 .hm-hero-search input {
     flex: 1;
-        padding: 6px 0px 1px 30px;
+        padding: 10px 0;
         border: none;
         outline: none;
-        width: 100%;
-        font-size: 13px ;
+        width: auto;
+        min-width: 0;
+        font-size: 16px;
 }
 
 /* Nút tìm kiếm */
 .hm-hero-search .btn-hm {
-    width: 100%;
-    /* Vì cha đã là flex-direction: row, nút này sẽ nằm cùng hàng với input */
-    /* Nếu bạn muốn nút nằm dưới cùng (như comment mô tả), bạn cần bọc input và icon trong 1 div riêng */
-    /* Hoặc dùng flex-wrap: wrap; cho thẻ cha .hm-hero-search */
+    width: auto;
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 13px;
+    white-space: nowrap;
 }
     .hm-hero-cta { margin-top: 24px; }
     .hm-hero-stats { gap: 8px 14px; font-size: 13.5px; }

@@ -38,7 +38,7 @@ $gio_ngan = function ($t) {
             <div class="tk-ms-none">
                 <span class="tk-empty__ic"><?= tk_icon('message') ?></span>
                 <h3>Chưa có cuộc trò chuyện nào</h3>
-                <p>Khi hai bạn cùng thích nhau, khung trò chuyện sẽ mở ra ở đây.</p>
+                <p>Chọn một hồ sơ và nhắn tin để bắt đầu làm quen.</p>
                 <a class="tk-btn tk-btn--brand tk-btn--sm" href="<?= site_url('swipe-match') ?>"><?= tk_icon('match') ?>Khám phá &amp; ghép đôi</a>
             </div>
         <?php else: ?>
@@ -111,9 +111,12 @@ $gio_ngan = function ($t) {
                         <button class="tk-btn tk-btn--brand" type="button" id="chat-hello-send" aria-describedby="chat-hello-hint">Gửi lời chào 👋</button>
                     </div>
                 <?php endif; ?>
-                <?php foreach ($messages as $m): ?>
+                <?php foreach ($messages as $index => $m): ?>
                     <?php $mine = (int) $m['sender_id'] === (int) $user['id']; ?>
-                    <div class="chat-msg <?= $mine ? 'mine' : '' ?> <?= $m['type'] === 'image' ? 'is-image' : '' ?>">
+                    <?php $next = $messages[$index + 1] ?? null;
+                    $continues = $next && (int) $next['sender_id'] === (int) $m['sender_id']
+                        && substr($next['created_at'], 0, 10) === substr($m['created_at'], 0, 10); ?>
+                    <div class="chat-msg <?= $mine ? 'mine' : '' ?> <?= $m['type'] === 'image' ? 'is-image' : '' ?>" data-day="<?= e(substr($m['created_at'], 0, 10)) ?>">
                         <?php if ($m['type'] === 'image'): ?>
                             <a href="<?= base_url(ltrim($m['content'], '/')) ?>" target="_blank">
                                 <img src="<?= base_url(ltrim($m['content'], '/')) ?>" alt="Ảnh" loading="lazy">
@@ -126,7 +129,7 @@ $gio_ngan = function ($t) {
                             ?>
                             <p class="<?= $only_emoji ? 'emoji-only' : '' ?>"><?= nl2br(e($m['content'])) ?></p>
                         <?php endif; ?>
-                        <small><?= date('H:i d/m', strtotime($m['created_at'])) ?></small>
+                        <small <?= $continues ? 'hidden' : '' ?>><?= date('H:i d/m', strtotime($m['created_at'])) ?><?php if ($mine && !empty($m['read_at'])): ?><span class="chat-message-seen"> · Đã xem</span><?php endif; ?></small>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -134,8 +137,7 @@ $gio_ngan = function ($t) {
             <?php if (!$can_send): ?>
                 <div class="tk-ms-locked">
                     <div class="tk-alert tk-alert--warning">
-                        Hai bạn chưa ghép đôi nên không gửi tin nhắn được.
-                        Chỉ khi cả hai cùng thích nhau, khung trò chuyện mới mở lại.
+                        <?= e($send_error ?: 'Hiện không thể gửi tin nhắn tới thành viên này.') ?>
                     </div>
                 </div>
             <?php else: ?>

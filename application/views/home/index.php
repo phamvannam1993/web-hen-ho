@@ -87,7 +87,7 @@ $hero_img = setting('home_hero_image') ?: 'assets/images/banner.png';
             $steps = array(
                 array($ic_pen,   'Tạo hồ sơ', 'Đăng ký nhanh chóng, thêm ảnh và thông tin về bản thân bạn.'),
                 array($ic_heart, 'Kết nối',   'Thả tim những người bạn ấn tượng – Họ sẽ biết và có thể đáp lại.'),
-                array($ic_chat,  'Trò chuyện','Khi cả hai cùng thả tim, mở khóa chat và bắt đầu câu chuyện tình yêu.'),
+                array($ic_chat,  'Trò chuyện','Nhắn tin ngay từ hồ sơ để làm quen và bắt đầu câu chuyện của hai bạn.'),
             );
             foreach ($steps as $i => $st): ?>
                 <?php if ($i > 0): ?><span class="hm-step-sep" aria-hidden="true">›</span><?php endif; ?>
@@ -150,58 +150,9 @@ $hero_img = setting('home_hero_image') ?: 'assets/images/banner.png';
         <h2 class="hm-title is-left">Gợi ý ghép đôi cho bạn</h2>
         <p class="hm-sub">Sắp xếp theo mức độ tương hợp với tiêu chí của bạn</p>
 
-        <div class="hm-sugs">
-            <?php foreach ($suggestions as $m):
-                $tuoi     = age_from($m['birthday']);
-                $da_match = in_array((int) $m['id'], $matched_ids, true);
-                // match_score tối đa lý thuyết là 155 nhưng thực tế hiếm khi vượt
-                // 120, nên lấy 120 làm mốc 100% rồi kẹp trong khoảng 60–99 để
-                // con số vừa sát thực vừa không hiện những mức khó tin.
-                $hop = max(60, min(99, (int) round(($m['match_score'] ?? 0) * 100 / 120)));
-                $chips = array_filter(array(
-                    !empty($m['province_name']) ? $m['province_name'] : null,
-                    !empty($m['job'])           ? $m['job'] : null,
-                    !empty($m['height_cm'])     ? (int) $m['height_cm'] . 'cm' : null,
-                    !empty($m['marital_status']) && $m['marital_status'] === 'doc_than' ? 'Độc thân' : null,
-                ));
-            ?>
-                <article class="hm-sug" data-user="<?= (int) $m['id'] ?>">
-                    <a class="hm-sug-photo" href="<?= site_url('profile/' . $m['slug']) ?>">
-                        <img src="<?= avatar_url($m['avatar'], $m['gender']) ?>" alt="<?= e(display_name($m)) ?>" loading="lazy">
-                    </a>
-
-                    <div class="hm-sug-body">
-                        <div class="hm-sug-top">
-                            <h3><a href="<?= site_url('profile/' . $m['slug']) ?>"><?= e(display_name($m)) ?><?= $tuoi ? ', ' . $tuoi : '' ?></a></h3>
-                            <span class="hm-pill hm-pill-pink">Tương hợp: <?= $hop ?>%</span>
-                            <?php if ($da_match): ?>
-                                <span class="hm-pill hm-pill-green">Đã match!</span>
-                            <?php endif; ?>
-                        </div>
-
-                        <?php if ($chips): ?>
-                            <p class="hm-sug-chips">
-                                <?php foreach ($chips as $c): ?><span><?= e($c) ?></span><?php endforeach; ?>
-                            </p>
-                        <?php endif; ?>
-                    </div>
-
-                    <div class="hm-sug-actions">
-                        <?php if ($da_match): ?>
-                            <button type="button" class="btn-hm btn-hm-solid" data-chat-with="<?= (int) $m['id'] ?>">
-                                <?= $ic($ic_chat) ?>Trò chuyện ngay
-                            </button>
-                        <?php else: ?>
-                            <button type="button" class="btn-hm btn-hm-line" data-card-action="pass">
-                                <?= $ic($ic_close) ?>Bỏ qua
-                            </button>
-                            <button type="button" class="btn-hm btn-hm-solid <?= !empty($m['liked']) ? 'is-liked' : '' ?>"
-                                    data-card-action="like" data-like-label="Thả tim">
-                                <?= $ic($ic_heart) ?><span class="js-like-text"><?= !empty($m['liked']) ? 'Đã thích' : 'Thả tim' ?></span>
-                            </button>
-                        <?php endif; ?>
-                    </div>
-                </article>
+        <div class="hm-sugs" data-account-suggestions="home">
+            <?php foreach ($suggestions as $m): ?>
+                <?php $this->load->view('home/_suggestion', array('m' => $m, 'matched_ids' => $matched_ids)); ?>
             <?php endforeach; ?>
         </div>
 

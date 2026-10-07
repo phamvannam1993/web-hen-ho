@@ -118,6 +118,17 @@ class MY_Controller extends CI_Controller
             ->set_header('Pragma: no-cache')
             ->set_header('Expires: 0');
         $data['user'] = $this->auth->user();
+        $data['account_badge_total'] = 0;
+        $data['account_menu_counts'] = array();
+        if ($this->auth->check()) {
+            $this->load->model('m_interest_badge');
+            $counts = $this->m_interest_badge->menu_counts($this->auth->id());
+            $data['account_menu_counts'] = $counts;
+            if (isset($data['tk'])) $data['tk'] = array_merge($data['tk'], $counts);
+            $data['unread_noti'] = $counts['noti'];
+            // Incoming likes and profile views are included in interest already.
+            $data['account_badge_total'] = $counts['total'];
+        }
         $data['content_view'] = $view;
         $this->load->view('layouts/main', $data);
     }

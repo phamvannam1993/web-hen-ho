@@ -39,7 +39,7 @@ $ve = function ($i, $m, $o) use ($so_ro, $cho_tra_loi) {
 <header class="tk-ph">
     <div class="tk-ph__b">
         <h1>Ai đã thích bạn</h1>
-        <p>Thích lại để ghép đôi và mở khung chat.</p>
+        <p>Thích lại để thể hiện sự quan tâm, hoặc nhắn tin ngay từ hồ sơ.</p>
     </div>
     <div class="tk-ph__act"><span class="tk-pill tk-pill--brand"><?= number_format($tong) ?> lượt thích</span></div>
 </header>
@@ -59,7 +59,7 @@ $ve = function ($i, $m, $o) use ($so_ro, $cho_tra_loi) {
                 <p class="tk-wl-ban__t"><?= number_format($tong) ?> người đang quan tâm bạn</p>
                 <p class="tk-wl-ban__d">
                     <?php if ($la_vip): ?>
-                        Thích lại là ghép đôi ngay và mở khung trò chuyện.
+                        Thích lại để ghép đôi. Bạn cũng có thể nhắn tin ngay từ hồ sơ.
                     <?php else: ?>
                         Thành viên thường xem rõ được <?= min(2, count($list)) ?> người đầu. Nâng cấp VIP để xem tất cả và thích lại.
                     <?php endif; ?>

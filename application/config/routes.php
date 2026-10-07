@@ -70,6 +70,7 @@ $route['tam-su/(nam|nu|gay|les)']                   = 'confide/index/$1';
 $route['tam-su/(nam|nu|gay|les)/trang/(:num)']      = 'confide/index/$1/$2';
 
 $route['hen-ho']                          = 'dating/index';
+$route['hen-ho/vi-tri']                   = 'dating/location';
 $route['hen-ho/trang/(:num)']             = 'dating/index//$1';
 $route['hen-ho/(nam|nu|gay|les)']         = 'dating/index/$1';
 $route['hen-ho/(nam|nu|gay|les)/trang/(:num)'] = 'dating/index/$1/$2';
@@ -126,6 +127,9 @@ $route['ajax/phong-chat']      = 'ajax/room_messages';
 $route['ajax/online-members']  = 'ajax/online_members';
 $route['ajax/phong-chat/gui']  = 'ajax/room_send';
 $route['ajax/mo-chat/(:num)']  = 'ajax/open_conversation/$1';
+$route['ajax/goi-y-tai-khoan'] = 'ajax/account_suggestion';
+$route['ajax/so-quan-tam'] = 'ajax/interest_count';
+$route['ajax/quan-tam/da-xem'] = 'ajax/interest_seen';
 $route['ajax/report']          = 'ajax/report';
 
 /* ------------------------------------------------------------------

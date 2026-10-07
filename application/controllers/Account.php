@@ -8,17 +8,12 @@ class Account extends Member_Controller
     {
         parent::__construct();
         $this->load->model(array('m_user', 'm_post', 'm_category', 'm_interaction',
-                                 'm_notification', 'm_billing', 'm_job', 'm_daily'));
+                                 'm_notification', 'm_billing', 'm_job', 'm_daily', 'm_interest_badge'));
 
         // Số liệu cho khung chung của khu Tài khoản (cột trái, thanh trên và
         // thanh dưới trên điện thoại) — trang nào cũng cần nên nạp một lần ở đây.
         $id = $this->auth->id();
-        $this->data['tk'] = array(
-            'me'    => $this->m_user->find($id),
-            'liked' => (int) $this->m_interaction->liked_me_count($id),
-            'msg'   => (int) $this->m_interaction->unread_count($id),
-            'noti'  => (int) $this->data['unread_noti'],
-        );
+        $this->data['tk'] = array('me' => $this->m_user->find($id));
     }
 
     public function index()
@@ -334,7 +329,17 @@ class Account extends Member_Controller
     public function likes()
     {
         $me = $this->auth->user();
+        $tab = (string) $this->input->get('tab');
+        if (!in_array($tab, $this->m_interest_badge->tabs(), true)) $tab = 'ban-thich';
+        $this->m_interest_badge->mark_seen($me['id'], $tab);
+        $token = $this->session->userdata('interest_seen_token');
+        if (!$token) {
+            $token = bin2hex(random_bytes(32));
+            $this->session->set_userdata('interest_seen_token', $token);
+        }
         $this->render('account/likes', array(
+            'interest_seen_token' => $token,
+            'interest_totals' => $this->m_interest_badge->counts($me['id'], false),
             'title'    => 'Quan tâm & ghép đôi',
             'liked_me' => $this->m_interaction->liked_me($me['id']),
             'my_likes' => $this->m_interaction->my_likes($me['id']),
@@ -354,13 +359,12 @@ class Account extends Member_Controller
         // mở sẵn (hoặc tạo mới) hội thoại với người đó.
         $to = (int) $this->input->get('to');
         if ($to && $to !== (int) $me['id']) {
-            // Chưa ghép đôi thì không có hội thoại để mở
+            $error = $this->m_interaction->message_permission($me['id'], $to);
             $conv = $this->m_interaction->conversation_with($me['id'], $to);
             if ($conv) {
                 redirect('tai-khoan/tin-nhan/' . $conv['id']);
             }
-            set_flash('danger', 'Hai bạn chưa ghép đôi nên chưa nhắn tin được. '
-                . 'Hãy bấm Thích và chờ người ấy thích lại.');
+            set_flash('danger', $error ?: 'Không mở được hội thoại với người này.');
             redirect('tai-khoan/quan-tam');
         }
 
@@ -371,9 +375,8 @@ class Account extends Member_Controller
             }
             $other_id = (int) $conv['user_low_id'] === (int) $me['id'] ? $conv['user_high_id'] : $conv['user_low_id'];
             $partner  = $this->m_user->find($other_id);
-            // Hội thoại cũ của cặp chưa (hoặc không còn) ghép đôi thì chỉ xem lại
-            // được lịch sử, không gửi thêm tin nhắn.
-            $can_send = $this->m_interaction->is_matched($me['id'], $other_id);
+            $send_error = $this->m_interaction->message_permission($me['id'], $other_id);
+            $can_send = $send_error === null;
             $messages = $this->m_interaction->messages($conversation_id);
             $this->m_interaction->mark_read($conversation_id, $me['id']);
         }
@@ -385,6 +388,7 @@ class Account extends Member_Controller
             'messages'      => $messages,
             'partner'       => $partner,
             'can_send'      => $can_send,
+            'send_error'    => $send_error ?? '',
             'conversation_id' => $conversation_id,
         ));
     }
@@ -394,6 +398,7 @@ class Account extends Member_Controller
     public function who_liked_me()
     {
         $me = $this->auth->user();
+        $this->m_interest_badge->mark_seen($me['id'], 'thich-ban');
         $this->render('account/who_liked_me', array(
             'title'   => 'Ai đã thích bạn',
             'list'    => $this->m_interaction->liked_me($me['id'], 60),
@@ -419,6 +424,7 @@ class Account extends Member_Controller
     public function profile_viewers()
     {
         $me = $this->auth->user();
+        $this->m_interest_badge->mark_seen($me['id'], 'da-xem');
         $this->render('account/profile_viewers', array(
             'title'  => 'Ai đã xem hồ sơ bạn',
             'list'   => $this->m_interaction->viewers($me['id'], 60),

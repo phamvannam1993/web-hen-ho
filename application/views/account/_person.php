@@ -93,6 +93,9 @@ $tieu_de = $locked ? 'Hồ sơ bị giới hạn' : $ten . ($tuoi ? ', ' . $tuoi
                         <?= tk_icon('heart') ?><span class="js-like-text"><?= $liked ? 'Đã thích' : e($label) ?></span>
                     </button>
                 <?php endif; ?>
+                <?php if (!$matched && !$locked): ?>
+                    <a class="tk-btn tk-btn--outline tk-btn--icon-sm" href="<?= e($chat) ?>" aria-label="Nhắn tin" title="Nhắn tin"><?= tk_icon('message') ?></a>
+                <?php endif; ?>
                 <?php if ($pass && !$locked): ?>
                     <button type="button" class="tk-btn tk-btn--outline tk-btn--icon-sm" data-card-action="pass" aria-label="Bỏ qua" title="Bỏ qua">
                         <?= tk_icon('x') ?>
