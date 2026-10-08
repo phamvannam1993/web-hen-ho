@@ -705,6 +705,23 @@
     /* ------------------------- Gửi tin ------------------------- */
 
     if (formEl) {
+        var sendButton = formEl.querySelector('.cw-send');
+        if (sendButton) {
+            // Keep the input focused during the tap; refocusing after an async
+            // request cannot reliably reopen the keyboard on iOS.
+            function keepKeyboard(event) {
+                if (document.activeElement === inputEl) event.preventDefault();
+            }
+            sendButton.addEventListener('pointerdown', keepKeyboard);
+            sendButton.addEventListener('mousedown', keepKeyboard);
+            if (!window.PointerEvent) {
+                sendButton.addEventListener('touchstart', function (event) {
+                    if (document.activeElement !== inputEl) return;
+                    event.preventDefault();
+                    formEl.dispatchEvent(new Event('submit', { cancelable: true }));
+                }, { passive: false });
+            }
+        }
         formEl.addEventListener('submit', function (e) {
             e.preventDefault();
             if (!dang_mo || sending) { return; }
@@ -755,6 +772,14 @@
                     });
                 }
             }).finally(function () { sending = false; });
+        });
+    }
+
+    if (bodyEl) {
+        bodyEl.addEventListener('click', function (event) {
+            if (!event.target.closest('a, button') && document.activeElement === inputEl) {
+                inputEl.blur();
+            }
         });
     }
 

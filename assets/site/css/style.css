@@ -3467,6 +3467,9 @@ html.cw-page-locked body {
     overflow: hidden; overscroll-behavior: none;
 }
 html.cw-page-locked .site-mobile-nav { bottom: var(--cw-keyboard-inset, 0px); }
+@media (max-width: 1023.98px) {
+    html.cw-page-locked .site-mobile-nav { display: none; }
+}
 .cw-panel :is(.cw-body, .cw-side-list, .cw-online-panel, .cw-emoji-list) {
     overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch;
 }
