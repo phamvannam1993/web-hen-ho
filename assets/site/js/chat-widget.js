@@ -41,6 +41,65 @@
     var badge  = document.getElementById('cw-badge');
     var panel  = document.getElementById('cw-panel');
 
+    // Reserve the visible bottom navigation instead of covering it.
+    var bottomNav = document.querySelector('.site-mobile-nav');
+    var visualViewport = window.visualViewport;
+    var savedScrollY = 0;
+    var pageLocked = false;
+    function fitAboveNav() {
+        var height = bottomNav && bottomNav.getClientRects().length ? bottomNav.offsetHeight : 0;
+        var top = visualViewport ? visualViewport.offsetTop : 0;
+        var viewportHeight = visualViewport ? visualViewport.height : window.innerHeight;
+        panel.style.setProperty('--cw-nav-height', height + 'px');
+        panel.style.setProperty('--cw-viewport-top', top + 'px');
+        panel.style.setProperty('--cw-panel-height', Math.max(0, viewportHeight - height) + 'px');
+        if (pageLocked) {
+            document.documentElement.style.setProperty('--cw-keyboard-inset', Math.max(0, window.innerHeight - top - viewportHeight) + 'px');
+        }
+    }
+    function syncPageLock() {
+        var open = !panel.hidden;
+        if (open && !pageLocked) {
+            savedScrollY = window.scrollY;
+            document.body.style.setProperty('--cw-scroll-top', -savedScrollY + 'px');
+            document.documentElement.classList.add('cw-page-locked');
+            pageLocked = true;
+        } else if (!open && pageLocked) {
+            document.documentElement.classList.remove('cw-page-locked');
+            document.documentElement.style.removeProperty('--cw-keyboard-inset');
+            document.body.style.removeProperty('--cw-scroll-top');
+            pageLocked = false;
+            window.scrollTo(0, savedScrollY);
+        }
+        fitAboveNav();
+    }
+    new MutationObserver(syncPageLock).observe(panel, { attributes: true, attributeFilter: ['hidden'] });
+    var previousTouchY = 0;
+    document.addEventListener('touchstart', function (event) {
+        if (event.touches.length === 1) previousTouchY = event.touches[0].clientY;
+    }, { passive: true });
+    document.addEventListener('touchmove', function (event) {
+        if (!pageLocked || event.touches.length !== 1) return;
+        var area = event.target.closest('.cw-body, .cw-side-list, .cw-online-panel, .cw-emoji-list');
+        var delta = event.touches[0].clientY - previousTouchY;
+        previousTouchY = event.touches[0].clientY;
+        if (!area || !panel.contains(area) || area.scrollHeight <= area.clientHeight ||
+            (delta > 0 && area.scrollTop <= 0) ||
+            (delta < 0 && area.scrollTop + area.clientHeight >= area.scrollHeight - 1)) {
+            if (event.cancelable) event.preventDefault();
+        }
+    }, { passive: false });
+    fitAboveNav();
+    window.addEventListener('resize', fitAboveNav);
+    window.addEventListener('load', fitAboveNav);
+    if (visualViewport) {
+        visualViewport.addEventListener('resize', fitAboveNav);
+        visualViewport.addEventListener('scroll', fitAboveNav);
+    }
+    if (bottomNav && window.ResizeObserver) {
+        new ResizeObserver(fitAboveNav).observe(bottomNav);
+    }
+
     var sideEl   = document.getElementById('cw-side');
     var listEl   = document.getElementById('cw-list');
     var searchEl = document.getElementById('cw-search');

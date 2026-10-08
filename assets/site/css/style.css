@@ -3453,14 +3453,23 @@ body.is-bare .chat-widget {
    Cột trái là danh sách hội thoại (phòng chung nằm ngay đầu), cột phải là nội
    dung đang mở. Màn hẹp chỉ hiện một cột, trượt qua lại bằng lớp .is-chat. */
 .cw-panel {
-    position: fixed; top: 0; right: 0; bottom: 0;
-    width: min(760px, 100vw); height: 100vh; height: 100dvh;
+    position: fixed; top: var(--cw-viewport-top, 0px); right: 0; bottom: auto;
+    width: min(760px, 100vw); height: var(--cw-panel-height, 100dvh);
     background: #fff; overflow: hidden;
     box-shadow: -18px 0 60px rgba(58, 40, 96, .22);
     display: flex;
     animation: cw-slide .26s cubic-bezier(.22,.9,.32,1);
 }
 .cw-panel[hidden] { display: none; }
+html.cw-page-locked { overflow: hidden; overscroll-behavior: none; }
+html.cw-page-locked body {
+    position: fixed; top: var(--cw-scroll-top, 0px); left: 0; right: 0;
+    overflow: hidden; overscroll-behavior: none;
+}
+html.cw-page-locked .site-mobile-nav { bottom: var(--cw-keyboard-inset, 0px); }
+.cw-panel :is(.cw-body, .cw-side-list, .cw-online-panel, .cw-emoji-list) {
+    overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch;
+}
 @keyframes cw-slide {
     from { opacity: .4; transform: translateX(28px); }
     to   { opacity: 1; transform: none; }
