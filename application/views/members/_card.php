@@ -46,6 +46,18 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
             <span class="mi"><?= $ic_pin ?><?= !empty($m['province_name']) ? e($m['province_name']) : 'Chưa rõ khu vực' ?></span>
         </p>
 
+        <?php if (array_key_exists('distance_km', $m)): ?>
+            <p class="pcard-meta pcard-distance">
+                <?php if (!empty($m['distance_same_province']) && empty($m['distance_real'])): ?>
+                    Cùng khu vực<?= !empty($m['province_name']) ? ' · ' . e($m['province_name']) : '' ?>
+                <?php elseif ($m['distance_km'] === null): ?>
+                    Chưa rõ khoảng cách
+                <?php else: ?>
+                    <?= empty($m['distance_real']) ? 'Ước tính · ' : '' ?>Cách bạn <?= (float) $m['distance_km'] < 1 ? 'dưới 1' : number_format(round((float) $m['distance_km']), 0, ',', '.') ?> km
+                <?php endif; ?>
+            </p>
+        <?php endif; ?>
+
         <?php if (!empty($m['height_cm']) || !empty($m['job']) || !empty($m['marital_status'])): ?>
             <p class="pcard-meta">
                 <?php if (!empty($m['height_cm'])): ?>

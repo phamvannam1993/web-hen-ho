@@ -154,16 +154,7 @@
 
     window.appModal = showModal;
 
-    document.querySelectorAll('[data-chat-with]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            if (!btn.hasAttribute('data-chat-needs-match')) { return; }
-            showModal({
-                type: 'info',
-                title: 'Chưa ghép đôi',
-                message: 'Hai bạn cần thích nhau (match) trước khi có thể nhắn tin. Hãy bấm Thích và chờ người ấy thích lại nhé!'
-            });
-        });
-    });
+
 
     /**
      * Máy chủ trả về `need: 'verify'` (chưa xác thực email nên chưa thả tim /
@@ -400,6 +391,59 @@
 
     /* ------------------------- Gọi API ------------------------- */
 
+    var interestCount = document.querySelector('[data-interest-count]');
+    var accountTotalCount = document.querySelector('[data-account-total-count]');
+    var interestRefresh = Promise.resolve();
+    function applyAccountCounts(res) {
+        var interest = Number(res.interest === undefined ? res.count : res.interest) || 0;
+        document.querySelectorAll('[data-interest-tab-count]').forEach(function (badge) {
+            var count = Number((res.interest_tabs || {})[badge.dataset.interestTabCount]) || 0;
+            badge.hidden = count <= 0;
+            badge.textContent = (count > 99 ? '99+' : count) + ' mới';
+            badge.setAttribute('aria-label', count + ' mục mới chưa xem');
+            badge.title = count + ' mục mới chưa xem';
+            badge.closest('[data-tab]').classList.toggle('has-unread', count > 0);
+        });
+        document.querySelectorAll('[data-account-menu-count]').forEach(function (badge) {
+            var count = Number(res[badge.dataset.accountMenuCount]) || 0;
+            badge.hidden = count <= 0;
+            badge.textContent = count > 99 ? '99+' : count;
+            if (badge.dataset.accountMenuCount === 'interest') {
+                badge.setAttribute('aria-label', count + ' mục quan tâm chưa xem');
+            } else if (badge.dataset.accountMenuCount === 'msg') {
+                badge.setAttribute('aria-label', count + ' tin nhắn chưa đọc');
+            }
+        });
+        if (interestCount) {
+            interestCount.hidden = interest <= 0;
+            interestCount.textContent = interest > 99 ? '99+' : interest;
+            interestCount.setAttribute('aria-label', interest + ' mục quan tâm chưa xem');
+        }
+        if (accountTotalCount) {
+            var total = Number(res.total) || 0;
+            accountTotalCount.hidden = total <= 0;
+            accountTotalCount.textContent = total > 99 ? '99+' : total;
+            accountTotalCount.setAttribute('aria-label', total + ' thông báo trong tài khoản');
+        }
+    }
+    function refreshInterestCount() {
+        if (!interestCount && !accountTotalCount) return;
+        interestRefresh = interestRefresh.catch(function () {}).then(function () {
+            return fetch(base + 'ajax/so-quan-tam', {credentials: 'same-origin', cache: 'no-store'})
+                .then(function (response) { return response.json(); })
+                .then(function (res) {
+                    if (!res.ok) return;
+                    applyAccountCounts(res);
+                }).catch(function () {});
+        });
+    }
+
+    document.addEventListener('account-counts-changed', refreshInterestCount);
+    window.addEventListener('focus', refreshInterestCount);
+    if (interestCount || accountTotalCount) {
+        setInterval(function () { if (!document.hidden) refreshInterestCount(); }, 30000);
+    }
+
     function post(url, data) {
         return fetch(url, {
             method: 'POST',
@@ -409,6 +453,11 @@
             },
             body: new URLSearchParams(data || {})
         }).then(function (r) { return r.json(); }).then(function (res) {
+            if (res && res.ok && res.account_counts) applyAccountCounts(res.account_counts);
+            else if (res && res.ok && (typeof res.liked === 'boolean' || res.matched)) refreshInterestCount();
+            if (res && res.ok && (res.liked || res.matched)) {
+                document.dispatchEvent(new CustomEvent('dating-contact-added'));
+            }
             // Hiện SAU trình xử lý riêng của từng nút (chúng có thể mở modal lỗi chung),
             // để lời mời xác thực / thêm ảnh luôn là thứ người dùng thấy cuối cùng.
             if (res && (res.need === 'verify' || res.need === 'profile' || res.nudge)) {
@@ -435,24 +484,14 @@
                     // Riêng ghép đôi thì vẫn báo vì đó là việc đáng chú ý.
                     var actions = btn.closest('.profile-actions');
                     if (actions) {
-                        var chatButton = actions.querySelector('[data-chat-with]');
-                        if (chatButton) {
-                            if (res.matched) {
-                                chatButton.removeAttribute('data-chat-needs-match');
-                                chatButton.removeAttribute('title');
-                            } else {
-                                chatButton.setAttribute('data-chat-needs-match', '');
-                                chatButton.setAttribute('title', 'Hai bạn cần thích nhau trước khi nhắn tin');
-                            }
-                        }
                         var note = actions.parentNode.querySelector('.matched-note');
                         if (note) {
                             note.classList.toggle('matched-note-wait', !res.matched);
                             note.textContent = res.matched
                                 ? 'Hai bạn đã ghép đôi — hãy bắt đầu trò chuyện!'
                                 : res.liked
-                                    ? 'Bạn đã gửi lượt thích. Khi người ấy thích lại, khung chat sẽ mở ra.'
-                                    : 'Bấm Thích để gửi lời quan tâm. Hai bạn thích nhau thì mới nhắn tin được.';
+                                    ? 'Bạn đã gửi lượt thích. Hãy nhắn tin để làm quen!'
+                                    : 'Bạn có thể nhắn tin ngay để làm quen hoặc bấm Thích để gửi lời quan tâm.';
                         }
                     }
                     if (res.matched) {
@@ -873,6 +912,58 @@
         }
     }
 
+    var suggestionQueue = Promise.resolve();
+    function replaceAccountSuggestion(id) {
+        var lists = document.querySelectorAll('[data-account-suggestions]');
+        lists.forEach(function (list) {
+            list.querySelectorAll('[data-user="' + id + '"]').forEach(function (card) {
+                card.classList.add('card-gone');
+                card.querySelectorAll('button').forEach(function (button) { button.disabled = true; });
+            });
+        });
+        var fade = new Promise(function (resolve) { setTimeout(resolve, 280); });
+        suggestionQueue = suggestionQueue.then(function () {
+            var excluded = new Set();
+            lists.forEach(function (list) {
+                list.querySelectorAll('[data-user]').forEach(function (card) { excluded.add(card.dataset.user); });
+            });
+            var data = {};
+            if (document.querySelector('[data-account-suggestions="home"]')) data.layout = 'home';
+            Array.from(excluded).forEach(function (value, index) { data['exclude[' + index + ']'] = value; });
+            return Promise.all([fade, post(base + 'ajax/goi-y-tai-khoan', data)])
+                .then(function (results) {
+                    var res = results[1];
+                    if (!res.ok) throw new Error('suggestions');
+                    lists.forEach(function (list) {
+                        var old = list.querySelector('[data-user="' + id + '"]');
+                        if (!old) return;
+                        var html = res[list.dataset.accountSuggestions];
+                        if (html) {
+                            var template = document.createElement('template');
+                            template.innerHTML = html.trim();
+                            var replacement = template.content.firstElementChild;
+                            replacement.classList.add('card-gone');
+                            old.replaceWith(replacement);
+                            requestAnimationFrame(function () {
+                                requestAnimationFrame(function () { replacement.classList.remove('card-gone'); });
+                            });
+                        } else {
+                            old.remove();
+                            if (!list.querySelector('[data-user]')) {
+                                list.innerHTML = '<p class="tk-card__d">Bạn đã xem hết gợi ý phù hợp. Hãy cập nhật tiêu chí để tìm thêm người mới.</p>';
+                            }
+                        }
+                    });
+                }).catch(function () {
+                    lists.forEach(function (list) {
+                        var old = list.querySelector('[data-user="' + id + '"]');
+                        if (old) old.remove();
+                    });
+                    showModal({type: 'info', title: 'Đã lưu lượt thích', message: 'Chưa tải được gợi ý mới. Hãy tải lại trang để xem tiếp.'});
+                });
+        });
+    }
+
     /* --- Thẻ hồ sơ: nút Bỏ qua / Thích (trang chủ, tìm kiếm, khu vực) --- */
     document.addEventListener('click', function (e) {
         var btn = e.target.closest('[data-card-action]');
@@ -895,8 +986,13 @@
                 return showModal({ type: 'error', title: 'Không thực hiện được', message: res.message });
             }
 
-            if (action === 'pass') {
-                // Bỏ qua thì ẩn hẳn thẻ khỏi danh sách
+            if (card.closest('[data-account-suggestions]') && (res.liked || action === 'pass')) {
+                replaceAccountSuggestion(id);
+                return;
+            }
+
+            if (action === 'pass' || (res.liked && card.closest('.dating-page, .confide-page, .members-page, .hm-sugs, .member-grid'))) {
+                // Hồ sơ đã thích hoặc bỏ qua được ẩn khỏi danh sách duyệt.
                 card.classList.add('card-gone');
                 setTimeout(function () { card.remove(); }, 280);
                 return;
@@ -1300,6 +1396,13 @@
     function renderMessage(m) {
         var div = document.createElement('div');
         div.className = 'chat-msg' + (m.mine ? ' mine' : '') + (m.type === 'image' ? ' is-image' : '');
+        div.dataset.day = m.day_key || m.day || '';
+        var previous = body.lastElementChild;
+        if (previous && previous.classList.contains('chat-msg')
+            && previous.classList.contains('mine') === !!m.mine && previous.dataset.day === div.dataset.day) {
+            var previousMeta = previous.querySelector('small');
+            if (previousMeta) previousMeta.hidden = true;
+        }
 
         if (m.type === 'image') {
             var a = document.createElement('a');
@@ -1320,6 +1423,12 @@
 
         var t = document.createElement('small');
         t.textContent = m.time;
+        if (m.mine && m.seen) {
+            var seen = document.createElement('span');
+            seen.className = 'chat-message-seen';
+            seen.textContent = ' · Đã xem';
+            t.appendChild(seen);
+        }
         div.appendChild(t);
         return div;
     }
@@ -1342,7 +1451,16 @@
                 if (m.id > lastId) { lastId = m.id; }
             });
 
-            if (seenEl) { seenEl.textContent = res.seen ? 'Đã xem' : ''; }
+            if (seenEl) seenEl.textContent = '';
+            if (res.seen) {
+                body.querySelectorAll('.chat-msg.mine small:not([hidden])').forEach(function (meta) {
+                    if (meta.querySelector('.chat-message-seen')) return;
+                    var label = document.createElement('span');
+                    label.className = 'chat-message-seen';
+                    label.textContent = ' · Đã xem';
+                    meta.appendChild(label);
+                });
+            }
             if (res.messages.length && stick) { scrollDown(); }
         })
         .catch(function () { /* mất mạng tạm thời thì bỏ qua, lần sau thử lại */ });

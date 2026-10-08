@@ -80,11 +80,36 @@ class Dating extends MY_Controller
 
         // Sắp xếp: mới tham gia / vừa online / đã xác thực
         $sort = $this->input->get('sort');
-        if (!in_array($sort, array('new', 'active', 'verified'), true)) {
-            $sort = 'active';
+        if (!in_array($sort, array('nearby', 'new', 'active', 'verified'), true)) {
+            $sort = 'nearby';
         }
 
-        $filters = array_merge($current['filters'], array('sort' => $sort));
+        $origin = null;
+        $me = $this->data['user'];
+        $origin_province = (int) $this->input->get('origin_province');
+        if (!$origin_province) $origin_province = (int) ($me['province_id'] ?? 0);
+            if ($this->m_user->location_ready() && $me && !empty($me['location_updated_at'])
+                && strtotime($me['location_updated_at']) >= time() - 30 * 86400
+                && is_numeric($me['lat']) && is_numeric($me['lng'])
+                && abs($me['lat']) <= 90 && abs($me['lng']) <= 180) {
+                $origin = array('lat' => $me['lat'], 'lng' => $me['lng'], 'real' => true, 'province_id' => (int) ($me['province_id'] ?? 0));
+            } else {
+                foreach ($this->data['provinces'] as $province) {
+                    $coordinates = $this->m_user->province_coordinates($province);
+                    if ((int) $province['id'] === $origin_province && $coordinates) {
+                        $origin = array('lat' => $coordinates[0], 'lng' => $coordinates[1], 'real' => false, 'province_id' => $origin_province);
+                        break;
+                    }
+                }
+            }
+        $distance_max = (int) $this->input->get('distance_max');
+        if (!in_array($distance_max, array(10, 25, 50, 100, 200, 500), true)) $distance_max = 0;
+        $filters = array_merge($current['filters'], array('sort' => $sort, 'distance_origin' => $origin, 'distance_max' => $distance_max));
+        $token = $this->session->userdata('dating_location_token');
+        if (!$token) {
+            $token = bin2hex(random_bytes(32));
+            $this->session->set_userdata('dating_location_token', $token);
+        }
         if ($this->input->get('province_id')) {
             $filters['province_id'] = $this->input->get('province_id');
         }
@@ -101,10 +126,34 @@ class Dating extends MY_Controller
             'tabs'       => $tabs,
             'tab'        => $tab,
             'sort'       => $sort,
+            'distance_origin' => $origin,
+            'origin_province' => $origin_province,
+            'distance_max' => $distance_max,
+            'location_token' => $token,
+            'location_ready' => $this->m_user->location_ready(),
             'members'    => $this->m_user->search($filters, $this->per_page, ($page - 1) * $this->per_page),
             'total'      => $total,
             'base_url'   => $base,
             'pagination' => pagination_links($base, $page, $total, $this->per_page, $this->input->get()),
         ));
+    }
+
+    public function location()
+    {
+        $this->output->set_header('Cache-Control: private, no-store');
+        if ($this->input->method() !== 'post') return $this->json(array('ok' => false), 405);
+        if (!$this->auth->check()) return $this->json(array('ok' => false), 401);
+        $token = $this->input->post('location_token');
+        $expected = $this->session->userdata('dating_location_token');
+        if (!is_string($token) || !$expected || !hash_equals($expected, $token)) return $this->json(array('ok' => false), 403);
+        if (!$this->m_user->location_ready()) return $this->json(array('ok' => false), 503);
+        $lat = $this->input->post('lat');
+        $lng = $this->input->post('lng');
+        if (!is_numeric($lat) || !is_numeric($lng) || !is_finite((float) $lat) || !is_finite((float) $lng)
+            || abs((float) $lat) > 90 || abs((float) $lng) > 180) return $this->json(array('ok' => false), 422);
+        $saved = $this->db->where('id', $this->auth->id())->update('users', array(
+            'lat' => (float) $lat, 'lng' => (float) $lng, 'location_updated_at' => date('Y-m-d H:i:s'),
+        ));
+        return $this->json(array('ok' => (bool) $saved), $saved ? 200 : 500);
     }
 }

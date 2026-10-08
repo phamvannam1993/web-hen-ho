@@ -1,5 +1,5 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
-$nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai', 'gay' => 'Gay', 'les' => 'Les');
+$nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai');
 ?>
 <div class="discover-page">
     <h1 class="sr-only">Khám phá và ghép đôi tại Saigon Cupid</h1>
@@ -84,7 +84,7 @@ $nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai', 'gay' => 'Gay', 
         <h2>Bạn muốn khám phá ai?</h2>
         <p>Chọn nhóm bạn quan tâm để chúng tôi hiển thị đúng người.</p>
         <div class="sw-onboard-opts">
-            <?php foreach (array('male' => 'Bạn trai', 'female' => 'Bạn gái', 'gay' => 'Gay', 'les' => 'Les') as $k => $t): ?>
+            <?php foreach (array('male' => 'Bạn trai', 'female' => 'Bạn gái') as $k => $t): ?>
                 <a href="<?= site_url('swipe-match') ?>?xem=<?= $k ?>"><?= $t ?></a>
             <?php endforeach; ?>
         </div>

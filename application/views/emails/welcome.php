@@ -12,7 +12,7 @@
     $buoc = array(
         array('1', 'Hoàn thiện hồ sơ', 'Thêm ảnh và vài dòng giới thiệu — hồ sơ đầy đủ được gợi ý nhiều hơn hẳn.'),
         array('2', 'Xem gợi ý ghép đôi', 'Chúng tôi chọn sẵn những người hợp tiêu chí của bạn.'),
-        array('3', 'Gửi lời chào', 'Thả tim trước; khi cả hai cùng thích nhau thì khung chat mở ra.'),
+        array('3', 'Gửi lời chào', 'Nhắn tin ngay từ hồ sơ để bắt đầu làm quen.'),
     );
     foreach ($buoc as $b): ?>
         <tr>

@@ -14,6 +14,7 @@ $link = function ($key, $value) use ($base_url) {
 
     <nav class="dating-tabs" aria-label="Nhóm tâm sự">
         <?php foreach ($tabs as $key => $t): ?>
+            <?php if (in_array($key, array('gay', 'les'), true)) continue; ?>
             <a class="<?= $key === $tab ? 'on' : '' ?>"
                href="<?= site_url('tam-su' . ($key ? '/' . $key : '')) ?>"><?= e($t['label']) ?></a>
         <?php endforeach; ?>

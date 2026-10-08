@@ -15,7 +15,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Sitemap extends MY_Controller
 {
     /** Bốn nhóm dùng chung cho cả hẹn hò lẫn tâm sự. */
-    private $nhom = array('nam', 'nu', 'gay', 'les');
+    private $nhom = array('nam', 'nu');
 
     /** Bảng mục lục trỏ sang các sitemap con. */
     public function index()

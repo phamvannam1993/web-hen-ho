@@ -10,6 +10,14 @@ CREATE DATABASE IF NOT EXISTS `web_hen_ho`
   DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `web_hen_ho`;
 
+CREATE TABLE IF NOT EXISTS account_interest_seen (
+  user_id BIGINT UNSIGNED NOT NULL,
+  tab VARCHAR(20) NOT NULL,
+  item_id BIGINT UNSIGNED NOT NULL,
+  version VARCHAR(64) NOT NULL,
+  PRIMARY KEY (user_id, tab, item_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ---------------------------------------------------------------------
 -- 1. DANH MỤC DÙNG CHUNG
 -- ---------------------------------------------------------------------
@@ -20,6 +28,8 @@ CREATE TABLE `provinces` (
   `name`      VARCHAR(100) NOT NULL,
   `slug`      VARCHAR(120) NOT NULL,
   `region`    ENUM('bac','trung','nam') DEFAULT NULL,
+  `lat` DECIMAL(9,6) DEFAULT NULL,
+  `lng` DECIMAL(9,6) DEFAULT NULL,
   `sort`      SMALLINT NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_provinces_slug` (`slug`)
@@ -232,6 +242,9 @@ CREATE TABLE `users` (
   `gender`          ENUM('male','female','other') NOT NULL DEFAULT 'other',
   `birthday`        DATE DEFAULT NULL,
   `province_id`     SMALLINT UNSIGNED DEFAULT NULL,
+  `lat` DECIMAL(9,6) DEFAULT NULL,
+  `lng` DECIMAL(9,6) DEFAULT NULL,
+  `location_updated_at` DATETIME DEFAULT NULL,
   `avatar`          VARCHAR(255) DEFAULT NULL,
   `cover`           VARCHAR(255) DEFAULT NULL,
   `bio`             TEXT DEFAULT NULL,

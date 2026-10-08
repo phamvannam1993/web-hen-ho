@@ -76,14 +76,16 @@
         if (!onlinePanel) return;
         onlinePanel.classList.remove('is-open');
         onlinePanel.setAttribute('role', 'complementary');
-        onlineToggle.setAttribute('aria-expanded', 'false');
-        if (restoreFocus) onlineToggle.focus();
+        if (onlineToggle) {
+            onlineToggle.setAttribute('aria-expanded', 'false');
+            if (restoreFocus) onlineToggle.focus();
+        }
     }
 
     function showOnlineRoom(show) {
         if (!onlinePanel) return;
         onlinePanel.hidden = !show;
-        onlineToggle.hidden = !show;
+        if (onlineToggle) onlineToggle.hidden = !show;
         closeOnline(false);
         onlineGeneration++;
         onlineLoading = false;
@@ -233,7 +235,7 @@
             p.className = 'cw-empty';
             p.textContent = key
                 ? 'Không tìm thấy ai tên như vậy.'
-                : 'Chưa có cuộc trò chuyện nào. Hãy ghép đôi để bắt đầu nhắn tin.';
+                : 'Chưa có cuộc trò chuyện nào. Mở một hồ sơ và nhắn tin để làm quen.';
             listEl.appendChild(p);
             return;
         }
@@ -390,6 +392,11 @@
 
         var khoa = m.mine ? 'me' : ('u' + (m.user_id || m.sender_id || m.name || ''));
         var noiTiep = khoa === nguoiCuoi;
+        if (noiTiep) {
+            var previous = bodyEl.lastElementChild;
+            var previousMeta = previous && previous.querySelector('.cw-msg-time');
+            if (previousMeta) previousMeta.hidden = true;
+        }
         nguoiCuoi = khoa;
 
         var wrap = document.createElement('div');
@@ -623,6 +630,16 @@
             });
 
             if (res.messages && res.messages.length) { loadList(); }
+            if (res.seen) {
+                bodyEl.querySelectorAll('.cw-msg.mine .cw-msg-time:not([hidden])').forEach(function (meta) {
+                    if (meta.querySelector('.cw-seen')) return;
+                    meta.classList.add('has-seen');
+                    var label = document.createElement('i');
+                    label.className = 'cw-seen';
+                    label.textContent = 'Đã xem';
+                    meta.appendChild(label);
+                });
+            }
         }).catch(function () {});
     }
 
@@ -808,7 +825,7 @@
     document.querySelectorAll('[data-chat-with]').forEach(function (btn) {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
-            if (btn.hasAttribute('data-chat-needs-match')) { return; }
+
             api('ajax/mo-chat/' + btn.getAttribute('data-chat-with')).then(function (res) {
                 if (res.ok) {
                     panel.hidden = false;
@@ -819,8 +836,8 @@
                 }
                 if (window.appModal) {
                     window.appModal({
-                        type: res.need_match ? 'info' : 'error',
-                        title: res.need_match ? 'Chưa ghép đôi' : 'Không mở được trò chuyện',
+                        type: 'error',
+                        title: 'Không mở được trò chuyện',
                         message: res.message
                     });
                 }
@@ -860,5 +877,8 @@
 
     /* Số chưa đọc và tóm tắt phòng chung lấy ngay khi vào trang */
     loadRoomSummary();
-    if (!isGuest) { loadList(); }
+    if (!isGuest) {
+        loadList();
+        document.addEventListener('dating-contact-added', loadList);
+    }
 })();

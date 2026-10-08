@@ -38,7 +38,7 @@ class M_interaction extends CI_Model
             $this->db->where('id', $exists['id'])->delete('likes');
             $liked = false;
             // Rút lại lượt thích của một cặp đã ghép đôi thì gỡ luôn ghép đôi,
-            // khung chat giữa hai người khoá lại theo.
+            // hội thoại giữa hai người vẫn được giữ lại.
             if ($target_type === 'user') {
                 $this->unmatch($user_id, $target_id);
             }
@@ -63,11 +63,12 @@ class M_interaction extends CI_Model
 
         $matched = false;
         if ($liked && $target_type === 'user') {
+            $this->conversation_with($user_id, $target_id);
             $this->load->model('m_notification');
             $matched = $this->check_match($user_id, $target_id);
             if (!$matched) {
                 $this->m_notification->push($target_id, 'like', 'Có 1 người vừa thích bạn',
-                    'Thích lại để ghép đôi và mở khung trò chuyện.',
+                    'Thích lại để thể hiện sự quan tâm, hoặc nhắn tin ngay để làm quen.',
                     site_url('tai-khoan/quan-tam'), $user_id);
             }
         }
@@ -200,7 +201,7 @@ class M_interaction extends CI_Model
     /**
      * Trả lời một lượt thích đang chờ ở mục "Người thích bạn".
      *
-     *   $action = 'accept' : thích lại -> ghép đôi, mở khoá chat cho cả hai
+     *   $action = 'accept' : thích lại -> ghép đôi
      *   $action = 'skip'   : bỏ qua    -> lượt thích chuyển 'rejected', người
      *                                     gửi không nhận được thông báo gì
      *
@@ -245,6 +246,7 @@ class M_interaction extends CI_Model
                 ));
             }
             $this->create_match($user_id, $other_id);
+            $this->conversation_with($user_id, $other_id);
             return array('ok' => true, 'matched' => true,
                 'message' => 'Ghép đôi thành công! Hai bạn có thể nhắn tin cho nhau.');
         }
@@ -254,7 +256,7 @@ class M_interaction extends CI_Model
         return array('ok' => true, 'matched' => false, 'message' => 'Đã bỏ qua lượt thích này.');
     }
 
-    /** Gỡ ghép đôi (khi một bên rút lại lượt thích). Chat khoá lại theo. */
+    /** Gỡ ghép đôi (khi một bên rút lại lượt thích). Hội thoại vẫn tiếp tục được. */
     private function unmatch($user_id, $other_id)
     {
         list($low, $high) = $this->pair($user_id, $other_id);
@@ -370,15 +372,10 @@ class M_interaction extends CI_Model
 
     /* ------------------------- Nhắn tin ------------------------- */
 
-    /**
-     * Lấy hội thoại giữa hai người. Chỉ tạo mới khi hai bên đã ghép đôi —
-     * đây là chốt chặn cuối cùng cho luật "có match mới được nhắn tin".
-     */
+    /** Lấy hoặc tạo hội thoại theo quyền nhận tin, không yêu cầu ghép đôi. */
     public function conversation_with($user_id, $other_id, $create = true)
     {
-        if ($create && !$this->is_matched($user_id, $other_id)) {
-            $create = false;
-        }
+        if ($create && $this->message_permission($user_id, $other_id, false) !== null) return null;
         list($low, $high) = $this->pair($user_id, $other_id);
         $conv = $this->db->where('user_low_id', $low)->where('user_high_id', $high)
             ->get('conversations')->row_array();
@@ -397,6 +394,18 @@ class M_interaction extends CI_Model
      */
     public function conversations($user_id)
     {
+        // Bổ sung liên hệ cho lượt thích cũ; không tạo tin nhắn tự động.
+        $this->db->query("INSERT IGNORE INTO conversations (user_low_id, user_high_id)
+            SELECT LEAST(l.user_id, l.target_id), GREATEST(l.user_id, l.target_id)
+            FROM likes l JOIN users u ON u.id = l.target_id
+            WHERE l.user_id = ? AND l.target_type = 'user' AND l.target_id <> l.user_id
+              AND u.status = 'active' AND u.deleted_at IS NULL
+              AND NOT EXISTS (SELECT 1 FROM blocks b
+                WHERE (b.user_id = l.user_id AND b.blocked_id = l.target_id)
+                   OR (b.user_id = l.target_id AND b.blocked_id = l.user_id))
+              AND NOT EXISTS (SELECT 1 FROM conversations existing
+                WHERE existing.user_low_id = LEAST(l.user_id, l.target_id)
+                  AND existing.user_high_id = GREATEST(l.user_id, l.target_id))", array((int) $user_id));
         return $this->db->query(
             "SELECT c.*, u.id AS other_id, u.display_name, u.nickname, u.slug AS user_slug, u.avatar,
                     u.gender, u.last_active_at,
@@ -419,25 +428,35 @@ class M_interaction extends CI_Model
             ->order_by('id', 'ASC')->limit($limit)->get('messages')->result_array();
     }
 
-    /**
-     * Gửi tin nhắn. Áp dụng quy tắc quyền nhắn của người nhận (all/vip/matched).
-     */
+    /** Trả về lý do từ chối hoặc null khi được nhắn tin. Giá trị matched cũ được hiểu là all. */
+    public function message_permission($sender_id, $receiver_id, $check_vip = true)
+    {
+        if ((int) $sender_id <= 0 || (int) $receiver_id <= 0 || (int) $sender_id === (int) $receiver_id) {
+            return 'Không thể gửi tin nhắn tới người dùng này.';
+        }
+        if ($this->is_blocked($sender_id, $receiver_id)) return 'Không thể gửi tin nhắn tới người dùng này.';
+        $receiver = $this->db->where('id', $receiver_id)->where('deleted_at', null)->get('users')->row_array();
+        if (!$receiver || $receiver['status'] !== 'active') return 'Thành viên này hiện không thể nhận tin nhắn.';
+        $pref = $this->db->where('user_id', $receiver_id)->get('user_preferences')->row_array();
+        if ($check_vip && ($pref['allow_message'] ?? 'all') === 'vip' && !$this->auth->is_vip()) {
+            return 'Người này chỉ nhận tin nhắn từ thành viên VIP.';
+        }
+        return null;
+    }
+
+    /** Tổng số người tôi đã thích, gồm cả người đã ghép đôi. */
+    public function my_likes_count($user_id)
+    {
+        return (int) $this->db->from('likes l')->join('users u', 'u.id = l.target_id')
+            ->where('l.target_type', 'user')->where('l.user_id', (int) $user_id)
+            ->where('u.deleted_at', null)->count_all_results();
+    }
+
+    /** Gửi tin nhắn theo quyền nhận tin và trạng thái chặn. */
     public function send_message($sender_id, $receiver_id, $content, $type = 'text')
     {
-        if ($this->is_blocked($sender_id, $receiver_id)) {
-            return array('ok' => false, 'message' => 'Không thể gửi tin nhắn tới người dùng này.');
-        }
-        // Luật chung: chỉ nhắn tin được khi hai bên đã ghép đôi.
-        if (!$this->is_matched($sender_id, $receiver_id)) {
-            return array('ok' => false, 'need_match' => true,
-                'message' => 'Hai bạn chưa ghép đôi. Hãy thích nhau trước khi nhắn tin.');
-        }
-
-        // Người nhận vẫn có thể siết thêm: chỉ nhận tin từ thành viên VIP.
-        $pref = $this->db->where('user_id', $receiver_id)->get('user_preferences')->row_array();
-        if (($pref['allow_message'] ?? 'all') === 'vip' && !$this->auth->is_vip()) {
-            return array('ok' => false, 'message' => 'Người này chỉ nhận tin nhắn từ thành viên VIP.');
-        }
+        $error = $this->message_permission($sender_id, $receiver_id);
+        if ($error !== null) return array('ok' => false, 'message' => $error);
 
         $conv = $this->conversation_with($sender_id, $receiver_id);
         if (!$conv) {

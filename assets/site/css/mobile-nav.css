@@ -1,4 +1,13 @@
 .site-mobile-nav { display: none; }
+.site-mobile-nav .tk-dot-count {
+    position: absolute; top: 3px; left: calc(50% + 5px);
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 18px; padding: 1px 4px; border-radius: 999px;
+    background: var(--tk-primary, oklch(0.654 0.203 13.5)); color: #fff;
+    font-size: 10px; font-weight: 700; line-height: 16px;
+    border: 2px solid #fff; pointer-events: none;
+}
+.site-mobile-nav .tk-dot-count[hidden] { display: none; }
 @media all {
     body.is-bare main, body.is-bare .discover-page {
         height: calc(100vh - 52px - env(safe-area-inset-bottom, 0px));

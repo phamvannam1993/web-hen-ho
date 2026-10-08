@@ -2,7 +2,7 @@
 /**
  * Quan tâm & ghép đôi — dựng theo `src/routes/tai-khoan.quan-tam.tsx`.
  *
- * Chỉ khi hai bên cùng thích nhau mới thành ghép đôi và mở được khung chat,
+ * Hai bên cùng thích nhau thì thành ghép đôi; nhắn tin không yêu cầu ghép đôi,
  * nên thẻ "Người thích bạn" có hai nút quyết định: Thích lại hoặc Bỏ qua
  * (`[data-like-reply]`, app.js gửi tới ajax/tra-loi-thich).
  *
@@ -11,13 +11,13 @@
  * thẻ tại chỗ cho khỏi tải lại trang.
  */
 $tabs = array(
-    'thich-ban' => array('Người thích bạn', count($liked_me)),
-    'ghep-doi'  => array('Đã ghép đôi',     count($matches)),
-    'da-xem'    => array('Đã xem hồ sơ',    count($viewers)),
-    'ban-thich' => array('Bạn đã thích',    count($my_likes)),
+    'ban-thich' => array('Bạn đã thích',    $interest_totals['ban-thich']),
+    'thich-ban' => array('Người thích bạn', $interest_totals['thich-ban']),
+    'ghep-doi'  => array('Đã ghép đôi',     $interest_totals['ghep-doi']),
+    'da-xem'    => array('Đã xem hồ sơ',    $interest_totals['da-xem']),
 );
 $tab = (string) $this->input->get('tab');
-if (!isset($tabs[$tab])) { $tab = 'thich-ban'; }
+if (!isset($tabs[$tab])) { $tab = 'ban-thich'; }
 
 // In một danh sách người hai lần: thẻ ngang trên điện thoại, thẻ lớn từ sm
 $luoi = function ($list, $o, $ve = null) {
@@ -49,7 +49,7 @@ $cho_tra_loi = function ($m, $o) {
 <header class="tk-ph">
     <div class="tk-ph__b">
         <h1>Quan tâm &amp; ghép đôi</h1>
-        <p>Khung chat chỉ mở khi hai người cùng thích nhau.</p>
+        <p>Bạn có thể nhắn tin ngay từ hồ sơ để làm quen.</p>
     </div>
     <div class="tk-ph__act">
         <a class="tk-btn tk-btn--brand" href="<?= site_url('tai-khoan/goi-y') ?>"><?= tk_icon('sparkles') ?>Gợi ý hôm nay</a>
@@ -58,9 +58,10 @@ $cho_tra_loi = function ($m, $o) {
 
 <nav class="tk-tabs" role="tablist" data-lk-tabs>
     <?php foreach ($tabs as $k => $t): ?>
+        <?php $unread = (int) ($tk['interest_tabs'][$k] ?? 0); ?>
         <a href="?tab=<?= $k ?>" role="tab" id="tk-lk-tab-<?= $k ?>" data-tab="<?= $k ?>"
            aria-controls="tk-lk-<?= $k ?>" aria-selected="<?= $k === $tab ? 'true' : 'false' ?>"
-           class="<?= $k === $tab ? 'is-active' : '' ?>"><?= e($t[0]) ?><span class="tk-tabs__n"><?= $t[1] ?></span></a>
+           class="<?= $k === $tab ? 'is-active' : '' ?><?= $unread ? ' has-unread' : '' ?>"><?= e($t[0]) ?><span class="tk-tabs__n" title="Tổng số hồ sơ"><?= $t[1] ?></span><span class="tk-tab-unread" data-interest-tab-count="<?= $k ?>" <?= $unread ? '' : 'hidden' ?> aria-label="<?= $unread ?> mục mới chưa xem" title="<?= $unread ?> mục mới chưa xem"><?= $unread > 99 ? '99+' : $unread ?> mới</span></a>
     <?php endforeach; ?>
 </nav>
 
@@ -78,7 +79,7 @@ $cho_tra_loi = function ($m, $o) {
             <div class="tk-card__h">
                 <div>
                     <h2 class="tk-card__t"><?= count($liked_me) ?> người đang chờ bạn thích lại</h2>
-                    <p class="tk-card__d">Thích lại để mở khung chat ngay. Nếu bỏ qua, người kia sẽ không được báo gì cả.</p>
+                    <p class="tk-card__d">Thích lại để thể hiện sự quan tâm, hoặc mở hồ sơ để nhắn tin. Nếu bỏ qua, người kia sẽ không được báo gì cả.</p>
                 </div>
             </div>
             <?php $luoi($liked_me, array(), $cho_tra_loi); ?>
@@ -92,7 +93,7 @@ $cho_tra_loi = function ($m, $o) {
         <div class="tk-empty">
             <span class="tk-empty__ic"><?= tk_icon('match') ?></span>
             <h3>Chưa có ghép đôi nào</h3>
-            <p>Thích lại những người đã thích bạn để ghép đôi ngay và bắt đầu trò chuyện.</p>
+            <p>Thích lại để thể hiện sự quan tâm, hoặc nhắn tin ngay từ hồ sơ để làm quen.</p>
             <div class="tk-empty__act"><a class="tk-btn tk-btn--brand" href="<?= site_url('swipe-match') ?>"><?= tk_icon('match') ?>Khám phá ngay</a></div>
         </div>
     <?php else: ?>
@@ -152,7 +153,7 @@ $cho_tra_loi = function ($m, $o) {
             <div class="tk-card__h">
                 <div>
                     <h2 class="tk-card__t">Bạn đã thích</h2>
-                    <p class="tk-card__d">Đang chờ người ấy thích lại. Khi cả hai cùng thích, chat sẽ mở ra.</p>
+                    <p class="tk-card__d">Bạn đã gửi lời quan tâm. Có thể nhắn tin ngay từ hồ sơ để làm quen.</p>
                 </div>
             </div>
             <?php $luoi($my_likes, array('action' => 'view', 'label' => 'Xem hồ sơ', 'pass' => false)); ?>
@@ -178,6 +179,15 @@ $cho_tra_loi = function ($m, $o) {
             var u = new URL(window.location.href);
             u.searchParams.set('tab', k);
             history.replaceState(null, '', u);
+        }
+        if (ghi) {
+            var body = new URLSearchParams({tab: k, token: <?= json_encode($interest_seen_token) ?>});
+            body.set(<?= json_encode($this->security->get_csrf_token_name()) ?>, <?= json_encode($this->security->get_csrf_hash()) ?>);
+            fetch(<?= json_encode(site_url('ajax/quan-tam/da-xem')) ?>, {method: 'POST', credentials: 'same-origin', body: body})
+                .then(function (response) { return response.json(); })
+                .then(function (result) {
+                    if (result.ok) document.dispatchEvent(new CustomEvent('account-counts-changed'));
+                }).catch(function () {});
         }
     }
     nav.addEventListener('click', function (e) {
