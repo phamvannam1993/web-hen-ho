@@ -151,5 +151,13 @@
   body.is-messages-page .site-footer { display: none; }
   .tk-ms.is-open .tk-ms-side { display: none; }
   .tk-ms:not(.is-open) .tk-ms-pane { display: none; }
-  .tk-ms.is-open .tk-ms-pane { height: calc(100dvh - var(--tk-head, 0px) - 129px); min-height: 420px; }
+  .tk-ms.is-open .tk-ms-pane { height: calc(100dvh - var(--tk-head, 0px) - 129px); min-height: 0; }
 }
+
+html.tk-inbox-open { overflow: hidden; overscroll-behavior: none; }
+html.tk-inbox-open body { position: fixed; inset: 0; overflow: hidden; overscroll-behavior: none; }
+.tk-card.tk-ms.is-open { height: var(--inbox-height); min-height: 0; }
+.tk-ms.is-open .tk-ms-pane { height: 100%; min-height: 0; overflow: hidden; }
+.tk-ms-head, .tk-ms-form, .tk-ms-seen, .tk-ms-locked { flex-shrink: 0; }
+.tk-ms-body, .tk-ms-list, .tk-ms .emoji-list { overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; }
+.tk-ms-inwrap > .tk-input { font-size: 16px; }

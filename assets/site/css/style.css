@@ -3117,15 +3117,10 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
     color: #fff; box-shadow: 0 3px 10px rgba(0, 0, 0, .22);
 }
 .pcard-gender .ic { width: 20px; height: 20px; }
-.pcard-gender.is-male, .pcard-gender-inline.is-male     { background: #4a90e2; }
-.pcard-gender.is-female, .pcard-gender-inline.is-female { background: #e9508c; }
-/* Huy hiệu giới tính cạnh tên: chỉ dùng ở chế độ danh sách */
-.pcard-gender-inline {
-    display: none; width: 26px; height: 26px; border-radius: 50%;
-    align-items: center; justify-content: center; color: #fff; vertical-align: middle;
-}
-.pcard-gender-inline .ic { width: 15px; height: 15px; }
-.pcard-gender .ic, .pcard-gender-inline .ic {
+.pcard-gender.is-male     { background: #4a90e2; }
+.pcard-gender.is-female { background: #e9508c; }
+
+.pcard-gender .ic {
     fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round;
 }
 
@@ -3231,8 +3226,9 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
 .member-grid.is-list .pcard { flex-direction: row; align-items: stretch; }
 .member-grid.is-list .pcard-photo { flex: 0 0 190px; width: 190px; }
 .member-grid.is-list .pcard-photo img { height: 100%; max-height: none; aspect-ratio: auto; }
-.member-grid.is-list .pcard-gender { display: none; }
-.member-grid.is-list .pcard-gender-inline { display: inline-flex; }
+.member-grid.is-list .pcard-gender { display: inline-flex; width: 26px; height: 26px; right: 6px; bottom: 6px; }
+.member-grid.is-list .pcard-gender .ic { width: 16px; height: 16px; }
+
 /* Nhãn trạng thái chuyển sang góc phải của phần thân cho giống mẫu */
 .member-grid.is-list .pcard-tags { left: auto; right: 18px; top: 18px; }
 .member-grid.is-list .pcard-body { padding: 18px 20px; }
@@ -3284,11 +3280,10 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
         border-radius: 6px; overflow: hidden;
     }
     .dating-page .pcard-photo img { aspect-ratio: 1 / 1; max-height: none; }
-    .dating-page .pcard-gender { display: none; }
-    .dating-page .pcard-gender-inline {
-        display: inline-flex; width: 20px; height: 20px;
-    }
-    .dating-page .pcard-gender-inline .ic { width: 12px; height: 12px; }
+    .dating-page .pcard-gender { display: inline-flex; width: 22px; height: 22px; right: 4px; bottom: 4px; }
+    .dating-page .pcard-gender .ic { width: 14px; height: 14px; }
+
+
     .dating-page .pcard-body { min-width: 0; padding: 0; }
     .dating-page .pcard-name {
         margin-bottom: 5px; font-size: 16px; overflow-wrap: anywhere;
@@ -3904,21 +3899,21 @@ body.is-bare .chat-widget {
 
 /* Ô nhập: ô bo tròn dài, nút gửi tròn tách riêng bên phải */
 .cw-form {
-    display: flex; align-items: center; gap: 12px; padding: 18px 20px;
+    display: flex; align-items: center; gap: 8px; padding: 12px;
     border-top: 1px solid #f0f0f4; background: #fff; flex: 0 0 auto;
 }
 /* Nút đính kèm phải cao ngang ô nhập và nút gửi, không thì cụm dưới bị lệch */
 .cw-attach {
-    flex: 0 0 auto; width: 46px; height: 46px; border-radius: 50%; background: #f1f2f6;
+    flex: 0 0 auto; width: 40px; height: 44px; border-radius: 50%; background: transparent;
     display: grid; place-items: center; cursor: pointer; margin: 0;
     transition: background .15s, transform .15s;
 }
 .cw-attach svg {
-    width: 21px; height: 21px; fill: none; stroke: #6b7280;
+    width: 16px; height: 16px; fill: none; stroke: #827888;
     stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
 }
-.cw-attach:hover svg { stroke: #4f6ef7; }
-.cw-attach:hover { background: #e6e9fb; transform: scale(1.06); }
+.cw-attach:hover svg { stroke: #e94c78; }
+.cw-attach:hover { background: #fff0f5; }
 .cw-attach.is-disabled { opacity: .5; cursor: default; }
 /* Đang tải ảnh lên: khoá nút lại và cho quay vòng để biết máy đang làm việc */
 .cw-form.is-sending .cw-attach { pointer-events: none; opacity: .6; }
@@ -3927,21 +3922,25 @@ body.is-bare .chat-widget {
 @keyframes cw-spin { to { transform: rotate(360deg); } }
 .cw-input-wrap { position: relative; flex: 1; min-width: 0; }
 .cw-input-wrap input {
-    width: 100%; padding: 16px 52px 16px 24px; border: 1px solid transparent;
-    border-radius: 999px; background: #f1f2f6; font-size: 16px; font-family: inherit;
+    width: 100%; height: 44px; padding: 0 48px 0 14px; border: 1px solid #d8d3da;
+    border-radius: 18px; background: #fff; font-size: 16px; font-family: inherit;
     transition: border-color .15s, background .15s, box-shadow .15s;
 }
-.cw-input-wrap input::placeholder { color: #a5a9b1; }
+.cw-input-wrap input::placeholder { color: #827888; }
 .cw-input-wrap input:focus {
-    outline: none; border-color: #c7d2fe; background: #fff;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, .12);
+    outline: none; border-color: #ed4d79; background: #fff;
+    box-shadow: 0 0 0 2px rgba(237, 77, 121, .12);
 }
 .cw-emoji-btn {
-    position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
-    background: none; border: 0; cursor: pointer; font-size: 25px; color: #6366f1; line-height: 1;
+    position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+    display: grid; place-items: center; width: 44px; height: 44px;
+    padding: 0; margin: 0; appearance: none; -webkit-appearance: none;
+    background: none; border: 0; border-radius: 50%; cursor: pointer; color: #827888; line-height: 1;
+    touch-action: manipulation;
     transition: color .15s, transform .15s;
 }
-.cw-emoji-btn:hover { color: #4338ca; transform: translateY(-50%) scale(1.15); }
+.cw-emoji-btn:hover { color: #e94c78; }
+.cw-emoji-btn .tk-ic { display: block; width: 18px; height: 18px; }
 
 /* Bảng icon: nằm hẳn dưới ô nhập, chia tab và lưới 5 cột như ảnh mẫu */
 .cw-emoji-panel {
@@ -3968,17 +3967,17 @@ body.is-bare .chat-widget {
 .cw-emoji-item:hover { background: #f3f4f8; transform: scale(1.12); }
 
 .cw-send {
-    flex: 0 0 auto; width: 54px; height: 54px; border-radius: 50%; border: 0;
-    background: linear-gradient(140deg, #eef1ff, #f4ecff); color: #5b6bf5;
+    flex: 0 0 auto; width: 44px; height: 44px; padding: 0; border-radius: 50%; border: 0;
+    background: linear-gradient(135deg, #f43f72, #fb7195); color: #fff;
     cursor: pointer; font-size: 17px; line-height: 1;
     display: grid; place-items: center;
     transition: transform .15s, background .15s, color .15s;
 }
-.cw-send:hover { background: linear-gradient(140deg, #e2e8ff, #ece0ff); transform: scale(1.08); }
+.cw-send:hover { filter: brightness(1.05); }
 .cw-send:active { transform: scale(.94); }
 .cw-send:disabled { opacity: .5; cursor: default; transform: none; }
 .cw-send-ic {
-    width: 24px; height: 24px; fill: none; stroke: currentColor;
+    width: 18px; height: 18px; fill: none; stroke: currentColor;
     stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
     transform: translateX(-1px);
 }
@@ -5084,3 +5083,15 @@ button.cw-close {
 .modal-actions a.btn { text-decoration: none; }
 /* Accessible heading for the full-screen discovery interface. */
 .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+/* Shared mobile form controls: prevent iOS automatic focus zoom. */
+@media (max-width: 1024px), (any-pointer: coarse) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="color"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"]),
+    textarea, select, [contenteditable="true"], [contenteditable="plaintext-only"] { font-size: 16px !important; }
+}
+.footer-col__list--social .footer-social-icon {
+    width: 20px; height: 20px; flex: 0 0 20px; object-fit: contain; filter: brightness(0) invert(1);
+}
+@media (max-width: 760px) {
+    .cw-form { padding: 12px max(12px, env(safe-area-inset-right)) 12px max(12px, env(safe-area-inset-left)); }
+}
