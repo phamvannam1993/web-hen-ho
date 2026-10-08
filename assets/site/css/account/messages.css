@@ -161,3 +161,10 @@ html.tk-inbox-open body { position: fixed; inset: 0; overflow: hidden; overscrol
 .tk-ms-head, .tk-ms-form, .tk-ms-seen, .tk-ms-locked { flex-shrink: 0; }
 .tk-ms-body, .tk-ms-list, .tk-ms .emoji-list { overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; }
 .tk-ms-inwrap > .tk-input { font-size: 16px; }
+
+/* An open inbox fills the available content area up to the bottom nav. */
+html.tk-inbox-open .tk-main { padding: 0; }
+html.tk-inbox-open .tk-main__in { max-width: none; margin: 0; gap: 0; }
+html.tk-inbox-open .tk-card.tk-ms.is-open {
+  border: 0; border-radius: 0; box-shadow: none;
+}
