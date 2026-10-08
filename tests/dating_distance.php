@@ -4,11 +4,11 @@ define('BASEPATH', __DIR__);
 class CI_Model {}
 require __DIR__ . '/../application/models/M_user.php';
 class DistanceDb {
-    public $ready = true, $selects = array(), $orders = array(), $conditions = array();
+    public $ready = true, $selects = array(), $orders = array(), $conditions = array(), $where_values = array();
     public function field_exists($field, $table) { return $this->ready; }
     public function select($sql, $escape = true) { $this->selects[] = $sql; return $this; }
     public function order_by($sql, $direction = '', $escape = true) { $this->orders[] = array($sql, $direction); return $this; }
-    public function where($sql, $value = null, $escape = true) { $this->conditions[] = $sql; return $this; }
+    public function where($sql, $value = null, $escape = true) { $this->conditions[] = $sql; $this->where_values[] = array($sql, $value); return $this; }
     public function from($table) { return $this; }
     public function join($table, $on, $type) { return $this; }
     public function limit($limit, $offset) { return $this; }
@@ -31,6 +31,8 @@ $filters = array('sort' => 'nearby', 'distance_origin' => $origin, 'distance_max
 $user->search($filters, 24, 24);
 verify_distance(strpos($user->db->orders[0][0], 'IS NULL') !== false, 'Unknown distances must sort last');
 verify_distance($user->db->orders[1][1] === 'ASC', 'Nearest first before pagination');
+verify_distance($user->db->orders[2] === array('u.last_active_at', 'DESC'), 'Equally near profiles prioritize most recent activity');
+verify_distance(!in_array('u.id !=', $user->db->conditions, true), 'Guests can browse all eligible members');
 verify_distance(strpos(implode(' ', $user->db->selects), '0 AS distance_real') !== false, 'Province origin is always estimated');
 $where = $user->db->conditions;
 $user->db->conditions = array();
@@ -38,8 +40,16 @@ $user->count_search($filters);
 verify_distance($where === $user->db->conditions, 'Count and results apply identical radius filters');
 $user->auth->logged_in = true;
 $user->db->conditions = array();
+$user->db->where_values = array();
 $user->count_search($filters);
+verify_distance(in_array(array('u.id !=', 7), $user->db->where_values, true), 'Count excludes the signed-in viewer');
 verify_distance(strpos(implode(' ', $user->db->conditions), "browse_like.user_id = 7 AND browse_like.target_type = 'user'") !== false, 'Browse excludes only profiles liked by current viewer before counting');
+$where = $user->db->conditions;
+$user->db->conditions = array();
+$user->db->where_values = array();
+$user->search($filters, 24, 24);
+verify_distance(in_array(array('u.id !=', 7), $user->db->where_values, true), 'Paginated results exclude the signed-in viewer');
+verify_distance($where === $user->db->conditions, 'Signed-in count and results use identical filters');
 $user->auth->logged_in = false;
 $sql = $user->distance_sql($origin);
 verify_distance(strpos($sql, 'location_updated_at') !== false && strpos($sql, '30 DAY') !== false, 'Only recent consented coordinates count as real');
