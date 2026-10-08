@@ -168,3 +168,27 @@ html.tk-inbox-open .tk-main__in { max-width: none; margin: 0; gap: 0; }
 html.tk-inbox-open .tk-card.tk-ms.is-open {
   border: 0; border-radius: 0; box-shadow: none;
 }
+
+@media (max-width: 1023.98px) {
+  html.tk-inbox-open {
+    width: 100%; height: 100%; overflow: hidden;
+  }
+  html.tk-inbox-open body {
+    width: 100%; max-width: 100%; height: 100%;
+    margin: 0; padding-bottom: 0; overflow: hidden;
+  }
+  html.tk-inbox-open .tk-layout {
+    min-height: 0; min-width: 0; width: 100%; max-width: 100%;
+  }
+  html.tk-inbox-open :is(.tk-main, .tk-main__in, .tk-ms, .tk-ms-pane) {
+    min-width: 0; max-width: 100%; overflow: hidden;
+  }
+  html.tk-inbox-open .tk-ms-head__who { overflow: hidden; }
+  html.tk-inbox-open :is(.tk-ms-body, .tk-ms-list, .emoji-list) {
+    overflow-x: hidden; overscroll-behavior: contain;
+    touch-action: pan-y; scrollbar-width: none;
+  }
+  html.tk-inbox-open :is(.tk-ms-body, .tk-ms-list, .emoji-list)::-webkit-scrollbar {
+    display: none; width: 0; height: 0;
+  }
+}
