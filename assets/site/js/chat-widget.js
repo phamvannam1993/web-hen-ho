@@ -397,12 +397,12 @@
     var tabOnline = document.getElementById('cw-tab-online');
     function setOnline(n) {
         if (onlineToggleCount) {
-            var onlineLabel = Math.max(0, Number(n) || 0).toLocaleString('vi-VN') + ' người đang online';
+            var onlineLabel = Math.max(0, Number(n) || 0).toLocaleString('vi-VN') + ' Người đang Online';
             onlineToggleCount.textContent = onlineLabel;
             onlineToggle.setAttribute('aria-label', onlineLabel + '. Bấm để xem danh sách người đang online');
         }
         if (statusEl && dang_mo && dang_mo.kind === 'room') {
-            statusEl.textContent = n + ' người đang online';
+            statusEl.textContent = n + ' Người đang Online';
         }
         if (tabCount) { tabCount.textContent = Number(n).toLocaleString('vi-VN'); }
         if (tabOnline) { tabOnline.hidden = false; }
