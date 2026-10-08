@@ -145,6 +145,7 @@
         if (!onlinePanel) return;
         onlinePanel.hidden = !show;
         if (onlineToggle) onlineToggle.hidden = !show;
+        if (statusEl) statusEl.hidden = show;
         closeOnline(false);
         onlineGeneration++;
         onlineLoading = false;
@@ -155,7 +156,7 @@
     function loadOnline(force) {
         if (!onlinePanel || panel.hidden || !dang_mo || dang_mo.kind !== 'room'
             || document.hidden || onlineLoading
-            || (mobileOnline.matches && !onlinePanel.classList.contains('is-open'))
+            || !onlinePanel.classList.contains('is-open')
             || (!force && Date.now() - onlineUpdated < 30000)) return;
         onlineLoading = true;
         var generation = onlineGeneration;
@@ -215,7 +216,7 @@
             }
         });
         document.addEventListener('pointerdown', function (event) {
-            if (mobileOnline.matches && !onlinePanel.contains(event.target) && !onlineToggle.contains(event.target)) closeOnline(false);
+            if (!onlinePanel.contains(event.target) && !onlineToggle.contains(event.target)) closeOnline(false);
         });
         mobileOnline.addEventListener('change', function () { closeOnline(false); loadOnline(true); });
     }
@@ -396,7 +397,7 @@
     var tabOnline = document.getElementById('cw-tab-online');
     function setOnline(n) {
         if (onlineToggleCount) {
-            var onlineLabel = Math.max(0, Number(n) || 0).toLocaleString('vi-VN') + ' người online';
+            var onlineLabel = Math.max(0, Number(n) || 0).toLocaleString('vi-VN') + ' người đang online';
             onlineToggleCount.textContent = onlineLabel;
             onlineToggle.setAttribute('aria-label', onlineLabel + '. Bấm để xem danh sách người đang online');
         }

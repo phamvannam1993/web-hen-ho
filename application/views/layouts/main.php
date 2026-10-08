@@ -459,6 +459,10 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
                     <div class="cw-peer">
                         <b id="cw-name"></b>
                         <small id="cw-status"></small>
+                        <button type="button" class="cw-online-toggle" id="cw-online-toggle" hidden
+                                aria-expanded="false" aria-controls="cw-online-panel" aria-haspopup="dialog">
+                            <span id="cw-online-toggle-count">Người đang online</span> <span aria-hidden="true">▾</span>
+                        </button>
                     </div>
                     <button type="button" class="cw-close" data-close aria-label="Đóng">&times;</button>
                 </header>
