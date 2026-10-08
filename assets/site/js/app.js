@@ -1296,16 +1296,16 @@
     list.addEventListener('click', function (e) {
         var item = e.target.closest('.emoji-item');
         if (!item) { return; }
-        var start = input.selectionStart || input.value.length;
-        var end   = input.selectionEnd || input.value.length;
+        var start = input.selectionStart == null ? input.value.length : input.selectionStart;
+        var end   = input.selectionEnd == null ? input.value.length : input.selectionEnd;
         input.value = input.value.slice(0, start) + item.textContent + input.value.slice(end);
-        input.focus();
         input.selectionStart = input.selectionEnd = start + item.textContent.length;
     });
 
     btn.addEventListener('click', function (e) {
         e.stopPropagation();
         panel.hidden = !panel.hidden;
+        if (!panel.hidden) { input.blur(); }
     });
     panel.addEventListener('click', function (e) { e.stopPropagation(); });
     document.addEventListener('click', function () { panel.hidden = true; });

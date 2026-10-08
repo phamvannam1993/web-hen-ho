@@ -802,10 +802,9 @@
         if (!tabs || !list) { return; }
 
         function chen(ch) {
-            var a = input.selectionStart || input.value.length;
-            var b = input.selectionEnd || input.value.length;
+            var a = input.selectionStart == null ? input.value.length : input.selectionStart;
+            var b = input.selectionEnd == null ? input.value.length : input.selectionEnd;
             input.value = input.value.slice(0, a) + ch + input.value.slice(b);
-            input.focus();
             input.selectionStart = input.selectionEnd = a + ch.length;
         }
 
@@ -839,6 +838,7 @@
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
             panelEl.hidden = !panelEl.hidden;
+            if (!panelEl.hidden) { input.blur(); }
         });
         panelEl.addEventListener('click', function (e) { e.stopPropagation(); });
     }
