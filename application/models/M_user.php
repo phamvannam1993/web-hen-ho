@@ -180,6 +180,7 @@ class M_user extends CI_Model
             ->where($this->dieu_kien_ho_so_du('u'), null, false);
         if ($this->auth->check()) {
             $viewer = (int) $this->auth->id();
+            $this->db->where('u.id !=', $viewer);
             $this->db->where("NOT EXISTS (SELECT 1 FROM likes browse_like
                 WHERE browse_like.user_id = $viewer AND browse_like.target_type = 'user'
                   AND browse_like.target_id = u.id)", null, false);
