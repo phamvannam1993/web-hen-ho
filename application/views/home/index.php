@@ -33,7 +33,7 @@ $hero_img = setting('home_hero_image') ?: 'assets/images/banner.png';
          style="background-image:url('<?= base_url(ltrim($hero_img, '/')) ?>')"></div>
     <div class="container hm-hero-inner">
         <h1 class="hm-hero-title">Nơi trái tim Việt Nam tìm thấy nhau</h1>
-        <p class="hm-hero-sub">Kết nối với người phù hợp – Chỉ nhắn tin khi cả hai cùng thả tim ❤️</p>
+        <p class="hm-hero-sub">Kết nối với người phù hợp – Chủ động nhắn tin để làm quen ❤️</p>
 
         <form class="hm-hero-search" method="get" action="<?= site_url('tim-kiem') ?>">
             <span class="hm-hero-search-ic" aria-hidden="true"><?= $ic($ic_search) ?></span>
@@ -62,7 +62,7 @@ $hero_img = setting('home_hero_image') ?: 'assets/images/banner.png';
         <div class="hm-why">
             <?php
             $whys = array(
-                array($ic_heart,  'Kết nối chân thật',  'Chỉ những người thực sự quan tâm mới có thể match và nhắn tin với nhau.'),
+                array($ic_heart,  'Kết nối chân thật',  'Thả tim để bày tỏ sự quan tâm hoặc nhắn tin ngay để làm quen.'),
                 array($ic_shield, 'An toàn &amp; Bảo mật', 'Kết nối qua HTTPS. Chủ động bảo vệ thông tin cá nhân và báo cáo hồ sơ vi phạm.'),
                 array($ic_users,  'Cộng đồng đông đảo', 'Kết nối với hàng nghìn thành viên từ khắp các tỉnh thành.'),
                 array($ic_chat,   'Tìm kiếm thông minh', 'Gợi ý đối tượng phù hợp dựa trên sở thích và tính cách của bạn.'),
@@ -173,7 +173,7 @@ $hero_img = setting('home_hero_image') ?: 'assets/images/banner.png';
                 array('Nhờ ' . ($settings['site_name'] ?? 'Saigon Cupid') . ' mà mình đã gặp được người ấy sau 3 năm độc thân. '
                     . 'Quy trình kết nối thông minh giúp tụi mình tìm thấy nhiều tiếng nói chung trước khi trò chuyện trực tiếp.',
                     'Chị Minh Anh', 'Hà Nội', 'female'),
-                array('Ứng dụng tuyệt vời, an toàn và cực kỳ bảo mật. Mình thích tính năng thả tim hai chiều rồi mới trò chuyện, '
+                array('Ứng dụng tuyệt vời, an toàn và cực kỳ bảo mật. Mình thích việc có thể chủ động nhắn tin làm quen, '
                     . 'giúp tránh được rất nhiều tin nhắn làm phiền.',
                     'Anh Quốc Bảo', 'TP. Hồ Chí Minh', 'male'),
                 array('Ban đầu mình khá e dè khi hẹn hò online. Nhưng ' . ($settings['site_name'] ?? 'Saigon Cupid')

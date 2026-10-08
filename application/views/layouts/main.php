@@ -67,7 +67,17 @@ $tk_app = !empty($tk) && !empty($content_view) && strpos($content_view, 'account
 <?php
 /* Thanh trên cùng: liên hệ bên trái, trang tĩnh và mạng xã hội bên phải.
    Mục nào chưa khai trong Quản trị -> Cấu hình thì tự ẩn đi. */
-$mxh = seo_social_urls($settings);
+$mxh = array();
+foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
+    $social_url = trim($settings[$social_name . '_url'] ?? '');
+    if ($social_url === '') continue;
+    if (strpos($social_url, '//') === 0) $social_url = 'https:' . $social_url;
+    elseif (!preg_match('~^[a-z][a-z0-9+.-]*:~i', $social_url)) $social_url = 'https://' . $social_url;
+    if (filter_var($social_url, FILTER_VALIDATE_URL)
+        && in_array(strtolower(parse_url($social_url, PHP_URL_SCHEME) ?? ''), array('http', 'https'), true)) {
+        $mxh[$social_name] = $social_url;
+    }
+}
 ?>
 <div class="topbar">
     <div class="container topbar-inner">
@@ -315,7 +325,7 @@ $mxh = seo_social_urls($settings);
                     <h3 class="footer-col__title">Kết nối chúng tôi</h3>
                     <ul class="footer-col__list footer-col__list--social">
                         <?php foreach ($mxh as $name => $url): ?>
-                        <li><a href="<?= e($url) ?>" target="_blank" rel="noopener noreferrer"><?= e(ucfirst($name)) ?></a></li>
+                        <li><a href="<?= e($url) ?>" target="_blank" rel="noopener noreferrer"><img class="footer-social-icon" src="<?= base_url('assets/images/' . ($name === 'instagram' ? 'insta' : $name) . '.png') ?>" width="20" height="20" alt="" aria-hidden="true" loading="lazy"><?= e(ucfirst($name)) ?></a></li>
                         <?php endforeach; ?>
                         
                         
@@ -484,10 +494,10 @@ $mxh = seo_social_urls($settings);
                     </label>
                     <div class="cw-input-wrap">
                         <input type="text" name="content" id="cw-input" autocomplete="off"
-                               placeholder="<?= $user ? 'Vui lòng nhập tin nhắn' : 'Đăng nhập để trò chuyện…' ?>"
+                               placeholder="<?= $user ? 'Nhập tin nhắn...' : 'Đăng nhập để trò chuyện…' ?>"
                                <?= $user ? '' : 'disabled' ?>>
                         <button type="button" class="cw-emoji-btn" id="cw-emoji-btn"
-                                title="Biểu tượng cảm xúc" <?= $user ? '' : 'disabled' ?>>☺</button>
+                                title="Biểu tượng cảm xúc" aria-label="Biểu tượng cảm xúc" <?= $user ? '' : 'disabled' ?>><?= tk_icon('smile') ?></button>
                     </div>
                     <button class="cw-send" type="submit" aria-label="Gửi" <?= $user ? '' : 'disabled' ?>>
                         <svg viewBox="0 0 24 24" class="cw-send-ic" aria-hidden="true"><path d="M21.4 3.6 2.9 10.3c-1 .4-1 1.8 0 2.1l6.2 2 2.4 6.6c.3.9 1.6 1 2 .1l8-16.2c.4-.8-.4-1.6-1.2-1.3z"/><path d="M9.4 14.6 21 3.9"/></svg>

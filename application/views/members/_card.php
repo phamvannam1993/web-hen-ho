@@ -37,7 +37,6 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
     <div class="pcard-body">
         <h3 class="pcard-name">
             <a href="<?= site_url('profile/' . $m['slug']) ?>"><?= e(display_name($m)) ?><?= $age ? ', ' . $age : '' ?></a>
-            <span class="pcard-gender-inline <?= $gclass ?>"><?= $ic_gender ?></span>
         </h3>
 
         <p class="pcard-meta">
