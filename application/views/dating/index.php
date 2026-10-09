@@ -1,76 +1,8 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
 $sorts = array('nearby' => 'Gần bạn nhất', 'active' => 'Vừa online', 'new' => 'Mới tham gia', 'verified' => 'Đã xác thực');
-/** Đường dẫn giữ nguyên tab, chỉ đổi kiểu sắp xếp. */
-$sort_url = function ($key) use ($base_url) {
-    $q = $this->input->get();
-    $q['sort'] = $key;
-    return site_url($base_url) . '?' . http_build_query($q);
-};
 ?>
 <div class="container dating-page">
-    <header class="dating-head">
-        <h1><?= e($heading) ?></h1>
-        <p><?= e($tabs[$tab]['desc']) ?></p>
-    </header>
-
-    <!-- Dải tab chuyển nhanh giữa các mục con -->
-    <nav class="dating-tabs" aria-label="Nhóm hẹn hò">
-        <?php foreach ($tabs as $key => $t): ?>
-            <?php if (in_array($key, array('gay', 'les'), true)) continue; ?>
-            <a class="<?= $key === $tab ? 'on' : '' ?>"
-               href="<?= e(site_url('hen-ho' . ($key ? '/' . $key : '')) . ($this->input->get() ? '?' . http_build_query($this->input->get()) : '')) ?>"><?= e($t['label']) ?></a>
-        <?php endforeach; ?>
-    </nav>
-
-    <div class="dating-filter-panel" id="dating-filter-panel">
-    <button type="button" class="dating-filter-toggle" id="dating-filter-toggle" aria-expanded="false" aria-controls="dating-filter-content" hidden>
-        <svg class="dating-filter-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
-        <span>Bộ lọc</span>
-        <span class="dating-filter-summary"><?= e($sorts[$sort]) ?><?= $distance_max ? ' · ' . (int) $distance_max . ' km' : '' ?></span>
-        <svg class="dating-filter-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-    </button>
-    <div id="dating-filter-content" class="dating-filter-content">
-    <form class="dating-distance-filter" id="dating-distance-fields" action="<?= site_url($base_url) ?>" method="get">
-        <input type="hidden" name="sort" value="<?= e($sort) ?>">
-        <?php if ($this->input->get('province_id')): ?><input type="hidden" name="province_id" value="<?= (int) $this->input->get('province_id') ?>"><?php endif; ?>
-        <?php if (empty($distance_origin['real'])): ?>
-        <label>Khu vực của bạn
-            <select name="origin_province">
-                <option value="">Chọn tỉnh/thành</option>
-                <?php foreach ($provinces as $province): ?>
-                    <option value="<?= (int) $province['id'] ?>" <?= $origin_province === (int) $province['id'] ? 'selected' : '' ?>><?= e($province['name']) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </label>
-        <?php endif; ?>
-        <label>Khoảng cách
-            <select name="distance_max">
-                <option value="0">Tất cả khoảng cách</option>
-                <?php foreach (array(10, 25, 50, 100, 200, 500) as $km): ?>
-                <option value="<?= $km ?>" <?= $distance_max === $km ? 'selected' : '' ?>>Trong <?= $km ?> km</option>
-                <?php endforeach; ?>
-            </select>
-        </label>
-        <button type="submit" class="dating-filter-button dating-filter-apply">Áp dụng</button>
-        <?php if ($user && $location_ready): ?>
-        <button type="button" class="dating-filter-button dating-filter-location" id="dating-location" data-url="<?= site_url('hen-ho/vi-tri') ?>" data-token="<?= e($location_token) ?>" data-csrf-name="<?= e($this->security->get_csrf_token_name()) ?>" data-csrf-value="<?= e($this->security->get_csrf_hash()) ?>"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>Dùng vị trí hiện tại</button>
-        <?php endif; ?>
-        <p id="dating-location-status" role="status">
-            <?= !$distance_origin ? 'Chọn khu vực của bạn để xem khoảng cách và xếp người gần nhất lên đầu.' : (empty($distance_origin['real']) ? 'Khoảng cách ước tính theo tỉnh/thành, tính theo đường chim bay.' : 'Ưu tiên vị trí đã chia sẻ; hồ sơ chưa có vị trí sẽ dùng tỉnh/thành để ước tính. Khoảng cách theo đường chim bay.') ?>
-        </p>
-    </form>
-    <div class="dating-bar">
-        <p class="result-total"><b><?= number_format($total) ?></b> hồ sơ</p>
-        <div class="sort-tabs">
-            <span>Xếp theo:</span>
-            <?php foreach ($sorts as $key => $label): ?>
-                <a class="<?= $sort === $key ? 'on' : '' ?>" href="<?= $sort_url($key) ?>"><?= $label ?></a>
-            <?php endforeach; ?>
-        </div>
-    </div>
-    </div>
-    </div>
-    <script defer src="<?= base_url('assets/site/js/dating-location.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/dating-location.js') ?>"></script>
+    <?php $this->load->view('dating/_discovery', array('sorts' => $sorts)); ?>
 
     <?php if (empty($members)): ?>
         <p class="empty">Chưa có hồ sơ nào trong mục này.

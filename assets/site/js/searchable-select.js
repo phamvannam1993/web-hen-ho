@@ -14,7 +14,7 @@ function boDauTiengViet(s) {
             .replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();
 }
 
-document.querySelectorAll('select[data-searchable], select[data-custom-select], .tk-pf select, .filter-panel select').forEach(function (select, index) {
+document.querySelectorAll('select[data-searchable], select[data-custom-select], .tk-pf select, .filter-panel select, .dating-discovery-form select').forEach(function (select, index) {
     if (select.multiple || select.size > 1) { return; }
     var searchable = select.hasAttribute('data-searchable');
     var options = Array.prototype.slice.call(select.options);
@@ -22,6 +22,7 @@ document.querySelectorAll('select[data-searchable], select[data-custom-select], 
 
     var box = document.createElement('div');
     box.className = 'ss';
+    if (select.classList.contains('sort-select')) { box.classList.add('ss-sort'); }
 
     var nut = document.createElement('button');
     nut.type = 'button';

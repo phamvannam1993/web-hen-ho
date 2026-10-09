@@ -33,6 +33,12 @@
                     return response.json();
                 }).then(function (result) {
                     if (!result.ok) throw new Error('save');
+                    var form = document.getElementById('dating-distance-fields');
+                    if (form && form.requestSubmit) {
+                        form.requestSubmit();
+                        button.disabled = false;
+                        return;
+                    }
                     var url = new URL(window.location.href);
                     url.pathname = url.pathname.replace(/\/trang\/\d+\/?$/, '');
                     window.location.replace(url.toString());
