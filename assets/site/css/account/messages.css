@@ -5,6 +5,9 @@
 
 .tk-card.tk-ms { padding: 0; overflow: hidden; }
 
+/* Nhường không gian thanh điều hướng phía trên cho hội thoại đang mở. */
+body.is-inbox-open :is(.topbar, .site-header, .tk-mhead) { display: none; }
+
 /* ── Danh sách hội thoại ── */
 .tk-ms-side { display: flex; flex-direction: column; min-height: 0; }
 .tk-ms-side__h { padding: 12px; border-bottom: 1px solid var(--tk-border); }
@@ -148,6 +151,21 @@
 /* Điện thoại / máy tính bảng: danh sách HOẶC khung chat; khung chat vừa khít
    giữa đầu trang site (--tk-head) + thanh menu 49px + lề 16px và thanh dưới 52px */
 @media (max-width: 1023.98px) {
+  html.tk-inbox-list { height: 100%; overflow: hidden; overscroll-behavior: none; }
+  html.tk-inbox-list body {
+    position: fixed; inset: 0; margin: 0; padding-bottom: 0;
+    overflow: hidden; overscroll-behavior: none;
+  }
+  html.tk-inbox-list .tk-layout { min-height: 0; background: #fff; }
+  html.tk-inbox-list .tk-main { padding: 0; overflow: hidden; }
+  html.tk-inbox-list .tk-main__in { max-width: none; margin: 0; gap: 0; }
+  html.tk-inbox-list .tk-card.tk-ms {
+    height: var(--inbox-height); min-height: 0;
+    border: 0; border-radius: 0; box-shadow: none;
+  }
+  html.tk-inbox-list .tk-ms-side { height: 100%; overflow: hidden; }
+  html.tk-inbox-list .tk-ms-side__h { flex-shrink: 0; background: #fff; }
+  html.tk-inbox-list .tk-ms-list { overflow-x: hidden; touch-action: pan-y; }
   body.is-messages-page .site-footer { display: none; }
   .tk-ms.is-open .tk-ms-side { display: none; }
   .tk-ms:not(.is-open) .tk-ms-pane { display: none; }
