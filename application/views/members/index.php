@@ -45,7 +45,7 @@ $with = function ($key, $value) use ($base_url) {
     return site_url($base_url) . '?' . http_build_query($q);
 };
 ?>
-<div class="container">
+<div class="container members-page">
     <?php if ($province): ?>
         <nav class="breadcrumb">
             <a href="<?= site_url() ?>">Trang chủ</a> ›
@@ -217,7 +217,7 @@ $with = function ($key, $value) use ($base_url) {
                         <svg viewBox="0 0 24 24" class="ic"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>
                         Bộ lọc
                     </button>
-                    <select class="sort-select" onchange="location.href = this.value">
+                    <select class="sort-select" data-custom-select aria-label="Sắp xếp thành viên" onchange="location.href = this.value">
                         <?php foreach (array('active' => 'Hoạt động gần đây', 'new' => 'Mới tham gia', 'vip' => 'Thành viên VIP') as $k => $v): ?>
                             <option value="<?= $with('sort', $k) ?>" <?= $g('sort', 'active') === $k ? 'selected' : '' ?>><?= $v ?></option>
                         <?php endforeach; ?>
@@ -255,6 +255,22 @@ $with = function ($key, $value) use ($base_url) {
                     hoặc <a href="<?= site_url('thanh-vien') ?>">xem toàn bộ thành viên</a>.</p>
             <?php else: ?>
                 <div class="member-grid <?= $view_mode === 'list' ? 'is-list' : '' ?>">
+                    <script>
+                    (function () {
+                        var grid = document.currentScript.parentElement;
+                        var page = grid.closest('.members-page');
+                        var requested = new URLSearchParams(window.location.search).get('view');
+                        var mode = requested === 'grid' || requested === 'list' ? requested
+                            : (window.matchMedia('(max-width: 720px)').matches ? 'list' : 'grid');
+                        grid.classList.toggle('is-list', mode === 'list');
+                        page.querySelector('input[name="view"]').value = mode;
+                        page.querySelectorAll('.view-switch a').forEach(function (link) {
+                            var selected = new URL(link.href).searchParams.get('view') === mode;
+                            link.classList.toggle('on', selected);
+                            link.setAttribute('aria-current', selected ? 'true' : 'false');
+                        });
+                    }());
+                    </script>
                     <?php foreach ($members as $m): ?>
                         <?php $this->load->view('members/_card', array('m' => $m)); ?>
                     <?php endforeach; ?>

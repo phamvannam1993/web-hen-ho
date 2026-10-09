@@ -87,7 +87,9 @@ class Dating extends MY_Controller
         $origin = null;
         $me = $this->data['user'];
         $origin_province = (int) $this->input->get('origin_province');
+        if ((int) $this->input->get('province_id')) $origin_province = (int) $this->input->get('province_id');
         if (!$origin_province) $origin_province = (int) ($me['province_id'] ?? 0);
+        if (!$origin_province) $origin_province = (int) $this->input->get('province_id');
             if ($this->m_user->location_ready() && $me && !empty($me['location_updated_at'])
                 && strtotime($me['location_updated_at']) >= time() - 30 * 86400
                 && is_numeric($me['lat']) && is_numeric($me['lng'])
@@ -103,8 +105,25 @@ class Dating extends MY_Controller
                 }
             }
         $distance_max = (int) $this->input->get('distance_max');
+        $guest_location = $this->session->userdata('dating_guest_location');
+        if (!$me && is_array($guest_location) && ($guest_location['updated_at'] ?? 0) >= time() - 86400) {
+            $origin = array('lat' => $guest_location['lat'], 'lng' => $guest_location['lng'], 'real' => true);
+        }
         if (!in_array($distance_max, array(10, 25, 50, 100, 200, 500), true)) $distance_max = 0;
         $filters = array_merge($current['filters'], array('sort' => $sort, 'distance_origin' => $origin, 'distance_max' => $distance_max));
+        $gender = $this->input->get('gender');
+        if (in_array($gender, array('male', 'female'), true)) $filters['gender'] = $gender;
+        $marital = $this->input->get('marital');
+        if (in_array($marital, array('doc_than', 'ly_hon', 'goa', 'phuc_tap'), true)) $filters['marital'] = $marital;
+        foreach (array('age_min', 'age_max') as $key) {
+            $age = (int) $this->input->get($key);
+            if ($age >= 18 && $age <= 80) $filters[$key] = $age;
+        }
+        if (isset($filters['age_min'], $filters['age_max']) && $filters['age_min'] > $filters['age_max']) {
+            list($filters['age_min'], $filters['age_max']) = array($filters['age_max'], $filters['age_min']);
+        }
+        $keyword = $this->input->get('q');
+        if (is_string($keyword)) $filters['keyword'] = mb_substr(trim($keyword), 0, 100);
         $token = $this->session->userdata('dating_location_token');
         if (!$token) {
             $token = bin2hex(random_bytes(32));
@@ -123,6 +142,8 @@ class Dating extends MY_Controller
             'title'      => $current['title'],
             'meta_desc'  => $current['desc'],
             'heading'    => $current['heading'],
+            'filters'    => $filters,
+            'hero_members' => $this->m_user->dating_hero_members(),
             'tabs'       => $tabs,
             'tab'        => $tab,
             'sort'       => $sort,
@@ -142,15 +163,18 @@ class Dating extends MY_Controller
     {
         $this->output->set_header('Cache-Control: private, no-store');
         if ($this->input->method() !== 'post') return $this->json(array('ok' => false), 405);
-        if (!$this->auth->check()) return $this->json(array('ok' => false), 401);
         $token = $this->input->post('location_token');
         $expected = $this->session->userdata('dating_location_token');
         if (!is_string($token) || !$expected || !hash_equals($expected, $token)) return $this->json(array('ok' => false), 403);
-        if (!$this->m_user->location_ready()) return $this->json(array('ok' => false), 503);
         $lat = $this->input->post('lat');
         $lng = $this->input->post('lng');
         if (!is_numeric($lat) || !is_numeric($lng) || !is_finite((float) $lat) || !is_finite((float) $lng)
             || abs((float) $lat) > 90 || abs((float) $lng) > 180) return $this->json(array('ok' => false), 422);
+        if (!$this->auth->check()) {
+            $this->session->set_userdata('dating_guest_location', array('lat' => (float) $lat, 'lng' => (float) $lng, 'updated_at' => time()));
+            return $this->json(array('ok' => true));
+        }
+        if (!$this->m_user->location_ready()) return $this->json(array('ok' => false), 503);
         $saved = $this->db->where('id', $this->auth->id())->update('users', array(
             'lat' => (float) $lat, 'lng' => (float) $lng, 'location_updated_at' => date('Y-m-d H:i:s'),
         ));

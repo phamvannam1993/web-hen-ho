@@ -46,6 +46,7 @@ $this->load->view('layouts/seo', array('seo_path' => $seo_path, 'can_index' => $
    thoại) theo bản thiết kế SaigonCupid, nằm giữa đầu trang và chân trang của site. */
 $tk_app = !empty($tk) && !empty($content_view) && strpos($content_view, 'account/') === 0;
 $tk_inbox_open = $tk_app && $content_view === 'account/messages' && !empty($partner);
+$guest_banner = !$user && empty($bare) && strpos($content_view, 'auth/') !== 0;
 ?>
 <?php if ($tk_app): ?>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -60,7 +61,7 @@ $tk_inbox_open = $tk_app && $content_view === 'account/messages' && !empty($part
 <?php endif; ?>
 <link rel="stylesheet" href="<?= base_url('assets/site/css/mobile-nav.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/mobile-nav.css') ?>">
 </head>
-<body class="<?= !empty($bare) ? 'is-bare' : '' ?><?= $tk_app ? 'tk-app' : '' ?><?= $content_view === 'account/messages' ? ' is-messages-page' : '' ?><?= $tk_inbox_open ? ' is-inbox-open' : '' ?>">
+<body class="<?= !empty($bare) ? 'is-bare' : '' ?><?= $tk_app ? 'tk-app' : '' ?><?= $content_view === 'account/messages' ? ' is-messages-page' : '' ?><?= $tk_inbox_open ? ' is-inbox-open' : '' ?><?= $guest_banner ? ' has-guest-banner' : '' ?>">
 
 <!-- Dải mảnh trên cùng: khẩu hiệu + hotline -->
 <?php /* Chế độ toàn màn hình (trang Khám phá): bỏ thanh trên, menu và chân trang */ ?>
@@ -534,5 +535,14 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 <script defer src="<?= base_url('assets/site/js/chat-widget.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/chat-widget.js') ?>"></script>
 
 <?php $this->load->view('layouts/_mobile_nav'); ?>
+<?php if ($guest_banner): ?>
+<aside class="guest-banner" aria-label="Tham gia Saigon Cupid">
+    <p><strong>Gặp người phù hợp, bắt đầu kết nối</strong><span>Đăng nhập hoặc tạo tài khoản để thích và nhắn tin.</span></p>
+    <div class="guest-banner-actions">
+        <a class="guest-banner-login" href="<?= site_url('dang-nhap') ?>">Đăng nhập</a>
+        <a class="guest-banner-register" href="<?= site_url('dang-ky') ?>">Đăng ký</a>
+    </div>
+</aside>
+<?php endif; ?>
 </body>
 </html>

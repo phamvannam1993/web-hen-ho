@@ -13,6 +13,11 @@ body.is-inbox-open :is(.topbar, .site-header, .tk-mhead) { display: none; }
 .tk-ms-side__h { padding: 12px; border-bottom: 1px solid var(--tk-border); }
 .tk-ms-side__t { font-size: 16px; line-height: 24px; font-weight: 700; }
 .tk-ms-search { margin-top: 8px; }
+/* Use the wrapper's SVG, without the browser's native search icon. */
+.tk-ms-search input[type="search"] { -webkit-appearance: none; appearance: none; }
+.tk-ms-search input::-webkit-search-decoration,
+.tk-ms-search input::-webkit-search-results-button,
+.tk-ms-search input::-webkit-search-results-decoration { -webkit-appearance: none; display: none; }
 .tk-ms-search input::-webkit-search-cancel-button { cursor: pointer; }
 
 .tk-ms-list { flex: 1; overflow-y: auto; min-height: 0; }
@@ -151,6 +156,8 @@ body.is-inbox-open :is(.topbar, .site-header, .tk-mhead) { display: none; }
 /* Điện thoại / máy tính bảng: danh sách HOẶC khung chat; khung chat vừa khít
    giữa đầu trang site (--tk-head) + thanh menu 49px + lề 16px và thanh dưới 52px */
 @media (max-width: 1023.98px) {
+  body.is-messages-page .tk-mhead { display: none; }
+  body.is-messages-page .site-header { display: block; }
   html.tk-inbox-list { height: 100%; overflow: hidden; overscroll-behavior: none; }
   html.tk-inbox-list body {
     position: fixed; inset: 0; margin: 0; padding-bottom: 0;

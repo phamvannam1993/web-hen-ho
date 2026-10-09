@@ -99,10 +99,19 @@ class M_user extends CI_Model
         ));
     }
 
-    /**
-     * Danh sách thành viên có lọc.
-     * $filters: gender, province_id, age_min, age_max, keyword, online, vip, sort
-     */
+    /** Chọn vài ảnh đại diện công khai từ nhóm thành viên lâu năm. */
+    public function dating_hero_members()
+    {
+        $pool = $this->db->select('id, avatar, gender, display_name, nickname, slug')
+            ->from('users')->where('status', 'active')->where('deleted_at', null)
+            ->where('role', 'member')->where('avatar !=', '')
+            ->where('created_at <=', date('Y-m-d H:i:s', time() - 30 * 86400))
+            ->order_by('created_at', 'ASC')->limit(60)->get()->result_array();
+        shuffle($pool);
+        return array_slice($pool, 0, 4);
+    }
+
+    /** Danh sách thành viên có lọc, dùng cùng điều kiện với count_search. */
     public function search(array $filters, $limit = 12, $offset = 0)
     {
         $this->build_search($filters);

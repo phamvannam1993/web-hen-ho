@@ -2988,6 +2988,25 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
 .result-total b { color: #1c2330; font-weight: 800; }
 
 .result-tools { display: flex; align-items: center; gap: 10px; }
+.members-page .search-toolbar:has(.ss-sort) { position: relative; z-index: 2; clip-path: none; }
+.members-page .ss-sort { min-width: 190px; }
+.members-page .ss-sort .ss-toggle {
+    min-height: 40px; border: 1px solid #efd5dd; border-radius: 9px;
+    padding: 9px 30px 9px 12px; background-color: #fff7f9; color: #65434d; font-size: 14px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='m4 6 4 4 4-4' stroke='%23d1273f' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-size: 14px;
+}
+.members-page .ss-sort .ss-toggle:hover { border-color: #dba4b2; background-color: var(--bg); }
+.members-page .ss-sort .ss-toggle[aria-expanded="true"] { border-color: var(--pink); box-shadow: 0 0 0 3px #d1273f12; }
+.members-page .ss-sort .ss-panel { z-index: 60; padding: 5px; border-color: #efd5dd; border-radius: 9px; background: #fffafb; box-shadow: 0 8px 24px #7c283b1a; }
+.members-page .ss-sort .ss-item { padding: 9px 10px; border-radius: 5px; font-size: 13px; color: #65434d; }
+.members-page .ss-sort .ss-item:hover, .members-page .ss-sort .ss-item:focus-visible { background: var(--bg); color: var(--pink-dark); outline: none; }
+.members-page .ss-sort .ss-item.is-on { background: #f9dce3; color: var(--pink-dark); }
+@media (max-width: 900px) {
+    .members-page .ss-sort { flex: 1 1 auto; min-width: 0; }
+    .members-page .ss-sort .ss-toggle { min-height: 36px; padding: 8px 28px 8px 10px; font-size: 12px; }
+    .members-page .ss-sort .ss-item { padding: 8px; font-size: 12px; }
+}
 .sort-select {
     padding: 11px 14px; border: 1.5px solid #e3e6ea; border-radius: 12px;
     font-size: 15px; color: #1c2330; background: #fff; cursor: pointer;
@@ -3269,34 +3288,46 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
 
 /* Hẹn hò trên mobile: ảnh bên trái, thông tin và hành động bên phải. */
 @media (max-width: 720px) {
-    .dating-page .member-grid { grid-template-columns: minmax(0, 1fr); gap: 10px; }
-    .dating-page .pcard {
+    .members-page .search-head { padding: 12px 0 16px; }
+    .members-page .search-head h1 { font-size: 22px; margin-bottom: 6px; }
+    .members-page .search-head p { font-size: 14px; line-height: 1.5; }
+    .members-page .search-toolbar,
+    .members-page .result-panel { padding: 10px; border-radius: 12px; }
+    .members-page .result-top { gap: 8px; }
+    .members-page .result-total { font-size: 14px; }
+    .members-page .result-tools { gap: 6px; }
+    .members-page .btn-filter-toggle { padding: 8px 10px; font-size: 13px; gap: 6px; }
+    .members-page .sort-select { min-width: 0; padding: 8px; font-size: 13px; }
+    .members-page .view-switch { padding: 3px; border-radius: 9px; }
+    .members-page .view-switch a { width: 30px; height: 30px; }
+    .dating-page .member-grid, .members-page .member-grid.is-list { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+    :is(.dating-page, .members-page .member-grid.is-list) .pcard {
         flex-direction: row; align-items: flex-start;
         padding: 10px; gap: 10px; min-width: 0;
     }
-    .dating-page .pcard-photo {
+    :is(.dating-page, .members-page .member-grid.is-list) .pcard-photo {
         flex: 0 0 clamp(80px, 25vw, 112px);
         width: clamp(80px, 25vw, 112px);
         border-radius: 6px; overflow: hidden;
     }
-    .dating-page .pcard-photo img { aspect-ratio: 1 / 1; max-height: none; }
-    .dating-page .pcard-gender { display: inline-flex; width: 22px; height: 22px; right: 4px; bottom: 4px; }
-    .dating-page .pcard-gender .ic { width: 14px; height: 14px; }
+    :is(.dating-page, .members-page .member-grid.is-list) .pcard-photo img { aspect-ratio: 1 / 1; height: auto; max-height: none; }
+    :is(.dating-page, .members-page .member-grid.is-list) .pcard-gender { display: inline-flex; width: 22px; height: 22px; right: 4px; bottom: 4px; }
+    :is(.dating-page, .members-page .member-grid.is-list) .pcard-gender .ic { width: 14px; height: 14px; }
 
 
-    .dating-page .pcard-body { min-width: 0; padding: 0; }
-    .dating-page .pcard-name {
+    :is(.dating-page, .members-page .member-grid.is-list) .pcard-body { min-width: 0; padding: 0; }
+    :is(.dating-page, .members-page .member-grid.is-list) .pcard-name {
         margin-bottom: 5px; font-size: 16px; overflow-wrap: anywhere;
     }
-    .dating-page .pcard-meta { font-size: 12px; line-height: 1.4; gap: 4px 8px; }
-    .dating-page .pcard-meta .mi {
+    :is(.dating-page, .members-page .member-grid.is-list) .pcard-meta { font-size: 12px; line-height: 1.4; gap: 4px 8px; }
+    :is(.dating-page, .members-page .member-grid.is-list) .pcard-meta .mi {
         min-width: 0; margin-right: 0; white-space: normal; overflow-wrap: anywhere;
     }
-    .dating-page .pcard-meta .ic { width: 14px; height: 14px; flex-basis: 14px; }
-    .dating-page .pcard-bio,
-    .dating-page .pcard-chips { display: none; }
-    .dating-page .pcard-actions { margin-top: 6px; gap: 6px; }
-    .dating-page .btn-swipe { min-height: 24px; padding: 8px 4px; font-size: 12px; }
+    :is(.dating-page, .members-page .member-grid.is-list) .pcard-meta .ic { width: 14px; height: 14px; flex-basis: 14px; }
+    :is(.dating-page, .members-page .member-grid.is-list) .pcard-bio,
+    :is(.dating-page, .members-page .member-grid.is-list) .pcard-chips { display: none; }
+    :is(.dating-page, .members-page .member-grid.is-list) .pcard-actions { margin-top: 6px; gap: 6px; }
+    :is(.dating-page, .members-page .member-grid.is-list) .btn-swipe { min-height: 24px; padding: 8px 4px; font-size: 12px; }
 }
 
 .block-sub { text-align: center; color: var(--muted); margin: -8px 0 14px; }

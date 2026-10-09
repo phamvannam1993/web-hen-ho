@@ -1,0 +1,102 @@
+.site-page-content:has(> .dating-page) { padding-top: 0; }
+.container.dating-page { padding-top: 0; }
+.dating-discovery { margin-inline: calc(50% - 50vw); border: 0; border-radius: 0; background: var(--card); box-shadow: none; }
+.dating-hero { display: flex; align-items: center; justify-content: space-between; gap: 32px; padding: 36px max(16px, calc((100vw - 1200px) / 2)); background: linear-gradient(110deg, var(--bg), #f9dce3); }
+.dating-hero-copy { max-width: 740px; min-width: 0; }
+.dating-eyebrow { display: block; margin-bottom: 10px; color: var(--pink); font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+.dating-hero h1 { margin: 0 0 12px; color: #202b36; font-size: clamp(24px, 3vw, 36px); line-height: 1.2; font-weight: 800; }
+.dating-hero p { margin: 0; color: #647386; font-size: 15px; line-height: 1.6; }
+.dating-portraits { position: relative; flex: 0 0 280px; height: 230px; }
+.dating-portraits a { position: absolute; overflow: hidden; border: 4px solid #fff; border-radius: 50%; box-shadow: 0 4px 14px #842b4212; }
+.dating-portraits a:nth-child(1) { width: 132px; height: 132px; right: 8px; top: 0; }
+.dating-portraits a:nth-child(2) { width: 88px; height: 88px; left: 12px; top: 18px; }
+.dating-portraits a:nth-child(3) { width: 108px; height: 108px; left: 32px; bottom: 0; }
+.dating-portraits a:nth-child(4) { width: 82px; height: 82px; right: 0; bottom: 2px; }
+.dating-portraits img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.dating-discovery-form { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding: 24px max(16px, calc((100vw - 1200px) / 2)); }
+.dating-discovery-form label { display: block; min-width: 0; margin: 0; }
+.dating-discovery-form input, .dating-discovery-form :is(select, .ss-toggle) { box-sizing: border-box; width: 100%; min-width: 0; height: 44px; margin: 0; border: 1px solid #eadce1; border-radius: 9px; padding: 0 12px; background-color: #fffafb; color: #344052; font: inherit; font-size: 14px; }
+.dating-discovery-form input::placeholder { color: #8792a2; opacity: 1; }
+.dating-discovery-form :is(select, .ss-toggle) {
+    -webkit-appearance: none; appearance: none;
+    padding-right: 30px; border-color: #efd5dd; background-color: #fff7f9;
+    color: #65434d; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='m4 6 4 4 4-4' stroke='%23d1273f' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center; background-size: 14px;
+    transition: border-color .15s, background-color .15s, box-shadow .15s;
+}
+.dating-discovery-form :is(select, .ss-toggle):hover { border-color: #dba4b2; background-color: var(--bg); }
+.dating-discovery-form :is(select, .ss-toggle):focus { border-color: var(--pink); background-color: #fff; box-shadow: 0 0 0 3px #d1273f12; }
+.dating-discovery-form :is(select, .ss-toggle) option { background: #fff; color: var(--ink); }
+.dating-discovery-form :is(select, .ss-toggle) option:checked { background: var(--bg); color: var(--pink-dark); }
+.dating-discovery-form .ss-toggle { height: 44px; padding-block: 0; border-radius: 9px; font-size: 14px; }
+.dating-discovery-form .ss-toggle.is-empty { color: #8a737b; }
+.dating-discovery-form .ss-toggle[aria-expanded="true"] { border-color: var(--pink); background-color: #fff; box-shadow: 0 0 0 3px #d1273f12; }
+.dating-discovery-form .ss-panel { z-index: 60; padding: 5px; border-color: #efd5dd; border-radius: 9px; background: #fffafb; box-shadow: 0 8px 24px #7c283b1a; }
+.dating-discovery-form .ss-panel[hidden] { display: none; }
+.dating-discovery-form .ss-list { max-height: 230px; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #edc5d0 transparent; }
+.dating-discovery-form .ss-item { padding: 8px 10px; border-radius: 5px; color: #65434d; font-size: 13px; line-height: 1.4; }
+.dating-discovery-form .ss-item:hover, .dating-discovery-form .ss-item:focus-visible { background: var(--bg); color: var(--pink-dark); outline: none; }
+.dating-discovery-form .ss-item.is-on { background: #f9dce3; color: var(--pink-dark); font-weight: 600; }
+.dating-discovery-form .ss-search { height: 34px; min-height: 0; margin-bottom: 5px; padding: 0 8px; border-color: #efd5dd; border-radius: 5px; background: #fff; font-size: 12px; }
+.dating-discovery-form .ss-empty { padding: 10px 6px; font-size: 12px; }
+.dating-discovery-form .dating-query { position: relative; grid-column: 1 / -1; }
+.dating-query input { padding-left: 40px; -webkit-appearance: none; appearance: none; }
+.dating-query input::-webkit-search-decoration { -webkit-appearance: none; display: none; }
+.dating-query svg { position: absolute; left: 13px; top: 13px; width: 18px; height: 18px; fill: none; stroke: #95a0b1; stroke-width: 1.8; pointer-events: none; }
+.dating-distance-row { display: flex; gap: 8px; min-width: 0; }
+.dating-distance-row label { flex: 1; min-width: 0; }
+.dating-locate { display: grid; place-items: center; width: 44px; flex: 0 0 44px; height: 44px; border: 1px solid #eadce1; border-radius: 9px; background: #fff; color: var(--pink); cursor: pointer; }
+.dating-locate svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.dating-locate:disabled { opacity: .5; cursor: wait; }
+.dating-reset, .dating-submit { display: flex; align-items: center; justify-content: center; min-height: 44px; border: 1px solid #f0ccd5; border-radius: 9px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.dating-reset { color: var(--pink); background: var(--bg); }
+.dating-submit { grid-column: 1 / -1; background: var(--pink); border-color: var(--pink); color: #fff; }
+.dating-submit:hover { background: var(--pink-dark); }
+.dating-discovery-form #dating-location-status { grid-column: 1 / -1; margin: 0; font-size: 12px; line-height: 1.5; color: #788495; }
+.dating-discovery-form :is(input, select, button, a):focus-visible { outline: 2px solid var(--pink); outline-offset: 2px; }
+.dating-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.dating-results-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 20px 0 14px; }
+.dating-results-heading .result-total { margin: 0; font-size: 14px; }
+@media (max-width: 720px) {
+    .dating-discovery-form { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    .dating-hero { display: grid; grid-template-columns: minmax(0, 1fr) clamp(120px, 34vw, 156px); padding: 20px 16px; gap: 8px 14px; align-items: center; }
+    .dating-hero-copy { display: contents; }
+    .dating-eyebrow { grid-column: 1; align-self: end; font-size: 10px; margin-bottom: 0; letter-spacing: .7px; }
+    .dating-hero h1 { grid-column: 1; align-self: start; font-size: 22px; margin: 0; }
+    .dating-hero p { grid-column: 1 / -1; margin-top: 4px; font-size: 12px; line-height: 1.5; }
+    .dating-portraits { grid-column: 2; grid-row: 1 / 3; width: 100%; height: 158px; }
+    .dating-portraits a { border-width: 3px; }
+    .dating-portraits a:nth-child(1) { width: 76px; height: 76px; right: 0; top: 0; }
+    .dating-portraits a:nth-child(2) { width: 48px; height: 48px; left: 0; top: 12px; }
+    .dating-portraits a:nth-child(3) { width: 64px; height: 64px; left: 0; bottom: 8px; }
+    .dating-portraits a:nth-child(4) { width: 48px; height: 48px; right: 0; bottom: 0; }
+    .dating-discovery-form { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 10px 12px; gap: 6px; }
+    .dating-discovery-form input, .dating-discovery-form :is(select, .ss-toggle) { height: 34px; min-height: 34px; padding: 0 8px; border-radius: 6px; font-size: 11px; line-height: 1.3; }
+    .dating-discovery-form :is(select, .ss-toggle) { padding-right: 24px; background-position: right 7px center; background-size: 12px; }
+    .dating-discovery-form .dating-query input { padding-left: 30px; }
+    .dating-discovery-form input[name="age_min"],
+    .dating-discovery-form input[name="age_max"] {
+        -webkit-appearance: none; appearance: textfield;
+        height: 34px; font-size: 10px; line-height: 14px; padding: 9px 8px;
+    }
+    .dating-discovery-form input[name="age_min"]::placeholder,
+    .dating-discovery-form input[name="age_max"]::placeholder { font-size: 10px; line-height: 14px; }
+    .dating-discovery-form input[name="age_min"]::-webkit-inner-spin-button,
+    .dating-discovery-form input[name="age_max"]::-webkit-inner-spin-button,
+    .dating-discovery-form input[name="age_min"]::-webkit-outer-spin-button,
+    .dating-discovery-form input[name="age_max"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    .dating-query svg { left: 9px; top: 9px; width: 15px; height: 15px; }
+    .dating-locate { width: 34px; flex-basis: 34px; height: 34px; border-radius: 6px; }
+    .dating-locate svg { width: 17px; height: 17px; }
+    .dating-reset, .dating-submit { min-height: 34px; padding: 6px 8px; border-radius: 6px; font-size: 11px; line-height: 1.3; }
+    .dating-submit { min-height: 36px; margin-top: 2px; font-size: 12px; }
+    .dating-distance-row { gap: 6px; }
+    .dating-discovery-form .ss-toggle { height: 34px; min-height: 34px; padding: 0 24px 0 8px; border-radius: 6px; font-size: 11px; }
+    .dating-discovery-form .ss-panel { padding: 4px; border-radius: 7px; }
+    .dating-discovery-form .ss-item { padding: 8px; font-size: 11px; }
+    .dating-discovery-form .ss-list { max-height: min(210px, 40dvh); }
+    .dating-discovery-form .ss-search { height: 30px; min-height: 30px; font-size: 11px; }
+    .dating-discovery-form #dating-location-status { margin-top: 2px; font-size: 10px; line-height: 1.4; }
+    .dating-results-heading { margin-top: 16px; gap: 8px; }
+}
