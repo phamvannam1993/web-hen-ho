@@ -45,6 +45,7 @@ $this->load->view('layouts/seo', array('seo_path' => $seo_path, 'can_index' => $
 /* Khu Tài khoản bọc nội dung trong khung riêng (cột trái + thanh dưới trên điện
    thoại) theo bản thiết kế SaigonCupid, nằm giữa đầu trang và chân trang của site. */
 $tk_app = !empty($tk) && !empty($content_view) && strpos($content_view, 'account/') === 0;
+$tk_inbox_open = $tk_app && $content_view === 'account/messages' && !empty($partner);
 ?>
 <?php if ($tk_app): ?>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -59,7 +60,7 @@ $tk_app = !empty($tk) && !empty($content_view) && strpos($content_view, 'account
 <?php endif; ?>
 <link rel="stylesheet" href="<?= base_url('assets/site/css/mobile-nav.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/mobile-nav.css') ?>">
 </head>
-<body class="<?= !empty($bare) ? 'is-bare' : '' ?><?= $tk_app ? 'tk-app' : '' ?><?= $content_view === 'account/messages' ? ' is-messages-page' : '' ?>">
+<body class="<?= !empty($bare) ? 'is-bare' : '' ?><?= $tk_app ? 'tk-app' : '' ?><?= $content_view === 'account/messages' ? ' is-messages-page' : '' ?><?= $tk_inbox_open ? ' is-inbox-open' : '' ?>">
 
 <!-- Dải mảnh trên cùng: khẩu hiệu + hotline -->
 <?php /* Chế độ toàn màn hình (trang Khám phá): bỏ thanh trên, menu và chân trang */ ?>

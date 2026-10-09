@@ -175,9 +175,7 @@ $gio_ngan = function ($t) {
     </div>
 </div>
 
-<?php if ($dang_mo): ?>
 <script src="<?= base_url('assets/site/js/inbox-layout.js') ?>?v=<?= @filemtime(FCPATH . 'assets/site/js/inbox-layout.js') ?>" defer></script>
-<?php endif; ?>
 
 <?php if (!empty($conversations)): ?>
 <script>

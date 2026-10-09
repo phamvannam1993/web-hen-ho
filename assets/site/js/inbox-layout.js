@@ -1,10 +1,14 @@
 (function () {
     'use strict';
-    var card = document.querySelector('.tk-ms.is-open');
+    var card = document.querySelector('.tk-ms');
     if (!card) return;
     var viewport = window.visualViewport;
-    document.documentElement.classList.add('tk-inbox-open');
+    var isOpen = card.classList.contains('is-open');
+    var mobile = window.matchMedia('(max-width: 1023.98px)');
+    document.documentElement.classList.toggle('tk-inbox-open', isOpen);
     function fitInbox() {
+        document.documentElement.classList.toggle('tk-inbox-list', !isOpen && mobile.matches);
+        if (!isOpen && !mobile.matches) return;
         var bottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
         document.querySelectorAll('.tk-bnav, .site-mobile-nav').forEach(function (nav) {
             if (nav.getClientRects().length && getComputedStyle(nav).visibility !== 'hidden') {
@@ -26,7 +30,7 @@
     }
     if (window.ResizeObserver) {
         var observer = new ResizeObserver(scheduleFit);
-        document.querySelectorAll('.tk-bnav, .site-mobile-nav, .site-header, .tk-mhead').forEach(function (element) {
+        document.querySelectorAll('.tk-bnav, .site-mobile-nav, .topbar, .site-header, .tk-mhead, .tk-main__in > .tk-alert').forEach(function (element) {
             observer.observe(element);
         });
     }
@@ -36,6 +40,7 @@
         if (event.touches.length === 1) previousY = event.touches[0].clientY;
     }, { passive: true });
     document.addEventListener('touchmove', function (event) {
+        if (!isOpen && !mobile.matches) return;
         if (event.touches.length !== 1) return;
         var area = event.target.closest('.tk-ms-body, .tk-ms-list, .tk-ms .emoji-list, .tk-side__in, .modal-body');
         var delta = event.touches[0].clientY - previousY;
