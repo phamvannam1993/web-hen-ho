@@ -73,6 +73,8 @@
   box-shadow: 0 8px 32px rgb(70 58 77 / 12%);
 }
 .tk-pf-save__text strong { display: block; font-size: 14px; font-weight: 600; color: var(--tk-fg); }
+.tk-pf-save__text { flex: 1; min-width: 0; max-width: 320px; }
+.tk-pf-save__text .tk-progress { margin-top: 6px; height: 5px; }
 .tk-pf-save__text p { margin-top: 3px; font-size: 13px; color: var(--tk-muted-fg); }
 .tk-pf-save .tk-btn { flex-shrink: 0; }
 
@@ -85,8 +87,10 @@
     border: 0; border-top: 1px solid var(--tk-border); border-radius: 0; box-shadow: none;
     background: rgb(255 255 255 / 95%); backdrop-filter: blur(8px);
   }
-  .tk-pf-save__text { display: none; }
-  .tk-pf-save .tk-btn { display: flex; width: 100%; }
+  .tk-pf-save__text { display: block; max-width: none; }
+  .tk-pf-save__text strong, .tk-pf-save__text .tk-pf-pc__n { font-size: 12px; }
+  .tk-pf-save { gap: 12px; }
+  .tk-pf-save .tk-btn { display: flex; width: auto; padding-inline: 14px; font-size: 12px; }
 }
 
 @media (max-width: 639.98px) {
@@ -101,4 +105,17 @@
 .tk-layout .tk-field input#email[aria-invalid="true"] {
   border-color: var(--tk-danger);
   box-shadow: 0 0 0 2px oklch(0.585 0.22 25 / 15%);
+}
+.tk-pf-images__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.tk-pf-images :is(.tk-pf-av, .tk-pf-cover) { display: flex; align-items: center; flex-wrap: nowrap; gap: 16px; min-width: 0; }
+.tk-pf-images :is(.tk-pf-av, .tk-pf-cover) > div { min-width: 0; }
+.tk-pf-images .tk-pf-av img { width: 72px; height: 72px; border-radius: 18px; }
+.tk-pf-cover > img { display: block; width: 112px; height: 72px; flex: 0 0 112px; object-fit: cover; border-radius: 12px; }
+.tk-pf-images .tk-pf-file { font-size: 12px; padding-inline: 12px; white-space: nowrap; }
+.tk-pf-images .tk-hint { margin-top: 6px; font-size: 11px; }
+.tk-pf-cover .tk-pf-file { position: relative; }
+@media (max-width: 767.98px) {
+  .tk-pf-images__grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .tk-pf-images .tk-pf-cover { border-top: 1px solid var(--tk-border); padding-top: 16px; }
+  .tk-pf-images .tk-pf-cover > img { width: 72px; flex-basis: 72px; height: 48px; }
 }

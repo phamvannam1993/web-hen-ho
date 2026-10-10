@@ -48,10 +48,12 @@ $tk_app = !empty($tk) && !empty($content_view) && strpos($content_view, 'account
 $tk_inbox_open = $tk_app && $content_view === 'account/messages' && !empty($partner);
 $guest_banner = !$user && empty($bare) && strpos($content_view, 'auth/') !== 0;
 ?>
-<?php if ($tk_app): ?>
+<?php if ($tk_app || $content_view === 'members/profile'): ?>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap">
+<?php endif; ?>
+<?php if ($tk_app): ?>
 <link rel="stylesheet" href="<?= base_url('assets/site/css/account.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/account.css') ?>">
 <?php /* Phần riêng của từng trang (nếu có): assets/site/css/account/<tên view>.css */ ?>
 <?php $tk_css = 'assets/site/css/account/' . basename($content_view) . '.css'; ?>
@@ -233,7 +235,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 
         <div class="header-actions">
             <?php if ($user): ?>
-                <a class="btn-account" href="<?= site_url('tai-khoan') ?>">
+                <a class="btn-account" href="<?= site_url('tai-khoan/ho-so') ?>">
                     <img src="<?= avatar_url($user['avatar'], $user['gender']) ?>" alt="">
                     <span><?= e(display_name($user)) ?></span>
                     <span class="account-total-badge" data-account-total-count <?= empty($account_badge_total) ? 'hidden' : '' ?> aria-label="<?= (int) ($account_badge_total ?? 0) ?> thông báo trong tài khoản"><?= ($account_badge_total ?? 0) > 99 ? '99+' : (int) ($account_badge_total ?? 0) ?></span>
@@ -454,12 +456,12 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
             <div class="cw-convo" id="cw-convo" hidden>
                 <header class="cw-head">
                     <button type="button" class="cw-back" id="cw-back" aria-label="Về danh sách">‹</button>
-                    <img class="cw-avatar" id="cw-avatar" alt="" hidden>
+                    <a id="cw-avatar-link" class="cw-profile-avatar" hidden aria-label="Xem trang cá nhân"><img class="cw-avatar" id="cw-avatar" alt="" hidden></a>
                     <span class="cw-avatar cw-row-room-ic" id="cw-avatar-room" hidden aria-hidden="true">
                         <svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><path d="M16.2 5.8a3.2 3.2 0 0 1 0 5.4M17.5 19a6 6 0 0 0-1.6-4"/></svg>
                     </span>
                     <div class="cw-peer">
-                        <b id="cw-name"></b>
+                        <a id="cw-profile-link"><b id="cw-name"></b></a>
                         <small id="cw-status"></small>
                         <button type="button" class="cw-online-toggle" id="cw-online-toggle" hidden
                                 aria-expanded="false" aria-controls="cw-online-panel" aria-haspopup="dialog">

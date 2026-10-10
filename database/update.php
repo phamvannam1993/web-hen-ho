@@ -84,6 +84,7 @@ echo "\n== 2. Danh mục tỉnh/thành ==\n";
 require $root . '/database/migrate_provinces_2025.php';
 
 echo "\n== 3. Cột dữ liệu mới ==\n";
+require __DIR__ . '/migrate_profile_cover.php';
 // Chủ đề tâm sự, phục vụ trang /tam-su
 $co = $pdo->query("SHOW COLUMNS FROM users LIKE 'confide_topic'")->fetch();
 if (!$co) {
