@@ -217,3 +217,5 @@ html.tk-inbox-open .tk-card.tk-ms.is-open {
     display: none; width: 0; height: 0;
   }
 }
+.tk-ms-head__s.is-online { color: #228b45; }
+.tk-ms-head__s.is-online::before { content: ''; display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: #31c05a; vertical-align: middle; }

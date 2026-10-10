@@ -359,6 +359,10 @@
         return api('ajax/hoi-thoai').then(function (res) {
             if (!res.ok) { return; }
             duLieuList = res.items || [];
+            if (dang_mo && dang_mo.kind === 'chat') {
+                var peer = duLieuList.find(function (item) { return Number(item.id) === Number(dang_mo.id); });
+                if (peer) setPeerActivity(peer);
+            }
             setBadge(res.unread || 0);
             veList();
 
@@ -632,7 +636,7 @@
             avatarEl.src = info.avatar || '';
         }
         nameEl.textContent = info.name || '';
-        statusEl.textContent = info.online ? 'Đang online' : '';
+        setPeerActivity(info);
         if (receiver) { receiver.value = info.user_id || ''; }
         if (inputEl) { inputEl.placeholder = 'Vui lòng nhập tin nhắn'; }
 
@@ -642,6 +646,11 @@
 
         batDauTai();
         if (inputEl) { inputEl.focus(); }
+    }
+
+    function setPeerActivity(info) {
+        statusEl.textContent = info.online ? 'Đang online' : (info.activity || 'Chưa có thông tin hoạt động');
+        statusEl.classList.toggle('is-online', !!info.online);
     }
 
     /** Quay lại danh sách (màn hẹp). */
@@ -693,6 +702,7 @@
         return api('ajax/tin-nhan/' + hoi_thoai + '?after=' + lastId).then(function (res) {
             if (!res.ok || !dang_mo || dang_mo.kind !== 'chat') { return; }
             if (Number(dang_mo.id) !== Number(hoi_thoai)) { return; }
+            setPeerActivity(res);
 
             if (lastId === 0) {
                 veLai(res.messages);

@@ -426,6 +426,7 @@ class Ajax extends MY_Controller
                 'name'    => display_name($r),
                 'avatar'  => avatar_url($r['avatar'], $r['gender']),
                 'online'  => (bool) is_online($r['last_active_at']),
+                'activity' => !empty($r['last_active_at']) ? 'Hoạt động ' . time_ago($r['last_active_at']) : 'Chưa có thông tin hoạt động',
                 'last'    => !$r['last_message_id'] ? 'Bắt đầu trò chuyện' : $this->tom_tat_tin($r['last_type'], $r['last_content'],
                                                (int) $r['last_sender_id'] === (int) $me),
                 'time'    => $r['last_at'] ? time_ago($r['last_at']) : '',
@@ -493,6 +494,7 @@ class Ajax extends MY_Controller
             'name'    => display_name($other),
             'avatar'  => avatar_url($other['avatar'], $other['gender']),
             'online'  => (bool) is_online($other['last_active_at']),
+            'activity' => !empty($other['last_active_at']) ? 'Hoạt động ' . time_ago($other['last_active_at']) : 'Chưa có thông tin hoạt động',
         ));
     }
 
@@ -545,7 +547,11 @@ class Ajax extends MY_Controller
             ->where('sender_id', $me)->where('read_at', null)
             ->count_all_results() === 0;
 
-        return $this->json(array('ok' => true, 'messages' => $messages, 'seen' => $seen));
+        $other_id = (int) $conv['user_low_id'] === (int) $me ? $conv['user_high_id'] : $conv['user_low_id'];
+        $other = $this->db->select('last_active_at')->where('id', $other_id)->get('users')->row_array();
+        return $this->json(array('ok' => true, 'messages' => $messages, 'seen' => $seen,
+            'online' => (bool) is_online($other['last_active_at'] ?? null),
+            'activity' => !empty($other['last_active_at']) ? 'Hoạt động ' . time_ago($other['last_active_at']) : 'Chưa có thông tin hoạt động'));
     }
 
     /** Báo cáo vi phạm với thành viên / tin đăng / bình luận. */

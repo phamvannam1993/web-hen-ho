@@ -2,7 +2,7 @@
 // Run: php tests/dating_discovery.php
 define('BASEPATH', __DIR__);
 class MY_Controller {
-    public $data, $input, $session, $m_user, $rendered;
+    public $data, $input, $session, $m_user, $rendered, $db;
     public function render($view, $data) { $this->rendered = $data; }
 }
 require __DIR__ . '/../application/controllers/Dating.php';
@@ -37,7 +37,7 @@ check_discovery($filters === $controller->m_user->count_filters, 'Count and resu
 check_discovery($filters['keyword'] === 'Hà Nội' && $filters['gender'] === 'female' && $filters['marital'] === 'ly_hon', 'Text, gender and marital filters reach the model');
 check_discovery($filters['age_min'] === 25 && $filters['age_max'] === 45, 'Reversed age range is normalized');
 check_discovery($filters['distance_origin']['real'] === false && $filters['distance_max'] === 50, 'Selected province supports estimated radius');
-check_discovery($controller->rendered['heading'] === 'Hẹn hò & tìm bạn đời nghiêm túc', 'Main heading stays unchanged');
+check_discovery($controller->rendered['heading'] === 'Tìm kiếm đối tượng hẹn hò và bạn bè', 'Main heading matches the discovery page');
 $controller->input->query = array('gender' => 'invalid', 'marital' => 'invalid', 'age_min' => '2', 'age_max' => '999');
 $controller->index();
 $filters = $controller->m_user->search_filters;

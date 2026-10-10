@@ -3691,6 +3691,8 @@ html.cw-page-locked .site-mobile-nav { bottom: var(--cw-keyboard-inset, 0px); }
 #cw-profile-link { color: inherit; }
 #cw-profile-link[href]:hover b { color: var(--pink); }
 .cw-peer small { display: block; font-size: 12.5px; color: #8b909a; }
+.cw-peer small.is-online { color: #228b45; }
+.cw-peer small.is-online::before { content: ''; display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: #31c05a; vertical-align: middle; }
 .cw-peer small:empty { display: none; }
 
 /* ---------------- Khung tin nhắn ---------------- */
