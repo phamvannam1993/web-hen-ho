@@ -474,10 +474,6 @@ class M_interaction extends CI_Model
             'last_message_at' => date('Y-m-d H:i:s'),
         ));
 
-        $this->load->model('m_notification');
-        $this->m_notification->push($receiver_id, 'message', 'Tin nhắn mới',
-            excerpt($content, 80), site_url('tai-khoan/tin-nhan/' . $conv['id']), $sender_id);
-
         // Mỗi tin nhắn xếp một email chỉ có tên, avatar và liên kết mở hội thoại.
         $this->load->library('emailer');
         $nguoi_gui = $this->db->select('id, display_name, nickname, avatar, gender')
