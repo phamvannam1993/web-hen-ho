@@ -24,7 +24,7 @@ class Dating extends MY_Controller
             '' => array(
                 'label'   => 'Tất cả',
                 'filters' => array(),
-                'title'   => 'Hẹn Hò & Tìm Bạn Đời Nghiêm Túc',
+                'title'   => 'Cộng đồng tìm kiếm đối tượng hẹn hò nghiêm túc',
                 'desc'    => 'Cộng đồng hẹn hò và kết đôi uy tín. Tìm bạn đời, bạn gái, bạn trai '
                            . 'nghiêm túc, ly hôn hay Việt kiều nhanh chóng. Đăng ký kết nối an toàn ngay!',
                 'heading' => 'Tìm kiếm đối tượng hẹn hò và bạn bè',
