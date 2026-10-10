@@ -61,7 +61,6 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
             <p class="pcard-facts">
                 <?php if (!empty($marital[$m['marital_status'] ?? ''])): ?><span><?= e($marital[$m['marital_status']]) ?></span><?php endif; ?>
                 <?php if (!empty($m['height_cm'])): ?><span><?= (int) $m['height_cm'] ?> cm<?= !empty($m['weight_kg']) ? ' · ' . (int) $m['weight_kg'] . ' kg' : '' ?></span><?php endif; ?>
-                <?php if (!empty($m['job'])): ?><span><?= e($m['job']) ?></span><?php endif; ?>
             </p>
         <?php elseif (!empty($m['height_cm']) || !empty($m['job']) || !empty($m['marital_status'])): ?>
             <p class="pcard-meta">

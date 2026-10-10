@@ -3686,6 +3686,10 @@ html.cw-page-locked .site-mobile-nav { bottom: var(--cw-keyboard-inset, 0px); }
     display: block; font-size: 15.5px; font-weight: 700; color: var(--ink);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+.cw-profile-avatar { flex: 0 0 40px; line-height: 0; }
+.cw-profile-avatar[hidden] { display: none; }
+#cw-profile-link { color: inherit; }
+#cw-profile-link[href]:hover b { color: var(--pink); }
 .cw-peer small { display: block; font-size: 12.5px; color: #8b909a; }
 .cw-peer small:empty { display: none; }
 
@@ -5122,7 +5126,7 @@ button.cw-close {
 /* Shared mobile form controls: prevent iOS automatic focus zoom. */
 @media (max-width: 1024px), (any-pointer: coarse) {
     input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="color"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"]),
-    textarea, select, [contenteditable="true"], [contenteditable="plaintext-only"] { font-size: 16px !important; }
+    textarea, select, [contenteditable="true"], [contenteditable="plaintext-only"] { font-size: 11px !important; }
 }
 .footer-col__list--social .footer-social-icon {
     width: 20px; height: 20px; flex: 0 0 20px; object-fit: contain; filter: brightness(0) invert(1);

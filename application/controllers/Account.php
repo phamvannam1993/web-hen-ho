@@ -145,6 +145,14 @@ class Account extends Member_Controller
                     $data['has_children'] = (int) $this->input->post('has_children');
                 }
 
+                $cover = $this->upload_image('cover_image');
+                if (!empty($_FILES['cover_image']['name']) && !$cover) {
+                    redirect('tai-khoan/ho-so');
+                    return;
+                }
+                if ($cover) {
+                    $data['cover_image'] = $cover;
+                }
                 $avatar = $this->upload_image('avatar');
                 if ($avatar) {
                     $data['avatar'] = $avatar;

@@ -4,75 +4,26 @@ $marital = array('doc_than' => 'Độc thân', 'ly_hon' => 'Ly hôn', 'goa' => '
 $edu = array('thpt' => 'THPT', 'trung_cap' => 'Trung cấp', 'cao_dang' => 'Cao đẳng',
              'dai_hoc' => 'Đại học', 'sau_dai_hoc' => 'Sau đại học');
 $is_me = $user && (int) $user['id'] === (int) $m['id'];
+$profile_cover = base_url(!empty($m['cover_image']) ? ltrim($m['cover_image'], '/') : 'assets/site/images/profile-cover.jpg');
+$pp_icon = function ($name) {
+    $paths = array(
+        'user' => '<circle cx="12" cy="8" r="4"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/>',
+        'heart' => '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/>',
+        'lock' => '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4m-4 4v2"/>',
+        'photos' => '<rect x="5" y="3" width="16" height="16" rx="2"/><circle cx="10" cy="8" r="1"/><path d="m21 14-5-5L5 19M1 7v14a2 2 0 0 0 2 2h14"/>',
+        'message' => '<path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3 8.5 8.5 0 0 1 21 11.5Z"/>',
+        'sparkles' => '<path d="m12 3 2.7 6.3L21 12l-6.3 2.7L12 21l-2.7-6.3L3 12l6.3-2.7L12 3ZM5 3v4M3 5h4m12 12v4m-2-2h4"/>',
+        'pin' => '<path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+        'share' => '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.5 6.8-4m-6.8 7 6.8 4"/>',
+    );
+    return '<svg class="pp-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . ($paths[$name] ?? $paths['user']) . '</svg>';
+};
 ?>
-<div class="container page-layout">
-    <div>
-        <article class="content-box profile-page">
-            <header class="profile-head">
+
+<link rel="stylesheet" href="<?= base_url('assets/site/css/public-profile.css') ?>?v=<?= filemtime(FCPATH.'assets/site/css/public-profile.css') ?>">
+<div class="container public-profile" data-public-profile>
+    <nav class="pp-breadcrumb" aria-label="Đường dẫn"><a href="<?= site_url('hen-ho') ?>">← Khám phá hồ sơ</a><span>Hồ sơ cá nhân › <?= e(display_name($m)) ?></span></nav>
                 <?php
-                $p_online = is_online($m['last_active_at']);
-                $p_new    = !empty($m['created_at']) && strtotime($m['created_at']) > strtotime('-7 days');
-                ?>
-                <div class="profile-photo">
-    <button type="button" class="profile-image-trigger" data-profile-image aria-label="Xem ảnh đại diện lớn hơn">
-        <img src="<?= avatar_url($m['avatar'], $m['gender']) ?>" alt="<?= e(display_name($m)) ?>">
-    </button>
-    <?php if ($p_online): ?>
-        <span class="dot-online" title="Đang hoạt động"></span>
-    <?php endif; ?>
-</div>
-                <div class="profile-headline">
-                    <h1><?= e(display_name($m)) ?></h1>
-                    <p class="profile-tags">
-                        <!--<?php if ($p_online): ?><span class="tag tag-online">Online</span><?php endif; ?>-->
-                        <!--<?php if ($p_new): ?><span class="tag tag-new">Mới tham gia</span><?php endif; ?>-->
-                        <span><?= gender_label($m['gender']) ?></span>
-                        <?php if ($age): ?><span><?= $age ?> tuổi</span><?php endif; ?>
-                        <!--<?php if ($m['province_name']): ?><span><?= e($m['province_name']) ?></span><?php endif; ?>-->
-                        <?php if ($m['is_vip']): ?><span class="tag-vip">VIP</span><?php endif; ?>
-                        <?php if ($m['kyc_status'] === 'verified'): ?><span class="tag-verified">Đã xác minh</span><?php endif; ?>
-                    </p>
-                    <p class="profile-active">
-                        <?= is_online($m['last_active_at']) ? 'Đang online' : 'Hoạt động ' . time_ago($m['last_active_at']) ?>
-                        · <?= number_format($like_count) ?> lượt thích
-                    </p>
-
-                    <?php if (!$is_me): ?>
-                        <div class="profile-actions <?= $user ? 'profile-actions--connect' : '' ?>">
-                            <?php if ($user): ?>
-                                <?php // Cùng cấu trúc với thứ JS dựng lại sau khi bấm,
-                                      // để trạng thái trước và sau khi tải lại trang giống nhau ?>
-                                <button class="btn btn-primary btn-like-toggle <?= $liked ? 'is-liked' : '' ?>"
-        type="button" data-like-user="<?= (int) $m['id'] ?>" data-like-label="<?= $liked_me ? 'Thích lại' : 'Thích' ?>">
-    <svg viewBox="0 0 24 24" class="ic">
-        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-    </svg>
-    <span class="js-like-text"><?= $liked ? 'Đã thích' : ($liked_me ? 'Thích lại' : 'Thích') ?></span>
-</button>
-                                    <button class="btn btn-blue-outline" type="button" data-chat-with="<?= (int) $m['id'] ?>">Nhắn tin</button>
-                                <button class="btn btn-ghost" type="button" data-report-user="<?= (int) $m['id'] ?>">Báo cáo</button>
-                            <?php else: ?>
-                                <a class="btn btn-primary" href="<?= site_url('dang-nhap') ?>">Đăng nhập để kết nối</a>
-                            <?php endif; ?>
-                        </div>
-                        <?php if ($matched): ?>
-                            <p class="matched-note">Hai bạn đã ghép đôi — hãy bắt đầu trò chuyện!</p>
-                        <?php elseif ($user): ?>
-                            <p class="matched-note matched-note-wait">
-                                <?= $liked
-                                    ? 'Bạn đã gửi lượt thích. Hãy nhắn tin để làm quen!'
-                                    : 'Bạn có thể nhắn tin ngay để làm quen hoặc bấm Thích để gửi lời quan tâm.' ?>
-                            </p>
-                        <?php endif; ?>
-                    <?php else: ?>
-                        <div class="profile-actions">
-                            <a class="btn btn-primary" href="<?= site_url('tai-khoan/ho-so') ?>">Sửa hồ sơ</a>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </header>
-
-            <?php
             /* Khung hồ sơ dạng bảng: mỗi nhóm một thẻ, nhãn bên trái, giá trị bên phải.
                Giá trị nào là thông tin phân loại (giới tính, nơi ở, mục tiêu…) thì tô
                xanh cho dễ quét mắt; thông tin liên hệ thì che lại nếu chưa đăng nhập. */
@@ -115,19 +66,95 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
             };
             ?>
 
-            <div class="fact-panel">
-                <section class="fact-card fact-title">
-                    <a class="fact-back" href="<?= site_url('thanh-vien') ?>" aria-label="Quay lại danh sách">
-                        <svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/></svg>
-                    </a>
-                    <h2>Hẹn hò kết bạn với <?= e(display_name($m)) ?></h2>
+
+    <div class="pp-layout">
+        <aside class="pp-left">
+            <section class="pp-identity"><div class="pp-mini-cover"><img src="<?= e($profile_cover) ?>" alt=""></div><header class="profile-head">
+                <?php
+                $p_online = is_online($m['last_active_at']);
+                $p_new    = !empty($m['created_at']) && strtotime($m['created_at']) > strtotime('-7 days');
+                ?>
+                <div class="profile-photo">
+    <button type="button" class="profile-image-trigger" data-profile-image aria-label="Xem ảnh đại diện lớn hơn">
+        <img src="<?= avatar_url($m['avatar'], $m['gender']) ?>" alt="<?= e(display_name($m)) ?>">
+    </button>
+    <?php if ($p_online): ?>
+        <span class="dot-online" title="Đang hoạt động"></span>
+    <?php endif; ?>
+</div>
+                <div class="profile-headline">
+                    <h1><?= e(display_name($m)) ?></h1>
+                    <p class="profile-tags">
+                        <!--<?php if ($p_online): ?><span class="tag tag-online">Online</span><?php endif; ?>-->
+                        <!--<?php if ($p_new): ?><span class="tag tag-new">Mới tham gia</span><?php endif; ?>-->
+                        <span><?= gender_label($m['gender']) ?></span>
+                        <?php if ($age): ?><span><?= $age ?> tuổi</span><?php endif; ?>
+                        <?php if (!empty($m['province_name'])): ?><span><?= e($m['province_name']) ?></span><?php endif; ?>
+                        <!--<?php if ($m['province_name']): ?><span><?= e($m['province_name']) ?></span><?php endif; ?>-->
+                        <?php if ($m['is_vip']): ?><span class="tag-vip">VIP</span><?php endif; ?>
+                        <?php if ($m['kyc_status'] === 'verified'): ?><span class="tag-verified">Đã xác minh</span><?php endif; ?>
+                    </p>
+                    <p class="profile-active">
+                        <?= is_online($m['last_active_at']) ? 'Đang online' : 'Hoạt động ' . time_ago($m['last_active_at']) ?>
+                        · <?= number_format($like_count) ?> lượt thích
+                    </p>
+
+                    <?php if (!$is_me): ?>
+                        <div class="profile-actions <?= $user ? 'profile-actions--connect' : '' ?>">
+                            <?php if ($user): ?>
+                                <?php // Cùng cấu trúc với thứ JS dựng lại sau khi bấm,
+                                      // để trạng thái trước và sau khi tải lại trang giống nhau ?>
+                                <button class="btn btn-primary btn-like-toggle <?= $liked ? 'is-liked' : '' ?>"
+        type="button" data-like-user="<?= (int) $m['id'] ?>" data-like-label="<?= $liked_me ? 'Thích lại' : 'Thích' ?>">
+    <svg viewBox="0 0 24 24" class="ic">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+    </svg>
+    <span class="js-like-text"><?= $liked ? 'Đã thích' : ($liked_me ? 'Thích lại' : 'Thích') ?></span>
+</button>
+                                    <button class="btn btn-blue-outline" type="button" data-chat-with="<?= (int) $m['id'] ?>"><?= $pp_icon('message') ?>Nhắn tin</button>
+                                <button class="btn btn-ghost" type="button" data-report-user="<?= (int) $m['id'] ?>">Báo cáo</button>
+                            <?php else: ?>
+                                <a class="btn btn-primary" href="<?= site_url('dang-nhap') ?>">Đăng nhập để kết nối</a>
+                            <?php endif; ?>
+                        </div>
+                        <?php if ($matched): ?>
+                            <p class="matched-note">Hai bạn đã ghép đôi — hãy bắt đầu trò chuyện!</p>
+                        <?php elseif ($user): ?>
+                            <p class="matched-note matched-note-wait">
+                                <?= $liked
+                                    ? 'Bạn đã gửi lượt thích. Hãy nhắn tin để làm quen!'
+                                    : 'Bạn có thể nhắn tin ngay để làm quen hoặc bấm Thích để gửi lời quan tâm.' ?>
+                            </p>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <div class="profile-actions">
+                            <a class="btn btn-primary" href="<?= site_url('tai-khoan/ho-so') ?>">Sửa hồ sơ</a>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </header></section>
+            <section class="pp-panel pp-basic"><h2><span class="pp-heading-icon"><?= $pp_icon('user') ?></span>Thông tin cơ bản</h2>
+                <?php $ve_nhom(array_merge($nhom_chinh, $nhom_noi_o)); ?>
+                <details><summary>Xem tất cả thông tin</summary><?php $ve_nhom($nhom_khac); ?></details>
+            </section>
+            <section class="pp-panel pp-trust"><h2>♡ Kết nối bằng sự chân thành</h2><p>Tôn trọng thông tin riêng tư của nhau. Không chia sẻ thông tin cá nhân khi chưa thực sự tin tưởng.</p></section>
+        </aside>
+        <main class="pp-main">
+            <section class="pp-overview pp-panel">
+                <div class="pp-cover"><img src="<?= e($profile_cover) ?>" alt="Ảnh bìa của <?= e(display_name($m)) ?>"><span><?= $pp_icon('pin') ?><?= e($m['province_name'] ?: 'Việt Nam') ?></span><button type="button" class="pp-share" data-profile-share aria-label="Sao chép liên kết hồ sơ" title="Chia sẻ hồ sơ"><?= $pp_icon('share') ?></button></div>
+                <div class="pp-title"><h2>Hẹn hò kết bạn với <?= e(display_name($m)) ?></h2><p>Một kết nối mới, một câu chuyện mới.</p></div>
+                <div class="pp-tabs" role="tablist" aria-label="Nội dung hồ sơ">
+                    <button type="button" role="tab" id="pp-tab-about" aria-selected="true" aria-controls="pp-about" data-profile-tab="about"><?= $pp_icon('user') ?>Giới thiệu</button>
+                    <button type="button" role="tab" id="pp-tab-photos" aria-selected="false" aria-controls="pp-photos" data-profile-tab="photos" tabindex="-1"><?= $pp_icon('photos') ?>Ảnh</button>
+                    <button type="button" role="tab" id="pp-tab-posts" aria-selected="false" aria-controls="pp-posts" data-profile-tab="posts" tabindex="-1"><?= $pp_icon('message') ?>Bài viết</button>
+                </div>
+            </section>
+            <p class="pp-share-status" role="status" data-profile-share-status></p>
+            <div id="pp-about" role="tabpanel" aria-labelledby="pp-tab-about">
+                <section class="pp-panel pp-about"><h2><span class="pp-heading-icon"><?= $pp_icon('sparkles') ?></span>Về mình</h2><h3>Đôi lời giới thiệu</h3><p><?= !empty($m['bio']) ? nl2br(e($m['bio'])) : 'Chưa có lời giới thiệu.' ?></p>
+                    <div class="pp-about-facts"><div><h3>Bạn đang tìm kiếm ai?</h3><p><?= e($muc_tieu ?: 'Chưa cập nhật') ?></p></div><div><h3>Con cái</h3><p><?= (int) $m['has_children'] === 1 ? 'Đã có con' : 'Chưa có con' ?></p></div></div>
                 </section>
-
-                <?php $ve_nhom($nhom_chinh); ?>
-
-                <?php // Liên hệ: khách chỉ thấy lời mời đăng ký, thành viên thấy số đã che bớt.
-                      // Ô "lấy pass" vẫn để tắt như trước, không dựng lại ở đây. ?>
-                <?php if (!$is_me): ?>
+                <?php if (!$is_me): ?><section class="pp-panel pp-contact"><h2><span class="pp-heading-icon"><?= $pp_icon('lock') ?></span>Thông tin liên hệ</h2>                <?php if (!$is_me): ?>
                     <section class="fact-card">
                         <dl class="fact-list">
                             <div><dt>Số điện thoại</dt><dd>
@@ -142,31 +169,11 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
                     </section>
                 <?php endif; ?>
 
-                <?php $ve_nhom($nhom_noi_o); ?>
-                <?php $ve_nhom($nhom_khac); ?>
-
-                <?php if ($m['bio']): ?>
-                    <section class="fact-card fact-bio">
-                        <h3>Đôi lời giới thiệu</h3>
-                        <p><?= nl2br(e($m['bio'])) ?></p>
-                    </section>
-                <?php endif; ?>
-
-                <?php if (!$user): ?>
-                    <section class="fact-card fact-cta">
-                        <p class="fact-cta-lead"><b><?= e(display_name($m)) ?></b> là hồ sơ
-                            <?= $m['is_vip'] ? 'VIP, ' : '' ?>đẹp. Nên không công khai nhiều thông tin.</p>
-                        <p>Bạn vui lòng đăng nhập để xem ảnh, xem số điện thoại và trò chuyện
-                            với <b><?= e(display_name($m)) ?></b> bạn nhé!</p>
-                        <div class="fact-cta-btns">
-                            <a class="btn btn-primary" href="<?= site_url('dang-ky') ?>">Đăng ký tài khoản</a>
-                            <a class="btn btn-blue-outline" href="<?= site_url('dang-nhap') ?>">Đăng nhập</a>
-                        </div>
-                    </section>
-                <?php endif; ?>
+</section><?php endif; ?>
+                <section class="pp-panel"><h2>Sở thích</h2><div class="pp-interests"><?php foreach ($interests as $interest): ?><span><?= e($interest['name']) ?></span><?php endforeach; ?><?php if (!$interests): ?><p>Chưa cập nhật sở thích.</p><?php endif; ?></div></section>
             </div>
-
-            <?php if ($photos): ?>
+            <div id="pp-photos" role="tabpanel" aria-labelledby="pp-tab-photos" hidden>
+                <section class="pp-panel"><h2>Album ảnh</h2><?php if (!$photos): ?><p><?= $user ? 'Chưa có ảnh trong album.' : 'Đăng nhập để xem ảnh trong album.' ?></p><?php if (!$user): ?><a class="btn btn-primary" href="<?= site_url('dang-nhap') ?>">Đăng nhập để xem ảnh</a><?php endif; ?><?php endif; ?>            <?php if ($photos): ?>
                 <section class="profile-section">
                     <h2 class="info-heading">Album ảnh</h2>
                     <div class="photo-grid">
@@ -177,7 +184,9 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
                 </section>
             <?php endif; ?>
 
-            <?php if ($posts): ?>
+</section>
+            </div>
+            <div id="pp-posts" role="tabpanel" aria-labelledby="pp-tab-posts" hidden><section class="pp-panel"><h2><span class="pp-heading-icon"><?= $pp_icon('message') ?></span>Bài viết</h2><?php if (!$posts): ?><div class="pp-posts-empty"><?= $pp_icon('message') ?><h3>Chưa có bài viết</h3><p>Các bài viết được chia sẻ sẽ xuất hiện tại đây.</p></div><?php endif; ?>            <?php if ($posts): ?>
                 <section class="profile-section">
                     <h2 class="info-heading">Tin đăng của <?= e(display_name($m)) ?></h2>
                     <div class="card-grid">
@@ -187,9 +196,8 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
                     </div>
                 </section>
             <?php endif; ?>
-        </article>
-
-        <section class="content-box comment-box" id="binh-luan">
+</section></div>
+            <section class="content-box comment-box" id="binh-luan">
             <h2 class="info-heading"><?= count($comments) ?> bình luận</h2>
 
             <?php if ($user): ?>
@@ -297,14 +305,19 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
                 </ul>
             <?php endif; ?>
         </section>
-    </div>
-
-    <aside>
-        <!--<div class="sidebar-box">-->
-        <!--    <h3><?= e($settings['site_name'] ?? 'Saigon Cupid') ?></h3>-->
-        <!--    <p><?= e($settings['site_desc'] ?? '') ?></p>-->
-        <!--</div>-->
-        <div class="sidebar-box">
+        </main>
+        <aside class="pp-right">                <?php if (!$user): ?>
+                    <section class="fact-card fact-cta">
+                        <p class="fact-cta-lead"><b><?= e(display_name($m)) ?></b> là hồ sơ
+                            <?= $m['is_vip'] ? 'VIP, ' : '' ?>đẹp. Nên không công khai nhiều thông tin.</p>
+                        <p>Bạn vui lòng đăng nhập để xem ảnh, xem số điện thoại và trò chuyện
+                            với <b><?= e(display_name($m)) ?></b> bạn nhé!</p>
+                        <div class="fact-cta-btns">
+                            <a class="btn btn-primary" href="<?= site_url('dang-ky') ?>">Đăng ký tài khoản</a>
+                            <a class="btn btn-blue-outline" href="<?= site_url('dang-nhap') ?>">Đăng nhập</a>
+                        </div>
+                    </section>
+                <?php endif; ?>        <div class="sidebar-box">
             <h3>Tìm theo khu vực</h3>
             <?php /* Dạng thẻ nhiều cột cho gọn, thay vì danh sách dọc dài lê thê */ ?>
             <p class="area-chips">
@@ -314,5 +327,7 @@ $is_me = $user && (int) $user['id'] === (int) $m['id'];
             </p>
             <a class="sidebar-more" href="<?= site_url('khu-vuc') ?>">Xem tất cả khu vực →</a>
         </div>
-    </aside>
+</aside>
+    </div>
 </div>
+<script defer src="<?= base_url('assets/site/js/public-profile.js') ?>?v=<?= filemtime(FCPATH.'assets/site/js/public-profile.js') ?>"></script>

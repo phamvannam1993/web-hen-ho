@@ -246,6 +246,7 @@ CREATE TABLE `users` (
   `lng` DECIMAL(9,6) DEFAULT NULL,
   `location_updated_at` DATETIME DEFAULT NULL,
   `avatar`          VARCHAR(255) DEFAULT NULL,
+  `cover_image`     VARCHAR(255) DEFAULT NULL,
   `cover`           VARCHAR(255) DEFAULT NULL,
   `bio`             TEXT DEFAULT NULL,
   `height_cm`       SMALLINT UNSIGNED DEFAULT NULL,

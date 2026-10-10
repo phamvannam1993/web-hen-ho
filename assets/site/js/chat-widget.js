@@ -581,6 +581,9 @@
 
     /** Mở phòng chat chung. */
     function moPhong() {
+        document.getElementById('cw-avatar-link').hidden = true;
+        document.getElementById('cw-avatar-link').removeAttribute('href');
+        document.getElementById('cw-profile-link').removeAttribute('href');
         renderedIds.clear();
         dang_mo = { kind: 'room' };
         showOnlineRoom(true);
@@ -606,6 +609,17 @@
 
     /** Mở một hội thoại riêng. */
     function moChat(info) {
+        var profileUrl = info.profile_url || '';
+        var avatarLink = document.getElementById('cw-avatar-link');
+        var profileLink = document.getElementById('cw-profile-link');
+        avatarLink.hidden = false;
+        if (profileUrl) {
+            avatarLink.href = profileUrl;
+            profileLink.href = profileUrl;
+        } else {
+            avatarLink.removeAttribute('href');
+            profileLink.removeAttribute('href');
+        }
         showOnlineRoom(false);
         renderedIds.clear();
         dang_mo = Object.assign({ kind: 'chat' }, info);

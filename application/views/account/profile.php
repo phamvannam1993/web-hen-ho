@@ -53,33 +53,23 @@ $hien_online = $da_gui ? $this->input->post('show_online')
         <div class="tk-alert tk-alert--danger"><?= validation_errors() ?></div>
     <?php endif; ?>
 
-    <!-- Mức hoàn thiện -->
-    <section class="tk-card">
-        <div class="tk-pf-pc">
-            <span class="tk-pf-pc__t">Mức hoàn thiện hồ sơ</span>
-            <span class="tk-pf-pc__n"><?= $diem ?>%</span>
-        </div>
-        <div class="tk-progress" style="margin-top:8px" role="progressbar" aria-valuenow="<?= $diem ?>" aria-valuemin="0" aria-valuemax="100">
-            <i style="width:<?= max(0, min(100, $diem)) ?>%"></i>
-        </div>
         <?php if (!empty($thieu)): ?>
             <?php /* Thiếu mục cần để hiện công khai: không khoá gì, chỉ báo hồ sơ đang bị ẩn */ ?>
-            <div class="tk-alert tk-alert--warning" style="margin-top:16px">
+            <div class="tk-alert tk-alert--warning">
                 <p>Hồ sơ của bạn <b>chưa hiển thị với mọi người</b>. Thêm
                     <b><?= e(mb_strtolower(implode(', ', $thieu))) ?></b> để xuất hiện trong danh sách
                     Hẹn hò, Ghép đôi ẩn và Thành viên.</p>
             </div>
         <?php endif; ?>
-    </section>
-
     <!-- Ảnh đại diện -->
-    <section class="tk-card">
+    <section class="tk-card tk-pf-images">
         <div class="tk-card__h">
             <div>
-                <h2 class="tk-card__t">Ảnh đại diện</h2>
-                <p class="tk-card__d">Cần có ảnh thì hồ sơ mới hiện với mọi người. Ảnh rõ mặt nhận nhiều lượt thích hơn.</p>
+                <h2 class="tk-card__t">Ảnh hồ sơ</h2>
+                <p class="tk-card__d">JPG, PNG, WEBP hoặc GIF, tối đa 5MB mỗi ảnh.</p>
             </div>
         </div>
+        <div class="tk-pf-images__grid">
         <div class="tk-pf-av">
             <button type="button" class="profile-image-trigger" data-profile-image aria-label="Xem ảnh đại diện lớn hơn">
                 <img id="tk-pf-av-img" src="<?= e(avatar_url($me['avatar'] ?? null, $me['gender'] ?? 'other')) ?>" alt="Ảnh đại diện" width="96" height="96">
@@ -90,8 +80,19 @@ $hien_online = $da_gui ? $this->input->post('show_online')
                     <?= tk_icon('camera') ?>Đổi ảnh đại diện
                     <input type="file" id="avatar" name="avatar" accept="image/*" data-preview="#tk-pf-av-img">
                 </label>
-                <p class="tk-hint" style="margin-top:8px">JPG, PNG, WEBP hoặc GIF, tối đa 5MB.</p>
+                <p class="tk-hint">Chọn ảnh rõ mặt.</p>
             </div>
+        </div>
+        <div class="tk-pf-cover">
+            <img id="tk-pf-cover-img" src="<?= e(base_url(!empty($me['cover_image']) ? ltrim($me['cover_image'], '/') : 'assets/site/images/profile-cover.jpg')) ?>" alt="Ảnh bìa hồ sơ">
+            <div>
+            <label class="tk-btn tk-btn--brand tk-pf-file" for="cover_image">
+                <?= tk_icon('camera') ?>Đổi ảnh bìa
+                <input type="file" id="cover_image" name="cover_image" accept="image/jpeg,image/png,image/webp,image/gif" data-preview="#tk-pf-cover-img">
+            </label>
+            <p class="tk-hint">Chọn ảnh ngang.</p>
+            </div>
+        </div>
         </div>
     </section>
 
@@ -340,8 +341,13 @@ $hien_online = $da_gui ? $this->input->post('show_online')
 
     <div class="tk-pf-save">
         <div class="tk-pf-save__text">
-            <strong>Hồ sơ của bạn</strong>
-            <p>Lưu lại sau khi cập nhật thông tin nhé.</p>
+            <div class="tk-pf-pc">
+                <strong>Hồ sơ của bạn</strong>
+                <span class="tk-pf-pc__n" aria-label="Mức hoàn thiện hồ sơ <?= $diem ?> phần trăm"><?= $diem ?>%</span>
+            </div>
+            <div class="tk-progress" role="progressbar" aria-label="Mức hoàn thiện hồ sơ" aria-valuenow="<?= $diem ?>" aria-valuemin="0" aria-valuemax="100">
+                <i style="width:<?= max(0, min(100, $diem)) ?>%"></i>
+            </div>
         </div>
         <button class="tk-btn tk-btn--brand tk-btn--lg" type="submit" disabled><?= tk_icon('save') ?>Lưu hồ sơ</button>
     </div>

@@ -422,6 +422,7 @@ class Ajax extends MY_Controller
             $items[] = array(
                 'id'      => (int) $r['id'],
                 'user_id' => (int) $r['other_id'],
+                'profile_url' => site_url('profile/' . $r['user_slug']),
                 'name'    => display_name($r),
                 'avatar'  => avatar_url($r['avatar'], $r['gender']),
                 'online'  => (bool) is_online($r['last_active_at']),
@@ -488,6 +489,7 @@ class Ajax extends MY_Controller
             'ok'      => true,
             'id'      => (int) $conv['id'],
             'user_id' => (int) $other['id'],
+            'profile_url' => site_url('profile/' . $other['slug']),
             'name'    => display_name($other),
             'avatar'  => avatar_url($other['avatar'], $other['gender']),
             'online'  => (bool) is_online($other['last_active_at']),
