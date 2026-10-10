@@ -3415,12 +3415,12 @@ body.is-bare .chat-widget {
     font-family: inherit;
     position: relative; border: 0; cursor: pointer; padding: 18px 11px 15px;
     display: flex; flex-direction: column; align-items: center; gap: 11px;
-    background: linear-gradient(160deg, #8ea2ff 0%, #b98ce8 38%, #f27ba8 72%, #ff9d7e 100%);
+    background: linear-gradient(160deg, var(--pink), var(--pink-dark));
     color: #fff; border-radius: 18px 0 0 18px;
-    box-shadow: -6px 8px 26px rgba(112, 86, 190, .34);
+    box-shadow: -6px 8px 26px rgba(209, 39, 63, .24);
     transition: transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s, opacity .2s;
 }
-.cw-tab:hover { transform: translateX(-3px); box-shadow: -10px 10px 32px rgba(112, 86, 190, .45); }
+.cw-tab:hover { transform: translateX(-3px); box-shadow: -10px 10px 32px rgba(209, 39, 63, .32); }
 .cw-tab:active { transform: translateX(-1px) scale(.98); }
 
 /* Ngăn kéo mở: đẩy cả thẻ sang trái đúng bề rộng ngăn kéo để nó nằm dính mép
@@ -3525,7 +3525,7 @@ html.cw-page-locked .site-mobile-nav { bottom: var(--cw-keyboard-inset, 0px); }
 }
 .cw-side-head::before {
     content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
-    background: linear-gradient(90deg, #8ea2ff, #b98ce8 40%, #f27ba8 75%, #ff9d7e);
+    background: linear-gradient(90deg, var(--pink), var(--pink-dark));
 }
 .cw-side-head h3 { margin: 0; flex: 1; font-size: 19px; font-weight: 800; color: var(--ink); }
 
@@ -3540,8 +3540,8 @@ html.cw-page-locked .site-mobile-nav { bottom: var(--cw-keyboard-inset, 0px); }
     border-radius: 999px; background: #f1f2f6; font-family: inherit; font-size: 14.5px;
 }
 .cw-search input:focus {
-    outline: none; background: #fff; border-color: #c7d2fe;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, .12);
+    outline: none; background: #fff; border-color: var(--pink);
+    box-shadow: 0 0 0 3px rgba(209, 39, 63, .12);
 }
 
 .cw-side-list {
@@ -3576,7 +3576,7 @@ html.cw-page-locked .site-mobile-nav { bottom: var(--cw-keyboard-inset, 0px); }
 /* Phòng chung dùng icon thay ảnh đại diện */
 .cw-row-room-ic {
     display: grid; place-items: center; border-radius: 50%;
-    background: linear-gradient(140deg, #8ea2ff, #c084fc 55%, #f472b6); color: #fff;
+    background: linear-gradient(140deg, var(--pink), var(--pink-dark)); color: #fff;
 }
 .cw-row-room-ic svg {
     width: 24px; height: 24px; fill: none; stroke: currentColor;
@@ -3609,7 +3609,7 @@ html.cw-page-locked .site-mobile-nav { bottom: var(--cw-keyboard-inset, 0px); }
 /* Nhãn "Cộng đồng" cạnh tên phòng chung */
 .cw-tag {
     flex: 0 0 auto; display: inline-block; padding: 2px 7px; border-radius: 999px;
-    background: #eef0ff; color: #5b6bf5; font-size: 10px; font-weight: 700;
+    background: var(--bg); color: var(--pink-dark); font-size: 10px; font-weight: 700;
     font-style: normal; letter-spacing: .3px; vertical-align: middle;
 }
 
@@ -3678,7 +3678,7 @@ html.cw-page-locked .site-mobile-nav { bottom: var(--cw-keyboard-inset, 0px); }
 
 .cw-avatar {
     width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex: 0 0 auto;
-    border: 2px solid #fff; box-shadow: 0 0 0 2px #e3d7fa;
+    border: 2px solid #fff; box-shadow: 0 0 0 2px #f3c8d0;
 }
 .cw-avatar[hidden] { display: none; }
 .cw-peer { flex: 1; min-width: 0; line-height: 1.35; }

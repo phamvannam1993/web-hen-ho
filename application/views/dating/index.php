@@ -11,7 +11,7 @@ $sorts = array('nearby' => 'Gần bạn nhất', 'active' => 'Vừa online', 'ne
     <?php else: ?>
         <div class="member-grid">
             <?php foreach ($members as $m): ?>
-                <?php $this->load->view('members/_card', array('m' => $m)); ?>
+                <?php $this->load->view('members/_card', array('m' => $m, 'dating_card' => true)); ?>
             <?php endforeach; ?>
         </div>
         <?= $pagination ?>
