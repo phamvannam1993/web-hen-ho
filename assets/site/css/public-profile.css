@@ -10,14 +10,14 @@
     --pp-secondary: oklch(0.966 0.012 350);
     --pp-secondary-ink: oklch(0.34 0.04 350);
     --pp-radius: 18px;
-    width: 100%; max-width: 1152px; padding: 0 24px 40px; color: var(--ink);
+    width: min(1200px, 100% - 32px); max-width: 1200px; padding: 0 0 40px; color: var(--ink);
     font-family: "Be Vietnam Pro", "Inter", ui-sans-serif, system-ui, sans-serif;
     font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased;
 }
 .public-profile :is(button, textarea, input) { font-family: inherit; }
 .pp-breadcrumb { display: flex; justify-content: space-between; gap: 16px; padding: 16px 0; font-size: 12px; color: var(--muted); }
 .pp-breadcrumb a { color: inherit; }
-.pp-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr) 232px; align-items: start; gap: 20px; }
+.pp-layout { display: grid; grid-template-columns: 260px minmax(0, 1fr) 248px; align-items: start; gap: 24px; }
 .pp-layout > *, .pp-main > * { min-width: 0; }
 .pp-panel, .pp-identity, .public-profile .sidebar-box, .public-profile .comment-box { border: 1px solid var(--line); border-radius: var(--pp-radius); background: var(--card); padding: 20px; margin: 0 0 16px; box-shadow: none; }
 .public-profile h2 { margin: 0 0 16px; font-size: 14px; font-weight: 700; }
@@ -148,6 +148,31 @@
     #pp-posts .post-title { font-size: 12px; gap: 6px; }
     #pp-posts .post-meta { font-size: 10px; }
 }
+/* Slightly larger controls and typography for the expanded profile layout. */
+.public-profile h2 { font-size: 16px; }
+.public-profile h3 { font-size: 13px; }
+.public-profile p { font-size: 13px; }
+.pp-panel, .public-profile .sidebar-box, .public-profile .comment-box { padding: 22px; }
+.pp-overview { padding: 0; }
+.public-profile .profile-photo img { width: 108px; height: 108px; }
+.public-profile .profile-photo { margin-top: -44px; }
+.pp-mini-cover { height: 88px; }
+.public-profile .profile-headline h1 { font-size: 20px; }
+.public-profile .profile-active { font-size: 12px; }
+.public-profile .profile-actions .btn { height: 36px; min-height: 36px; font-size: 13px; }
+.public-profile .profile-actions .btn-ghost { min-height: 28px; height: 28px; }
+.public-profile .fact-list dt, .public-profile .fact-list dd { font-size: 12px; }
+.pp-basic summary { font-size: 13px; padding-block: 9px; }
+.pp-heading-icon { width: 32px; height: 32px; flex-basis: 32px; }
+.pp-title { padding: 16px 22px; }
+.pp-title p { font-size: 12px; }
+.pp-tabs button { font-size: 13px; height: 52px; }
+.pp-about > p { font-size: 15px; }
+.pp-about-facts h3 { font-size: 12px; }
+.pp-interests span { font-size: 13px; padding: 9px 13px; }
+.public-profile .sidebar-box h3 { font-size: 15px; }
+.public-profile .area-chips a, .public-profile .sidebar-more { font-size: 12px; }
+.public-profile .fact-cta .btn { font-size: 13px; min-height: 36px; }
 @media (max-width: 1023px) {
     .pp-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
     .pp-trust { display: none; }
@@ -157,7 +182,7 @@
     .public-profile .area-chips { display: grid; grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 639px) {
-    .public-profile { padding: 0 12px 24px; }
+    .public-profile { width: 100%; padding: 0 12px 24px; }
     .pp-breadcrumb { padding: 16px 0; font-size: 12px; }
     .pp-breadcrumb > span { display: none; }
     .pp-panel, .public-profile .comment-box, .public-profile .sidebar-box { padding: 16px; }
