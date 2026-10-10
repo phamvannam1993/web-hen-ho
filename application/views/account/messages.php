@@ -90,7 +90,7 @@ $gio_ngan = function ($t) {
                     </span>
                     <span class="tk-ms-item__b">
                         <span class="tk-ms-head__n"><?= e(display_name($partner)) ?></span>
-                        <span class="tk-ms-head__s"><?= is_online($partner['last_active_at']) ? 'Đang online' : 'Hoạt động ' . time_ago($partner['last_active_at']) ?></span>
+                        <span class="tk-ms-head__s<?= is_online($partner['last_active_at']) ? ' is-online' : '' ?>"><?= is_online($partner['last_active_at']) ? 'Đang online' : (!empty($partner['last_active_at']) ? 'Hoạt động ' . time_ago($partner['last_active_at']) : 'Chưa có thông tin hoạt động') ?></span>
                     </span>
                 </a>
                 <a class="tk-btn tk-btn--ghost tk-btn--icon-sm" href="<?= site_url('profile/' . ($partner['slug'] ?: $partner['id'])) ?>"

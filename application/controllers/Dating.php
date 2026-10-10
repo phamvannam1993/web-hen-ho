@@ -76,6 +76,17 @@ class Dating extends MY_Controller
         if (!array_key_exists($tab, $tabs)) {
             show_404();
         }
+        // Only personalize a fresh visit; keep explicit tabs and submitted filters.
+        if ($tab === '' && (int) $page === 1 && !empty($this->data['user']) && !$this->input->get()) {
+            $preference = $this->db->select('seeking_gender')
+                ->where('user_id', (int) $this->data['user']['id'])
+                ->get('user_preferences')->row_array();
+            $preferred_tab = array('male' => 'nam', 'female' => 'nu');
+            if (isset($preferred_tab[$preference['seeking_gender'] ?? ''])) {
+                redirect('hen-ho/' . $preferred_tab[$preference['seeking_gender']], 'location', 302);
+                return;
+            }
+        }
         $current = $tabs[$tab];
 
         // Sắp xếp: mới tham gia / vừa online / đã xác thực
