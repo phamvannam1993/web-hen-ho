@@ -1,5 +1,22 @@
 (function () {
     'use strict';
+    var filterForm = document.getElementById('dating-distance-fields');
+    if (filterForm) {
+        var genderSelect = filterForm.querySelector('select[name="gender"]');
+        var updateFilterAction = function () {
+            var urls = {
+                '': filterForm.dataset.allUrl,
+                male: filterForm.dataset.maleUrl,
+                female: filterForm.dataset.femaleUrl
+            };
+            filterForm.action = urls[genderSelect.value] || urls[''];
+        };
+        if (genderSelect) {
+            updateFilterAction();
+            genderSelect.addEventListener('change', updateFilterAction);
+            filterForm.addEventListener('submit', updateFilterAction);
+        }
+    }
     var panel = document.getElementById('dating-filter-panel');
     var toggle = document.getElementById('dating-filter-toggle');
     if (panel && toggle) {

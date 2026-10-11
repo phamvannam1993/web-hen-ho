@@ -20,7 +20,7 @@ $chosen = function ($key, $option) use ($value) { return (string) $value($key) =
         </div>
         <?php endif; ?>
     </header>
-    <form class="dating-discovery-form" id="dating-distance-fields" action="<?= site_url($base_url) ?>" method="get">
+    <form class="dating-discovery-form" id="dating-distance-fields" action="<?= site_url($base_url) ?>" method="get" data-all-url="<?= e(site_url('hen-ho')) ?>" data-male-url="<?= e(site_url('hen-ho/nam')) ?>" data-female-url="<?= e(site_url('hen-ho/nu')) ?>">
         <label class="dating-query">
             <span class="dating-sr-only">Tìm theo tên, khu vực hoặc nghề nghiệp</span>
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg>

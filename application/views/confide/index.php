@@ -6,6 +6,7 @@ $link = function ($key, $value) use ($base_url) {
     return site_url($base_url) . ($q ? '?' . http_build_query($q) : '');
 };
 ?>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/confide.css') ?>?v=<?= filemtime(FCPATH.'assets/site/css/confide.css') ?>">
 <div class="container confide-page">
     <header class="confide-head">
         <h1><?= e($heading) ?></h1>
