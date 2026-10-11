@@ -2,6 +2,11 @@
 .confide-page .confide-head { padding: 16px; background: linear-gradient(110deg, #fff5f7, #f6cbd5); border: 1px solid #eab3c1; border-radius: 8px; box-shadow: 0 3px 12px rgb(145 39 65 / 9%); }
 .confide-page .confide-head h1 { color: #34212a; }
 .confide-page .confide-head p { color: #70515e; }
+@media (max-width: 720px) {
+    .confide-page .ccard-actions { gap: 5px; }
+    .confide-page .btn-confide { min-height: 26px; padding: 6px 7px; font-size: 11px; gap: 4px; }
+    .confide-page .btn-confide .ic { width: 13px; height: 13px; flex-basis: 13px; }
+}
 @media (min-width: 721px) {
     .confide-page .confide-head { padding: 24px; }
     .confide-page .confide-head h1 { margin: 0 0 8px; font-size: 24px; }
