@@ -5,8 +5,10 @@
 
 .tk-card.tk-ms { padding: 0; overflow: hidden; }
 
-/* Nhường không gian thanh điều hướng phía trên cho hội thoại đang mở. */
-body.is-inbox-open :is(.topbar, .site-header, .tk-mhead) { display: none; }
+/* Chỉ thu gọn điều hướng khi mở hội thoại trên màn hình nhỏ. */
+@media (max-width: 1023.98px) {
+  body.is-inbox-open :is(.topbar, .site-header, .tk-mhead) { display: none; }
+}
 
 /* ── Danh sách hội thoại ── */
 .tk-ms-side { display: flex; flex-direction: column; min-height: 0; }
