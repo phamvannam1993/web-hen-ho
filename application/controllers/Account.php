@@ -145,6 +145,12 @@ class Account extends Member_Controller
                     $data['has_children'] = (int) $this->input->post('has_children');
                 }
 
+                if (!empty($_FILES['cover_image']['name']) && !$this->db->field_exists('cover_image', 'users')) {
+                    log_message('error', 'Profile cover upload: users.cover_image is missing; run database/migrate_profile_cover.php');
+                    set_flash('warning', 'Chưa lưu được ảnh bìa vì hệ thống chưa cập nhật dữ liệu ảnh bìa. Vui lòng liên hệ quản trị viên.');
+                    redirect('tai-khoan/ho-so');
+                    return;
+                }
                 $cover = $this->upload_image('cover_image');
                 if (!empty($_FILES['cover_image']['name']) && !$cover) {
                     redirect('tai-khoan/ho-so');
@@ -158,6 +164,15 @@ class Account extends Member_Controller
                     $data['avatar'] = $avatar;
                 }
                 $this->m_user->update_profile($me['id'], $data);
+                if ($cover) {
+                    $saved_profile = $this->m_user->find($me['id']);
+                    if (($saved_profile['cover_image'] ?? null) !== $cover) {
+                        log_message('error', 'Profile cover upload: database did not persist cover for user ' . (int) $me['id']);
+                        set_flash('warning', 'Ảnh đã tải lên nhưng chưa lưu được ảnh bìa. Vui lòng thử lại.');
+                        redirect('tai-khoan/ho-so');
+                        return;
+                    }
+                }
 
                 // tiêu chí ghép đôi
                 $pref = array(
@@ -630,7 +645,8 @@ class Account extends Member_Controller
         if (empty($_FILES[$field]['name'])) {
             return null;
         }
-        $this->load->library('upload', $this->upload_config());
+        $this->load->library('upload');
+        $this->upload->initialize($this->upload_config());
         if (!$this->upload->do_upload($field)) {
             set_flash('warning', strip_tags($this->upload->display_errors()));
             return null;
