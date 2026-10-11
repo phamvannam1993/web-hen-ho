@@ -12,6 +12,8 @@ $flash = $this->session->flashdata('flash');
 
   gtag('config', 'G-NXYG6XSVEK');
 </script>
+<meta name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <?php
