@@ -4450,6 +4450,9 @@ html.cw-page-locked .site-mobile-nav { bottom: var(--cw-keyboard-inset, 0px); }
     content: ""; position: absolute; inset: 0;
     background: linear-gradient(135deg, rgb(225 188 194 / 62%) 0%, rgb(233 190 196 / 55%) 45%, rgb(205 115 130 / 68%) 100%), radial-gradient(120% 90% at 50% 120%, rgba(0, 0, 0, .3), transparent 60%);
 }
+@media (max-width: 720px) {
+    .hm-hero-bg { background-position: right center; }
+}
 .hm-hero-inner { position: relative; z-index: 1; padding: 120px 0 104px; }
 .hm-hero-title {
     margin: 0 auto 18px; max-width: 900px;
