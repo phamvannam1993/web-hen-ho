@@ -24,9 +24,8 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
 
 <?php /* ===================== Khối mở đầu ===================== */ ?>
 <?php
-/* Ảnh nền khối mở đầu. Thay ảnh khác thì chỉ cần ghi đè file này, hoặc đặt
-   khoá cấu hình home_hero_image (Quản trị -> Cấu hình) trỏ tới ảnh khác. */
-$hero_img = setting('home_hero_image') ?: 'assets/images/banner.png';
+/* Ảnh banner trang chủ được chọn theo thiết kế hiện tại. */
+$hero_img = 'assets/images/banner.webp';
 ?>
 <section class="hm-hero">
     <div class="hm-hero-bg" aria-hidden="true"
