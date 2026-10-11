@@ -123,7 +123,11 @@ class Dating extends MY_Controller
         if (!in_array($distance_max, array(10, 25, 50, 100, 200, 500), true)) $distance_max = 0;
         $filters = array_merge($current['filters'], array('sort' => $sort, 'distance_origin' => $origin, 'distance_max' => $distance_max));
         $gender = $this->input->get('gender');
-        if (in_array($gender, array('male', 'female'), true)) $filters['gender'] = $gender;
+        if ($gender === '' || in_array($gender, array('male', 'female'), true)) {
+            // A submitted selection replaces the tab's default, including "all".
+            unset($filters['gender'], $filters['seeking']);
+            if ($gender !== '') $filters['gender'] = $gender;
+        }
         $marital = $this->input->get('marital');
         if (in_array($marital, array('doc_than', 'ly_hon', 'goa', 'phuc_tap'), true)) $filters['marital'] = $marital;
         foreach (array('age_min', 'age_max') as $key) {

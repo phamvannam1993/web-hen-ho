@@ -30,4 +30,13 @@ check_discovery($GLOBALS['preference_redirect'] === null && $controller->rendere
 $controller->input->query = array();
 $controller->index('nu');
 check_discovery($GLOBALS['preference_redirect'] === null && $controller->rendered['tab'] === 'nu', 'Explicit tab stays selected');
-echo "PASS: saved gender redirects, all genders and explicit choices.\n";
+foreach (array('nam', 'nu', 'gay', 'les') as $tab) {
+    foreach (array('', 'male', 'female') as $gender) {
+        $controller->input->query = array('gender' => $gender);
+        $controller->index($tab);
+        $filters = $controller->rendered['filters'];
+        check_discovery($gender === '' ? !isset($filters['gender']) : $filters['gender'] === $gender, 'Submitted gender overrides every tab default');
+        check_discovery(!isset($filters['seeking']), 'Manual gender selection clears the tab seeking restriction');
+    }
+}
+echo "PASS: saved gender redirects, all genders and explicit choices on every tab.\n";
