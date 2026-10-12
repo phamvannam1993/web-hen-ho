@@ -7,7 +7,7 @@ class Engagement extends Api_Controller
     public function __construct()
     {
         parent::__construct();
-        $this->load->model(array('m_interaction', 'm_streak'));
+        $this->load->model(array('m_interaction', 'm_streak', 'm_interest_badge'));
     }
 
     /**
@@ -36,6 +36,8 @@ class Engagement extends Api_Controller
             return;
         }
         $la_vip = $this->la_vip();
+        // Mở danh sách là đã xem thẻ "Người thích bạn" (như trang web)
+        $this->m_interest_badge->mark_seen($this->me['id'], 'thich-ban');
 
         return $this->ok(array(
             'total'  => $this->m_interaction->liked_me_count($this->me['id']),
@@ -71,7 +73,7 @@ class Engagement extends Api_Controller
 
         return $kq['ok']
             ? $this->ok(array('matched' => $kq['matched'], 'message' => $kq['message']))
-            : $this->loi($kq['message'], 409);
+            : $this->loi($kq['message'], ($kq['need'] ?? '') === 'profile' ? 403 : 409, $kq);
     }
 
     /** GET /api/profile-viewers */
@@ -82,6 +84,7 @@ class Engagement extends Api_Controller
         }
         $la_vip = $this->la_vip();
         $list   = $this->m_interaction->viewers($this->me['id'], 60);
+        $this->m_interest_badge->mark_seen($this->me['id'], 'da-xem');
 
         $items = $this->che_bot($list, $la_vip);
         // VIP mới được biết thời điểm xem

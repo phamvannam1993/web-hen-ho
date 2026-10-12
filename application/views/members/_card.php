@@ -37,7 +37,6 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
     <div class="pcard-body">
         <h3 class="pcard-name">
             <a href="<?= site_url('profile/' . $m['slug']) ?>"><?= e(display_name($m)) ?><?= $age ? ', ' . $age : '' ?></a>
-            <span class="pcard-gender-inline <?= $gclass ?>"><?= $ic_gender ?></span>
         </h3>
 
         <p class="pcard-meta">
@@ -46,7 +45,24 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
             <span class="mi"><?= $ic_pin ?><?= !empty($m['province_name']) ? e($m['province_name']) : 'Chưa rõ khu vực' ?></span>
         </p>
 
-        <?php if (!empty($m['height_cm']) || !empty($m['job']) || !empty($m['marital_status'])): ?>
+        <?php if (array_key_exists('distance_km', $m)): ?>
+            <p class="pcard-meta pcard-distance">
+                <?php if (!empty($m['distance_same_province']) && empty($m['distance_real'])): ?>
+                    Cùng khu vực<?= !empty($m['province_name']) ? ' · ' . e($m['province_name']) : '' ?>
+                <?php elseif ($m['distance_km'] === null): ?>
+                    Chưa rõ khoảng cách
+                <?php else: ?>
+                    <?= empty($m['distance_real']) ? 'Ước tính · ' : '' ?>Cách bạn <?= (float) $m['distance_km'] < 1 ? 'dưới 1' : number_format(round((float) $m['distance_km']), 0, ',', '.') ?> km
+                <?php endif; ?>
+            </p>
+        <?php endif; ?>
+
+        <?php if (!empty($dating_card)): ?>
+            <p class="pcard-facts">
+                <?php if (!empty($marital[$m['marital_status'] ?? ''])): ?><span><?= e($marital[$m['marital_status']]) ?></span><?php endif; ?>
+                <?php if (!empty($m['height_cm'])): ?><span><?= (int) $m['height_cm'] ?> cm<?= !empty($m['weight_kg']) ? ' · ' . (int) $m['weight_kg'] . ' kg' : '' ?></span><?php endif; ?>
+            </p>
+        <?php elseif (!empty($m['height_cm']) || !empty($m['job']) || !empty($m['marital_status'])): ?>
             <p class="pcard-meta">
                 <?php if (!empty($m['height_cm'])): ?>
                     <span class="mi"><?= $ic_ruler ?><?= (int) $m['height_cm'] ?> cm<?= !empty($m['weight_kg']) ? ' · ' . (int) $m['weight_kg'] . ' kg' : '' ?></span>
@@ -57,7 +73,7 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
         <?php endif; ?>
 
         <?php /* Luôn giữ khối này kể cả khi trống để các thẻ cùng hàng cao bằng nhau */ ?>
-        <p class="pcard-bio"><?= !empty($m['bio']) ? e(excerpt($m['bio'], 110)) : '' ?></p>
+        <p class="pcard-bio"><?= $user && !empty($m['bio']) ? e(excerpt($m['bio'], 110)) : '' ?></p>
 
         <?php /* Luôn render để thẻ có sở thích và chưa có vẫn cao bằng nhau */ ?>
         <p class="pcard-chips">

@@ -112,6 +112,23 @@ class MY_Controller extends CI_Controller
     protected function render($view, $data = array())
     {
         $data = array_merge($this->data, $data);
+        // Giao diện phụ thuộc phiên đăng nhập, kể cả khi đang xem hồ sơ công khai.
+        // Không dùng lại HTML dành cho khách từ cache sau khi đăng nhập.
+        $this->output->set_header('Cache-Control: private, no-store, no-cache, must-revalidate')
+            ->set_header('Pragma: no-cache')
+            ->set_header('Expires: 0');
+        $data['user'] = $this->auth->user();
+        $data['account_badge_total'] = 0;
+        $data['account_menu_counts'] = array();
+        if ($this->auth->check()) {
+            $this->load->model('m_interest_badge');
+            $counts = $this->m_interest_badge->menu_counts($this->auth->id());
+            $data['account_menu_counts'] = $counts;
+            if (isset($data['tk'])) $data['tk'] = array_merge($data['tk'], $counts);
+            $data['unread_noti'] = $counts['noti'];
+            // Incoming likes and profile views are included in interest already.
+            $data['account_badge_total'] = $counts['total'];
+        }
         $data['content_view'] = $view;
         $this->load->view('layouts/main', $data);
     }
@@ -506,6 +523,71 @@ class Api_Controller extends CI_Controller
             return null;
         }
         return $tuong_doi . '/' . $this->upload->data('file_name');
+    }
+
+    /**
+     * Điểm gốc để tính khoảng cách "Gần bạn nhất" — cùng luật với Dating::index:
+     * vị trí thật (cấp trong 30 ngày) nếu có, không thì toạ độ tỉnh đang chọn
+     * hoặc tỉnh trong hồ sơ.
+     */
+    protected function diem_goc($origin_province = 0)
+    {
+        $this->load->model('m_province');
+        $me = $this->me;
+        if ($this->m_user->location_ready() && $me && !empty($me['location_updated_at'])
+            && strtotime($me['location_updated_at']) >= time() - 30 * 86400
+            && is_numeric($me['lat']) && is_numeric($me['lng'])
+            && abs($me['lat']) <= 90 && abs($me['lng']) <= 180) {
+            return array('lat' => $me['lat'], 'lng' => $me['lng'], 'real' => true, 'province_id' => (int) ($me['province_id'] ?? 0));
+        }
+        $origin_province = (int) $origin_province ?: (int) ($me['province_id'] ?? 0);
+        if (!$origin_province) {
+            return null;
+        }
+        foreach ($this->m_province->all() as $province) {
+            if ((int) $province['id'] === $origin_province) {
+                $toa_do = $this->m_user->province_coordinates($province);
+                return $toa_do ? array('lat' => $toa_do[0], 'lng' => $toa_do[1], 'real' => false, 'province_id' => $origin_province) : null;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Khoảng cách hiển thị trên thẻ hồ sơ, giống members/_card.php của web.
+     * Trả về null khi không tính được.
+     */
+    protected function nhan_khoang_cach(array $u)
+    {
+        if (!array_key_exists('distance_km', $u)) {
+            return null;
+        }
+        if (!empty($u['distance_same_province']) && empty($u['distance_real'])) {
+            return 'Cùng tỉnh/thành';
+        }
+        if ($u['distance_km'] === null) {
+            return null;
+        }
+        $km = (float) $u['distance_km'];
+        return (empty($u['distance_real']) ? 'Ước tính · ' : '') . 'Cách bạn '
+            . ($km < 1 ? 'dưới 1' : number_format(round($km), 0, ',', '.')) . ' km';
+    }
+
+    /**
+     * Thả tim bị từ chối vì hồ sơ chưa đủ (M_interaction::like_profile_error):
+     * trả 403 kèm need=profile và danh sách mục còn thiếu để ứng dụng mời
+     * bổ sung. Trả về true nếu đã xuất lỗi.
+     */
+    protected function loi_tha_tim($kq)
+    {
+        if (!is_array($kq) || !isset($kq['ok']) || $kq['ok']) {
+            return false;
+        }
+        $this->loi($kq['message'] ?? 'Không thả tim được.', ($kq['need'] ?? '') === 'profile' ? 403 : 409, array(
+            'need'    => $kq['need'] ?? null,
+            'missing' => $kq['missing'] ?? array(),
+        ));
+        return true;
     }
 
     /** Số trang từ ?page=, bắt đầu từ 1. */

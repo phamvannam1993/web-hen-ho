@@ -28,6 +28,21 @@ class Emailer
 
     /* ===================== Các loại email ===================== */
 
+    /** A useful next step for members who have not activated or finished setup. */
+    public function activation_nudge($user_id, $verify, array $missing = array())
+    {
+        $u = $this->CI->m_user->find($user_id);
+        if (!$u) return false;
+        $review = !$verify && !$missing && $u['status'] === 'pending';
+        return $this->CI->m_email->enqueue($user_id, 'activation_nudge',
+            $verify ? 'Xác nhận email để bắt đầu kết nối tại Saigon Cupid'
+                    : ($review ? 'Theo dõi trạng thái tài khoản Saigon Cupid của bạn' : 'Hoàn thiện hồ sơ để tìm người phù hợp với bạn'),
+            'activation_nudge', array('name' => $this->ten($u), 'verify' => (bool) $verify,
+                'review' => $review,
+                'missing' => array_values($missing),
+                'link' => site_url($verify ? 'xac-thuc' : ($review ? 'tai-khoan' : 'tai-khoan/bat-dau'))));
+    }
+
     /** Chào mừng người mới, gửi sau 1 phút. */
     public function welcome($user_id)
     {
@@ -43,19 +58,9 @@ class Emailer
         );
     }
 
-    /**
-     * Có tin nhắn mới. Xếp hàng chờ 5 phút rồi mới gửi — lúc đó worker kiểm
-     * tra lại: người nhận đọc rồi hoặc đang online thì thôi không gửi nữa.
-     */
-    public function new_message($receiver_id, $sender, $conversation_id, $content, $type = 'text')
+    /** Mỗi tin nhắn tạo một email thông báo, không chứa nội dung tin nhắn. */
+    public function new_message($receiver_id, $sender, $conversation_id)
     {
-        // Một cuộc hội thoại chỉ báo tối đa một lần mỗi giờ
-        if ($this->CI->m_email->da_gui_gan_day($receiver_id, 'new_message', $conversation_id, 1)) {
-            return false;
-        }
-
-        $xem_truoc = $type === 'image' ? 'Đã gửi một ảnh' : mb_substr(trim((string) $content), 0, 150);
-
         return $this->CI->m_email->enqueue(
             $receiver_id, 'new_message',
             $this->ten($sender) . ' đã nhắn tin cho bạn',
@@ -63,10 +68,9 @@ class Emailer
             array(
                 'sender'  => $this->ten($sender),
                 'avatar'  => avatar_url($sender['avatar'] ?? null, $sender['gender'] ?? 'other'),
-                'preview' => $xem_truoc,
                 'link'    => site_url('tai-khoan/tin-nhan/' . (int) $conversation_id),
             ),
-            array('delay_minutes' => 5, 'related_id' => $conversation_id)
+            array('related_id' => $conversation_id)
         );
     }
 
@@ -209,7 +213,7 @@ class Emailer
         list($tieu_de, $nhanh) = $this->CI->m_email->chon_nhanh($user_id, array(
             'A' => $so_thich > 0
                 ? $this->ten($u) . ' ơi, có ' . (int) $so_thich . ' người mới thích bạn!'
-                : $this->ten($u) . ' ơi, có người đang chờ bạn quay lại!',
+                : $this->ten($u) . ' ơi, quay lại khám phá những kết nối mới nhé',
             'B' => $so_thich > 0
                 ? 'Bạn đang bỏ lỡ ' . (int) $so_thich . ' người quan tâm mình'
                 : 'Lâu rồi không gặp — có gì mới cho bạn đây',

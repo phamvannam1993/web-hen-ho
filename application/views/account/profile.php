@@ -10,7 +10,12 @@
 $da_gui = ($this->input->method() === 'post');
 
 /** Giá trị nên hiện ra: ưu tiên thứ vừa gửi lên, chưa gửi thì lấy trong CSDL. */
-$goc = function ($k, $mac_dinh = '') use ($da_gui, $me, $pref) {
+$email_bi_trung = !empty($email_bi_trung);
+$loi_email = strip_tags(form_error('email', '', ''));
+$goc = function ($k, $mac_dinh = '') use ($da_gui, $me, $pref, $email_bi_trung) {
+    if ($k === 'email' && $email_bi_trung) {
+        return (string) ($me['email'] ?? '');
+    }
     if ($da_gui) {
         return isset($_POST[$k]) ? (string) $_POST[$k] : '';
     }
@@ -35,7 +40,7 @@ $dang_chon = $da_gui ? array_map('intval', (array) $this->input->post('interests
 $hien_online = $da_gui ? $this->input->post('show_online')
                        : (!isset($pref['show_online']) || $pref['show_online']);
 ?>
-<div class="tk-ph">
+<div class="tk-ph tk-ph--profile">
     <div class="tk-ph__b">
         <h1>Hồ sơ của tôi</h1>
         <p>Thông tin càng đầy đủ, cơ hội ghép đôi càng cao. Trường có dấu * là bắt buộc.</p>
@@ -48,43 +53,46 @@ $hien_online = $da_gui ? $this->input->post('show_online')
         <div class="tk-alert tk-alert--danger"><?= validation_errors() ?></div>
     <?php endif; ?>
 
-    <!-- Mức hoàn thiện -->
-    <section class="tk-card">
-        <div class="tk-pf-pc">
-            <span class="tk-pf-pc__t">Mức hoàn thiện hồ sơ</span>
-            <span class="tk-pf-pc__n"><?= $diem ?>%</span>
-        </div>
-        <div class="tk-progress" style="margin-top:8px" role="progressbar" aria-valuenow="<?= $diem ?>" aria-valuemin="0" aria-valuemax="100">
-            <i style="width:<?= max(0, min(100, $diem)) ?>%"></i>
-        </div>
         <?php if (!empty($thieu)): ?>
             <?php /* Thiếu mục cần để hiện công khai: không khoá gì, chỉ báo hồ sơ đang bị ẩn */ ?>
-            <div class="tk-alert tk-alert--warning" style="margin-top:16px">
+            <div class="tk-alert tk-alert--warning">
                 <p>Hồ sơ của bạn <b>chưa hiển thị với mọi người</b>. Thêm
                     <b><?= e(mb_strtolower(implode(', ', $thieu))) ?></b> để xuất hiện trong danh sách
                     Hẹn hò, Ghép đôi ẩn và Thành viên.</p>
             </div>
         <?php endif; ?>
-    </section>
-
     <!-- Ảnh đại diện -->
-    <section class="tk-card">
+    <section class="tk-card tk-pf-images">
         <div class="tk-card__h">
             <div>
-                <h2 class="tk-card__t">Ảnh đại diện</h2>
-                <p class="tk-card__d">Cần có ảnh thì hồ sơ mới hiện với mọi người. Ảnh rõ mặt nhận nhiều lượt thích hơn.</p>
+                <h2 class="tk-card__t">Ảnh hồ sơ</h2>
+                <p class="tk-card__d">JPG, PNG, WEBP hoặc GIF, tối đa 5MB mỗi ảnh.</p>
             </div>
         </div>
+        <div class="tk-pf-images__grid">
         <div class="tk-pf-av">
-            <img id="tk-pf-av-img" src="<?= e(avatar_url($me['avatar'] ?? null, $me['gender'] ?? 'other')) ?>" alt="Ảnh đại diện" width="96" height="96">
+            <button type="button" class="profile-image-trigger" data-profile-image aria-label="Xem ảnh đại diện lớn hơn">
+                <img id="tk-pf-av-img" src="<?= e(avatar_url($me['avatar'] ?? null, $me['gender'] ?? 'other')) ?>" alt="Ảnh đại diện" width="96" height="96">
+            </button>
             <div>
                 <?php /* Ô chọn tệp thật nằm trong nhãn, nhãn mang dáng nút */ ?>
                 <label class="tk-btn tk-btn--brand tk-pf-file" for="avatar">
                     <?= tk_icon('camera') ?>Đổi ảnh đại diện
                     <input type="file" id="avatar" name="avatar" accept="image/*" data-preview="#tk-pf-av-img">
                 </label>
-                <p class="tk-hint" style="margin-top:8px">JPG, PNG, WEBP hoặc GIF, tối đa 5MB.</p>
+                <p class="tk-hint">Chọn ảnh rõ mặt.</p>
             </div>
+        </div>
+        <div class="tk-pf-cover">
+            <img id="tk-pf-cover-img" src="<?= e(base_url(!empty($me['cover_image']) ? ltrim($me['cover_image'], '/') : 'assets/site/images/profile-cover.jpg')) ?>" alt="Ảnh bìa hồ sơ">
+            <div>
+            <label class="tk-btn tk-btn--brand tk-pf-file" for="cover_image">
+                <?= tk_icon('camera') ?>Đổi ảnh bìa
+                <input type="file" id="cover_image" name="cover_image" accept="image/jpeg,image/png,image/webp,image/gif" data-preview="#tk-pf-cover-img">
+            </label>
+            <p class="tk-hint">Chọn ảnh ngang.</p>
+            </div>
+        </div>
         </div>
     </section>
 
@@ -102,6 +110,23 @@ $hien_online = $da_gui ? $this->input->post('show_online')
                 <input type="text" id="nickname" name="nickname" value="<?= $v('nickname') ?>"
                        placeholder="VD: Bằng Lăng Tím" maxlength="60">
                 <p class="tk-hint">Có thể dùng thay cho họ tên thật</p>
+            </div>
+            <div class="tk-field">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" value="<?= $v('email') ?>"
+                       maxlength="190" autocomplete="email" data-email-check="<?= e(site_url('tai-khoan/kiem-tra-email')) ?>"
+                       data-original-email="<?= e($me['email'] ?? '') ?>" <?= !empty($me['email']) ? 'required' : '' ?>
+                       <?php if ($loi_email): ?>aria-invalid="true" aria-describedby="email-error" autofocus<?php endif; ?>>
+                <div id="email-error" class="tk-alert tk-alert--danger" role="alert" <?= $loi_email ? '' : 'hidden' ?>><?= e($loi_email) ?></div>
+                <p id="email-check-status" class="tk-hint" role="status" hidden></p>
+                <p class="tk-hint">Có thể sửa nếu bạn nhập sai. Email mới dùng để đăng nhập và nhận thư; sau khi đổi cần xác thực lại.</p>
+                <?php if (!empty($me['email']) && setting('otp_register', '1') === '1'): ?>
+                    <p class="tk-hint">Trạng thái: <?= !empty($me['email_verified_at']) ? 'Đã xác thực email' : 'Chưa xác thực email' ?>.</p>
+                <?php endif; ?>
+                <?php if (!empty($me['email']) && empty($me['email_verified_at'])): ?>
+                    <p class="tk-hint"><button type="submit" form="profile-resend-email" class="tk-btn tk-btn--outline">Gửi lại email xác thực</button></p>
+                    <p class="tk-hint">Thư được gửi tới email đã lưu. Nếu đổi email, hãy lưu hồ sơ trước.</p>
+                <?php endif; ?>
             </div>
             <div class="tk-field">
                 <label for="phone">Số điện thoại Zalo</label>
@@ -287,15 +312,15 @@ $hien_online = $da_gui ? $this->input->post('show_online')
     <section class="tk-card">
         <div class="tk-card__h"><div><h2 class="tk-card__t">Quyền riêng tư</h2></div></div>
         <div class="tk-toggles">
-            <?php /* Mọi tin nhắn đều đã yêu cầu ghép đôi, mục này chỉ để siết thêm */ ?>
+            <?php /* Người dùng có thể chọn nhận tin từ mọi người hoặc chỉ từ VIP */ ?>
             <div class="tk-toggle tk-pf-sel">
                 <span class="tk-toggle__b">
                     <label class="tk-toggle__t" for="allow_message">Ai được nhắn tin cho tôi</label>
-                    <span class="tk-toggle__d">Chỉ người đã ghép đôi với bạn mới nhắn tin được. Bạn có thể siết thêm ở đây.</span>
+                    <span class="tk-toggle__d">Chọn ai có thể gửi tin nhắn cho bạn.</span>
                 </span>
                 <span class="tk-field">
                     <select id="allow_message" name="allow_message">
-                        <?php foreach (array('all' => 'Mọi người đã ghép đôi', 'vip' => 'Chỉ người đã ghép đôi và là VIP') as $k => $t): ?>
+                        <?php foreach (array('all' => 'Mọi người', 'vip' => 'Chỉ thành viên VIP') as $k => $t): ?>
                             <option value="<?= $k ?>" <?= $chon('allow_message', $k, 'all') ?>><?= $t ?></option>
                         <?php endforeach; ?>
                     </select>
@@ -315,6 +340,141 @@ $hien_online = $da_gui ? $this->input->post('show_online')
     </section>
 
     <div class="tk-pf-save">
-        <button class="tk-btn tk-btn--brand tk-btn--lg" type="submit"><?= tk_icon('save') ?>Lưu hồ sơ</button>
+        <div class="tk-pf-save__text">
+            <div class="tk-pf-pc">
+                <strong>Hồ sơ của bạn</strong>
+                <span class="tk-pf-pc__n" aria-label="Mức hoàn thiện hồ sơ <?= $diem ?> phần trăm"><?= $diem ?>%</span>
+            </div>
+            <div class="tk-progress" role="progressbar" aria-label="Mức hoàn thiện hồ sơ" aria-valuenow="<?= $diem ?>" aria-valuemin="0" aria-valuemax="100">
+                <i style="width:<?= max(0, min(100, $diem)) ?>%"></i>
+            </div>
+        </div>
+        <button class="tk-btn tk-btn--brand tk-btn--lg" type="submit" disabled><?= tk_icon('save') ?>Lưu hồ sơ</button>
     </div>
 </form>
+<form id="profile-resend-email" method="post" action="<?= site_url('xac-thuc/gui-lai') ?>" hidden>
+    <input type="hidden" name="from_profile" value="1">
+</form>
+<script>
+(function () {
+    var input = document.getElementById('email');
+    var form = input.form;
+    var error = document.getElementById('email-error');
+    var button = form.querySelector('.tk-pf-save button[type="submit"]');
+    var timer, version = 0, checked = input.value.trim(), pending = null;
+    var endpoint = input.dataset.emailCheck;
+    var status = document.getElementById('email-check-status');
+
+    function values() {
+        return JSON.stringify(Array.from(form.elements).filter(function (field) {
+            return field.name && /^(INPUT|SELECT|TEXTAREA)$/.test(field.tagName) &&
+                !/^(hidden|submit|button|reset)$/.test(field.type);
+        }).map(function (field) {
+            if (field.type === 'file') {
+                return [field.name, Array.from(field.files).map(function (file) {
+                    return [file.name, file.size, file.lastModified];
+                })];
+            }
+            if (field.type === 'checkbox' || field.type === 'radio') {
+                return [field.name, field.value, field.checked];
+            }
+            if (field.multiple) {
+                return [field.name, Array.from(field.selectedOptions).map(function (option) { return option.value; })];
+            }
+            return [field.name, field.value];
+        }));
+    }
+    var initialValues = values();
+    function updateSave() {
+        button.disabled = values() === initialValues || checked !== input.value.trim() || !!pending;
+    }
+    form.addEventListener('input', updateSave);
+    form.addEventListener('change', updateSave);
+    form.addEventListener('reset', function () { setTimeout(updateSave, 0); });
+    updateSave();
+
+    function message(text) {
+        error.textContent = text;
+        error.hidden = !text;
+        if (text) {
+            input.setAttribute('aria-invalid', 'true');
+            input.setAttribute('aria-describedby', 'email-error');
+        } else {
+            input.removeAttribute('aria-invalid');
+            input.removeAttribute('aria-describedby');
+        }
+    }
+
+    function check() {
+        var value = input.value.trim();
+        if (checked === value) { updateSave(); return Promise.resolve(true); }
+        if (pending && pending.value === value) return pending.promise;
+        input.setCustomValidity('');
+        if (!input.checkValidity()) {
+            message('Vui lòng nhập email đúng định dạng.');
+            button.disabled = true;
+            status.hidden = true;
+            return Promise.resolve(false);
+        }
+        var requestVersion = ++version;
+        button.disabled = true;
+        status.textContent = 'Đang kiểm tra email…';
+        status.hidden = false;
+        var promise = fetch(endpoint + '?email=' + encodeURIComponent(value), {
+            credentials: 'same-origin', cache: 'no-store', headers: { 'Accept': 'application/json' }
+        }).then(function (response) {
+            if (!response.ok) throw new Error('Email check failed');
+            return response.json();
+        }).then(function (data) {
+            if (requestVersion !== version || input.value.trim() !== value) return false;
+            if (typeof data.available !== 'boolean') throw new Error('Invalid response');
+            checked = data.available ? value : null;
+            message(data.available ? '' : 'Email này đã được dùng cho tài khoản khác. Vui lòng chọn email khác. Email hiện tại của bạn vẫn được giữ nguyên.');
+            updateSave();
+            return data.available;
+        }).catch(function () {
+            if (requestVersion === version) {
+                message('Chưa kiểm tra được email. Vui lòng thử lại.');
+                button.disabled = true;
+            }
+            return false;
+        }).finally(function () {
+            if (requestVersion === version) {
+                pending = null;
+                status.hidden = true;
+                updateSave();
+            }
+        });
+        pending = { value: value, promise: promise };
+        return promise;
+    }
+
+    input.addEventListener('input', function () {
+        clearTimeout(timer);
+        ++version;
+        checked = null;
+        pending = null;
+        message('');
+        button.disabled = true;
+        status.textContent = 'Đang kiểm tra email…';
+        status.hidden = false;
+        timer = setTimeout(check, 350);
+    });
+    input.addEventListener('blur', function () { clearTimeout(timer); check(); });
+    form.addEventListener('submit', function (event) {
+        if (values() === initialValues) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            return;
+        }
+        if (checked === input.value.trim()) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        clearTimeout(timer);
+        check().then(function (available) {
+            if (available && checked === input.value.trim()) form.requestSubmit(button);
+            else input.focus();
+        });
+    }, true);
+})();
+</script>

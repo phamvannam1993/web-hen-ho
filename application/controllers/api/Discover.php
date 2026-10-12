@@ -78,6 +78,9 @@ class Discover extends Api_Controller
         }
 
         $kq = $this->m_interaction->toggle_like($this->me['id'], 'user', $target_id);
+        if ($this->loi_tha_tim($kq)) {
+            return;
+        }
 
         return $this->ok(array(
             'liked'     => (bool) $kq['liked'],

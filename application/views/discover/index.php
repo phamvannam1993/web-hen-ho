@@ -1,7 +1,8 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
-$nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai', 'gay' => 'Gay', 'les' => 'Les');
+$nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai');
 ?>
 <div class="discover-page">
+    <h1 class="sr-only">Khám phá và ghép đôi tại Saigon Cupid</h1>
 
     <div class="sw-stage" id="sw-stage"
          data-guest="<?= $user ? '0' : '1' ?>"
@@ -72,36 +73,9 @@ $nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai', 'gay' => 'Gay', 
                 <span class="sw-key">↑</span> xem thêm</p>
         <?php endif; ?>
 
-<?php /* Thanh điều hướng nằm luôn trong khung */ ?>
-<nav class="sw-tabbar">
-    <a href="<?= site_url() ?>">
-    <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
-    <span>Trang chủ</span>
-</a>
-    <a class="on" href="<?= site_url('swipe-match') ?>">
-        <svg viewBox="0 0 24 24"><path d="M12 20.5s-7-4.3-7-9.1A4.4 4.4 0 0 1 12 8a4.4 4.4 0 0 1 7 3.4c0 4.8-7 9.1-7 9.1z"/></svg>
-        <span>Khám phá</span>
-    </a>
-    <a href="<?= site_url('hen-ho') ?>">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
-        <span>Hẹn hò</span>
-    </a>
-    <a href="<?= site_url('tam-su') ?>">
-        <svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 3z"/></svg>
-        <span>Tâm sự</span>
-    </a>
-
-    <a href="<?= site_url($user ? 'tai-khoan' : 'dang-nhap') ?>">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5"/></svg>
-        <span><?= $user ? 'Tôi' : 'Đăng nhập' ?></span>
-    </a>
-</nav>
     </div>
 
 </div>
-
-<?php /* Gợi ý hôm nay đặt ngay dưới khung vuốt */ ?>
-<?php if ($user) { $this->load->view('_daily_card', array('daily' => $daily)); } ?>
 
 <?php /* Khách chưa chọn nhóm: hỏi ngay khi vào trang */ ?>
 <?php if (!empty($need_pick)): ?>
@@ -110,7 +84,7 @@ $nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai', 'gay' => 'Gay', 
         <h2>Bạn muốn khám phá ai?</h2>
         <p>Chọn nhóm bạn quan tâm để chúng tôi hiển thị đúng người.</p>
         <div class="sw-onboard-opts">
-            <?php foreach (array('male' => 'Bạn trai', 'female' => 'Bạn gái', 'gay' => 'Gay', 'les' => 'Les') as $k => $t): ?>
+            <?php foreach (array('male' => 'Bạn trai', 'female' => 'Bạn gái') as $k => $t): ?>
                 <a href="<?= site_url('swipe-match') ?>?xem=<?= $k ?>"><?= $t ?></a>
             <?php endforeach; ?>
         </div>

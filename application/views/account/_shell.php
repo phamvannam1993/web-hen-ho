@@ -31,9 +31,9 @@ $groups = array(
         'anh'   => array('Ảnh của tôi',   'images'),
     ),
     'Kết nối' => array(
-        'quan-tam'     => array('Quan tâm & ghép đôi', 'match'),
+        'quan-tam'     => array('Quan tâm & ghép đôi', 'match', 'interest'),
         'ai-thich-ban' => array('Ai đã thích bạn',     'heart',   'liked'),
-        'ai-xem-ho-so' => array('Ai đã xem hồ sơ',     'eye'),
+        'ai-xem-ho-so' => array('Ai đã xem hồ sơ',     'eye', 'viewers'),
         'tin-nhan'     => array('Tin nhắn',            'message', 'msg'),
     ),
     'Hoạt động' => array(
@@ -55,15 +55,6 @@ if (!empty($settings['enable_posts'])) {
     $groups['Hồ sơ cá nhân']['tin-dang'] = array('Tin đăng của tôi', 'file');
 }
 
-/* Thanh dưới trên điện thoại. "Khám phá" dẫn tới trang vuốt hồ sơ thật của site. */
-$bottom = array(
-    array(site_url('tai-khoan'),          'Tổng quan', 'dashboard', $current === ''),
-    array(site_url('swipe-match'),        'Khám phá',  'match',     false),
-    array(site_url('tai-khoan/quan-tam'), 'Ghép đôi',  'sparkles',  $current === 'quan-tam'),
-    array(site_url('tai-khoan/tin-nhan'), 'Tin nhắn',  'message',   $current === 'tin-nhan', $tk['msg']),
-    array(site_url('tai-khoan/ho-so'),    'Tài khoản', 'user',      $current === 'ho-so'),
-);
-
 $so_xu    = number_format((int) ($me['coin_balance'] ?? 0));
 $la_vip   = !empty($me['is_vip']) && (empty($me['vip_expired_at']) || strtotime($me['vip_expired_at']) > time());
 $dem      = function ($n) { return $n > 99 ? '99+' : (int) $n; };
@@ -79,8 +70,12 @@ foreach ($groups as $items) {
     <div class="tk-mhead">
         <button type="button" class="tk-mhead__menu" data-tk-drawer="open"
                 aria-controls="tk-side" aria-expanded="false">
-            <?= tk_icon('menu') ?>
+            <span class="tk-mhead__menu-icon">
+                <?= tk_icon('menu') ?>
+                <span class="tk-count tk-mhead__badge" data-account-menu-count="interest" <?= empty($tk['interest']) ? 'hidden' : '' ?> aria-label="<?= (int) $tk['interest'] ?> mục quan tâm chưa xem"><?= $dem($tk['interest']) ?></span>
+            </span>
             <span class="tk-truncate"><span class="tk-mhead__k">Tài khoản ·</span> <?= e($trang_nay) ?></span>
+            <svg class="tk-ic tk-mhead__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
         </button>
         <a class="tk-mhead__coin" href="<?= site_url('tai-khoan/nap-xu') ?>"><?= tk_icon('coins') ?><?= $so_xu ?> xu</a>
     </div>
@@ -132,7 +127,9 @@ foreach ($groups as $items) {
                                        href="<?= site_url('tai-khoan' . ($slug !== '' ? '/' . $slug : '')) ?>">
                                         <?= tk_icon($it[1]) ?>
                                         <span class="tk-nav__txt"><?= e($it[0]) ?></span>
-                                        <?php if ($so > 0): ?><span class="tk-count"><?= $dem($so) ?></span><?php endif; ?>
+                                        <?php if ($slug === 'quan-tam'): ?>
+                                            <span class="tk-count tk-interest-count" data-interest-count <?= $so > 0 ? '' : 'hidden' ?> aria-label="<?= (int) $so ?> mục quan tâm chưa xem"><?= $dem($so) ?></span>
+                                        <?php elseif (isset($it[2])): ?><span class="tk-count" data-account-menu-count="<?= e($it[2]) ?>" <?= $so > 0 ? '' : 'hidden' ?>><?= $dem($so) ?></span><?php endif; ?>
                                     </a>
                                 </li>
                             <?php endforeach; ?>
@@ -153,20 +150,6 @@ foreach ($groups as $items) {
         </div>
     </main>
 
-    <!-- Thanh dưới — chỉ hiện trên điện thoại -->
-    <nav class="tk-bnav" aria-label="Điều hướng nhanh">
-        <ul>
-            <?php foreach ($bottom as $b): ?>
-                <li>
-                    <a class="<?= $b[3] ? 'is-active' : '' ?>" href="<?= $b[0] ?>" <?= $b[3] ? 'aria-current="page"' : '' ?>>
-                        <?= tk_icon($b[2]) ?>
-                        <span><?= e($b[1]) ?></span>
-                        <?php if (!empty($b[4])): ?><span class="tk-dot-count"><?= $dem($b[4]) ?></span><?php endif; ?>
-                    </a>
-                </li>
-            <?php endforeach; ?>
-        </ul>
-    </nav>
 </div>
 
 <script>

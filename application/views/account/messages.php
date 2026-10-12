@@ -38,7 +38,7 @@ $gio_ngan = function ($t) {
             <div class="tk-ms-none">
                 <span class="tk-empty__ic"><?= tk_icon('message') ?></span>
                 <h3>Chưa có cuộc trò chuyện nào</h3>
-                <p>Khi hai bạn cùng thích nhau, khung trò chuyện sẽ mở ra ở đây.</p>
+                <p>Chọn một hồ sơ và nhắn tin để bắt đầu làm quen.</p>
                 <a class="tk-btn tk-btn--brand tk-btn--sm" href="<?= site_url('swipe-match') ?>"><?= tk_icon('match') ?>Khám phá &amp; ghép đôi</a>
             </div>
         <?php else: ?>
@@ -46,12 +46,13 @@ $gio_ngan = function ($t) {
                 <?php foreach ($conversations as $c): ?>
                     <?php
                     $ten = display_name($c);
-                    $cuoi = $c['last_type'] === 'image' ? 'Đã gửi một ảnh' : excerpt($c['last_content'], 60);
+                    $cuoi = !$c['last_message_id'] ? 'Bắt đầu trò chuyện'
+                        : ($c['last_type'] === 'image' ? 'Đã gửi một ảnh' : excerpt($c['last_content'], 60));
                     if ((int) $c['last_sender_id'] === (int) $user['id']) $cuoi = 'Bạn: ' . $cuoi;
                     ?>
                     <li data-name="<?= e(mb_strtolower($ten)) ?>">
                         <a class="tk-ms-item<?= $conversation_id == $c['id'] ? ' is-active' : '' ?>"
-                           href="<?= site_url('tai-khoan/tin-nhan/' . $c['id']) ?>">
+                           href="<?= site_url('tai-khoan/tin-nhan/' . $c['id']) ?>"<?= $conversation_id == $c['id'] ? ' aria-current="page"' : '' ?>>
                             <span class="tk-ms-av">
                                 <img src="<?= e(avatar_url($c['avatar'], $c['gender'])) ?>" alt="<?= e($ten) ?>" loading="lazy">
                                 <?php if (is_online($c['last_active_at'])): ?><span class="tk-ms-online"></span><?php endif; ?>
@@ -89,7 +90,7 @@ $gio_ngan = function ($t) {
                     </span>
                     <span class="tk-ms-item__b">
                         <span class="tk-ms-head__n"><?= e(display_name($partner)) ?></span>
-                        <span class="tk-ms-head__s"><?= is_online($partner['last_active_at']) ? 'Đang online' : 'Hoạt động ' . time_ago($partner['last_active_at']) ?></span>
+                        <span class="tk-ms-head__s<?= is_online($partner['last_active_at']) ? ' is-online' : '' ?>"><?= is_online($partner['last_active_at']) ? 'Đang online' : (!empty($partner['last_active_at']) ? 'Hoạt động ' . time_ago($partner['last_active_at']) : 'Chưa có thông tin hoạt động') ?></span>
                     </span>
                 </a>
                 <a class="tk-btn tk-btn--ghost tk-btn--icon-sm" href="<?= site_url('profile/' . ($partner['slug'] ?: $partner['id'])) ?>"
@@ -102,9 +103,20 @@ $gio_ngan = function ($t) {
                 <div class="tk-ms-safe">
                     <span class="tk-pill tk-pill--warning"><?= tk_icon('shield-alert') ?>Không chuyển tiền cho người lạ và hạn chế chia sẻ thông tin cá nhân.</span>
                 </div>
-                <?php foreach ($messages as $m): ?>
+                <?php if (empty($messages) && $can_send): ?>
+                    <div class="tk-ms-hello" id="chat-hello">
+                        <span class="tk-ms-hello__icon" aria-hidden="true">👋</span>
+                        <strong>Bắt đầu bằng một lời chào</strong>
+                        <p id="chat-hello-hint">Bấm bên dưới để gửi 👋 cho <?= e(display_name($partner)) ?>.</p>
+                        <button class="tk-btn tk-btn--brand" type="button" id="chat-hello-send" aria-describedby="chat-hello-hint">Gửi lời chào 👋</button>
+                    </div>
+                <?php endif; ?>
+                <?php foreach ($messages as $index => $m): ?>
                     <?php $mine = (int) $m['sender_id'] === (int) $user['id']; ?>
-                    <div class="chat-msg <?= $mine ? 'mine' : '' ?> <?= $m['type'] === 'image' ? 'is-image' : '' ?>">
+                    <?php $next = $messages[$index + 1] ?? null;
+                    $continues = $next && (int) $next['sender_id'] === (int) $m['sender_id']
+                        && substr($next['created_at'], 0, 10) === substr($m['created_at'], 0, 10); ?>
+                    <div class="chat-msg <?= $mine ? 'mine' : '' ?> <?= $m['type'] === 'image' ? 'is-image' : '' ?>" data-day="<?= e(substr($m['created_at'], 0, 10)) ?>">
                         <?php if ($m['type'] === 'image'): ?>
                             <a href="<?= base_url(ltrim($m['content'], '/')) ?>" target="_blank">
                                 <img src="<?= base_url(ltrim($m['content'], '/')) ?>" alt="Ảnh" loading="lazy">
@@ -117,7 +129,7 @@ $gio_ngan = function ($t) {
                             ?>
                             <p class="<?= $only_emoji ? 'emoji-only' : '' ?>"><?= nl2br(e($m['content'])) ?></p>
                         <?php endif; ?>
-                        <small><?= date('H:i d/m', strtotime($m['created_at'])) ?></small>
+                        <small <?= $continues ? 'hidden' : '' ?>><?= date('H:i d/m', strtotime($m['created_at'])) ?><?php if ($mine && !empty($m['read_at'])): ?><span class="chat-message-seen"> · Đã xem</span><?php endif; ?></small>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -125,8 +137,7 @@ $gio_ngan = function ($t) {
             <?php if (!$can_send): ?>
                 <div class="tk-ms-locked">
                     <div class="tk-alert tk-alert--warning">
-                        Hai bạn chưa ghép đôi nên không gửi tin nhắn được.
-                        Chỉ khi cả hai cùng thích nhau, khung trò chuyện mới mở lại.
+                        <?= e($send_error ?: 'Hiện không thể gửi tin nhắn tới thành viên này.') ?>
                     </div>
                 </div>
             <?php else: ?>
@@ -163,6 +174,8 @@ $gio_ngan = function ($t) {
         <?php endif; ?>
     </div>
 </div>
+
+<script src="<?= base_url('assets/site/js/inbox-layout.js') ?>?v=<?= @filemtime(FCPATH . 'assets/site/js/inbox-layout.js') ?>" defer></script>
 
 <?php if (!empty($conversations)): ?>
 <script>

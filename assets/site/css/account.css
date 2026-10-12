@@ -38,7 +38,7 @@
 /* ── Token ─────────────────────────────────────────────────────────────── */
 
 body.tk-app {
-  --tk-bg: oklch(0.986 0.009 356);
+  --tk-bg: var(--bg, #fdf0f4);
   --tk-fg: oklch(0.255 0.016 300);
   --tk-card: #fff;
   --tk-primary: oklch(0.654 0.203 13.5);
@@ -182,11 +182,19 @@ body.tk-app {
 }
 .tk-mhead__menu {
   flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px;
-  height: 36px; padding: 0 12px 0 8px; border: 0; border-radius: 999px;
-  background: transparent; cursor: pointer; text-align: left;
+  height: 36px; padding: 0 12px 0 8px; border: 1px solid var(--tk-border); border-radius: 999px;
+  background: var(--tk-secondary); cursor: pointer; text-align: left;
   font-size: 14px; font-weight: 600;
 }
 .tk-mhead__menu:hover { background: var(--tk-accent); }
+.tk-mhead__menu-icon { position: relative; display: inline-flex; flex: 0 0 auto; }
+.tk-mhead__menu .tk-mhead__chevron { margin-left: auto; flex: 0 0 16px; width: 16px; height: 16px; transition: transform .15s; }
+.tk-mhead__menu[aria-expanded="true"] .tk-mhead__chevron { transform: rotate(180deg); }
+.tk-mhead__menu .tk-mhead__badge {
+  position: absolute; top: -9px; right: -11px; margin: 0;
+  min-width: 18px; padding: 1px 4px; font-size: 10px; line-height: 16px;
+  border: 2px solid var(--tk-card); pointer-events: none;
+}
 .tk-mhead__k { color: var(--tk-muted-fg); font-weight: 500; }
 .tk-mhead__coin {
   flex: 0 0 auto; display: flex; align-items: center; gap: 4px;
@@ -550,6 +558,15 @@ a.tk-stat:hover { box-shadow: var(--tk-shadow-float); }
 .tk-tabs > a:hover, .tk-tabs > button:hover { background: var(--tk-accent); color: var(--tk-accent-fg); }
 .tk-tabs > .is-active, .tk-tabs > .is-active:hover { background: var(--tk-grad-brand); color: #fff; box-shadow: 0 1px 2px rgb(0 0 0 / 8%); }
 .tk-tabs__n { margin-left: 6px; opacity: .8; }
+.tk-tabs > .has-unread:not(.is-active) { box-shadow: inset 0 0 0 1px var(--tk-primary); }
+.tk-tab-unread {
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-left: 8px; min-width: 20px; padding: 2px 6px;
+  border-radius: 999px; background: var(--tk-primary); color: #fff;
+  font-size: 11px; line-height: 16px; font-weight: 700;
+}
+.tk-tabs > .is-active .tk-tab-unread { background: #fff; color: var(--tk-primary); }
+.tk-tab-unread[hidden] { display: none; }
 
 /* ── ProposalNote, Alert ──────────────────────────────────────────────── */
 
@@ -608,7 +625,16 @@ a.tk-stat:hover { box-shadow: var(--tk-shadow-float); }
 /* ── Tổng quan (trang tai-khoan.index) ────────────────────────────────── */
 
 .tk-card.tk-hero { overflow: hidden; padding: 0; }
-.tk-hero__in { background: var(--tk-grad-brand); color: #fff; padding: 32px; }
+.tk-hero__in { position: relative; background: var(--tk-grad-brand); color: #fff; padding: 52px 32px 32px; }
+.tk-hero__profile {
+  position: absolute; top: 12px; right: 16px; display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 10px; border: 1px solid rgb(255 255 255 / 55%); border-radius: 999px;
+  color: #fff; background: rgb(255 255 255 / 12%); font-size: 12px; line-height: 18px;
+  text-decoration: none; white-space: nowrap;
+}
+.tk-hero__profile svg { width: 14px; height: 14px; }
+.tk-hero__profile:hover { background: rgb(255 255 255 / 25%); color: #fff; }
+.tk-hero__profile:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 .tk-hero__top { display: flex; align-items: center; gap: 16px; min-width: 0; }
 .tk-hero__av {
   width: 80px; height: 80px; flex: 0 0 auto; border-radius: var(--tk-r-2xl);
@@ -663,6 +689,11 @@ a.tk-stat:hover { box-shadow: var(--tk-shadow-float); }
   .tk-ph { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
   .tk-ph h1 { font-size: 18px; line-height: 28px; }
   .tk-ph p { font-size: 12px; line-height: 16px; }
+  .tk-ph--profile { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .tk-ph--profile .tk-ph__act {
+    justify-self: start; max-width: 100%; height: auto; min-height: 36px;
+    padding: 8px 16px; white-space: normal; text-align: center;
+  }
 
   .tk-card { padding: 12px; }
   .tk-card__h { margin-bottom: 12px; display: grid; grid-template-columns: minmax(0, 1fr) auto; }
@@ -698,7 +729,8 @@ a.tk-stat:hover { box-shadow: var(--tk-shadow-float); }
   .tk-grid--2, .tk-grid--3 { grid-template-columns: minmax(0, 1fr); }
   .tk-grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 
-  .tk-hero__in { padding: 20px 16px; }
+  .tk-hero__in { padding: 48px 16px 20px; }
+  .tk-hero__profile { top: 8px; right: 12px; padding: 4px 8px; font-size: 11px; }
   .tk-hero__top { gap: 12px; }
   .tk-hero__av { width: 48px; height: 48px; border-radius: var(--tk-r-xl); }
   .tk-hero__hi { font-size: 12px; line-height: 16px; }
@@ -717,8 +749,10 @@ a.tk-stat:hover { box-shadow: var(--tk-shadow-float); }
 
 /* Trạng thái của bộ nút chung `[data-card-action]` (app.js) */
 .tk-person { transition: box-shadow .15s, opacity .28s, transform .28s; }
-.tk-person.card-gone { opacity: 0; transform: scale(.96); }
+.tk-person.card-gone { opacity: 0; transform: scale(.96); pointer-events: none; }
 .tk-person .tk-btn.is-liked { background: var(--tk-accent); color: var(--tk-accent-fg); box-shadow: none; }
+.tk-interest-count[hidden] { display: none; }
+.tk-count[hidden] { display: none; }
 
 /* Trang Tin nhắn đã có khung chat riêng — ẩn tab "Trò chuyện" nổi của site để nó không che nút Gửi */
 body.tk-app:has(.tk-ms) .chat-widget { display: none; }

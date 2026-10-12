@@ -38,6 +38,7 @@ class M_email extends CI_Model
         're_engage'     => 're_engage',
         // Hai thư nhắc hoàn thiện hồ sơ sau đăng ký dùng chung công tắc "Nhắc quay lại"
         'profile_nudge' => 're_engage',
+        'activation_nudge' => 're_engage',
     );
 
     /* ===================== Cài đặt của người dùng ===================== */
@@ -134,7 +135,7 @@ class M_email extends CI_Model
      * Kiểm tra: đã huỷ đăng ký chưa, có tắt riêng loại này không, địa chỉ có
      * bị đánh dấu hỏng không, và trần 2 thư/ngày.
      */
-    public function duoc_gui($user_id, $type)
+    public function duoc_gui($user_id, $type, $ignore_cap = false)
     {
         $p = $this->prefs($user_id);
         if (!$p || $p['disabled_at']) {
@@ -149,7 +150,7 @@ class M_email extends CI_Model
             return false;
         }
 
-        if (!in_array($type, $this->mien_tran, true) && $this->so_thu_hom_nay($user_id) >= self::TOI_DA_MOI_NGAY) {
+        if (!$ignore_cap && !in_array($type, $this->mien_tran, true) && $this->so_thu_hom_nay($user_id) >= self::TOI_DA_MOI_NGAY) {
             return false;
         }
         return true;
@@ -160,8 +161,21 @@ class M_email extends CI_Model
     {
         return (int) $this->db->where('user_id', (int) $user_id)
             ->where('status', 'sent')
+            ->where_not_in('type', $this->mien_tran)
             ->where('sent_at >=', date('Y-m-d 00:00:00'))
             ->count_all_results('email_queue');
+    }
+
+    /** Pending mail also reserves the retention slot; never stack reminders. */
+    public function retention_due($user_id, $days = 1)
+    {
+        $rows = $this->db->query(
+            "SELECT id FROM email_queue WHERE user_id = ?
+              AND type IN ('match_suggest', 'activation_nudge', 'profile_nudge', 're_engage')
+              AND (status = 'pending' OR (status = 'sent' AND sent_at >= ?)) LIMIT 1",
+            array((int) $user_id, date('Y-m-d H:i:s', time() - max(1, (int) $days) * 86400))
+        )->result_array();
+        return !$rows;
     }
 
     /** Lần gửi gần nhất của một loại thư, trả về timestamp hoặc null. */

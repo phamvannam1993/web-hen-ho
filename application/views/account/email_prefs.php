@@ -6,14 +6,14 @@ $loai = array(
     'new_message'   => array('Tin nhắn mới', 'Báo khi có người nhắn mà bạn chưa đọc sau 5 phút.'),
     'notification'  => array('Ghép đôi & lượt thích', 'Ghép đôi báo ngay; lượt thích và lượt xem gom lại gửi một lần mỗi tối.'),
     'match_suggest' => array('Gợi ý người phù hợp', 'Chúng tôi chọn sẵn một người hợp tiêu chí và gửi tới bạn.'),
-    're_engage'     => array('Nhắc nhở', 'Nhắc khi bạn đã lâu không ghé (tối đa mỗi tuần một lần) và hai lần nhắc hoàn thiện hồ sơ sau khi đăng ký.'),
+    're_engage'     => array('Nhắc nhở', 'Nhắc xác nhận email, bổ sung hồ sơ hoặc quay lại khám phá. Người vắng trên 30 ngày nhận tối đa mỗi tuần một lần.'),
 );
 $da_huy = !empty($p['disabled_at']);
 ?>
 <div class="tk-ph">
     <div class="tk-ph__b">
         <h1>Cài đặt email</h1>
-        <p>Chúng tôi gửi tối đa 2 email mỗi ngày.</p>
+        <p>Tối đa 2 email gợi ý/thông báo tổng hợp mỗi ngày. Email tin nhắn và ghép đôi được gửi riêng.</p>
     </div>
 </div>
 
@@ -47,11 +47,11 @@ $da_huy = !empty($p['disabled_at']);
         <div class="tk-field">
             <label for="match_every_days">Gửi gợi ý mỗi</label>
             <select id="match_every_days" name="match_every_days">
-                <?php foreach (array(2 => '2 ngày', 3 => '3 ngày') as $n => $nhan): ?>
+                <?php foreach (array(1 => '1 ngày', 2 => '2 ngày', 3 => '3 ngày', 7 => '7 ngày') as $n => $nhan): ?>
                     <option value="<?= $n ?>" <?= (int) $p['match_every_days'] === $n ? 'selected' : '' ?>><?= $nhan ?></option>
                 <?php endforeach; ?>
             </select>
-            <p class="tk-hint">Áp dụng cho email gợi ý người phù hợp</p>
+            <p class="tk-hint">Áp dụng cho email gợi ý và nhắc quay lại. Mỗi chu kỳ chỉ chọn một nội dung phù hợp với trạng thái tài khoản.</p>
         </div>
         <p class="tk-em-tip">
             <?= tk_icon('info') ?>

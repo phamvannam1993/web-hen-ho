@@ -33,7 +33,7 @@ class Blog extends MY_Controller
     public function detail($slug)
     {
         $article = $this->m_article->by_slug($slug);
-        if (!$article || $article['status'] !== 'published') {
+        if (!$article || $article['status'] !== 'published' || empty($article['published_at']) || strtotime($article['published_at']) > time()) {
             show_404();
         }
         $this->m_article->increase_view($article['id']);

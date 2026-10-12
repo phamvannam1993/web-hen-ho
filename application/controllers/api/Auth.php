@@ -251,9 +251,11 @@ class Auth extends Api_Controller
         if (!$this->can_auth()) {
             return;
         }
-        $this->load->model(array('m_streak', 'm_interaction', 'm_notification'));
+        $this->load->model(array('m_streak', 'm_interaction', 'm_notification', 'm_interest_badge'));
         $id = $this->me['id'];
         $s  = $this->m_streak->get($id);
+        // Cùng bộ đếm với menu web: mục quan tâm chưa xem (4 thẻ) + tin nhắn + thông báo
+        $menu = $this->m_interest_badge->menu_counts($id);
 
         return $this->ok(array(
             'user'           => $this->ho_so($this->me, true),
@@ -269,9 +271,12 @@ class Auth extends Api_Controller
             'completion'     => tk_ho_so_day_du($this->me)['phan_tram'],
             'counts'         => array(
                 'liked_me'      => $this->m_interaction->liked_me_count($id),
-                'messages'      => $this->m_interaction->unread_count($id),
-                'notifications' => $this->m_notification->unread_count($id),
+                'messages'      => (int) $menu['msg'],
+                'notifications' => (int) $menu['noti'],
+                'interest'      => (int) $menu['interest'],
+                'interest_tabs' => $menu['interest_tabs'],
             ),
+            'has_email'      => !empty($this->me['email']),
         ));
     }
 }

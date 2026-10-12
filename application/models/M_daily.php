@@ -14,9 +14,16 @@ class M_daily extends CI_Model
     public $vua_tao = false;
 
     /** Hạn dùng: tới 8h sáng hôm sau. */
-    private function han_dung()
+    private function ngay_goi_y($now = null)
     {
-        return date('Y-m-d 08:00:00', strtotime('+1 day'));
+        $now = $now ?? time();
+        $reset = strtotime(date('Y-m-d', $now) . ' 08:00:00');
+        return date('Y-m-d', $now < $reset ? strtotime('-1 day', $reset) : $reset);
+    }
+
+    private function han_dung($now = null)
+    {
+        return date('Y-m-d 08:00:00', strtotime($this->ngay_goi_y($now) . ' +1 day'));
     }
 
     /** Gợi ý của hôm nay, kèm hồ sơ người được gợi ý. */
@@ -32,11 +39,19 @@ class M_daily extends CI_Model
             ->join('users u', 'u.id = d.match_user_id')
             ->join('provinces p', 'p.id = u.province_id', 'left')
             ->where('d.user_id', (int) $user_id)
-            ->where('d.match_date', date('Y-m-d'))
+            ->where('d.match_date', $this->ngay_goi_y())
             ->where('u.deleted_at', null)
             ->get()->row_array();
 
         if (!$row) {
+            return null;
+        }
+
+        // Recheck saved suggestions against the current profile/preferences.
+        // Keep answered cards visible, but never offer an ineligible pending card.
+        $owner = $this->db->where('id', (int) $user_id)->get('users')->row_array();
+        if (!$owner || !$this->tim_ung_vien($owner, (int) $row['match_user_id'],
+                (int) $row['id'], $row['status'] === 'pending')) {
             return null;
         }
 
@@ -54,6 +69,7 @@ class M_daily extends CI_Model
      */
     public function tao_cho($user_id)
     {
+        $this->vua_tao = false;
         $user_id = (int) $user_id;
         $u = $this->db->where('id', $user_id)->get('users')->row_array();
         if (!$u) {
@@ -61,7 +77,7 @@ class M_daily extends CI_Model
         }
 
         // Đã có gợi ý hôm nay thì trả về luôn, không chốt lại
-        $da_co = $this->db->where('user_id', $user_id)->where('match_date', date('Y-m-d'))
+        $da_co = $this->db->where('user_id', $user_id)->where('match_date', $this->ngay_goi_y())
             ->count_all_results('daily_matches') > 0;
         if ($da_co) {
             $this->vua_tao = false;
@@ -76,7 +92,7 @@ class M_daily extends CI_Model
         $this->db->insert('daily_matches', array(
             'user_id'       => $user_id,
             'match_user_id' => (int) $chon['id'],
-            'match_date'    => date('Y-m-d'),
+            'match_date'    => $this->ngay_goi_y(),
             'score'         => (int) $chon['diem'],
             'expires_at'    => $this->han_dung(),
         ));
@@ -89,11 +105,39 @@ class M_daily extends CI_Model
      * cùng tỉnh +10, tuổi lệch ≤3 +5, hoạt động trong 24h +5, có ảnh +3,
      * bio từ 50 ký tự +2, mỗi sở thích trùng +1. Hoà điểm thì bốc ngẫu nhiên.
      */
-    private function tim_ung_vien(array $u)
+    private function tim_ung_vien(array $u, $target_id = null, $daily_id = 0, $pending = true)
     {
         $pref = $this->db->where('user_id', $u['id'])->get('user_preferences')->row_array();
-        $muon = $pref['seeking_gender'] ?? 'all';
+        if (!$pref || !in_array($pref['seeking_gender'] ?? '', array('male', 'female', 'all'), true)) {
+            return null;
+        }
+        $muon = $pref['seeking_gender'];
+        $age_min = max(18, (int) ($pref['age_min'] ?? 18));
+        $age_max = (int) ($pref['age_max'] ?? 60);
+        if ($age_max < $age_min) {
+            return null;
+        }
+        $this->load->model('m_user');
+        $complete = $this->m_user->dieu_kien_ho_so_du('u2');
         $tuoi = age_from($u['birthday']) ?: 0;
+
+        $exclude = $pending ? "
+                AND u2.id NOT IN (SELECT target_id FROM likes
+                                   WHERE user_id = ? AND target_type = 'user')
+                AND u2.id NOT IN (SELECT passed_id FROM user_passes WHERE user_id = ?)
+                AND u2.id NOT IN (SELECT IF(user_low_id = ?, user_high_id, user_low_id)
+                                    FROM matches WHERE ? IN (user_low_id, user_high_id))" : '';
+        $bindings = array((int) $u['province_id'], $tuoi, $u['id'], $u['id'],
+            $muon, $muon, $age_min, $age_max);
+        if ($pending) {
+            array_push($bindings, $u['id'], $u['id'], $u['id'], $u['id']);
+        }
+        array_push($bindings, $u['id'], $u['id'], $u['id'], (int) $daily_id);
+        $target = '';
+        if ($target_id !== null) {
+            $target = ' AND u2.id = ?';
+            $bindings[] = (int) $target_id;
+        }
 
         $rows = $this->db->query(
             "SELECT u2.id,
@@ -110,27 +154,20 @@ class M_daily extends CI_Model
               WHERE u2.id <> ?
                 AND u2.status = 'active' AND u2.role = 'member' AND u2.deleted_at IS NULL
                 AND (? = 'all' OR u2.gender = ?)
-                AND u2.last_active_at >= ?
-                -- Chỉ gợi ý hồ sơ đang hiện công khai: có ảnh và khu vực
-                AND (u2.avatar IS NOT NULL AND u2.avatar <> '')
-                AND u2.province_id IS NOT NULL
-                AND u2.id NOT IN (SELECT target_id FROM likes
-                                   WHERE user_id = ? AND target_type = 'user')
-                AND u2.id NOT IN (SELECT passed_id FROM user_passes WHERE user_id = ?)
-                AND u2.id NOT IN (SELECT IF(user_low_id = ?, user_high_id, user_low_id)
-                                    FROM matches WHERE ? IN (user_low_id, user_high_id))
+                AND TIMESTAMPDIFF(YEAR, u2.birthday, CURDATE()) BETWEEN ? AND ?
+                AND u2.last_active_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
+                AND $complete
+                AND EXISTS (SELECT 1 FROM user_preferences ready WHERE ready.user_id = u2.id
+                            AND ready.seeking_gender <> '' AND ready.purpose <> '')
+                $exclude
                 AND u2.id NOT IN (SELECT blocked_id FROM blocks WHERE user_id = ?)
                 AND u2.id NOT IN (SELECT user_id FROM blocks WHERE blocked_id = ?)
                 -- Đã từng được gợi ý rồi thì không gợi lại
-                AND u2.id NOT IN (SELECT match_user_id FROM daily_matches WHERE user_id = ?)
+                AND u2.id NOT IN (SELECT match_user_id FROM daily_matches WHERE user_id = ? AND id <> ?)
+                $target
            ORDER BY diem DESC, RAND()
               LIMIT 1",
-            array(
-                (int) $u['province_id'], $tuoi, $u['id'], $u['id'],
-                $muon, $muon,
-                date('Y-m-d H:i:s', strtotime('-7 days')),
-                $u['id'], $u['id'], $u['id'], $u['id'], $u['id'], $u['id'], $u['id'],
-            )
+            $bindings
         )->result_array();
 
         return $rows ? $rows[0] : null;
@@ -157,6 +194,13 @@ class M_daily extends CI_Model
                 'message' => 'Gợi ý đã hết hạn. Quay lại lúc 8h sáng mai nhé!');
         }
 
+        // A stale page must not like a profile that no longer meets the filters.
+        $current = $this->today($user_id);
+        if (!$current || (int) $current['id'] !== (int) $id) {
+            return array('ok' => false, 'matched' => false,
+                'message' => 'Hồ sơ này không còn phù hợp với tiêu chí hiện tại. Vui lòng tải lại trang.');
+        }
+
         $this->load->model('m_interaction');
 
         if ($hanh_dong === 'skip') {
@@ -169,6 +213,9 @@ class M_daily extends CI_Model
         }
 
         $kq = $this->m_interaction->toggle_like($user_id, 'user', $row['match_user_id']);
+        if (isset($kq['ok']) && !$kq['ok']) {
+            return $kq;
+        }
         $this->db->where('id', $row['id'])->update('daily_matches', array(
             'status' => !empty($kq['matched']) ? 'matched' : 'liked',
         ));

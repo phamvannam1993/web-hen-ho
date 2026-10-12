@@ -7,7 +7,7 @@ class Account extends Api_Controller
     public function __construct()
     {
         parent::__construct();
-        $this->load->model(array('m_interaction', 'm_notification', 'm_billing', 'm_daily', 'm_job', 'm_province'));
+        $this->load->model(array('m_interaction', 'm_notification', 'm_billing', 'm_daily', 'm_job', 'm_province', 'm_interest_badge'));
     }
 
     /** GET /api/account — trang Tổng quan. */
@@ -25,7 +25,8 @@ class Account extends Api_Controller
             $hoat_dong[] = $this->thong_bao($n);
         }
         $goi_y = array();
-        foreach ($this->m_user->suggestions($this->me, 3) as $u) {
+        // Luân phiên mỗi ngày lúc 8h như trang Tổng quan web
+        foreach ($this->m_user->account_suggestions($this->me, 3) as $u) {
             $goi_y[] = $this->ho_so($u, true) + array('match_score' => min(100, (int) $u['match_score']));
         }
         $d = $this->m_daily->today($id);
@@ -94,6 +95,10 @@ class Account extends Api_Controller
                 'confide_topic'  => $u['confide_topic'] ?? null,
                 'avatar'         => avatar_url($u['avatar'], $u['gender']),
                 'has_avatar'     => !empty($u['avatar']),
+                'cover'          => base_url(!empty($u['cover_image']) ? ltrim($u['cover_image'], '/') : 'assets/site/images/profile-cover.jpg'),
+                'has_cover'      => !empty($u['cover_image']),
+                'email_verified' => !empty($u['email_verified_at']),
+                'verify_required' => setting('otp_register', '1') === '1',
             ),
             'preferences' => array(
                 'seeking_gender' => $pref['seeking_gender'] ?? null,
@@ -146,6 +151,19 @@ class Account extends Api_Controller
         if (mb_strlen((string) $v('bio')) > 500) {
             $loi['bio'] = 'Giới thiệu tối đa 500 ký tự.';
         }
+        // Đổi email ngay trong hồ sơ (như web): không được xoá trắng, không trùng ai
+        $doi_email = false;
+        if (array_key_exists('email', $b)) {
+            $email = trim((string) $b['email']);
+            if ($email === '' && !empty($me['email'])) {
+                $loi['email'] = 'Vui lòng nhập email mới, không được xoá email hiện tại.';
+            } elseif ($email !== '' && (strlen($email) > 190 || !filter_var($email, FILTER_VALIDATE_EMAIL))) {
+                $loi['email'] = 'Email không hợp lệ.';
+            } elseif ($email !== '' && $this->m_user->email_exists($email, $me['id'])) {
+                $loi['email'] = 'Email này đã được dùng cho tài khoản khác. Email hiện tại của bạn được giữ nguyên.';
+            }
+            $doi_email = $email !== (string) ($me['email'] ?? '');
+        }
         if ($loi) {
             return $this->loi(reset($loi), 422, array('errors' => $loi));
         }
@@ -172,6 +190,10 @@ class Account extends Api_Controller
         );
         if ($v('has_children') !== null && $v('has_children') !== '') {
             $data['has_children'] = (int) (bool) $v('has_children');
+        }
+        if ($doi_email) {
+            // update_profile() tự gỡ trạng thái đã xác thực khi email đổi
+            $data['email'] = trim((string) $b['email']) ?: null;
         }
         $this->m_user->update_profile($me['id'], $data);
 
@@ -205,7 +227,13 @@ class Account extends Api_Controller
         $this->m_user->recalc_profile_score($me['id']);
 
         $this->me = $this->m_user->find($me['id']);
-        return $this->ok(array_merge(array('message' => 'Đã cập nhật hồ sơ.'), $this->du_lieu_ho_so()));
+        $this->auth->dung_cho_api($this->me);
+        $message = 'Đã cập nhật hồ sơ.';
+        if ($doi_email) {
+            $message = 'Đã cập nhật hồ sơ và email. Từ nay hãy dùng email mới để đăng nhập.'
+                . (setting('otp_register', '1') === '1' ? ' Bấm "Gửi lại email xác thực" để xác thực email mới.' : '');
+        }
+        return $this->ok(array_merge(array('message' => $message, 'email_changed' => $doi_email), $this->du_lieu_ho_so()));
     }
 
     /** POST /api/account/avatar — multipart, trường "avatar". */
@@ -220,6 +248,47 @@ class Account extends Api_Controller
         }
         $this->m_user->update_profile($this->me['id'], array('avatar' => $path));
         return $this->ok(array('avatar' => base_url($path), 'message' => 'Đã cập nhật ảnh đại diện.'));
+    }
+
+    /** POST /api/account/cover — ảnh bìa trang cá nhân, multipart trường "cover". */
+    public function cover()
+    {
+        if (!$this->can_auth()) {
+            return;
+        }
+        if (!$this->db->field_exists('cover_image', 'users')) {
+            return $this->loi('Hệ thống chưa cập nhật dữ liệu ảnh bìa (chạy database/migrate_profile_cover.php).', 503);
+        }
+        $path = $this->tai_anh('cover');
+        if (!$path) {
+            return $this->loi($this->loi_anh ?: 'Hãy chọn một ảnh.', 422);
+        }
+        $this->m_user->update_profile($this->me['id'], array('cover_image' => $path));
+        return $this->ok(array('cover' => base_url($path), 'message' => 'Đã cập nhật ảnh bìa.'));
+    }
+
+    /**
+     * POST /api/account/location {lat, lng} — vị trí hiện tại cho "Gần bạn nhất"
+     * ở trang Hẹn hò (giống hen-ho/vi-tri của web). Dùng được 30 ngày.
+     */
+    public function location()
+    {
+        if (!$this->can_auth()) {
+            return;
+        }
+        $lat = $this->body('lat');
+        $lng = $this->body('lng');
+        if (!is_numeric($lat) || !is_numeric($lng) || !is_finite((float) $lat) || !is_finite((float) $lng)
+            || abs((float) $lat) > 90 || abs((float) $lng) > 180) {
+            return $this->loi('Vị trí không hợp lệ.', 422);
+        }
+        if (!$this->m_user->location_ready()) {
+            return $this->loi('Máy chủ chưa hỗ trợ lưu vị trí.', 503);
+        }
+        $this->db->where('id', $this->me['id'])->update('users', array(
+            'lat' => (float) $lat, 'lng' => (float) $lng, 'location_updated_at' => date('Y-m-d H:i:s'),
+        ));
+        return $this->ok(array('message' => 'Đã cập nhật vị trí của bạn.'));
     }
 
     /**
@@ -303,22 +372,65 @@ class Account extends Api_Controller
 
     /* ====================== Quan tâm & ghép đôi ====================== */
 
-    /** GET /api/account/likes — ghép đôi, tôi đã thích, ai xem hồ sơ (giống trang Quan tâm). */
+    /**
+     * GET /api/account/likes?tab=ban-thich|thich-ban|ghep-doi|da-xem
+     * Bốn thẻ của trang Quan tâm (web). Mở thẻ nào là đánh dấu đã xem thẻ đó.
+     * "Người thích bạn" và "Đã xem hồ sơ" theo luật che của bản thường.
+     */
     public function likes()
     {
         if (!$this->can_auth()) {
             return;
         }
         $id  = $this->me['id'];
+        $tab = (string) $this->input->get('tab');
+        if (!in_array($tab, $this->m_interest_badge->tabs(), true)) {
+            $tab = 'ban-thich';
+        }
         $map = function (array $ds) {
             return array_map(function ($u) { return $this->ho_so($u, true); }, $ds);
         };
+        $vip = $this->la_vip();
+        $che = function (array $ds, $them = null) use ($vip) {
+            $ra = array();
+            foreach ($ds as $i => $u) {
+                if ($vip || $i < 2) {
+                    $ra[] = array('locked' => false) + $this->ho_so($u, true) + ($them ? $them($u) : array());
+                } else {
+                    $ra[] = array('locked' => true, 'id' => null, 'name' => null);
+                }
+            }
+            return $ra;
+        };
+
+        $this->m_interest_badge->mark_seen($id, $tab);
+
         return $this->ok(array(
-            'matches'        => $map($this->m_interaction->matches($id)),
-            'my_likes'       => $map($this->m_interaction->my_likes($id)),
-            'liked_me_total' => $this->m_interaction->liked_me_count($id),
-            'viewer_total'   => $this->m_interaction->viewer_count($id),
+            'tab'      => $tab,
+            'is_vip'   => $vip,
+            'totals'   => $this->m_interest_badge->counts($id, false),
+            // Số mục mới chưa xem của từng thẻ (thẻ đang mở vừa được đánh dấu là 0)
+            'unread'   => $this->m_interest_badge->counts($id),
+            'my_likes' => $map($this->m_interaction->my_likes($id, 60)),
+            'liked_me' => $che($this->m_interaction->liked_me($id, 60), function ($u) {
+                return array('meta' => !empty($u['liked_at']) ? 'Thích bạn ' . time_ago($u['liked_at']) : null);
+            }),
+            'matches'  => $map($this->m_interaction->matches($id)),
+            'viewers'  => $che($this->m_interaction->viewers($id, 60), function ($u) use ($vip) {
+                return array('meta' => $vip && !empty($u['viewed_at']) ? 'Đã xem ' . time_ago($u['viewed_at']) : null);
+            }),
         ));
+    }
+
+    /** POST /api/account/likes/seen {tab} — đánh dấu đã xem một thẻ (khi đổi thẻ tại chỗ). */
+    public function likes_seen()
+    {
+        if (!$this->can_auth()) {
+            return;
+        }
+        $ok = $this->m_interest_badge->mark_seen($this->me['id'], (string) $this->body('tab'));
+        return $ok ? $this->ok(array('counts' => $this->m_interest_badge->menu_counts($this->me['id'])))
+                   : $this->loi('Thẻ không hợp lệ.', 422);
     }
 
     /* ====================== Thông báo ====================== */
@@ -333,6 +445,8 @@ class Account extends Api_Controller
             'url'    => $n['url'],
             'time'   => time_ago($n['created_at']),
             'unread' => empty($n['read_at']),
+            // Người gây ra thông báo (thích, ghép đôi, nhắn tin) — để hiện ảnh như web
+            'actor'  => $n['actor'] ?? null,
         );
     }
 
@@ -452,8 +566,8 @@ class Account extends Api_Controller
                     'notification'     => (int) (bool) $this->body('notification'),
                     'match_suggest'    => (int) (bool) $this->body('match_suggest'),
                     're_engage'        => (int) (bool) $this->body('re_engage'),
-                    // Tần suất chỉ nhận 2 hoặc 3 ngày như đặc tả
-                    'match_every_days' => in_array((int) $this->body('match_every_days'), array(2, 3), true)
+                    // Tần suất chung của email gợi ý và nhắc quay lại: 1, 2, 3 hoặc 7 ngày (như web)
+                    'match_every_days' => in_array((int) $this->body('match_every_days'), array(1, 2, 3, 7), true)
                         ? (int) $this->body('match_every_days') : 2,
                     'disabled_at'      => null,
                 ));

@@ -1,0 +1,33 @@
+.container.confide-page { max-width: 740px; }
+.confide-page .confide-head { padding: 16px; background: linear-gradient(110deg, #fff5f7, #f6cbd5); border: 1px solid #eab3c1; border-radius: 8px; box-shadow: 0 3px 12px rgb(145 39 65 / 9%); }
+.confide-page .confide-head h1 { color: #34212a; }
+.confide-page .confide-head p { color: #70515e; }
+@media (max-width: 720px) {
+    .confide-page .ccard-actions { gap: 5px; }
+    .confide-page .btn-confide { min-height: 26px; padding: 6px 7px; font-size: 11px; gap: 4px; }
+    .confide-page .btn-confide .ic { width: 13px; height: 13px; flex-basis: 13px; }
+}
+@media (min-width: 721px) {
+    .confide-page .confide-head { padding: 24px; }
+    .confide-page .confide-head h1 { margin: 0 0 8px; font-size: 24px; }
+    .confide-page .confide-head p { margin: 0; font-size: 13px; line-height: 1.6; }
+    .confide-page .dating-bar { display: flex; flex-wrap: wrap; gap: 10px; }
+    .confide-page .topic-row { flex-wrap: wrap; gap: 6px; }
+    .confide-page .topic-row a { font-size: 12px; padding: 6px 10px; }
+    .confide-page .confide-grid { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+    .confide-page .ccard { display: grid; grid-template-columns: 96px minmax(0, 1fr); align-items: start; padding: 14px; gap: 16px; min-width: 0; border: 1px solid #e7e8ec; border-radius: 14px; box-shadow: 0 2px 8px #11182705; }
+    .confide-page .ccard-photo { width: 96px; border-radius: 12px; overflow: hidden; }
+    .confide-page .ccard-photo img { display: block; width: 100%; height: 96px; aspect-ratio: 1; max-height: none; object-fit: cover; }
+    .confide-page .ccard-tags { top: 5px; left: 5px; right: 5px; gap: 4px; }
+    .confide-page .ccard-tags .tag { padding: 3px 5px; font-size: 9px; }
+    .confide-page .ccard-body { min-width: 0; padding: 0; }
+    .confide-page .ccard-name { margin-bottom: 6px; font-size: 17px; white-space: normal; overflow-wrap: anywhere; }
+    .confide-page .ccard-place { margin-bottom: 5px; font-size: 12px; line-height: 1.4; }
+    .confide-page .ccard-place .mi { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+    .confide-page .ccard-topic { min-height: 0; margin-bottom: 0; }
+    .confide-page .ccard-topic:empty { display: none; }
+    .confide-page .ccard-topic span { padding: 4px 8px; font-size: 12px; }
+    .confide-page .ccard-note { display: none; }
+    .confide-page .ccard-actions { display: flex; gap: 6px; margin-top: 8px; max-width: 280px; }
+    .confide-page .btn-confide { min-height: 30px; padding: 7px 12px; font-size: 12px; }
+}

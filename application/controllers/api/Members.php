@@ -38,7 +38,7 @@ class Members extends Api_Controller
             'les' => array('gender' => 'female', 'seeking' => 'female'),
         );
         $sort = $g('sort');
-        if (!in_array($sort, array('active', 'new', 'verified', 'listened', 'vip'), true)) {
+        if (!in_array($sort, array('nearby', 'active', 'new', 'verified', 'listened', 'vip'), true)) {
             $sort = 'active';
         }
 
@@ -67,6 +67,22 @@ class Members extends Api_Controller
         }
         $filters['sort'] = $sort;
 
+        // "Gần bạn nhất" và lọc bán kính của trang Hẹn hò mới
+        $distance_max = (int) $g('distance_max');
+        if (!in_array($distance_max, array(10, 25, 50, 100, 200, 500), true)) {
+            $distance_max = 0;
+        }
+        if ($sort === 'nearby' || $distance_max) {
+            $origin = $this->diem_goc((int) $g('origin_province') ?: (int) $g('province_id'));
+            $filters['distance_origin'] = $origin;
+            if ($origin && $distance_max) {
+                $filters['distance_max'] = $distance_max;
+            }
+            if (!$origin && $sort === 'nearby') {
+                $filters['sort'] = 'active';
+            }
+        }
+
         $page  = $this->trang();
         $total = $this->m_user->count_search($filters);
 
@@ -79,6 +95,7 @@ class Members extends Api_Controller
                 'weight_kg'      => !empty($u['weight_kg']) ? (int) $u['weight_kg'] : null,
                 // Nhãn "Mới tham gia" trên thẻ hồ sơ của web
                 'is_new'         => !empty($u['created_at']) && strtotime($u['created_at']) > strtotime('-7 days'),
+                'distance_text'  => $this->nhan_khoang_cach($u),
             );
         }
 
@@ -88,6 +105,9 @@ class Members extends Api_Controller
             'page'     => $page,
             'per_page' => $this->per_page,
             'has_more' => $page * $this->per_page < $total,
+            // Gốc tính khoảng cách: vị trí thật hay ước tính theo tỉnh
+            'distance_origin' => isset($filters['distance_origin']) && $filters['distance_origin']
+                ? (!empty($filters['distance_origin']['real']) ? 'location' : 'province') : null,
         ));
     }
 
@@ -140,12 +160,18 @@ class Members extends Api_Controller
             'profile'    => $this->ho_so_chi_tiet($m) + array(
                 'seeking'  => $pref['seeking_gender'] ?? null,
                 'has_phone' => !empty($m['phone']),
+                'cover'    => base_url(!empty($m['cover_image']) ? ltrim($m['cover_image'], '/') : 'assets/site/images/profile-cover.jpg'),
             ),
             'photos'     => $anh,
             'comments'   => $binh_luan,
             'like_count' => $this->m_interaction->count_likes('user', $m['id']),
             'liked'      => $me_id ? $this->m_interaction->has_liked($me_id, 'user', $m['id']) : false,
+            // Người này đã thích mình: nút đổi thành "Thích lại" như web
+            'liked_me'   => $me_id ? $this->m_interaction->has_liked($m['id'], 'user', $me_id) : false,
             'matched'    => $me_id ? $this->m_interaction->is_matched($me_id, $m['id']) : false,
+            // Nhắn tin không cần ghép đôi nữa — chỉ vướng chặn hoặc "chỉ nhận tin từ VIP"
+            'message_error' => $me_id && $me_id !== (int) $m['id']
+                ? $this->m_interaction->message_permission($me_id, $m['id']) : null,
             'is_me'      => $me_id === (int) $m['id'],
             'unlock_cost' => $this->la_vip() ? 0 : (int) setting('unlock_cost', 20),
         ));
@@ -185,6 +211,9 @@ class Members extends Api_Controller
             return $this->loi('Không tìm thấy thành viên.', 404);
         }
         $kq = $this->m_interaction->toggle_like($this->me['id'], 'user', $id);
+        if ($this->loi_tha_tim($kq)) {
+            return;
+        }
 
         return $this->ok(array(
             'liked'   => (bool) $kq['liked'],

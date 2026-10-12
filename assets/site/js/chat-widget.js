@@ -41,6 +41,65 @@
     var badge  = document.getElementById('cw-badge');
     var panel  = document.getElementById('cw-panel');
 
+    // Reserve the visible bottom navigation instead of covering it.
+    var bottomNav = document.querySelector('.site-mobile-nav');
+    var visualViewport = window.visualViewport;
+    var savedScrollY = 0;
+    var pageLocked = false;
+    function fitAboveNav() {
+        var height = bottomNav && bottomNav.getClientRects().length ? bottomNav.offsetHeight : 0;
+        var top = visualViewport ? visualViewport.offsetTop : 0;
+        var viewportHeight = visualViewport ? visualViewport.height : window.innerHeight;
+        panel.style.setProperty('--cw-nav-height', height + 'px');
+        panel.style.setProperty('--cw-viewport-top', top + 'px');
+        panel.style.setProperty('--cw-panel-height', Math.max(0, viewportHeight - height) + 'px');
+        if (pageLocked) {
+            document.documentElement.style.setProperty('--cw-keyboard-inset', Math.max(0, window.innerHeight - top - viewportHeight) + 'px');
+        }
+    }
+    function syncPageLock() {
+        var open = !panel.hidden;
+        if (open && !pageLocked) {
+            savedScrollY = window.scrollY;
+            document.body.style.setProperty('--cw-scroll-top', -savedScrollY + 'px');
+            document.documentElement.classList.add('cw-page-locked');
+            pageLocked = true;
+        } else if (!open && pageLocked) {
+            document.documentElement.classList.remove('cw-page-locked');
+            document.documentElement.style.removeProperty('--cw-keyboard-inset');
+            document.body.style.removeProperty('--cw-scroll-top');
+            pageLocked = false;
+            window.scrollTo(0, savedScrollY);
+        }
+        fitAboveNav();
+    }
+    new MutationObserver(syncPageLock).observe(panel, { attributes: true, attributeFilter: ['hidden'] });
+    var previousTouchY = 0;
+    document.addEventListener('touchstart', function (event) {
+        if (event.touches.length === 1) previousTouchY = event.touches[0].clientY;
+    }, { passive: true });
+    document.addEventListener('touchmove', function (event) {
+        if (!pageLocked || event.touches.length !== 1) return;
+        var area = event.target.closest('.cw-body, .cw-side-list, .cw-online-panel, .cw-emoji-list');
+        var delta = event.touches[0].clientY - previousTouchY;
+        previousTouchY = event.touches[0].clientY;
+        if (!area || !panel.contains(area) || area.scrollHeight <= area.clientHeight ||
+            (delta > 0 && area.scrollTop <= 0) ||
+            (delta < 0 && area.scrollTop + area.clientHeight >= area.scrollHeight - 1)) {
+            if (event.cancelable) event.preventDefault();
+        }
+    }, { passive: false });
+    fitAboveNav();
+    window.addEventListener('resize', fitAboveNav);
+    window.addEventListener('load', fitAboveNav);
+    if (visualViewport) {
+        visualViewport.addEventListener('resize', fitAboveNav);
+        visualViewport.addEventListener('scroll', fitAboveNav);
+    }
+    if (bottomNav && window.ResizeObserver) {
+        new ResizeObserver(fitAboveNav).observe(bottomNav);
+    }
+
     var sideEl   = document.getElementById('cw-side');
     var listEl   = document.getElementById('cw-list');
     var searchEl = document.getElementById('cw-search');
@@ -62,11 +121,113 @@
     var roomTimeEl = document.getElementById('cw-room-time');
     var rowRoom    = document.getElementById('cw-row-room');
 
+    var onlinePanel = document.getElementById('cw-online-panel');
+    var onlineList = document.getElementById('cw-online-list');
+    var onlineToggle = document.getElementById('cw-online-toggle');
+    var onlineToggleCount = document.getElementById('cw-online-toggle-count');
+    var onlineClose = document.getElementById('cw-online-close');
+    var onlineGeneration = 0;
+    var onlineLoading = false;
+    var onlineUpdated = 0;
+    var mobileOnline = window.matchMedia('(max-width: 760px)');
+
+    function closeOnline(restoreFocus) {
+        if (!onlinePanel) return;
+        onlinePanel.classList.remove('is-open');
+        onlinePanel.setAttribute('role', 'complementary');
+        if (onlineToggle) {
+            onlineToggle.setAttribute('aria-expanded', 'false');
+            if (restoreFocus) onlineToggle.focus();
+        }
+    }
+
+    function showOnlineRoom(show) {
+        if (!onlinePanel) return;
+        onlinePanel.hidden = !show;
+        if (onlineToggle) onlineToggle.hidden = !show;
+        if (statusEl) statusEl.hidden = show;
+        closeOnline(false);
+        onlineGeneration++;
+        onlineLoading = false;
+        onlineUpdated = 0;
+        if (show) loadOnline();
+    }
+
+    function loadOnline(force) {
+        if (!onlinePanel || panel.hidden || !dang_mo || dang_mo.kind !== 'room'
+            || document.hidden || onlineLoading
+            || !onlinePanel.classList.contains('is-open')
+            || (!force && Date.now() - onlineUpdated < 30000)) return;
+        onlineLoading = true;
+        var generation = onlineGeneration;
+        var members = [];
+        function page(after) {
+            return api('ajax/online-members?after=' + after).then(function (res) {
+                if (generation !== onlineGeneration) return;
+                if (!res.ok || !Array.isArray(res.members)) throw new Error('Online list unavailable');
+                members = members.concat(res.members);
+                if (res.next && res.next > after) return page(res.next);
+                var fragment = document.createDocumentFragment();
+                members.forEach(function (member) {
+                    var link = document.createElement('a');
+                    link.className = 'cw-online-member';
+                    link.href = member.url;
+                    var avatar = document.createElement('img');
+                    avatar.src = member.avatar;
+                    avatar.alt = '';
+                    avatar.width = 32;
+                    avatar.height = 32;
+                    avatar.loading = 'lazy';
+                    var name = document.createElement('span');
+                    name.textContent = member.name + (member.mine ? ' (Bạn)' : '');
+                    link.appendChild(avatar);
+                    link.appendChild(name);
+                    fragment.appendChild(link);
+                });
+                if (!members.length) {
+                    var empty = document.createElement('p');
+                    empty.textContent = 'Chưa có thành viên online.';
+                    fragment.appendChild(empty);
+                }
+                onlineList.replaceChildren(fragment);
+                onlineUpdated = Date.now();
+            });
+        }
+        if (!onlineList.childNodes.length) onlineList.textContent = 'Đang tải…';
+        page(0).catch(function () {
+            if (generation === onlineGeneration && !onlineUpdated) onlineList.textContent = 'Chưa tải được danh sách. Vui lòng thử lại.';
+        }).finally(function () {
+            if (generation === onlineGeneration) onlineLoading = false;
+        });
+    }
+
+    if (onlineToggle && onlinePanel) {
+        onlineToggle.addEventListener('click', function () {
+            var open = !onlinePanel.classList.contains('is-open');
+            onlinePanel.classList.toggle('is-open', open);
+            onlineToggle.setAttribute('aria-expanded', String(open));
+            onlinePanel.setAttribute('role', open ? 'dialog' : 'complementary');
+            if (open) { loadOnline(true); onlineClose.focus(); }
+        });
+        onlineClose.addEventListener('click', function () { closeOnline(true); });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && onlinePanel.classList.contains('is-open')) {
+                event.preventDefault(); closeOnline(true);
+            }
+        });
+        document.addEventListener('pointerdown', function (event) {
+            if (!onlinePanel.contains(event.target) && !onlineToggle.contains(event.target)) closeOnline(false);
+        });
+        mobileOnline.addEventListener('change', function () { closeOnline(false); loadOnline(true); });
+    }
+
     /** Hội thoại đang mở: {kind:'room'} hoặc {kind:'chat', id, user_id, name, ...} */
     var dang_mo = null;
     var lastId  = 0;     // id tin cuối đã vẽ của hội thoại đang mở
     var timer   = null;  // chu kỳ tải tin mới
     var listTimer = null;
+    var sending = false;
+    var renderedIds = new Set();
 
     var RT = window.Realtime || null;
     function rtLive() { return !!(RT && RT.connected); }
@@ -134,7 +295,7 @@
             p.className = 'cw-empty';
             p.textContent = key
                 ? 'Không tìm thấy ai tên như vậy.'
-                : 'Chưa có cuộc trò chuyện nào. Hãy ghép đôi để bắt đầu nhắn tin.';
+                : 'Chưa có cuộc trò chuyện nào. Mở một hồ sơ và nhắn tin để làm quen.';
             listEl.appendChild(p);
             return;
         }
@@ -198,6 +359,10 @@
         return api('ajax/hoi-thoai').then(function (res) {
             if (!res.ok) { return; }
             duLieuList = res.items || [];
+            if (dang_mo && dang_mo.kind === 'chat') {
+                var peer = duLieuList.find(function (item) { return Number(item.id) === Number(dang_mo.id); });
+                if (peer) setPeerActivity(peer);
+            }
             setBadge(res.unread || 0);
             veList();
 
@@ -223,6 +388,7 @@
 
     /** Tóm tắt phòng chung cho dòng đầu danh sách + số online trên thẻ dọc. */
     function loadRoomSummary() {
+        loadOnline();
         return api('ajax/phong-chat?only=online').then(function (res) {
             if (!res || !res.ok) { return; }
             setOnline(res.online);
@@ -234,8 +400,13 @@
     var tabCount  = document.getElementById('cw-tab-count');
     var tabOnline = document.getElementById('cw-tab-online');
     function setOnline(n) {
+        if (onlineToggleCount) {
+            var onlineLabel = Math.max(0, Number(n) || 0).toLocaleString('vi-VN') + ' Người đang Online';
+            onlineToggleCount.textContent = onlineLabel;
+            onlineToggle.setAttribute('aria-label', onlineLabel + '. Bấm để xem danh sách người đang online');
+        }
         if (statusEl && dang_mo && dang_mo.kind === 'room') {
-            statusEl.textContent = n + ' người đang online';
+            statusEl.textContent = n + ' Người đang Online';
         }
         if (tabCount) { tabCount.textContent = Number(n).toLocaleString('vi-VN'); }
         if (tabOnline) { tabOnline.hidden = false; }
@@ -285,6 +456,11 @@
 
         var khoa = m.mine ? 'me' : ('u' + (m.user_id || m.sender_id || m.name || ''));
         var noiTiep = khoa === nguoiCuoi;
+        if (noiTiep) {
+            var previous = bodyEl.lastElementChild;
+            var previousMeta = previous && previous.querySelector('.cw-msg-time');
+            if (previousMeta) previousMeta.hidden = true;
+        }
         nguoiCuoi = khoa;
 
         var wrap = document.createElement('div');
@@ -362,6 +538,7 @@
 
     function veLai(messages) {
         bodyEl.textContent = '';
+        renderedIds.clear();
         ngayCuoi = null;
         nguoiCuoi = null;
 
@@ -375,11 +552,19 @@
             return;
         }
 
-        messages.forEach(function (m) { bodyEl.appendChild(renderMessage(m)); });
+        messages.forEach(function (m) {
+            var id = String(m.id);
+            if (renderedIds.has(id)) { return; }
+            renderedIds.add(id);
+            bodyEl.appendChild(renderMessage(m));
+        });
         scrollDown();
     }
 
     function themTin(m) {
+        var id = String(m.id);
+        if (renderedIds.has(id)) { return; }
+        renderedIds.add(id);
         var trong = bodyEl.querySelector('.cw-empty');
         if (trong) { trong.remove(); }
 
@@ -400,13 +585,18 @@
 
     /** Mở phòng chat chung. */
     function moPhong() {
+        document.getElementById('cw-avatar-link').hidden = true;
+        document.getElementById('cw-avatar-link').removeAttribute('href');
+        document.getElementById('cw-profile-link').removeAttribute('href');
+        renderedIds.clear();
         dang_mo = { kind: 'room' };
+        showOnlineRoom(true);
         lastId = 0;
         clearInterval(timer);
 
         if (avatarEl) { avatarEl.hidden = true; }
         if (avatarRm) { avatarRm.hidden = false; }
-        nameEl.textContent = 'Phòng chat chung';
+        nameEl.textContent = 'Nhóm Hẹn Hò 4 Phương';
         statusEl.textContent = 'Đang tải…';
         if (receiver) { receiver.value = ''; }
         if (inputEl) {
@@ -423,6 +613,19 @@
 
     /** Mở một hội thoại riêng. */
     function moChat(info) {
+        var profileUrl = info.profile_url || '';
+        var avatarLink = document.getElementById('cw-avatar-link');
+        var profileLink = document.getElementById('cw-profile-link');
+        avatarLink.hidden = false;
+        if (profileUrl) {
+            avatarLink.href = profileUrl;
+            profileLink.href = profileUrl;
+        } else {
+            avatarLink.removeAttribute('href');
+            profileLink.removeAttribute('href');
+        }
+        showOnlineRoom(false);
+        renderedIds.clear();
         dang_mo = Object.assign({ kind: 'chat' }, info);
         lastId = 0;
         clearInterval(timer);
@@ -433,7 +636,7 @@
             avatarEl.src = info.avatar || '';
         }
         nameEl.textContent = info.name || '';
-        statusEl.textContent = info.online ? 'Đang online' : '';
+        setPeerActivity(info);
         if (receiver) { receiver.value = info.user_id || ''; }
         if (inputEl) { inputEl.placeholder = 'Vui lòng nhập tin nhắn'; }
 
@@ -445,8 +648,14 @@
         if (inputEl) { inputEl.focus(); }
     }
 
+    function setPeerActivity(info) {
+        statusEl.textContent = info.online ? 'Đang online' : (info.activity || 'Chưa có thông tin hoạt động');
+        statusEl.classList.toggle('is-online', !!info.online);
+    }
+
     /** Quay lại danh sách (màn hẹp). */
     function veDanhSach() {
+        closeOnline(false);
         root.classList.remove('is-chat');
         dang_mo = null;
         clearInterval(timer);
@@ -493,6 +702,7 @@
         return api('ajax/tin-nhan/' + hoi_thoai + '?after=' + lastId).then(function (res) {
             if (!res.ok || !dang_mo || dang_mo.kind !== 'chat') { return; }
             if (Number(dang_mo.id) !== Number(hoi_thoai)) { return; }
+            setPeerActivity(res);
 
             if (lastId === 0) {
                 veLai(res.messages);
@@ -504,15 +714,42 @@
             });
 
             if (res.messages && res.messages.length) { loadList(); }
+            if (res.seen) {
+                bodyEl.querySelectorAll('.cw-msg.mine .cw-msg-time:not([hidden])').forEach(function (meta) {
+                    if (meta.querySelector('.cw-seen')) return;
+                    meta.classList.add('has-seen');
+                    var label = document.createElement('i');
+                    label.className = 'cw-seen';
+                    label.textContent = 'Đã xem';
+                    meta.appendChild(label);
+                });
+            }
         }).catch(function () {});
     }
 
     /* ------------------------- Gửi tin ------------------------- */
 
     if (formEl) {
+        var sendButton = formEl.querySelector('.cw-send');
+        if (sendButton) {
+            // Keep the input focused during the tap; refocusing after an async
+            // request cannot reliably reopen the keyboard on iOS.
+            function keepKeyboard(event) {
+                if (document.activeElement === inputEl) event.preventDefault();
+            }
+            sendButton.addEventListener('pointerdown', keepKeyboard);
+            sendButton.addEventListener('mousedown', keepKeyboard);
+            if (!window.PointerEvent) {
+                sendButton.addEventListener('touchstart', function (event) {
+                    if (document.activeElement !== inputEl) return;
+                    event.preventDefault();
+                    formEl.dispatchEvent(new Event('submit', { cancelable: true }));
+                }, { passive: false });
+            }
+        }
         formEl.addEventListener('submit', function (e) {
             e.preventDefault();
-            if (!dang_mo) { return; }
+            if (!dang_mo || sending) { return; }
 
             var text = (inputEl.value || '').trim();
             var coAnh = fileEl && fileEl.files && fileEl.files.length;
@@ -531,6 +768,7 @@
             var data = new FormData(formEl);
             var url  = dang_mo.kind === 'room' ? 'ajax/phong-chat/gui' : 'ajax/send-message';
 
+            sending = true;
             inputEl.value = '';
             // Tải ảnh lên mất vài giây, phải cho thấy là máy đang làm việc chứ
             // không để người dùng bấm đi bấm lại vì tưởng hỏng.
@@ -558,7 +796,15 @@
                         message: 'Mất kết nối khi đang gửi. Bạn thử lại nhé.'
                     });
                 }
-            });
+            }).finally(function () { sending = false; });
+        });
+    }
+
+    if (bodyEl) {
+        bodyEl.addEventListener('click', function (event) {
+            if (!event.target.closest('a, button') && document.activeElement === inputEl) {
+                inputEl.blur();
+            }
         });
     }
 
@@ -581,10 +827,9 @@
         if (!tabs || !list) { return; }
 
         function chen(ch) {
-            var a = input.selectionStart || input.value.length;
-            var b = input.selectionEnd || input.value.length;
+            var a = input.selectionStart == null ? input.value.length : input.selectionStart;
+            var b = input.selectionEnd == null ? input.value.length : input.selectionEnd;
             input.value = input.value.slice(0, a) + ch + input.value.slice(b);
-            input.focus();
             input.selectionStart = input.selectionEnd = a + ch.length;
         }
 
@@ -618,6 +863,7 @@
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
             panelEl.hidden = !panelEl.hidden;
+            if (!panelEl.hidden) { input.blur(); }
         });
         panelEl.addEventListener('click', function (e) { e.stopPropagation(); });
     }
@@ -631,6 +877,7 @@
         var moRa = panel.hidden;
         panel.hidden = !moRa;
         root.classList.toggle('open', moRa);
+        bubble.setAttribute('aria-expanded', String(moRa));
 
         if (moRa) {
             // Mở ra là thấy danh sách trước, không nhảy thẳng vào phòng chung
@@ -650,16 +897,24 @@
         }
     });
 
-    root.querySelectorAll('[data-close]').forEach(function (b) {
-        b.addEventListener('click', function () {
+    function dongChat() {
+            showOnlineRoom(false);
             panel.hidden = true;
+            bubble.setAttribute('aria-expanded', 'false');
             root.classList.remove('open', 'is-chat');
             clearInterval(timer);
             clearInterval(listTimer);
             dang_mo = null;
             convoEl.hidden = true;
             if (idleEl) { idleEl.hidden = false; }
-        });
+    }
+
+    root.querySelectorAll('[data-close]').forEach(function (b) {
+        b.addEventListener('click', dongChat);
+    });
+
+    document.addEventListener('pointerdown', function (e) {
+        if (!panel.hidden && !root.contains(e.target)) { dongChat(); }
     });
 
     if (rowRoom) { rowRoom.addEventListener('click', moPhong); }
@@ -679,17 +934,19 @@
     document.querySelectorAll('[data-chat-with]').forEach(function (btn) {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
+
             api('ajax/mo-chat/' + btn.getAttribute('data-chat-with')).then(function (res) {
                 if (res.ok) {
                     panel.hidden = false;
                     root.classList.add('open');
+                    bubble.setAttribute('aria-expanded', 'true');
                     loadList();
                     return moChat(res);
                 }
                 if (window.appModal) {
                     window.appModal({
-                        type: res.need_match ? 'info' : 'error',
-                        title: res.need_match ? 'Chưa ghép đôi' : 'Không mở được trò chuyện',
+                        type: 'error',
+                        title: 'Không mở được trò chuyện',
                         message: res.message
                     });
                 }
@@ -729,5 +986,8 @@
 
     /* Số chưa đọc và tóm tắt phòng chung lấy ngay khi vào trang */
     loadRoomSummary();
-    if (!isGuest) { loadList(); }
+    if (!isGuest) {
+        loadList();
+        document.addEventListener('dating-contact-added', loadList);
+    }
 })();

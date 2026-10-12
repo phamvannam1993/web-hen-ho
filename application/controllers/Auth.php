@@ -159,12 +159,16 @@ class Auth extends MY_Controller
         if (!$this->auth->check()) {
             redirect('dang-nhap?next=' . urlencode('xac-thuc'));
         }
-        if ($this->auth->da_xac_thuc()) {
+        $me = $this->m_user->find($this->auth->id());
+        if (empty($me['email'])) {
+            set_flash('warning', 'Vui lòng lưu email trong hồ sơ trước khi xác thực.');
+            redirect('tai-khoan/ho-so');
+        }
+        if (!empty($me['email_verified_at'])) {
             set_flash('success', 'Email của bạn đã được xác thực.');
             redirect('tai-khoan');
         }
 
-        $me = $this->auth->user();
         $this->render('auth/check_email', array(
             'title'    => 'Xác thực email',
             'email'    => mask_email($me['email']),
@@ -179,18 +183,27 @@ class Auth extends MY_Controller
         if (!$this->auth->check()) {
             redirect('dang-nhap');
         }
-        if ($this->input->method() !== 'post' || $this->auth->da_xac_thuc()) {
+        if ($this->input->method() !== 'post') {
             redirect('xac-thuc');
         }
 
-        $me      = $this->auth->user();
+        $return_to = $this->input->post('from_profile') === '1' ? 'tai-khoan/ho-so' : 'xac-thuc';
+        $me = $this->m_user->find($this->auth->id());
+        if (empty($me['email'])) {
+            set_flash('warning', 'Vui lòng lưu email trong hồ sơ trước khi xác thực.');
+            redirect('tai-khoan/ho-so');
+        }
+        if (!empty($me['email_verified_at'])) {
+            set_flash('success', 'Email của bạn đã được xác thực.');
+            redirect($return_to);
+        }
         $con_cho = $this->m_otp->con_cho($me['id'], 'register');
         if ($con_cho > 0) {
             set_flash('warning', 'Vui lòng chờ thêm ' . $con_cho . ' giây rồi hãy gửi lại.');
         } else {
             $this->gui_link($me['id']);
         }
-        redirect('xac-thuc');
+        redirect($return_to);
     }
 
     /** Người dùng bấm link trong thư. */

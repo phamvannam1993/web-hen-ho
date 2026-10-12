@@ -26,31 +26,25 @@ class Chat extends Api_Controller
             $items[] = array(
                 'id'      => (int) $r['id'],
                 'user'    => array(
-                    'id'     => (int) $r['other_id'],
-                    'name'   => display_name($r),
-                    'slug'   => $r['user_slug'],
-                    'avatar' => avatar_url($r['avatar'], $r['gender']),
-                    'online' => (bool) is_online($r['last_active_at']),
+                    'id'       => (int) $r['other_id'],
+                    'name'     => display_name($r),
+                    'slug'     => $r['user_slug'],
+                    'avatar'   => avatar_url($r['avatar'], $r['gender']),
+                    'online'   => (bool) is_online($r['last_active_at']),
+                    'activity' => $this->hoat_dong($r['last_active_at']),
                 ),
-                'last'    => $this->tom_tat($r['last_type'], $r['last_content'], (int) $r['last_sender_id'] === $me),
+                // Thả tim là có hội thoại ngay (chưa có tin nào) — như web
+                'last'    => !$r['last_message_id'] ? 'Bắt đầu trò chuyện'
+                    : $this->tom_tat($r['last_type'], $r['last_content'], (int) $r['last_sender_id'] === $me),
+                'empty'   => !$r['last_message_id'],
                 'time'    => $r['last_at'] ? time_ago($r['last_at']) : '',
                 'unread'  => (int) $r['unread'],
             );
         }
 
-        // Người đã ghép đôi nhưng chưa nhắn câu nào — để bắt chuyện
-        $co_hoi_thoai = array_flip(array_map(function ($i) { return $i['user']['id']; }, $items));
-        $moi = array();
-        foreach ($this->m_interaction->matches($me, 30) as $u) {
-            if (!isset($co_hoi_thoai[(int) $u['id']])) {
-                $moi[] = $this->ho_so($u);
-            }
-        }
-
         return $this->ok(array(
-            'items'       => $items,
-            'new_matches' => $moi,
-            'unread'      => (int) $this->m_interaction->unread_count($me),
+            'items'  => $items,
+            'unread' => (int) $this->m_interaction->unread_count($me),
         ));
     }
 
@@ -68,11 +62,15 @@ class Chat extends Api_Controller
         if (!$other) {
             return $this->loi('Không tìm thấy thành viên.', 404);
         }
-        if (!$this->m_interaction->is_matched($this->me['id'], $user_id)) {
-            return $this->loi('Hai bạn chưa ghép đôi. Hãy bấm Thích và chờ ' . display_name($other)
-                . ' thích lại để mở khung trò chuyện.', 403, array('need_match' => true));
+        // Nhắn tin không cần ghép đôi nữa — chỉ vướng chặn hoặc "chỉ nhận tin từ VIP"
+        $loi = $this->m_interaction->message_permission($this->me['id'], $user_id);
+        if ($loi !== null) {
+            return $this->loi($loi, 403);
         }
         $conv = $this->m_interaction->conversation_with($this->me['id'], $user_id);
+        if (!$conv) {
+            return $this->loi('Không mở được hội thoại với người này.', 403);
+        }
         return $this->ok(array('id' => (int) $conv['id'], 'user' => $this->ho_so($other)));
     }
 
@@ -117,9 +115,10 @@ class Chat extends Api_Controller
         $ra = array('messages' => $ds, 'seen' => $seen);
         if ($after <= 0) {
             $other = $this->m_user->find($other_id);
-            $ra['partner']  = $other ? $this->ho_so($other) : null;
-            // Cặp không còn ghép đôi thì chỉ xem lại lịch sử, không gửi thêm
-            $ra['can_send'] = $this->m_interaction->is_matched($me, $other_id);
+            $ra['partner']  = $other ? $this->ho_so($other) + array('activity' => $this->hoat_dong($other['last_active_at'])) : null;
+            $loi = $this->m_interaction->message_permission($me, $other_id);
+            $ra['can_send']   = $loi === null;
+            $ra['send_error'] = $loi;
         }
         return $this->ok($ra);
     }
@@ -143,14 +142,14 @@ class Chat extends Api_Controller
         if ($image) {
             $kq = $this->m_interaction->send_message($this->me['id'], $nhan, $image, 'image');
             if (!$kq['ok']) {
-                return $this->loi($kq['message'], 403, array('need_match' => !empty($kq['need_match'])));
+                return $this->loi($kq['message'], 403);
             }
             $gui[] = $kq['message_id'];
         }
         if ($content !== '') {
             $kq = $this->m_interaction->send_message($this->me['id'], $nhan, mb_substr($content, 0, 2000));
             if (!$kq['ok']) {
-                return $this->loi($kq['message'], 403, array('need_match' => !empty($kq['need_match'])));
+                return $this->loi($kq['message'], 403);
             }
             $gui[] = $kq['message_id'];
         }
@@ -266,7 +265,49 @@ class Chat extends Api_Controller
         ));
     }
 
+    /**
+     * GET /api/online-members?after=<id> — người đang online (5 phút), như
+     * ajax/online-members của khung chat web. Chỉ thông tin công khai.
+     */
+    public function online_members()
+    {
+        if (!$this->thu_auth()) {
+            return;
+        }
+        $after = max(0, (int) $this->input->get('after'));
+        $me = $this->me ? (int) $this->me['id'] : 0;
+        $this->db->select('id, display_name, nickname, avatar, gender, slug')
+            ->from('users')->where('status', 'active')->where('deleted_at', null)
+            ->where('last_active_at >', date('Y-m-d H:i:s', time() - 300))
+            ->where('birthday <=', date('Y-m-d', strtotime('-18 years')))
+            ->where_in('role', array('member', 'admin', 'moderator'))
+            ->where('id >', $after);
+        if ($me) {
+            $this->db->where("id NOT IN (SELECT blocked_id FROM blocks WHERE user_id = $me)", null, false)
+                ->where("id NOT IN (SELECT user_id FROM blocks WHERE blocked_id = $me)", null, false);
+        }
+        $rows = $this->db->order_by('id', 'ASC')->limit(61)->get()->result_array();
+        $more = count($rows) > 60;
+        $rows = array_slice($rows, 0, 60);
+
+        $ds = array();
+        foreach ($rows as $r) {
+            $ds[] = array('id' => (int) $r['id'], 'name' => display_name($r), 'slug' => $r['slug'],
+                'avatar' => avatar_url($r['avatar'], $r['gender']), 'mine' => (int) $r['id'] === $me);
+        }
+        return $this->ok(array('members' => $ds, 'next' => $more && $rows ? (int) end($rows)['id'] : null));
+    }
+
     /* ---------------------------------------------------------------- */
+
+    /** "Hoạt động 5 phút trước" — giống dòng trạng thái khung chat web. */
+    private function hoat_dong($last_active_at)
+    {
+        if (is_online($last_active_at)) {
+            return 'Đang online';
+        }
+        return $last_active_at ? 'Hoạt động ' . time_ago($last_active_at) : 'Chưa có thông tin hoạt động';
+    }
 
     private function tin(array $r, $cua_toi)
     {
