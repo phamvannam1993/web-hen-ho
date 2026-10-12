@@ -1,0 +1,16 @@
+{
+  "name": "saigoncupid-realtime",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Máy chủ WebSocket cho chat thời gian thực của web-hen-ho và ứng dụng di động",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "ws": "8.18.0"
+  }
+}

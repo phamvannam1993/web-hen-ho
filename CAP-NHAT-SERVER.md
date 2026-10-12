@@ -79,9 +79,14 @@ làm hỏng dữ liệu — nhưng người dùng mới sẽ không nhận đư�
 
     REALTIME_WS_URL=wss://.../ws
     REALTIME_SECRET=...
+    REALTIME_HTTP_URL=http://127.0.0.1:3001
 
 Bỏ trống thì khung chat vẫn chạy, chỉ là tải tin mới theo chu kỳ 4 giây thay vì
 tức thời.
+
+Có điền thì phải chạy thêm máy chủ Node ở thư mục `websoket/` (dùng chung cho
+web và ứng dụng di động) và cho nginx chuyển `/ws` sang nó — làm theo
+`websoket/README.md`.
 
 ---
 

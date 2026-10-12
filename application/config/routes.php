@@ -43,6 +43,54 @@ $route['api/profile-viewers/count']       = 'api/engagement/viewers_count';
 
 $route['api/streak']                      = 'api/engagement/streak';
 $route['api/streak/freeze']               = 'api/engagement/streak_freeze';
+
+$route['api/auth/register']               = 'api/auth/register';
+$route['api/auth/forgot']                 = 'api/auth/forgot';
+$route['api/auth/resend-verify']          = 'api/auth/resend_verify';
+$route['api/auth/password']               = 'api/auth/password';
+
+$route['api/meta']                        = 'api/meta/index';
+$route['api/home']                        = 'api/home/index';
+
+$route['api/discover']                    = 'api/discover/index';
+$route['api/discover/undo']               = 'api/discover/undo';
+$route['api/discover/(:num)/like']        = 'api/discover/like/$1';
+$route['api/discover/(:num)/pass']        = 'api/discover/pass/$1';
+
+$route['api/members']                     = 'api/members/index';
+$route['api/members/(:num)/like']         = 'api/members/like/$1';
+$route['api/members/(:num)/contact']      = 'api/members/contact/$1';
+$route['api/members/(:num)/comment']      = 'api/members/comment/$1';
+$route['api/members/(:num)/block']        = 'api/members/block/$1';
+$route['api/members/(:num)/unblock']      = 'api/members/unblock/$1';
+$route['api/members/(:any)']              = 'api/members/show/$1';
+$route['api/comments/(:num)/delete']      = 'api/members/delete_comment/$1';
+$route['api/report']                      = 'api/members/report';
+
+$route['api/account']                     = 'api/account/index';
+$route['api/account/profile']             = 'api/account/profile';
+$route['api/account/avatar']              = 'api/account/avatar';
+$route['api/account/onboarding']          = 'api/account/onboarding';
+$route['api/account/photos']              = 'api/account/photos';
+$route['api/account/photos/(:num)/delete'] = 'api/account/delete_photo/$1';
+$route['api/account/likes']               = 'api/account/likes';
+$route['api/account/likes/seen']          = 'api/account/likes_seen';
+$route['api/account/cover']               = 'api/account/cover';
+$route['api/account/location']            = 'api/account/location';
+$route['api/online-members']              = 'api/chat/online_members';
+$route['api/account/notifications']       = 'api/account/notifications';
+$route['api/account/notifications/read']  = 'api/account/notifications_read';
+$route['api/account/wallet']              = 'api/account/wallet';
+$route['api/account/email-prefs']         = 'api/account/email_prefs';
+
+$route['api/conversations']               = 'api/chat/conversations';
+$route['api/conversations/open/(:num)']   = 'api/chat/open/$1';
+$route['api/conversations/(:num)']        = 'api/chat/messages/$1';
+$route['api/messages']                    = 'api/chat/send';
+$route['api/room']                        = 'api/chat/room';
+$route['api/room/send']                   = 'api/chat/room_send';
+$route['api/realtime']                    = 'api/chat/realtime';
+$route['api/realtime/read']               = 'api/chat/realtime_read';
 $route['xac-thuc']                = 'auth/verify';
 $route['xac-thuc/gui-lai']        = 'auth/resend';
 $route['xac-thuc-email/(:any)']  = 'auth/verify_link/$1';

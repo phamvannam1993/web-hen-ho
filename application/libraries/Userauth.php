@@ -79,6 +79,16 @@ class Userauth
         ));
     }
 
+    /**
+     * Gắn người dùng cho một yêu cầu API (xác thực bằng token, không có phiên).
+     * Không ghi gì vào session — chỉ để các model đang hỏi $this->auth
+     * (is_vip, id, check…) nhận đúng người đang gọi.
+     */
+    public function dung_cho_api(array $user)
+    {
+        $this->cached_user = $user;
+    }
+
     public function logout()
     {
         $token = get_cookie('remember_token');

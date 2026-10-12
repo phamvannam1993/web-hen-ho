@@ -259,7 +259,11 @@ class Api_Controller extends CI_Controller
     {
         parent::__construct();
         dong_bo_mui_gio_db($this);
-        $this->load->model('m_user');
+        $this->load->model(array('m_user', 'm_setting'));
+        // Nạp sẵn cấu hình như MY_Controller: M_user::only_online() đọc cấu hình
+        // giữa lúc đang dựng câu truy vấn tìm kiếm — lần đọc đầu tiên mà chạm DB
+        // ở đó sẽ xoá mất phần FROM đang dựng dở.
+        $this->m_setting->all();
 
         // Ứng dụng chạy ở tên miền khác nên phải mở CORS
         $this->output->set_header('Access-Control-Allow-Origin: *');
@@ -313,8 +317,26 @@ class Api_Controller extends CI_Controller
      */
     protected function can_auth()
     {
+        return $this->xac_thuc(true);
+    }
+
+    /**
+     * Đăng nhập không bắt buộc — dùng cho màn hình khách cũng xem được
+     * (khám phá, danh sách hẹn hò, trang cá nhân). Không gửi token thì là
+     * khách; gửi token hỏng thì vẫn báo 401 để ứng dụng biết mà đăng nhập lại.
+     */
+    protected function thu_auth()
+    {
+        return $this->xac_thuc(false);
+    }
+
+    private function xac_thuc($bat_buoc)
+    {
         $token = $this->lay_token();
         if (!$token) {
+            if (!$bat_buoc) {
+                return true;
+            }
             $this->loi('Thiếu token. Gửi header: Authorization: Bearer <token>', 401);
             return false;
         }
@@ -342,6 +364,8 @@ class Api_Controller extends CI_Controller
         }
 
         $this->me = $u;
+        // Các model hỏi $this->auth (is_vip, id, đã thích chưa…) như ở web
+        $this->auth->dung_cho_api($u);
         $this->db->where('id', $u['id'])->update('users', array(
             'last_active_at' => date('Y-m-d H:i:s'),
         ));
@@ -362,6 +386,26 @@ class Api_Controller extends CI_Controller
         return null;
     }
 
+    /** VIP còn hạn — cột is_vip có thể còn 1 khi đã quá vip_expired_at. */
+    protected function la_vip()
+    {
+        return $this->me && $this->auth->is_vip();
+    }
+
+    /**
+     * Giống web: chưa xác thực email thì chưa thả tim / nhắn tin / bình luận.
+     * Trả về false và đã xuất lỗi 403 kèm need_verify.
+     */
+    protected function can_xac_thuc($viec = 'thả tim và nhắn tin')
+    {
+        if ($this->auth->da_xac_thuc()) {
+            return true;
+        }
+        $this->loi('Bạn cần xác thực email (bấm link trong thư) để ' . $viec . '.', 403,
+            array('need_verify' => true));
+        return false;
+    }
+
     /** Rút gọn một hồ sơ thành dạng trả về cho ứng dụng. */
     protected function ho_so(array $u, $day_du = false)
     {
@@ -372,18 +416,183 @@ class Api_Controller extends CI_Controller
             'avatar'   => avatar_url($u['avatar'] ?? null, $u['gender'] ?? 'other'),
             'gender'   => $u['gender'] ?? null,
             'age'      => age_from($u['birthday'] ?? null),
-            'province' => $u['province_name'] ?? null,
+            'province' => $u['province_name'] ?? $this->ten_tinh($u['province_id'] ?? null),
             'online'   => (bool) is_online($u['last_active_at'] ?? null),
+            'verified' => ($u['kyc_status'] ?? '') === 'verified',
+            'is_vip'   => !empty($u['is_vip']) && (empty($u['vip_expired_at']) || $u['vip_expired_at'] > date('Y-m-d H:i:s')),
         );
+        if (isset($u['liked'])) {
+            $ra['liked'] = (bool) $u['liked'];
+        }
 
         if ($day_du) {
             $ra += array(
                 'job'       => $u['job'] ?? null,
-                'height_cm' => isset($u['height_cm']) ? (int) $u['height_cm'] : null,
+                'height_cm' => !empty($u['height_cm']) ? (int) $u['height_cm'] : null,
                 'bio'       => $u['bio'] ?? null,
                 'interests' => !empty($u['interest_names']) ? explode('|', $u['interest_names']) : array(),
             );
         }
         return $ra;
+    }
+
+    /**
+     * Tên tỉnh theo id — vài truy vấn của model (matches, my_likes…) chỉ lấy
+     * u.* chứ không JOIN bảng tỉnh. Bảng tỉnh nhỏ nên nạp một lần rồi tra mảng.
+     */
+    protected function ten_tinh($id)
+    {
+        static $map = null;
+        if (!$id) {
+            return null;
+        }
+        if ($map === null) {
+            $this->load->model('m_province');
+            $map = array_column($this->m_province->all(), 'name', 'id');
+        }
+        return $map[$id] ?? null;
+    }
+
+    /**
+     * Hồ sơ đầy đủ cho thẻ vuốt và trang cá nhân — cùng các trường mà
+     * discover/_card.php và members/profile.php đang hiện trên web.
+     */
+    protected function ho_so_chi_tiet(array $u)
+    {
+        $ra = $this->ho_so($u, true) + array(
+            'weight_kg'      => !empty($u['weight_kg']) ? (int) $u['weight_kg'] : null,
+            'education'      => $u['education'] ?? null,
+            'marital_status' => $u['marital_status'] ?? null,
+            'has_children'   => isset($u['has_children']) ? (bool) $u['has_children'] : null,
+            'smoking'        => $u['smoking'] ?? null,
+            'drinking'       => $u['drinking'] ?? null,
+            'purpose'        => $u['purpose'] ?? null,
+            'confide_topic'  => $u['confide_topic'] ?? null,
+            'zodiac'         => zodiac($u['birthday'] ?? null) ?: null,
+            'joined'         => !empty($u['created_at']) ? date('m/Y', strtotime($u['created_at'])) : null,
+            'last_active'    => !empty($u['last_active_at'])
+                ? (is_online($u['last_active_at']) ? 'Đang online' : time_ago($u['last_active_at'])) : null,
+        );
+        if (isset($u['match_score'])) {
+            $ra['match_score'] = min(100, (int) $u['match_score']);
+        }
+        if (array_key_exists('khoang_cach', $u) && $u['khoang_cach'] !== null) {
+            $ra['distance_km'] = (float) $u['khoang_cach'];
+        }
+        if (!empty($u['photo_paths'])) {
+            $ra['photos'] = array_map(function ($p) {
+                return base_url(ltrim($p, '/'));
+            }, array_slice(explode('|', $u['photo_paths']), 0, 6));
+        }
+        return $ra;
+    }
+
+    /** Lý do tải ảnh hỏng gần nhất, để báo đúng nguyên nhân. */
+    protected $loi_anh = null;
+
+    /**
+     * Nhận một ảnh tải lên (multipart) ở trường $field, lưu vào uploads/$thu_muc/Y/m.
+     * Trả về đường dẫn tương đối, hoặc null (không gửi ảnh, hoặc lỗi — xem $loi_anh).
+     */
+    protected function tai_anh($field, $thu_muc = '', $max_kb = 5120)
+    {
+        $this->loi_anh = null;
+        if (empty($_FILES[$field]['name'])) {
+            return null;
+        }
+        if (!empty($_FILES[$field]['error']) && $_FILES[$field]['error'] !== UPLOAD_ERR_OK) {
+            $this->loi_anh = in_array($_FILES[$field]['error'], array(UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE), true)
+                ? 'Ảnh quá lớn.' : 'Không nhận được ảnh, vui lòng thử lại.';
+            return null;
+        }
+
+        $tuong_doi = 'uploads/' . ($thu_muc !== '' ? $thu_muc . '/' : '') . date('Y/m');
+        $dir = FCPATH . $tuong_doi;
+        if (!is_dir($dir)) {
+            mkdir($dir, 0775, true);
+        }
+        $this->load->library('upload');
+        $this->upload->initialize(array(
+            'upload_path'   => $dir,
+            'allowed_types' => 'jpg|jpeg|png|webp|gif|heic|heif',
+            'max_size'      => $max_kb,
+            'encrypt_name'  => true,
+        ));
+        if (!$this->upload->do_upload($field)) {
+            $this->loi_anh = trim(strip_tags($this->upload->display_errors('', ''))) ?: 'Không tải được ảnh.';
+            return null;
+        }
+        return $tuong_doi . '/' . $this->upload->data('file_name');
+    }
+
+    /**
+     * Điểm gốc để tính khoảng cách "Gần bạn nhất" — cùng luật với Dating::index:
+     * vị trí thật (cấp trong 30 ngày) nếu có, không thì toạ độ tỉnh đang chọn
+     * hoặc tỉnh trong hồ sơ.
+     */
+    protected function diem_goc($origin_province = 0)
+    {
+        $this->load->model('m_province');
+        $me = $this->me;
+        if ($this->m_user->location_ready() && $me && !empty($me['location_updated_at'])
+            && strtotime($me['location_updated_at']) >= time() - 30 * 86400
+            && is_numeric($me['lat']) && is_numeric($me['lng'])
+            && abs($me['lat']) <= 90 && abs($me['lng']) <= 180) {
+            return array('lat' => $me['lat'], 'lng' => $me['lng'], 'real' => true, 'province_id' => (int) ($me['province_id'] ?? 0));
+        }
+        $origin_province = (int) $origin_province ?: (int) ($me['province_id'] ?? 0);
+        if (!$origin_province) {
+            return null;
+        }
+        foreach ($this->m_province->all() as $province) {
+            if ((int) $province['id'] === $origin_province) {
+                $toa_do = $this->m_user->province_coordinates($province);
+                return $toa_do ? array('lat' => $toa_do[0], 'lng' => $toa_do[1], 'real' => false, 'province_id' => $origin_province) : null;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Khoảng cách hiển thị trên thẻ hồ sơ, giống members/_card.php của web.
+     * Trả về null khi không tính được.
+     */
+    protected function nhan_khoang_cach(array $u)
+    {
+        if (!array_key_exists('distance_km', $u)) {
+            return null;
+        }
+        if (!empty($u['distance_same_province']) && empty($u['distance_real'])) {
+            return 'Cùng tỉnh/thành';
+        }
+        if ($u['distance_km'] === null) {
+            return null;
+        }
+        $km = (float) $u['distance_km'];
+        return (empty($u['distance_real']) ? 'Ước tính · ' : '') . 'Cách bạn '
+            . ($km < 1 ? 'dưới 1' : number_format(round($km), 0, ',', '.')) . ' km';
+    }
+
+    /**
+     * Thả tim bị từ chối vì hồ sơ chưa đủ (M_interaction::like_profile_error):
+     * trả 403 kèm need=profile và danh sách mục còn thiếu để ứng dụng mời
+     * bổ sung. Trả về true nếu đã xuất lỗi.
+     */
+    protected function loi_tha_tim($kq)
+    {
+        if (!is_array($kq) || !isset($kq['ok']) || $kq['ok']) {
+            return false;
+        }
+        $this->loi($kq['message'] ?? 'Không thả tim được.', ($kq['need'] ?? '') === 'profile' ? 403 : 409, array(
+            'need'    => $kq['need'] ?? null,
+            'missing' => $kq['missing'] ?? array(),
+        ));
+        return true;
+    }
+
+    /** Số trang từ ?page=, bắt đầu từ 1. */
+    protected function trang()
+    {
+        return max(1, (int) $this->input->get('page'));
     }
 }

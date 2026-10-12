@@ -474,6 +474,11 @@ class M_interaction extends CI_Model
             'last_message_at' => date('Y-m-d H:i:s'),
         ));
 
+        // Đẩy tức thời tới người nhận (web + ứng dụng) qua máy chủ WebSocket
+        $this->load->library('realtime');
+        $this->realtime->tin_rieng($conv['id'],
+            $this->db->where('id', $message_id)->get('messages')->row_array(), $sender_id, $receiver_id);
+
         // Mỗi tin nhắn xếp một email chỉ có tên, avatar và liên kết mở hội thoại.
         $this->load->library('emailer');
         $nguoi_gui = $this->db->select('id, display_name, nickname, avatar, gender')
@@ -490,6 +495,16 @@ class M_interaction extends CI_Model
         $this->db->where('conversation_id', $conversation_id)
             ->where('sender_id !=', $user_id)->where('read_at', null)
             ->update('messages', array('read_at' => date('Y-m-d H:i:s')));
+
+        // Có tin vừa chuyển sang đã đọc thì báo người gửi để hiện "Đã xem" ngay
+        if ($this->db->affected_rows() > 0) {
+            $conv = $this->db->where('id', $conversation_id)->get('conversations')->row_array();
+            if ($conv) {
+                $other = (int) $conv['user_low_id'] === (int) $user_id ? $conv['user_high_id'] : $conv['user_low_id'];
+                $this->load->library('realtime');
+                $this->realtime->da_doc($conversation_id, $other);
+            }
+        }
     }
 
     public function unread_count($user_id)
