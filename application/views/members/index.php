@@ -3,6 +3,8 @@ $g  = function ($k, $d = '') { return $this->input->get($k) !== null ? $this->in
 $sel = function ($k, $v) { return $this->input->get($k) == $v && $this->input->get($k) !== null ? 'selected' : ''; };
 $chosen_interests = (array) $this->input->get('interests');
 $view_mode = $view_mode ?? 'grid';
+$compact_members = $base_url === 'thanh-vien';
+if ($compact_members) $view_mode = 'list';
 // Trang một tỉnh (/ha-noi) dùng chung giao diện này, khác ở chỗ khu vực đã cố định
 $province = $province ?? null;
 
@@ -45,7 +47,10 @@ $with = function ($key, $value) use ($base_url) {
     return site_url($base_url) . '?' . http_build_query($q);
 };
 ?>
-<div class="container members-page">
+<?php if ($base_url === 'thanh-vien'): ?>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/members-discovery.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/members-discovery.css') ?>">
+<?php endif; ?>
+<div class="container members-page <?= $base_url === 'thanh-vien' ? 'members-discovery' : '' ?>">
     <?php if ($province): ?>
         <nav class="breadcrumb">
             <a href="<?= site_url() ?>">Trang chủ</a> ›
@@ -77,26 +82,29 @@ $with = function ($key, $value) use ($base_url) {
                     <a class="filter-clear" href="<?= site_url($base_url) ?>">Xoá bộ lọc</a><?php /* base_url là slug tỉnh nên vẫn ở đúng khu vực */ ?>
                 </div>
 
-                <section class="filter-group">
+                <section class="filter-group filter-basic-group">
                     <button type="button" class="filter-group-head" data-toggle-group>
                         <span>Cơ bản</span>
                         <svg viewBox="0 0 24 24" class="ic caret"><path d="M6 15l6-6 6 6"/></svg>
                     </button>
-                    <div class="filter-group-body">
+                    <div class="filter-group-body filter-basic-fields">
+                        <div>
                         <label class="filter-label" for="filter-gender">Giới tính</label>
                         <select name="gender" id="filter-gender">
                             <option value="">Tất cả</option>
                             <option value="male" <?= $sel('gender', 'male') ?>>Nam</option>
                             <option value="female" <?= $sel('gender', 'female') ?>>Nữ</option>
                         </select>
-
+                        </div>
+                        <div>
                         <label class="filter-label">Độ tuổi</label>
                         <div class="range-row">
                             <input type="number" name="age_min" min="18" max="80" placeholder="Từ 18" value="<?= e($g('age_min')) ?>">
                             <span>–</span>
                             <input type="number" name="age_max" min="18" max="80" placeholder="Đến 70" value="<?= e($g('age_max')) ?>">
                         </div>
-
+                        </div>
+                        <div>
                         <label class="filter-label"<?= !$province ? ' for="filter-province"' : '' ?>>Khu vực</label>
                         <?php if ($province): ?>
                             <div class="filter-fixed">
@@ -111,9 +119,14 @@ $with = function ($key, $value) use ($base_url) {
                                 <?php endforeach; ?>
                             </select>
                         <?php endif; ?>
+                        </div>
                     </div>
                 </section>
 
+                <?php if ($compact_members): ?>
+                <details class="members-more-filters" <?= $open_shape || $open_lifestyle || $open_advanced ? 'open' : '' ?>>
+                    <summary>Bộ lọc nâng cao</summary>
+                <?php endif; ?>
                 <section class="filter-group">
                     <button type="button" class="filter-group-head <?= $open_shape ? '' : 'is-closed' ?>" data-toggle-group>
                         <span>Ngoại hình</span>
@@ -200,6 +213,7 @@ $with = function ($key, $value) use ($base_url) {
                     </div>
                 </section>
 
+                <?php if ($compact_members): ?></details><?php endif; ?>
                 </div>
                 <div class="filter-panel-footer">
                     <button class="btn-apply" type="submit">Áp dụng bộ lọc</button>
@@ -223,6 +237,7 @@ $with = function ($key, $value) use ($base_url) {
                         <?php endforeach; ?>
                     </select>
 
+                    <?php if (!$compact_members): ?>
                     <div class="view-switch">
                         <a class="<?= $view_mode === 'grid' ? 'on' : '' ?>" href="<?= $with('view', 'grid') ?>" title="Dạng lưới" aria-label="Dạng lưới">
                             <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></svg>
@@ -231,6 +246,7 @@ $with = function ($key, $value) use ($base_url) {
                             <svg viewBox="0 0 24 24" class="ic"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
                         </a>
                     </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -260,7 +276,7 @@ $with = function ($key, $value) use ($base_url) {
                         var grid = document.currentScript.parentElement;
                         var page = grid.closest('.members-page');
                         var requested = new URLSearchParams(window.location.search).get('view');
-                        var mode = requested === 'grid' || requested === 'list' ? requested
+                        var mode = page.classList.contains('members-discovery') ? 'list' : requested === 'grid' || requested === 'list' ? requested
                             : (window.matchMedia('(max-width: 720px)').matches ? 'list' : 'grid');
                         grid.classList.toggle('is-list', mode === 'list');
                         page.querySelector('input[name="view"]').value = mode;
