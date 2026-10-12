@@ -1,0 +1,79 @@
+/* Bộ lọc phía trên danh sách, cùng phong cách với trang Hẹn hò. */
+.container.members-discovery { max-width: 740px; }
+.members-discovery .search-head {
+    margin: 16px 0 0;
+    padding: 18px 16px;
+    border: 1px solid #eadce1;
+    border-bottom: 0;
+    border-radius: 8px 8px 0 0;
+    background: linear-gradient(110deg, var(--bg), #f9dce3);
+}
+.members-discovery .search-head h1 { font-size: 24px; }
+.members-discovery .search-head p { font-size: 13px; line-height: 1.5; color: #647386; }
+.members-discovery .search-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "filter" "toolbar" "results";
+    grid-template-rows: auto auto auto;
+    gap: 0;
+}
+.members-discovery .filter-panel {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    transform: none;
+    position: static;
+    max-height: none;
+    overflow: visible;
+    border: 1px solid #eadce1;
+    border-radius: 0 0 8px 8px;
+    background: var(--card);
+    box-shadow: none;
+    margin-bottom: 20px;
+}
+.members-discovery .filter-panel-body { overflow: visible; padding: 12px 16px; }
+.members-discovery .filter-head, .members-discovery .filter-basic-group > .filter-group-head { display: none; }
+.members-discovery .filter-basic-group { margin: 0; padding: 0; }
+.members-discovery .filter-label { margin: 0 0 5px; font-size: 12px; }
+.members-discovery .filter-basic-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.members-more-filters { margin-top: 8px; }
+.members-more-filters > summary { cursor: pointer; color: var(--pink); font-size: 12px; font-weight: 600; padding: 6px 0; }
+.members-discovery .members-more-filters .filter-label { margin-top: 10px; }
+.members-discovery .filter-group-head { padding: 8px 0; font-size: 13px; }
+.members-discovery .filter-group-body[hidden] { display: none; }
+.members-discovery .filter-basic-fields > div { min-width: 0; }
+.members-discovery .filter-panel :is(select, input[type=number], .ss-toggle) {
+    border: 1px solid #eadce1;
+    background-color: #fffafb;
+    height: 36px;
+    min-height: 36px;
+    padding: 0 8px;
+    font-size: 12px;
+    border-radius: 6px;
+}
+.members-discovery .filter-panel .ss-toggle { padding-right: 28px; }
+.members-discovery .filter-panel-footer { padding: 8px 16px; border-radius: 0 0 8px 8px; box-shadow: none; }
+.members-discovery .filter-panel-footer .btn-apply { width: auto; min-width: 160px; padding: 9px 16px; font-size: 12px; }
+.members-discovery .btn-filter-toggle { display: none; }
+.members-discovery .search-toolbar { min-width: 0; padding: 12px 20px; }
+.members-discovery .result-top { flex-direction: row; align-items: center; justify-content: flex-end; }
+.members-discovery .result-tools { margin: 0; justify-content: flex-end; }
+.members-discovery .result-panel { min-width: 0; }
+.members-discovery .member-grid.is-list .pcard { align-items: center; gap: 14px; padding: 12px; }
+.members-discovery .member-grid.is-list .pcard-photo { flex: 0 0 96px; width: 96px; border-radius: 10px; overflow: hidden; }
+.members-discovery .member-grid.is-list .pcard-photo img { height: 96px; aspect-ratio: 1; }
+.members-discovery .member-grid.is-list .pcard-body { min-width: 0; padding: 0; }
+.members-discovery .member-grid.is-list .pcard-bio,
+.members-discovery .member-grid.is-list .pcard-chips { display: none; }
+@media (max-width: 720px) {
+    .members-discovery .search-toolbar { padding: 10px; }
+    .members-discovery .search-head { padding: 16px; }
+    .members-discovery .search-head h1 { font-size: 22px; }
+    .members-discovery .search-head p { font-size: 13px; }
+    .members-discovery .filter-panel-body { padding: 12px 16px; }
+    .members-discovery .filter-basic-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .members-discovery .filter-basic-fields > div:last-child { grid-column: 1 / -1; }
+    .members-discovery .filter-panel-footer { padding: 12px 16px; }
+    .members-discovery .filter-panel-footer .btn-apply { width: 100%; min-width: 0; }
+    .members-discovery .member-grid.is-list .pcard-photo { flex-basis: 76px; width: 76px; }
+    .members-discovery .member-grid.is-list .pcard-photo img { height: 76px; }
+}
