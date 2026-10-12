@@ -28,6 +28,21 @@ class Emailer
 
     /* ===================== Các loại email ===================== */
 
+    /** A useful next step for members who have not activated or finished setup. */
+    public function activation_nudge($user_id, $verify, array $missing = array())
+    {
+        $u = $this->CI->m_user->find($user_id);
+        if (!$u) return false;
+        $review = !$verify && !$missing && $u['status'] === 'pending';
+        return $this->CI->m_email->enqueue($user_id, 'activation_nudge',
+            $verify ? 'Xác nhận email để bắt đầu kết nối tại Saigon Cupid'
+                    : ($review ? 'Theo dõi trạng thái tài khoản Saigon Cupid của bạn' : 'Hoàn thiện hồ sơ để tìm người phù hợp với bạn'),
+            'activation_nudge', array('name' => $this->ten($u), 'verify' => (bool) $verify,
+                'review' => $review,
+                'missing' => array_values($missing),
+                'link' => site_url($verify ? 'xac-thuc' : ($review ? 'tai-khoan' : 'tai-khoan/bat-dau'))));
+    }
+
     /** Chào mừng người mới, gửi sau 1 phút. */
     public function welcome($user_id)
     {
@@ -43,19 +58,9 @@ class Emailer
         );
     }
 
-    /**
-     * Có tin nhắn mới. Xếp hàng chờ 5 phút rồi mới gửi — lúc đó worker kiểm
-     * tra lại: người nhận đọc rồi hoặc đang online thì thôi không gửi nữa.
-     */
-    public function new_message($receiver_id, $sender, $conversation_id, $content, $type = 'text')
+    /** Mỗi tin nhắn tạo một email thông báo, không chứa nội dung tin nhắn. */
+    public function new_message($receiver_id, $sender, $conversation_id)
     {
-        // Một cuộc hội thoại chỉ báo tối đa một lần mỗi giờ
-        if ($this->CI->m_email->da_gui_gan_day($receiver_id, 'new_message', $conversation_id, 1)) {
-            return false;
-        }
-
-        $xem_truoc = $type === 'image' ? 'Đã gửi một ảnh' : mb_substr(trim((string) $content), 0, 150);
-
         return $this->CI->m_email->enqueue(
             $receiver_id, 'new_message',
             $this->ten($sender) . ' đã nhắn tin cho bạn',
@@ -63,10 +68,9 @@ class Emailer
             array(
                 'sender'  => $this->ten($sender),
                 'avatar'  => avatar_url($sender['avatar'] ?? null, $sender['gender'] ?? 'other'),
-                'preview' => $xem_truoc,
                 'link'    => site_url('tai-khoan/tin-nhan/' . (int) $conversation_id),
             ),
-            array('delay_minutes' => 5, 'related_id' => $conversation_id)
+            array('related_id' => $conversation_id)
         );
     }
 
@@ -171,6 +175,35 @@ class Emailer
         );
     }
 
+    /**
+     * Nhắc hoàn thiện hồ sơ — gửi sau 1 ngày (lần 1) và 3 ngày (lần 2) kể từ
+     * khi đăng ký, nếu hồ sơ vẫn chưa đủ để hiện công khai. Nói lợi ích, không
+     * nói nghĩa vụ.
+     *
+     * @param array $thieu nhãn các mục còn thiếu (M_user::thieu_thong_tin)
+     */
+    public function profile_nudge($user_id, $lan, array $thieu)
+    {
+        $u = $this->CI->m_user->find($user_id);
+        if (!$u || !$thieu) { return false; }
+
+        $tieu_de = $lan <= 1
+            ? $this->ten($u) . ' ơi, thêm một tấm ảnh để mọi người thấy bạn nhé'
+            : 'Hồ sơ của ' . $this->ten($u) . ' vẫn đang bị ẩn — chỉ cần 1 phút';
+
+        return $this->CI->m_email->enqueue(
+            $user_id, 'profile_nudge',
+            $tieu_de,
+            'profile_nudge',
+            array(
+                'name'  => $this->ten($u),
+                'lan'   => (int) $lan,
+                'thieu' => array_values($thieu),
+                'link'  => site_url('tai-khoan/bat-dau'),
+            )
+        );
+    }
+
     /** Kéo người đã lâu không vào quay lại. */
     public function re_engage($user_id, $so_thich, array $avatars)
     {
@@ -180,7 +213,7 @@ class Emailer
         list($tieu_de, $nhanh) = $this->CI->m_email->chon_nhanh($user_id, array(
             'A' => $so_thich > 0
                 ? $this->ten($u) . ' ơi, có ' . (int) $so_thich . ' người mới thích bạn!'
-                : $this->ten($u) . ' ơi, có người đang chờ bạn quay lại!',
+                : $this->ten($u) . ' ơi, quay lại khám phá những kết nối mới nhé',
             'B' => $so_thich > 0
                 ? 'Bạn đang bỏ lỡ ' . (int) $so_thich . ' người quan tâm mình'
                 : 'Lâu rồi không gặp — có gì mới cho bạn đây',

@@ -31,13 +31,14 @@ $chips = array_filter(array(
 ));
 ?>
 <section class="dm-wrap" data-daily="<?= (int) $daily['id'] ?>"
+         data-server-now="<?= time() ?>"
          data-expires="<?= strtotime($daily['expires_at']) ?>">
     <div class="container">
         <div class="dm-card is-<?= e($daily['status']) ?>">
             <header class="dm-head">
                 <div>
                     <h2>Người phù hợp với bạn hôm nay</h2>
-                    <p class="dm-sub">Mỗi ngày một người, hết hạn lúc 8h sáng mai.</p>
+                    <p class="dm-sub">Mỗi ngày một người, làm mới lúc 8h sáng hằng ngày.</p>
                 </div>
                 <?php if ($daily['status'] === 'pending'): ?>
                     <span class="dm-countdown" id="dm-countdown">—</span>

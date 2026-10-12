@@ -2,11 +2,10 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
- * Mã OTP gửi qua email cho hai việc: xác thực khi đăng ký và bước hai khi
- * đăng nhập.
+ * Link xác thực email gửi sau khi đăng ký (bấm một chạm, không phải nhập mã).
  *
- * Mã lưu trong bảng user_tokens nhưng KHÔNG lưu nguyên văn — chỉ lưu bản băm.
- * Ai đọc được cơ sở dữ liệu cũng không đăng nhập hộ người khác được.
+ * Token lưu trong bảng user_tokens nhưng KHÔNG lưu nguyên văn — chỉ lưu bản băm.
+ * Ai đọc được cơ sở dữ liệu cũng không xác thực hộ người khác được.
  */
 class M_otp extends CI_Model
 {
@@ -16,20 +15,11 @@ class M_otp extends CI_Model
         'login'    => 'otp',
     );
 
-    const SO_CHU_SO  = 6;
-    const PHUT_SONG  = 10;   // mã sống bao lâu
-    const GIAY_CHO   = 60;   // phải chờ bao lâu mới được gửi lại
-    const TOI_DA_SAI = 5;    // sai quá số này thì huỷ mã
+    const GIAY_CHO = 60;   // phải chờ bao lâu mới được gửi lại
 
     private function loai($muc_dich)
     {
         return self::MUC_DICH[$muc_dich] ?? self::MUC_DICH['login'];
-    }
-
-    /** Băm mã kèm id người dùng để hai người trùng mã vẫn ra hai chuỗi khác nhau. */
-    private function bam($ma, $user_id)
-    {
-        return hash('sha256', $ma . '|' . (int) $user_id . '|' . config_item('encryption_key'));
     }
 
     /** Mã còn hiệu lực gần nhất của một người, dùng để tính thời gian chờ gửi lại. */
@@ -57,58 +47,55 @@ class M_otp extends CI_Model
         return max(0, self::GIAY_CHO - $da_qua);
     }
 
-    /**
-     * Sinh mã mới và huỷ mọi mã cũ cùng mục đích.
-     * Trả về mã nguyên văn để gửi email — chỉ chỗ này biết nó.
-     */
-    public function tao($user_id, $muc_dich)
+    /* ============ Link xác thực email một chạm ============ */
+
+    const GIO_SONG_LINK = 48;   // link trong thư sống bao lâu
+
+    /** Băm token của link — tra theo bản băm nên không cần biết user_id trước. */
+    private function bam_link($token)
     {
-        $this->huy($user_id, $muc_dich);
-
-        // random_int cho số ngẫu nhiên đủ an toàn, không dùng rand()
-        $ma = str_pad((string) random_int(0, 999999), self::SO_CHU_SO, '0', STR_PAD_LEFT);
-
-        $this->db->insert('user_tokens', array(
-            'user_id'    => (int) $user_id,
-            'type'       => $this->loai($muc_dich),
-            'token'      => $this->bam($ma, $user_id),
-            'expires_at' => date('Y-m-d H:i:s', time() + self::PHUT_SONG * 60),
-        ));
-
-        return $ma;
+        return hash('sha256', 'link|' . $token . '|' . config_item('encryption_key'));
     }
 
     /**
-     * Đối chiếu mã người dùng nhập.
-     * Trả về ['ok' => bool, 'message' => string].
+     * Sinh link xác thực email mới (huỷ link/mã cũ cùng loại).
+     * Trả về token nguyên văn để ghép vào URL — DB chỉ giữ bản băm.
      */
-    public function kiem_tra($user_id, $muc_dich, $ma_nhap)
+    public function tao_link($user_id)
     {
-        $ma_nhap = preg_replace('/\D+/', '', (string) $ma_nhap);
-        $hang    = $this->hien_hanh($user_id, $muc_dich);
+        $this->huy($user_id, 'register');
 
+        $token = bin2hex(random_bytes(24));
+        $this->db->insert('user_tokens', array(
+            'user_id'    => (int) $user_id,
+            'type'       => $this->loai('register'),
+            'token'      => $this->bam_link($token),
+            'expires_at' => date('Y-m-d H:i:s', time() + self::GIO_SONG_LINK * 3600),
+        ));
+        return $token;
+    }
+
+    /**
+     * Dùng link: đúng và còn hạn thì đánh dấu đã dùng, trả về user_id;
+     * sai hoặc hết hạn trả về null.
+     */
+    public function dung_link($token)
+    {
+        $token = preg_replace('/[^a-f0-9]/', '', strtolower((string) $token));
+        if ($token === '') {
+            return null;
+        }
+        $hang = $this->db->where('token', $this->bam_link($token))
+            ->where('type', $this->loai('register'))
+            ->where('used_at', null)
+            ->where('expires_at >', date('Y-m-d H:i:s'))
+            ->get('user_tokens')->row_array();
         if (!$hang) {
-            return array('ok' => false, 'message' => 'Mã đã hết hạn. Bấm "Gửi lại mã" để nhận mã mới.');
+            return null;
         }
-        if ((int) $hang['attempts'] >= self::TOI_DA_SAI) {
-            $this->huy($user_id, $muc_dich);
-            return array('ok' => false, 'message' => 'Bạn đã nhập sai quá nhiều lần. Hãy yêu cầu mã mới.');
-        }
-        if (!hash_equals($hang['token'], $this->bam($ma_nhap, $user_id))) {
-            $this->db->where('id', $hang['id'])
-                ->set('attempts', 'attempts + 1', false)->update('user_tokens');
-
-            $con_lai = self::TOI_DA_SAI - ((int) $hang['attempts'] + 1);
-            return array('ok' => false, 'message' => $con_lai > 0
-                ? 'Mã không đúng. Bạn còn ' . $con_lai . ' lần thử.'
-                : 'Mã không đúng và bạn đã hết lượt thử. Hãy yêu cầu mã mới.');
-        }
-
-        // Đúng: đánh dấu đã dùng để không ai xài lại được mã này
         $this->db->where('id', $hang['id'])
             ->update('user_tokens', array('used_at' => date('Y-m-d H:i:s')));
-
-        return array('ok' => true, 'message' => '');
+        return (int) $hang['user_id'];
     }
 
     /** Vô hiệu mọi mã chưa dùng của một người cho một mục đích. */

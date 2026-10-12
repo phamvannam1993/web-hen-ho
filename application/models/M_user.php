@@ -77,7 +77,18 @@ class M_user extends CI_Model
 
     public function update_profile($id, array $data)
     {
+        $this->db->trans_start();
+        if (array_key_exists('email', $data)) {
+            $current = $this->find($id);
+            if ((string) $data['email'] !== (string) ($current['email'] ?? '')) {
+                $data['email_verified_at'] = null;
+                $this->db->where('user_id', $id)
+                    ->where_in('type', array('verify_email', 'reset_password', 'otp'))
+                    ->delete('user_tokens');
+            }
+        }
         $this->db->where('id', $id)->update('users', $data);
+        $this->db->trans_complete();
         $this->recalc_profile_score($id);
     }
 
@@ -88,10 +99,19 @@ class M_user extends CI_Model
         ));
     }
 
-    /**
-     * Danh sách thành viên có lọc.
-     * $filters: gender, province_id, age_min, age_max, keyword, online, vip, sort
-     */
+    /** Chọn vài ảnh đại diện công khai từ nhóm thành viên lâu năm. */
+    public function dating_hero_members()
+    {
+        $pool = $this->db->select('id, avatar, gender, display_name, nickname, slug')
+            ->from('users')->where('status', 'active')->where('deleted_at', null)
+            ->where('role', 'member')->where('avatar !=', '')
+            ->where('created_at <=', date('Y-m-d H:i:s', time() - 30 * 86400))
+            ->order_by('created_at', 'ASC')->limit(60)->get()->result_array();
+        shuffle($pool);
+        return array_slice($pool, 0, 4);
+    }
+
+    /** Danh sách thành viên có lọc, dùng cùng điều kiện với count_search. */
     public function search(array $filters, $limit = 12, $offset = 0)
     {
         $this->build_search($filters);
@@ -112,8 +132,20 @@ class M_user extends CI_Model
                               AND l.target_id = u.id) AS liked";
         }
         $this->db->select($select, false);
+        if (array_key_exists('distance_origin', $filters)) {
+            $km = $this->distance_sql($filters['distance_origin']);
+            $real = $this->real_location_sql();
+            $this->db->select("$km AS distance_km, " . (!empty($filters['distance_origin']['real']) ? $real : '0') . ' AS distance_real', false);
+            $province_id = (int) ($filters['distance_origin']['province_id'] ?? 0);
+            $this->db->select(($province_id ? "(u.province_id = $province_id)" : '0') . ' AS distance_same_province', false);
+        }
 
         switch ($filters['sort'] ?? 'active') {
+            case 'nearby':
+                $km = $this->distance_sql($filters['distance_origin'] ?? null);
+                $this->db->order_by("($km) IS NULL", 'ASC', false)
+                    ->order_by($km, 'ASC', false)->order_by('u.last_active_at', 'DESC')->order_by('u.id', 'DESC');
+                break;
             case 'new':   $this->db->order_by('u.created_at', 'DESC'); break;
             case 'vip':   $this->db->order_by('u.is_vip', 'DESC')->order_by('u.last_active_at', 'DESC'); break;
             case 'listened':
@@ -155,6 +187,16 @@ class M_user extends CI_Model
             ->where('u.status', 'active')->where('u.deleted_at', null)
             ->where('u.role', 'member')
             ->where($this->dieu_kien_ho_so_du('u'), null, false);
+        if ($this->auth->check()) {
+            $viewer = (int) $this->auth->id();
+            $this->db->where('u.id !=', $viewer);
+            $this->db->where("NOT EXISTS (SELECT 1 FROM likes browse_like
+                WHERE browse_like.user_id = $viewer AND browse_like.target_type = 'user'
+                  AND browse_like.target_id = u.id)", null, false);
+        }
+        if (!empty($f['distance_max']) && !empty($f['distance_origin'])) {
+            $this->db->where('(' . $this->distance_sql($f['distance_origin']) . ') <= ' . (int) $f['distance_max'], null, false);
+        }
 
         if (!empty($f['gender']))      $this->db->where('u.gender', $f['gender']);
         if (!empty($f['province_id'])) $this->db->where('u.province_id', (int) $f['province_id']);
@@ -207,6 +249,52 @@ class M_user extends CI_Model
         }
     }
 
+    public function location_ready()
+    {
+        return $this->db->field_exists('location_updated_at', 'users')
+            && $this->db->field_exists('lat', 'provinces') && $this->db->field_exists('lng', 'provinces');
+    }
+
+    private function real_location_sql()
+    {
+        if (!$this->location_ready()) return '0';
+        return "(u.location_updated_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+            AND u.lat BETWEEN -90 AND 90 AND u.lng BETWEEN -180 AND 180)";
+    }
+
+    public function province_coordinates(array $province)
+    {
+        if (isset($province['lat'], $province['lng'])) return array((float) $province['lat'], (float) $province['lng']);
+        $coordinates = require __DIR__ . '/../config/province_coordinates.php';
+        return $coordinates[$province['slug'] ?? ''] ?? null;
+    }
+
+    private function province_coordinate_sql($axis)
+    {
+        $coordinates = require __DIR__ . '/../config/province_coordinates.php';
+        $sql = 'CASE p.slug';
+        foreach ($coordinates as $slug => $point) {
+            $sql .= " WHEN '" . $slug . "' THEN " . (float) $point[$axis === 'lat' ? 0 : 1];
+        }
+        $sql .= ' ELSE NULL END';
+        return $this->db->field_exists($axis, 'provinces') ? "COALESCE(p.$axis, $sql)" : "($sql)";
+    }
+
+    public function distance_sql($origin)
+    {
+        if (!$origin) return 'NULL';
+        $lat = (float) $origin['lat'];
+        $lng = (float) $origin['lng'];
+        $real = $this->real_location_sql();
+        $province_lat = $this->province_coordinate_sql('lat');
+        $province_lng = $this->province_coordinate_sql('lng');
+        $target_lat = $real === '0' ? $province_lat : "IF($real, u.lat, $province_lat)";
+        $target_lng = $real === '0' ? $province_lng : "IF($real, u.lng, $province_lng)";
+        return "(6371 * ACOS(GREATEST(-1, LEAST(1,
+            COS(RADIANS($lat)) * COS(RADIANS($target_lat)) * COS(RADIANS($target_lng) - RADIANS($lng))
+            + SIN(RADIANS($lat)) * SIN(RADIANS($target_lat))))))";
+    }
+
     /**
      * Điều kiện SQL: chỉ những hồ sơ đã khai đủ mới được hiện ra ngoài.
      * Danh sách cột khớp đúng với M_user::thieu_thong_tin() để hai bên không lệch nhau.
@@ -215,7 +303,7 @@ class M_user extends CI_Model
      */
     public function dieu_kien_ho_so_du($a = 'u')
     {
-        $dk = array();
+        $dk = array("$a.birthday <= '" . date('Y-m-d', strtotime('-18 years')) . "'");
         foreach (array('display_name', 'gender', 'birthday', 'province_id', 'avatar') as $c) {
             $dk[] = "$a.$c IS NOT NULL";
         }
@@ -227,17 +315,19 @@ class M_user extends CI_Model
         return implode(' AND ', $dk);
     }
 
-    /**
-     * Những mục hồ sơ còn bỏ trống, dùng để chặn người mới đăng ký đi tiếp
-     * khi chưa khai xong. Trả về mảng tên mục theo đúng thứ tự trên biểu mẫu;
-     * mảng rỗng nghĩa là hồ sơ đã đầy đủ.
-     */
-    /** Tổng số mục bắt buộc, dùng cho thanh tiến độ ở trang hồ sơ. */
+    /** Tổng số mục cần để hồ sơ hiện công khai, dùng cho thanh tiến độ ở trang hồ sơ. */
     public function so_muc_bat_buoc()
     {
-        return 8;   // 6 mục trong users + 2 mục tiêu chí tìm kiếm
+        return 7;   // 5 mục trong users + 2 mục tiêu chí tìm kiếm
     }
 
+    /**
+     * Những mục còn thiếu để hồ sơ được HIỆN CÔNG KHAI (danh sách Hẹn hò, Ghép
+     * đôi ẩn, Thành viên, gợi ý…). Thiếu thì người dùng vẫn dùng web bình thường,
+     * chỉ là hồ sơ bị ẩn và có banner nhắc. Mảng rỗng nghĩa là đã đủ.
+     *
+     * PHẢI khớp với dieu_kien_ho_so_du() — hai bên là một luật.
+     */
     public function thieu_thong_tin($user_id)
     {
         $u = $this->db->where('id', $user_id)->get('users')->row_array();
@@ -246,16 +336,14 @@ class M_user extends CI_Model
         }
         $pref = $this->db->where('user_id', $user_id)->get('user_preferences')->row_array();
 
-        // Chỉ những mục thật sự cần để hồ sơ dùng được và ghép đôi được.
-        // Các mục còn lại (chiều cao, nghề nghiệp, học vấn, thói quen, sở thích,
-        // ảnh đại diện...) là tuỳ chọn, khai thêm thì hồ sơ đẹp hơn thôi.
+        // Ảnh và khu vực lên đầu: hai mục người mới đăng ký luôn còn thiếu
+        // (đăng ký chỉ hỏi tên, giới tính, ngày sinh).
         $can = array(
+            'avatar'       => 'Ảnh đại diện',
+            'province_id'  => 'Khu vực',
             'display_name' => 'Tên hiển thị',
             'gender'       => 'Giới tính',
             'birthday'     => 'Ngày sinh',
-            'province_id'  => 'Khu vực',
-            'bio'          => 'Giới thiệu bản thân',
-            'avatar'       => 'Ảnh đại diện',
         );
 
         $thieu = array();
@@ -458,6 +546,33 @@ class M_user extends CI_Model
      *   +0-10 theo mức hoàn thiện hồ sơ
      * Loại trừ: chính mình, người đã chặn/bị chặn, người tôi đã thích hoặc đã bỏ qua.
      */
+    /** Rotate a shortlist of suitable profiles at 08:00 Vietnam time. */
+    public function account_suggestions($user, $limit = 3, $now = null)
+    {
+        $limit = max(1, (int) $limit);
+        $candidates = $this->suggestions($user, max(30, $limit));
+        if (!$candidates) return array();
+
+        // Stable per-member order; no random reshuffle on page reload.
+        $member_id = (int) $user['id'];
+        usort($candidates, function ($a, $b) use ($member_id) {
+            return strcmp(hash('sha256', $member_id . ':' . $a['id']),
+                hash('sha256', $member_id . ':' . $b['id']));
+        });
+        $clock = (new DateTimeImmutable('@' . ($now ?? time())))
+            ->setTimezone(new DateTimeZone('Asia/Ho_Chi_Minh'));
+        $cycle = $clock->modify('-8 hours')->format('Y-m-d');
+        $day = (int) floor((new DateTimeImmutable($cycle, new DateTimeZone('UTC')))->getTimestamp() / 86400);
+        $count = count($candidates);
+        // Advance one position each day so a pool larger than the display count changes.
+        $start = (($day % $count) + $count) % $count;
+        $selected = array();
+        for ($i = 0; $i < min($limit, $count); $i++) {
+            $selected[] = $candidates[($start + $i) % $count];
+        }
+        return $selected;
+    }
+
     public function suggestions($user, $limit = 12, $offset = 0)
     {
         $me   = (int) $user['id'];
@@ -502,9 +617,8 @@ class M_user extends CI_Model
                AND u.id NOT IN (SELECT user_id     FROM blocks WHERE blocked_id = ?)
                AND u.id NOT IN (SELECT passed_id FROM user_passes WHERE user_id = ?)
                $online_cond
-          -- Người đã thích vẫn giữ nguyên vị trí trong danh sách để sau khi bấm
-          -- (và cả khi tải lại trang) họ không biến mất hay nhảy sang trang khác.
-          -- Chỉ người bị bỏ qua mới loại khỏi gợi ý.
+               AND NOT EXISTS (SELECT 1 FROM likes hidden_like WHERE hidden_like.user_id = $me
+                   AND hidden_like.target_type = 'user' AND hidden_like.target_id = u.id)
           ORDER BY match_score DESC, u.last_active_at DESC
              LIMIT ? OFFSET ?";
 
@@ -534,6 +648,8 @@ class M_user extends CI_Model
                 AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE user_id = ?)
                 AND u.id NOT IN (SELECT user_id FROM blocks WHERE blocked_id = ?)
                 AND u.id NOT IN (SELECT passed_id FROM user_passes WHERE user_id = ?)
+                AND NOT EXISTS (SELECT 1 FROM likes hidden_like WHERE hidden_like.user_id = $me
+                    AND hidden_like.target_type = 'user' AND hidden_like.target_id = u.id)
                 $online_cond",
             array($me, $me, $me, $me)
         )->row('c');
@@ -559,6 +675,10 @@ class M_user extends CI_Model
             ->where('u.status', 'active')->where('u.role', 'member')->where('u.deleted_at', null)
             ->where($this->dieu_kien_ho_so_du('u'), null, false);
 
+        if ($viewer) {
+            $this->db->where("NOT EXISTS (SELECT 1 FROM likes purpose_like WHERE purpose_like.user_id = $viewer
+                AND purpose_like.target_type = 'user' AND purpose_like.target_id = u.id)", null, false);
+        }
         if ($this->only_online()) {
             $this->db->where('u.last_active_at >', date('Y-m-d H:i:s', time() - 300));
         }
@@ -649,17 +769,15 @@ class M_user extends CI_Model
         ));
     }
 
-    /** Tính % hoàn thiện hồ sơ để ưu tiên hiển thị. */
+    /**
+     * Tính % hoàn thiện hồ sơ để ưu tiên hiển thị. Cùng công thức với
+     * tk_ho_so_day_du() — gọi lại sau khi lưu sở thích để tính cả mục đó.
+     */
     public function recalc_profile_score($id)
     {
         $u = $this->db->where('id', $id)->get('users')->row_array();
         if (!$u) return 0;
-        $fields = array('avatar', 'bio', 'birthday', 'province_id', 'job', 'height_cm', 'marital_status', 'education');
-        $filled = 0;
-        foreach ($fields as $f) {
-            if (!empty($u[$f])) $filled++;
-        }
-        $score = (int) round($filled / count($fields) * 100);
+        $score = tk_ho_so_day_du($u)['phan_tram'];
         $this->db->where('id', $id)->update('users', array('profile_score' => $score));
         return $score;
     }

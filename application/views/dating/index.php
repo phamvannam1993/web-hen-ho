@@ -1,45 +1,8 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
-$sorts = array('active' => 'Vừa online', 'new' => 'Mới tham gia', 'verified' => 'Đã xác thực');
-/** Đường dẫn giữ nguyên tab, chỉ đổi kiểu sắp xếp. */
-$sort_url = function ($key) use ($base_url) {
-    $q = $this->input->get();
-    $q['sort'] = $key;
-    return site_url($base_url) . '?' . http_build_query($q);
-};
+$sorts = array('nearby' => 'Gần bạn nhất', 'active' => 'Vừa online', 'new' => 'Mới tham gia', 'verified' => 'Đã xác thực');
 ?>
 <div class="container dating-page">
-    <nav class="breadcrumb">
-        <a href="<?= site_url() ?>">Trang chủ</a> ›
-        <?php if ($tab): ?>
-            <a href="<?= site_url('hen-ho') ?>">Hẹn hò</a> ›
-            <span><?= e($tabs[$tab]['label']) ?></span>
-        <?php else: ?>
-            <span>Hẹn hò</span>
-        <?php endif; ?>
-    </nav>
-
-    <header class="dating-head">
-        <h1><?= e($heading) ?></h1>
-        <p><?= e($tabs[$tab]['desc']) ?></p>
-    </header>
-
-    <!-- Dải tab chuyển nhanh giữa các mục con -->
-    <nav class="dating-tabs" aria-label="Nhóm hẹn hò">
-        <?php foreach ($tabs as $key => $t): ?>
-            <a class="<?= $key === $tab ? 'on' : '' ?>"
-               href="<?= site_url('hen-ho' . ($key ? '/' . $key : '')) ?>"><?= e($t['label']) ?></a>
-        <?php endforeach; ?>
-    </nav>
-
-    <div class="dating-bar">
-        <p class="result-total"><b><?= number_format($total) ?></b> hồ sơ</p>
-        <div class="sort-tabs">
-            <span>Xếp theo:</span>
-            <?php foreach ($sorts as $key => $label): ?>
-                <a class="<?= $sort === $key ? 'on' : '' ?>" href="<?= $sort_url($key) ?>"><?= $label ?></a>
-            <?php endforeach; ?>
-        </div>
-    </div>
+    <?php $this->load->view('dating/_discovery', array('sorts' => $sorts)); ?>
 
     <?php if (empty($members)): ?>
         <p class="empty">Chưa có hồ sơ nào trong mục này.
@@ -48,7 +11,7 @@ $sort_url = function ($key) use ($base_url) {
     <?php else: ?>
         <div class="member-grid">
             <?php foreach ($members as $m): ?>
-                <?php $this->load->view('members/_card', array('m' => $m)); ?>
+                <?php $this->load->view('members/_card', array('m' => $m, 'dating_card' => true)); ?>
             <?php endforeach; ?>
         </div>
         <?= $pagination ?>

@@ -24,16 +24,15 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
 
 <?php /* ===================== Khối mở đầu ===================== */ ?>
 <?php
-/* Ảnh nền khối mở đầu. Thay ảnh khác thì chỉ cần ghi đè file này, hoặc đặt
-   khoá cấu hình home_hero_image (Quản trị -> Cấu hình) trỏ tới ảnh khác. */
-$hero_img = setting('home_hero_image') ?: 'assets/images/banner.png';
+/* Ảnh banner trang chủ được chọn theo thiết kế hiện tại. */
+$hero_img = 'assets/images/banner.webp';
 ?>
 <section class="hm-hero">
     <div class="hm-hero-bg" aria-hidden="true"
          style="background-image:url('<?= base_url(ltrim($hero_img, '/')) ?>')"></div>
     <div class="container hm-hero-inner">
         <h1 class="hm-hero-title">Nơi trái tim Việt Nam tìm thấy nhau</h1>
-        <p class="hm-hero-sub">Kết nối với người phù hợp – Chỉ nhắn tin khi cả hai cùng thả tim ❤️</p>
+        <p class="hm-hero-sub">Kết nối với người phù hợp – Chủ động nhắn tin để làm quen ❤️</p>
 
         <form class="hm-hero-search" method="get" action="<?= site_url('tim-kiem') ?>">
             <span class="hm-hero-search-ic" aria-hidden="true"><?= $ic($ic_search) ?></span>
@@ -45,9 +44,9 @@ $hero_img = setting('home_hero_image') ?: 'assets/images/banner.png';
         <a class="btn-hm btn-hm-solid btn-hm-lg hm-hero-cta" href="<?= site_url('swipe-match') ?>">Ghép Đôi Online</a>
 
         <ul class="hm-hero-stats">
-            <li><?= $ic($ic_userpl) ?><b><?= number_format(max(50000, $stats['total']), 0, ',', '.') ?>+</b> Thành viên</li>
-            <li><?= $ic($ic_heart) ?><b><?= number_format(max(5000, $couple_count), 0, ',', '.') ?>+</b> Cặp đôi</li>
-            <li><?= $ic($ic_star) ?><b>4.8/5</b> Đánh giá</li>
+            <li><?= $ic($ic_userpl) ?><b><?= number_format($stats['total'], 0, ',', '.') ?>+</b> Thành viên</li>
+            <li><?= $ic($ic_heart) ?><b><?= number_format($couple_count, 0, ',', '.') ?>+</b> Cặp đôi</li>
+            <li><?= $ic($ic_star) ?><b>18+</b> Cộng đồng trưởng thành</li>
         </ul>
     </div>
 </section>
@@ -62,8 +61,8 @@ $hero_img = setting('home_hero_image') ?: 'assets/images/banner.png';
         <div class="hm-why">
             <?php
             $whys = array(
-                array($ic_heart,  'Kết nối chân thật',  'Chỉ những người thực sự quan tâm mới có thể match và nhắn tin với nhau.'),
-                array($ic_shield, 'An toàn &amp; Bảo mật', 'Thông tin cá nhân được mã hóa và bảo vệ tuyệt đối.'),
+                array($ic_heart,  'Kết nối chân thật',  'Thả tim để bày tỏ sự quan tâm hoặc nhắn tin ngay để làm quen.'),
+                array($ic_shield, 'An toàn &amp; Bảo mật', 'Kết nối qua HTTPS. Chủ động bảo vệ thông tin cá nhân và báo cáo hồ sơ vi phạm.'),
                 array($ic_users,  'Cộng đồng đông đảo', 'Kết nối với hàng nghìn thành viên từ khắp các tỉnh thành.'),
                 array($ic_chat,   'Tìm kiếm thông minh', 'Gợi ý đối tượng phù hợp dựa trên sở thích và tính cách của bạn.'),
             );
@@ -87,7 +86,7 @@ $hero_img = setting('home_hero_image') ?: 'assets/images/banner.png';
             $steps = array(
                 array($ic_pen,   'Tạo hồ sơ', 'Đăng ký nhanh chóng, thêm ảnh và thông tin về bản thân bạn.'),
                 array($ic_heart, 'Kết nối',   'Thả tim những người bạn ấn tượng – Họ sẽ biết và có thể đáp lại.'),
-                array($ic_chat,  'Trò chuyện','Khi cả hai cùng thả tim, mở khóa chat và bắt đầu câu chuyện tình yêu.'),
+                array($ic_chat,  'Trò chuyện','Nhắn tin ngay từ hồ sơ để làm quen và bắt đầu câu chuyện của hai bạn.'),
             );
             foreach ($steps as $i => $st): ?>
                 <?php if ($i > 0): ?><span class="hm-step-sep" aria-hidden="true">›</span><?php endif; ?>
@@ -104,7 +103,7 @@ $hero_img = setting('home_hero_image') ?: 'assets/images/banner.png';
             <?php endforeach; ?>
         </div>
         <div class="hm-center">
-            <a class="btn-hm btn-hm-soft btn-hm-lg" href="<?= site_url('swipe-match') ?>">Tìm ngay nửa kia</a>
+            <a class="btn-hm btn-hm-soft btn-hm-lg" href="<?= site_url('hen-ho') ?>">Tìm ngay nửa kia</a>
         </div>
     </div>
 </section>
@@ -150,63 +149,14 @@ $hero_img = setting('home_hero_image') ?: 'assets/images/banner.png';
         <h2 class="hm-title is-left">Gợi ý ghép đôi cho bạn</h2>
         <p class="hm-sub">Sắp xếp theo mức độ tương hợp với tiêu chí của bạn</p>
 
-        <div class="hm-sugs">
-            <?php foreach ($suggestions as $m):
-                $tuoi     = age_from($m['birthday']);
-                $da_match = in_array((int) $m['id'], $matched_ids, true);
-                // match_score tối đa lý thuyết là 155 nhưng thực tế hiếm khi vượt
-                // 120, nên lấy 120 làm mốc 100% rồi kẹp trong khoảng 60–99 để
-                // con số vừa sát thực vừa không hiện những mức khó tin.
-                $hop = max(60, min(99, (int) round(($m['match_score'] ?? 0) * 100 / 120)));
-                $chips = array_filter(array(
-                    !empty($m['province_name']) ? $m['province_name'] : null,
-                    !empty($m['job'])           ? $m['job'] : null,
-                    !empty($m['height_cm'])     ? (int) $m['height_cm'] . 'cm' : null,
-                    !empty($m['marital_status']) && $m['marital_status'] === 'doc_than' ? 'Độc thân' : null,
-                ));
-            ?>
-                <article class="hm-sug" data-user="<?= (int) $m['id'] ?>">
-                    <a class="hm-sug-photo" href="<?= site_url('profile/' . $m['slug']) ?>">
-                        <img src="<?= avatar_url($m['avatar'], $m['gender']) ?>" alt="<?= e(display_name($m)) ?>" loading="lazy">
-                    </a>
-
-                    <div class="hm-sug-body">
-                        <div class="hm-sug-top">
-                            <h3><a href="<?= site_url('profile/' . $m['slug']) ?>"><?= e(display_name($m)) ?><?= $tuoi ? ', ' . $tuoi : '' ?></a></h3>
-                            <span class="hm-pill hm-pill-pink">Tương hợp: <?= $hop ?>%</span>
-                            <?php if ($da_match): ?>
-                                <span class="hm-pill hm-pill-green">Đã match!</span>
-                            <?php endif; ?>
-                        </div>
-
-                        <?php if ($chips): ?>
-                            <p class="hm-sug-chips">
-                                <?php foreach ($chips as $c): ?><span><?= e($c) ?></span><?php endforeach; ?>
-                            </p>
-                        <?php endif; ?>
-                    </div>
-
-                    <div class="hm-sug-actions">
-                        <?php if ($da_match): ?>
-                            <button type="button" class="btn-hm btn-hm-solid" data-chat-with="<?= (int) $m['id'] ?>">
-                                <?= $ic($ic_chat) ?>Trò chuyện ngay
-                            </button>
-                        <?php else: ?>
-                            <button type="button" class="btn-hm btn-hm-line" data-card-action="pass">
-                                <?= $ic($ic_close) ?>Bỏ qua
-                            </button>
-                            <button type="button" class="btn-hm btn-hm-solid <?= !empty($m['liked']) ? 'is-liked' : '' ?>"
-                                    data-card-action="like" data-like-label="Thả tim">
-                                <?= $ic($ic_heart) ?><span class="js-like-text"><?= !empty($m['liked']) ? 'Đã thích' : 'Thả tim' ?></span>
-                            </button>
-                        <?php endif; ?>
-                    </div>
-                </article>
+        <div class="hm-sugs" data-account-suggestions="home">
+            <?php foreach ($suggestions as $m): ?>
+                <?php $this->load->view('home/_suggestion', array('m' => $m, 'matched_ids' => $matched_ids)); ?>
             <?php endforeach; ?>
         </div>
 
         <div class="hm-center">
-            <a class="hm-link" href="<?= site_url('swipe-match') ?>">Xem thêm đề xuất khác →</a>
+            <a class="hm-link" href="<?= site_url('thanh-vien') ?>">Xem thêm đề xuất khác →</a>
         </div>
     </div>
 </section>
@@ -222,7 +172,7 @@ $hero_img = setting('home_hero_image') ?: 'assets/images/banner.png';
                 array('Nhờ ' . ($settings['site_name'] ?? 'Saigon Cupid') . ' mà mình đã gặp được người ấy sau 3 năm độc thân. '
                     . 'Quy trình kết nối thông minh giúp tụi mình tìm thấy nhiều tiếng nói chung trước khi trò chuyện trực tiếp.',
                     'Chị Minh Anh', 'Hà Nội', 'female'),
-                array('Ứng dụng tuyệt vời, an toàn và cực kỳ bảo mật. Mình thích tính năng thả tim hai chiều rồi mới trò chuyện, '
+                array('Ứng dụng tuyệt vời, an toàn và cực kỳ bảo mật. Mình thích việc có thể chủ động nhắn tin làm quen, '
                     . 'giúp tránh được rất nhiều tin nhắn làm phiền.',
                     'Anh Quốc Bảo', 'TP. Hồ Chí Minh', 'male'),
                 array('Ban đầu mình khá e dè khi hẹn hò online. Nhưng ' . ($settings['site_name'] ?? 'Saigon Cupid')
@@ -250,13 +200,13 @@ $hero_img = setting('home_hero_image') ?: 'assets/images/banner.png';
     <div class="container">
         <ul class="hm-band-stats">
             <li><span class="hm-band-ic"><?= $ic($ic_userpl) ?></span>
-                <b><?= number_format(max(50000, $stats['total']), 0, ',', '.') ?>+</b><small>Thành viên đăng ký</small></li>
+                <b><?= number_format($stats['total'], 0, ',', '.') ?>+</b><small>Thành viên đăng ký</small></li>
             <li><span class="hm-band-ic"><?= $ic($ic_heart) ?></span>
-                <b><?= number_format(max(5000, $couple_count), 0, ',', '.') ?>+</b><small>Cặp đôi kết nối</small></li>
+                <b><?= number_format($couple_count, 0, ',', '.') ?>+</b><small>Cặp đôi kết nối</small></li>
             <li><span class="hm-band-ic"><?= $ic($ic_pin) ?></span>
                 <b><?= (int) $province_count ?></b><small>Tỉnh thành kết nối</small></li>
             <li><span class="hm-band-ic"><?= $ic($ic_star) ?></span>
-                <b>4.8/5</b><small>Đánh giá hài lòng</small></li>
+                <b>18+</b><small>Độ tuổi tham gia</small></li>
         </ul>
 
         <?php if (!$user): ?>

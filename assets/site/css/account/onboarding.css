@@ -1,0 +1,32 @@
+/* Trang "Bắt đầu" (tai-khoan/bat-dau) — checklist ba bước sau đăng ký */
+
+.tk-ob-step { display: flex; align-items: flex-start; gap: 16px; }
+.tk-ob-step__b { flex: 1; min-width: 0; }
+.tk-ob-step__b .tk-card__t { white-space: normal; }
+.tk-ob-step__b .tk-card__t label { cursor: pointer; }
+.tk-ob-step__n {
+  width: 36px; height: 36px; flex: 0 0 36px;
+  display: grid; place-items: center; border-radius: 999px;
+  background: var(--tk-accent); color: var(--tk-accent-fg);
+  font-size: 15px; font-weight: 700;
+}
+.tk-ob-step__n.is-done { background: var(--tk-success); color: #fff; }
+.tk-ob-step__n .tk-ic { width: 18px; height: 18px; }
+
+.tk-ob-av { display: flex; align-items: center; gap: 16px; margin: 14px 0 8px; flex-wrap: wrap; }
+.tk-ob-av img {
+  width: 80px; height: 80px; border-radius: var(--tk-r-xl); object-fit: cover; display: block;
+  background: var(--tk-muted); box-shadow: 0 0 0 2px oklch(0.654 0.203 13.5 / 25%);
+}
+/* Ô chọn tệp thật nằm chồng, trong suốt, trên nút */
+.tk-ob-file { position: relative; overflow: hidden; }
+.tk-ob-file input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 0; }
+
+.tk-ob-acts { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+@media (max-width: 639.98px) {
+  .tk-ob-step { gap: 12px; }
+  .tk-ob-step__n { width: 28px; height: 28px; flex-basis: 28px; font-size: 13px; }
+  .tk-ob-acts { flex-direction: column; align-items: stretch; }
+  .tk-ob-acts .tk-btn { width: 100%; }
+}

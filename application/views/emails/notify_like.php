@@ -4,7 +4,7 @@
     <?= e($name) ?>, bạn có <?= (int) $so ?> người mới thích hồ sơ!
 </p>
 <p style="margin:0 0 22px; color:#6d6d6d;">
-    Thả tim lại để mở khung trò chuyện — chỉ khi cả hai cùng thích, hai bạn mới nhắn tin được.
+    Thả tim lại để thể hiện sự quan tâm, hoặc nhắn tin ngay từ hồ sơ để làm quen.
 </p>
 
 <?php if (!empty($avatars)): ?>

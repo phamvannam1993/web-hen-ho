@@ -2,7 +2,54 @@
 (function () {
     'use strict';
 
-    var base = document.querySelector('base') ? document.querySelector('base').href : '/';
+    var scriptBase = document.currentScript && document.currentScript.getAttribute('data-base');
+    var base = scriptBase || (document.querySelector('base') ? document.querySelector('base').href : '/');
+
+    /* View profile photos and comment attachments in a shared dialog. */
+    var commentImageViewer;
+    document.addEventListener('click', function (event) {
+        var trigger = event.target.closest('[data-comment-image], [data-profile-image]');
+        if (!trigger) { return; }
+        var thumbnail = trigger.querySelector('img');
+        if (!thumbnail && !trigger.getAttribute('href')) { return; }
+        event.preventDefault();
+        if (!commentImageViewer) {
+            commentImageViewer = document.createElement('dialog');
+            commentImageViewer.className = 'comment-image-viewer';
+            commentImageViewer.setAttribute('aria-label', 'Xem ảnh lớn');
+            var closeButton = document.createElement('button');
+            closeButton.type = 'button';
+            closeButton.className = 'comment-image-viewer-close';
+            closeButton.setAttribute('aria-label', 'Đóng');
+            closeButton.textContent = '×';
+            closeButton.addEventListener('click', function () { commentImageViewer.close(); });
+            commentImageViewer.appendChild(closeButton);
+            commentImageViewer.appendChild(document.createElement('img'));
+            commentImageViewer.addEventListener('click', function (e) {
+                if (e.target !== commentImageViewer) { return; }
+                var bounds = commentImageViewer.getBoundingClientRect();
+                if (e.clientX < bounds.left || e.clientX > bounds.right ||
+                    e.clientY < bounds.top || e.clientY > bounds.bottom) {
+                    commentImageViewer.close();
+                }
+            });
+            var previousOverflow;
+            commentImageViewer.addEventListener('close', function () {
+                document.body.style.overflow = previousOverflow;
+                commentImageViewer.querySelector('img').removeAttribute('src');
+            });
+            commentImageViewer.lockScroll = function () {
+                previousOverflow = document.body.style.overflow;
+                document.body.style.overflow = 'hidden';
+            };
+            document.body.appendChild(commentImageViewer);
+        }
+        var fullImage = commentImageViewer.querySelector('img');
+        fullImage.src = thumbnail ? (thumbnail.currentSrc || thumbnail.src) : trigger.href;
+        fullImage.alt = thumbnail ? thumbnail.alt : 'Ảnh trong album';
+        commentImageViewer.showModal();
+        commentImageViewer.lockScroll();
+    });
 
     /* ------------------------- Modal dùng chung ------------------------- */
 
@@ -59,11 +106,27 @@
         var actions = el.querySelector('.modal-actions');
         actions.textContent = '';
 
-        if (typeof opts.onConfirm === 'function') {
-            var cancel = document.createElement('button');
-            cancel.type = 'button';
+        if (opts.actionUrl) {
+            // Modal mời làm một việc cụ thể (xác thực email, thêm ảnh…): nút chính là link
+            var later = document.createElement('button');
+            later.type = 'button';
+            later.className = 'btn btn-ghost';
+            later.textContent = opts.laterText || 'Để sau';
+            later.addEventListener('click', function () { el.classList.remove('open'); });
+
+            var go = document.createElement('a');
+            go.className = 'btn btn-primary';
+            go.href = opts.actionUrl;
+            go.textContent = opts.actionText || 'Tiếp tục';
+
+            actions.appendChild(later);
+            actions.appendChild(go);
+        } else if (typeof opts.onConfirm === 'function') {
+            var cancel = document.createElement(opts.secondaryUrl ? 'a' : 'button');
+            if (opts.secondaryUrl) { cancel.href = opts.secondaryUrl; }
+            else { cancel.type = 'button'; }
             cancel.className = 'btn btn-ghost';
-            cancel.textContent = 'Huỷ';
+            cancel.textContent = opts.secondaryText || 'Huỷ';
             cancel.addEventListener('click', function () { el.classList.remove('open'); });
 
             var ok = document.createElement('button');
@@ -90,6 +153,65 @@
     }
 
     window.appModal = showModal;
+
+
+
+    /**
+     * Máy chủ trả về `need: 'verify'` (chưa xác thực email nên chưa thả tim /
+     * nhắn tin được) hoặc `nudge` (vd. thích xong mà chưa có ảnh) thì hiện modal
+     * có nút đi thẳng tới việc cần làm. Trả về true nếu đã xử lý.
+     */
+    function appNeed(res) {
+        if (!res) { return false; }
+        if (res.need === 'profile') {
+            showModal({
+                type: 'info', title: 'Hoàn thiện hồ sơ để thả tim',
+                message: res.message, actionUrl: res.url, actionText: 'Cập nhật hồ sơ'
+            });
+            return true;
+        }
+        if (res.need === 'verify') {
+            showModal({
+                type: 'info', title: 'Xác thực email để tiếp tục',
+                message: res.message, actionUrl: res.url, actionText: 'Xác thực email'
+            });
+            return true;
+        }
+        if (res.nudge) {
+            showModal({
+                type: 'info', title: res.nudge.title, message: res.nudge.message,
+                actionUrl: res.nudge.url, actionText: res.nudge.action
+            });
+            return true;
+        }
+        return false;
+    }
+    window.appNeed = appNeed;
+
+    /* Open the mobile search field before submitting a query. */
+    (function () {
+        var toggle = document.getElementById('header-search-toggle');
+        var form = document.getElementById('header-search');
+        if (!toggle || !form) { return; }
+        function close() {
+            form.classList.remove('is-open');
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+        toggle.addEventListener('click', function () {
+            var open = !form.classList.contains('is-open');
+            form.classList.toggle('is-open', open);
+            toggle.setAttribute('aria-expanded', String(open));
+        });
+        form.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                close();
+                toggle.focus();
+            }
+        });
+        window.addEventListener('resize', function () {
+            if (window.innerWidth > 900) { close(); }
+        });
+    })();
 
     /* Nút có data-confirm: hỏi bằng modal thay cho hộp thoại của trình duyệt */
     document.addEventListener('click', function (e) {
@@ -166,6 +288,14 @@
         });
 
         overlay.addEventListener('click', closeDrawer);
+        // Chạm ngoài panel cũng đóng, kể cả vùng header nằm trên lớp phủ.
+        document.addEventListener('click', function (e) {
+            if (!isMobile() || !drawer.classList.contains('open') ||
+                drawer.contains(e.target) || toggle.contains(e.target)) { return; }
+            e.preventDefault();
+            e.stopPropagation();
+            closeDrawer();
+        }, true);
         if (closeBtn) { closeBtn.addEventListener('click', closeDrawer); }
 
         document.addEventListener('keydown', function (e) {
@@ -261,6 +391,59 @@
 
     /* ------------------------- Gọi API ------------------------- */
 
+    var interestCount = document.querySelector('[data-interest-count]');
+    var accountTotalCount = document.querySelector('[data-account-total-count]');
+    var interestRefresh = Promise.resolve();
+    function applyAccountCounts(res) {
+        var interest = Number(res.interest === undefined ? res.count : res.interest) || 0;
+        document.querySelectorAll('[data-interest-tab-count]').forEach(function (badge) {
+            var count = Number((res.interest_tabs || {})[badge.dataset.interestTabCount]) || 0;
+            badge.hidden = count <= 0;
+            badge.textContent = (count > 99 ? '99+' : count) + ' mới';
+            badge.setAttribute('aria-label', count + ' mục mới chưa xem');
+            badge.title = count + ' mục mới chưa xem';
+            badge.closest('[data-tab]').classList.toggle('has-unread', count > 0);
+        });
+        document.querySelectorAll('[data-account-menu-count]').forEach(function (badge) {
+            var count = Number(res[badge.dataset.accountMenuCount]) || 0;
+            badge.hidden = count <= 0;
+            badge.textContent = count > 99 ? '99+' : count;
+            if (badge.dataset.accountMenuCount === 'interest') {
+                badge.setAttribute('aria-label', count + ' mục quan tâm chưa xem');
+            } else if (badge.dataset.accountMenuCount === 'msg') {
+                badge.setAttribute('aria-label', count + ' tin nhắn chưa đọc');
+            }
+        });
+        if (interestCount) {
+            interestCount.hidden = interest <= 0;
+            interestCount.textContent = interest > 99 ? '99+' : interest;
+            interestCount.setAttribute('aria-label', interest + ' mục quan tâm chưa xem');
+        }
+        if (accountTotalCount) {
+            var total = Number(res.total) || 0;
+            accountTotalCount.hidden = total <= 0;
+            accountTotalCount.textContent = total > 99 ? '99+' : total;
+            accountTotalCount.setAttribute('aria-label', total + ' thông báo trong tài khoản');
+        }
+    }
+    function refreshInterestCount() {
+        if (!interestCount && !accountTotalCount) return;
+        interestRefresh = interestRefresh.catch(function () {}).then(function () {
+            return fetch(base + 'ajax/so-quan-tam', {credentials: 'same-origin', cache: 'no-store'})
+                .then(function (response) { return response.json(); })
+                .then(function (res) {
+                    if (!res.ok) return;
+                    applyAccountCounts(res);
+                }).catch(function () {});
+        });
+    }
+
+    document.addEventListener('account-counts-changed', refreshInterestCount);
+    window.addEventListener('focus', refreshInterestCount);
+    if (interestCount || accountTotalCount) {
+        setInterval(function () { if (!document.hidden) refreshInterestCount(); }, 30000);
+    }
+
     function post(url, data) {
         return fetch(url, {
             method: 'POST',
@@ -269,7 +452,19 @@
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: new URLSearchParams(data || {})
-        }).then(function (r) { return r.json(); });
+        }).then(function (r) { return r.json(); }).then(function (res) {
+            if (res && res.ok && res.account_counts) applyAccountCounts(res.account_counts);
+            else if (res && res.ok && (typeof res.liked === 'boolean' || res.matched)) refreshInterestCount();
+            if (res && res.ok && (res.liked || res.matched)) {
+                document.dispatchEvent(new CustomEvent('dating-contact-added'));
+            }
+            // Hiện SAU trình xử lý riêng của từng nút (chúng có thể mở modal lỗi chung),
+            // để lời mời xác thực / thêm ảnh luôn là thứ người dùng thấy cuối cùng.
+            if (res && (res.need === 'verify' || res.need === 'profile' || res.nudge)) {
+                setTimeout(function () { appNeed(res); }, 0);
+            }
+            return res;
+        });
     }
 
     /* --- Thích thành viên --- */
@@ -281,11 +476,24 @@
                         return showModal({ type: 'error', title: 'Không thực hiện được', message: res.message });
                     }
                     var lbl = btn.querySelector('.js-like-text');
-                    if (lbl) { lbl.textContent = res.liked ? 'Đã thích' : 'Thích'; }
-                    else { btn.textContent = res.liked ? 'Đã thích' : 'Thích'; }
+                    var likeText = res.liked ? 'Đã thích' : (btn.getAttribute('data-like-label') || 'Thích');
+                    if (lbl) { lbl.textContent = likeText; }
+                    else { btn.textContent = likeText; }
                     btn.classList.toggle('is-liked', !!res.liked);
                     // Thích / bỏ thích không cần báo gì thêm, trạng thái nút đã đủ rõ.
                     // Riêng ghép đôi thì vẫn báo vì đó là việc đáng chú ý.
+                    var actions = btn.closest('.profile-actions');
+                    if (actions) {
+                        var note = actions.parentNode.querySelector('.matched-note');
+                        if (note) {
+                            note.classList.toggle('matched-note-wait', !res.matched);
+                            note.textContent = res.matched
+                                ? 'Hai bạn đã ghép đôi — hãy bắt đầu trò chuyện!'
+                                : res.liked
+                                    ? 'Bạn đã gửi lượt thích. Hãy nhắn tin để làm quen!'
+                                    : 'Bạn có thể nhắn tin ngay để làm quen hoặc bấm Thích để gửi lời quan tâm.';
+                        }
+                    }
                     if (res.matched) {
                         showModal({
                             type: 'success', title: 'Ghép đôi thành công!',
@@ -303,19 +511,22 @@
 
         /* Đếm ngược tới lúc hết hạn, cập nhật mỗi phút */
         var het = parseInt(wrap.getAttribute('data-expires'), 10) * 1000;
+        var serverNow = parseInt(wrap.getAttribute('data-server-now'), 10) * 1000;
+        var clockOffset = (serverNow || Date.now()) - Date.now();
+        var resetOnExpiry = het > (serverNow || Date.now());
         var oDem = document.getElementById('dm-countdown');
 
         function veDem() {
-            if (!oDem) { return; }
-            var con = het - Date.now();
+            var con = het - (Date.now() + clockOffset);
             if (con <= 0) {
-                oDem.textContent = 'Đã hết hạn';
+                if (resetOnExpiry) { window.location.reload(); }
+                else if (oDem) { oDem.textContent = 'Đã hết hạn'; }
                 return;
             }
             var gio  = Math.floor(con / 3600000);
             var phut = Math.floor(con % 3600000 / 60000);
-            oDem.textContent = 'Còn ' + gio + 'h ' + phut + 'p';
-            setTimeout(veDem, 60000);
+            if (oDem) { oDem.textContent = 'Còn ' + gio + 'h ' + phut + 'p'; }
+            setTimeout(veDem, Math.min(60000, con));
         }
         veDem();
 
@@ -325,7 +536,7 @@
 
         oNut.addEventListener('click', function (e) {
             var btn = e.target.closest('[data-daily-act]');
-            if (!btn) { return; }
+            if (!btn || btn.disabled) { return; }
 
             var act = btn.getAttribute('data-daily-act');
             oNut.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
@@ -360,6 +571,12 @@
                     });
                 }
                 if (oDem) { oDem.remove(); }
+            }).catch(function () {
+                oNut.querySelectorAll('button').forEach(function (b) { b.disabled = false; });
+                showModal({
+                    type: 'error', title: 'Không thực hiện được',
+                    message: 'Không gửi được phản hồi. Vui lòng thử lại.'
+                });
             });
         });
     })();
@@ -473,6 +690,8 @@
                 title: 'Cần đăng nhập',
                 message: 'Đăng nhập hoặc tạo tài khoản để gửi lượt thích và nhắn tin.',
                 confirmText: 'Đăng nhập',
+                secondaryText: 'Đăng ký',
+                secondaryUrl: stage.getAttribute('data-register'),
                 onConfirm: function () { window.location.href = stage.getAttribute('data-login'); }
             });
         }
@@ -484,6 +703,18 @@
             var demEl    = document.getElementById('sw-count');
             var trongEl  = document.getElementById('sw-empty');
             var dieuKhien = document.getElementById('sw-controls');
+
+            var lastControlScroll = deck.scrollTop;
+            deck.addEventListener('scroll', function () {
+                if (!dieuKhien) { return; }
+                var top = Math.max(0, Math.min(deck.scrollTop, deck.scrollHeight - deck.clientHeight));
+                var delta = top - lastControlScroll;
+                if (top > 4 && Math.abs(delta) < 4) { return; }
+                var hide = top > 4 && delta > 0;
+                dieuKhien.classList.toggle('is-scroll-hidden', hide);
+                dieuKhien.inert = hide;
+                lastControlScroll = top;
+            }, { passive: true });
 
             /* Thẻ đang xem là thẻ nằm ngay giữa khung cuộn */
             var NGUONG = 110;   // kéo ngang quá bao nhiêu điểm ảnh thì tính là đã chọn
@@ -681,6 +912,58 @@
         }
     }
 
+    var suggestionQueue = Promise.resolve();
+    function replaceAccountSuggestion(id) {
+        var lists = document.querySelectorAll('[data-account-suggestions]');
+        lists.forEach(function (list) {
+            list.querySelectorAll('[data-user="' + id + '"]').forEach(function (card) {
+                card.classList.add('card-gone');
+                card.querySelectorAll('button').forEach(function (button) { button.disabled = true; });
+            });
+        });
+        var fade = new Promise(function (resolve) { setTimeout(resolve, 280); });
+        suggestionQueue = suggestionQueue.then(function () {
+            var excluded = new Set();
+            lists.forEach(function (list) {
+                list.querySelectorAll('[data-user]').forEach(function (card) { excluded.add(card.dataset.user); });
+            });
+            var data = {};
+            if (document.querySelector('[data-account-suggestions="home"]')) data.layout = 'home';
+            Array.from(excluded).forEach(function (value, index) { data['exclude[' + index + ']'] = value; });
+            return Promise.all([fade, post(base + 'ajax/goi-y-tai-khoan', data)])
+                .then(function (results) {
+                    var res = results[1];
+                    if (!res.ok) throw new Error('suggestions');
+                    lists.forEach(function (list) {
+                        var old = list.querySelector('[data-user="' + id + '"]');
+                        if (!old) return;
+                        var html = res[list.dataset.accountSuggestions];
+                        if (html) {
+                            var template = document.createElement('template');
+                            template.innerHTML = html.trim();
+                            var replacement = template.content.firstElementChild;
+                            replacement.classList.add('card-gone');
+                            old.replaceWith(replacement);
+                            requestAnimationFrame(function () {
+                                requestAnimationFrame(function () { replacement.classList.remove('card-gone'); });
+                            });
+                        } else {
+                            old.remove();
+                            if (!list.querySelector('[data-user]')) {
+                                list.innerHTML = '<p class="tk-card__d">Bạn đã xem hết gợi ý phù hợp. Hãy cập nhật tiêu chí để tìm thêm người mới.</p>';
+                            }
+                        }
+                    });
+                }).catch(function () {
+                    lists.forEach(function (list) {
+                        var old = list.querySelector('[data-user="' + id + '"]');
+                        if (old) old.remove();
+                    });
+                    showModal({type: 'info', title: 'Đã lưu lượt thích', message: 'Chưa tải được gợi ý mới. Hãy tải lại trang để xem tiếp.'});
+                });
+        });
+    }
+
     /* --- Thẻ hồ sơ: nút Bỏ qua / Thích (trang chủ, tìm kiếm, khu vực) --- */
     document.addEventListener('click', function (e) {
         var btn = e.target.closest('[data-card-action]');
@@ -703,8 +986,13 @@
                 return showModal({ type: 'error', title: 'Không thực hiện được', message: res.message });
             }
 
-            if (action === 'pass') {
-                // Bỏ qua thì ẩn hẳn thẻ khỏi danh sách
+            if (card.closest('[data-account-suggestions]') && (res.liked || action === 'pass')) {
+                replaceAccountSuggestion(id);
+                return;
+            }
+
+            if (action === 'pass' || (res.liked && card.closest('.dating-page, .confide-page, .members-page, .hm-sugs, .member-grid'))) {
+                // Hồ sơ đã thích hoặc bỏ qua được ẩn khỏi danh sách duyệt.
                 card.classList.add('card-gone');
                 setTimeout(function () { card.remove(); }, 280);
                 return;
@@ -1008,16 +1296,16 @@
     list.addEventListener('click', function (e) {
         var item = e.target.closest('.emoji-item');
         if (!item) { return; }
-        var start = input.selectionStart || input.value.length;
-        var end   = input.selectionEnd || input.value.length;
+        var start = input.selectionStart == null ? input.value.length : input.selectionStart;
+        var end   = input.selectionEnd == null ? input.value.length : input.selectionEnd;
         input.value = input.value.slice(0, start) + item.textContent + input.value.slice(end);
-        input.focus();
         input.selectionStart = input.selectionEnd = start + item.textContent.length;
     });
 
     btn.addEventListener('click', function (e) {
         e.stopPropagation();
         panel.hidden = !panel.hidden;
+        if (!panel.hidden) { input.blur(); }
     });
     panel.addEventListener('click', function (e) { e.stopPropagation(); });
     document.addEventListener('click', function () { panel.hidden = true; });
@@ -1055,6 +1343,49 @@
     var lastId = parseInt(body.getAttribute('data-last-id') || '0', 10);
     var input  = document.getElementById('chat-input');
     var seenEl = document.getElementById('chat-seen');
+    var hello = document.getElementById('chat-hello');
+    var helloButton = document.getElementById('chat-hello-send');
+    var sending = false;
+
+    if (helloButton) {
+        helloButton.addEventListener('click', function () {
+            if (helloButton.disabled || hello.hidden) { return; }
+            helloButton.disabled = true;
+            helloButton.textContent = 'Đang gửi…';
+            var fd = new FormData(form);
+            fd.set('content', '👋');
+            fd.delete('image');
+            fetch(form.action, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: fd
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                if (!res.ok) {
+                    if (window.appNeed && window.appNeed(res)) { return; }
+                    if (window.appModal) {
+                        window.appModal({ type: 'error', title: 'Không gửi được lời chào', message: res.message });
+                    }
+                    return;
+                }
+                hello.hidden = true;
+                var preview = document.querySelector('.tk-ms-item.is-active .tk-ms-item__l');
+                if (preview) { preview.textContent = 'Bạn: 👋'; }
+                poll();
+                input.focus();
+            })
+            .catch(function () {
+                if (window.appModal) {
+                    window.appModal({ type: 'error', title: 'Không gửi được lời chào', message: 'Lỗi kết nối. Vui lòng thử lại.' });
+                }
+            })
+            .finally(function () {
+                helloButton.disabled = false;
+                helloButton.textContent = 'Gửi lời chào 👋';
+            });
+        });
+    }
 
     function atBottom() {
         return body.scrollHeight - body.scrollTop - body.clientHeight < 60;
@@ -1065,6 +1396,13 @@
     function renderMessage(m) {
         var div = document.createElement('div');
         div.className = 'chat-msg' + (m.mine ? ' mine' : '') + (m.type === 'image' ? ' is-image' : '');
+        div.dataset.day = m.day_key || m.day || '';
+        var previous = body.lastElementChild;
+        if (previous && previous.classList.contains('chat-msg')
+            && previous.classList.contains('mine') === !!m.mine && previous.dataset.day === div.dataset.day) {
+            var previousMeta = previous.querySelector('small');
+            if (previousMeta) previousMeta.hidden = true;
+        }
 
         if (m.type === 'image') {
             var a = document.createElement('a');
@@ -1085,6 +1423,12 @@
 
         var t = document.createElement('small');
         t.textContent = m.time;
+        if (m.mine && m.seen) {
+            var seen = document.createElement('span');
+            seen.className = 'chat-message-seen';
+            seen.textContent = ' · Đã xem';
+            t.appendChild(seen);
+        }
         div.appendChild(t);
         return div;
     }
@@ -1099,12 +1443,24 @@
             if (!res.ok) { return; }
             var stick = atBottom();
 
+            if (hello && res.messages.length) { hello.hidden = true; }
+
             res.messages.forEach(function (m) {
+                if (Number(m.id) <= lastId) { return; }
                 body.appendChild(renderMessage(m));
                 if (m.id > lastId) { lastId = m.id; }
             });
 
-            if (seenEl) { seenEl.textContent = res.seen ? 'Đã xem' : ''; }
+            if (seenEl) seenEl.textContent = '';
+            if (res.seen) {
+                body.querySelectorAll('.chat-msg.mine small:not([hidden])').forEach(function (meta) {
+                    if (meta.querySelector('.chat-message-seen')) return;
+                    var label = document.createElement('span');
+                    label.className = 'chat-message-seen';
+                    label.textContent = ' · Đã xem';
+                    meta.appendChild(label);
+                });
+            }
             if (res.messages.length && stick) { scrollDown(); }
         })
         .catch(function () { /* mất mạng tạm thời thì bỏ qua, lần sau thử lại */ });
@@ -1115,6 +1471,7 @@
 
     /* Gửi tin nhắn chữ bằng AJAX; gửi ảnh vẫn để form submit như cũ */
     form.addEventListener('submit', function (e) {
+        if (sending) { e.preventDefault(); return; }
         var file = form.querySelector('input[type=file]');
         if (file && file.files && file.files.length) { return; }
 
@@ -1122,24 +1479,35 @@
         var text = (input.value || '').trim();
         if (!text) { return; }
 
+        // Lấy dữ liệu form TRƯỚC khi xoá ô nhập, nếu không máy chủ nhận nội dung rỗng
+        var fd = new FormData(form);
+        sending = true;
         input.value = '';
         fetch(form.action, {
             method: 'POST',
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
-            body: new FormData(form)
+            body: fd
         })
         .then(function (r) { return r.json(); })
         .then(function (res) {
             if (!res.ok) {
-                input.value = text;
+                if (!input.value) { input.value = text; }
+                if (window.appNeed && window.appNeed(res)) { return; }
                 if (window.appModal) {
                     window.appModal({ type: 'error', title: 'Không gửi được', message: res.message });
                 }
                 return;
             }
+            if (hello) { hello.hidden = true; }
             poll();
         })
-        .catch(function () { form.submit(); });
+        .catch(function () {
+            if (!input.value) { input.value = text; }
+            if (window.appModal) {
+                window.appModal({ type: 'error', title: 'Chưa xác nhận được tin nhắn', message: 'Mất kết nối khi gửi. Kiểm tra tin nhắn trước khi thử lại.' });
+            }
+        })
+        .finally(function () { sending = false; });
     });
 })();
 

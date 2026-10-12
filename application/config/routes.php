@@ -43,8 +43,57 @@ $route['api/profile-viewers/count']       = 'api/engagement/viewers_count';
 
 $route['api/streak']                      = 'api/engagement/streak';
 $route['api/streak/freeze']               = 'api/engagement/streak_freeze';
+
+$route['api/auth/register']               = 'api/auth/register';
+$route['api/auth/forgot']                 = 'api/auth/forgot';
+$route['api/auth/resend-verify']          = 'api/auth/resend_verify';
+$route['api/auth/password']               = 'api/auth/password';
+
+$route['api/meta']                        = 'api/meta/index';
+$route['api/home']                        = 'api/home/index';
+
+$route['api/discover']                    = 'api/discover/index';
+$route['api/discover/undo']               = 'api/discover/undo';
+$route['api/discover/(:num)/like']        = 'api/discover/like/$1';
+$route['api/discover/(:num)/pass']        = 'api/discover/pass/$1';
+
+$route['api/members']                     = 'api/members/index';
+$route['api/members/(:num)/like']         = 'api/members/like/$1';
+$route['api/members/(:num)/contact']      = 'api/members/contact/$1';
+$route['api/members/(:num)/comment']      = 'api/members/comment/$1';
+$route['api/members/(:num)/block']        = 'api/members/block/$1';
+$route['api/members/(:num)/unblock']      = 'api/members/unblock/$1';
+$route['api/members/(:any)']              = 'api/members/show/$1';
+$route['api/comments/(:num)/delete']      = 'api/members/delete_comment/$1';
+$route['api/report']                      = 'api/members/report';
+
+$route['api/account']                     = 'api/account/index';
+$route['api/account/profile']             = 'api/account/profile';
+$route['api/account/avatar']              = 'api/account/avatar';
+$route['api/account/onboarding']          = 'api/account/onboarding';
+$route['api/account/photos']              = 'api/account/photos';
+$route['api/account/photos/(:num)/delete'] = 'api/account/delete_photo/$1';
+$route['api/account/likes']               = 'api/account/likes';
+$route['api/account/likes/seen']          = 'api/account/likes_seen';
+$route['api/account/cover']               = 'api/account/cover';
+$route['api/account/location']            = 'api/account/location';
+$route['api/online-members']              = 'api/chat/online_members';
+$route['api/account/notifications']       = 'api/account/notifications';
+$route['api/account/notifications/read']  = 'api/account/notifications_read';
+$route['api/account/wallet']              = 'api/account/wallet';
+$route['api/account/email-prefs']         = 'api/account/email_prefs';
+
+$route['api/conversations']               = 'api/chat/conversations';
+$route['api/conversations/open/(:num)']   = 'api/chat/open/$1';
+$route['api/conversations/(:num)']        = 'api/chat/messages/$1';
+$route['api/messages']                    = 'api/chat/send';
+$route['api/room']                        = 'api/chat/room';
+$route['api/room/send']                   = 'api/chat/room_send';
+$route['api/realtime']                    = 'api/chat/realtime';
+$route['api/realtime/read']               = 'api/chat/realtime_read';
 $route['xac-thuc']                = 'auth/verify';
 $route['xac-thuc/gui-lai']        = 'auth/resend';
+$route['xac-thuc-email/(:any)']  = 'auth/verify_link/$1';
 $route['quen-mat-khau']           = 'auth/forgot';
 $route['dat-lai-mat-khau/(:any)'] = 'auth/reset/$1';
 
@@ -69,6 +118,7 @@ $route['tam-su/(nam|nu|gay|les)']                   = 'confide/index/$1';
 $route['tam-su/(nam|nu|gay|les)/trang/(:num)']      = 'confide/index/$1/$2';
 
 $route['hen-ho']                          = 'dating/index';
+$route['hen-ho/vi-tri']                   = 'dating/location';
 $route['hen-ho/trang/(:num)']             = 'dating/index//$1';
 $route['hen-ho/(nam|nu|gay|les)']         = 'dating/index/$1';
 $route['hen-ho/(nam|nu|gay|les)/trang/(:num)'] = 'dating/index/$1/$2';
@@ -92,6 +142,8 @@ $route['thanh-vien/(:any)']       = 'members/legacy_profile/$1';
 
 $route['tai-khoan']               = 'account/index';
 $route['tai-khoan/ho-so']         = 'account/profile';
+$route['tai-khoan/kiem-tra-email'] = 'account/check_profile_email';
+$route['tai-khoan/bat-dau']       = 'account/onboarding';
 $route['tai-khoan/anh']           = 'account/photos';
 $route['tai-khoan/tin-dang']      = 'account/posts';
 $route['tai-khoan/sua-tin/(:num)']= 'account/edit_post/$1';
@@ -108,6 +160,7 @@ $route['tin-tuc']                 = 'blog/index';
 $route['tin-tuc/trang/(:num)']    = 'blog/index/$1';
 $route['tin-tuc/(:any)']          = 'blog/detail/$1';
 $route['trang/(:any)']            = 'pages/view/$1';
+$route['(bao-mat|an-toan|lien-he)'] = 'pages/policy/$1';
 
 /* AJAX */
 $route['ajax/like']            = 'ajax/like';
@@ -119,8 +172,12 @@ $route['ajax/send-message']    = 'ajax/send_message';
 $route['ajax/tin-nhan/(:num)'] = 'ajax/poll_messages/$1';
 $route['ajax/hoi-thoai']       = 'ajax/conversations';
 $route['ajax/phong-chat']      = 'ajax/room_messages';
+$route['ajax/online-members']  = 'ajax/online_members';
 $route['ajax/phong-chat/gui']  = 'ajax/room_send';
 $route['ajax/mo-chat/(:num)']  = 'ajax/open_conversation/$1';
+$route['ajax/goi-y-tai-khoan'] = 'ajax/account_suggestion';
+$route['ajax/so-quan-tam'] = 'ajax/interest_count';
+$route['ajax/quan-tam/da-xem'] = 'ajax/interest_seen';
 $route['ajax/report']          = 'ajax/report';
 
 /* ------------------------------------------------------------------
@@ -135,7 +192,7 @@ $route['sitemap-khuvuc\.xml']   = 'sitemap/khuvuc';
 $route['sitemap-posts\.xml']    = 'sitemap/posts';
 
 // Phân trang khu quản trị: /admin/{muc}/trang/{n}
-$route['admin/(users|posts|articles|orders|reports|codes)/trang/(:num)'] = 'admin/$1/index/$2';
+$route['admin/(users|posts|photos|articles|orders|reports|codes)/trang/(:num)'] = 'admin/$1/index/$2';
 
 $route['admin']                 = 'admin/dashboard/index';
 $route['admin/dang-nhap']       = 'admin/auth/login';

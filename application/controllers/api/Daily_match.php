@@ -49,11 +49,15 @@ class Daily_match extends Api_Controller
         if (!$this->can_auth()) {
             return;
         }
+        // Giống web: chưa xác thực email thì chưa thả tim được
+        if ($act === 'like' && !$this->can_xac_thuc('thả tim')) {
+            return;
+        }
         $kq = $this->m_daily->tra_loi($this->me['id'], (int) $id, $act);
 
         return $kq['ok']
             ? $this->ok(array('matched' => $kq['matched'], 'message' => $kq['message']))
-            : $this->loi($kq['message'], 409);
+            : $this->loi($kq['message'], ($kq['need'] ?? '') === 'profile' ? 403 : 409, $kq);
     }
 
     /** GET /api/daily-match/history */

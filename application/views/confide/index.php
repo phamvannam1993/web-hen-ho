@@ -6,17 +6,8 @@ $link = function ($key, $value) use ($base_url) {
     return site_url($base_url) . ($q ? '?' . http_build_query($q) : '');
 };
 ?>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/confide.css') ?>?v=<?= filemtime(FCPATH.'assets/site/css/confide.css') ?>">
 <div class="container confide-page">
-    <nav class="breadcrumb">
-        <a href="<?= site_url() ?>">Trang chủ</a> ›
-        <?php if ($tab): ?>
-            <a href="<?= site_url('tam-su') ?>">Tâm sự</a> ›
-            <span><?= e($tabs[$tab]['label']) ?></span>
-        <?php else: ?>
-            <span>Tâm sự</span>
-        <?php endif; ?>
-    </nav>
-
     <header class="confide-head">
         <h1><?= e($heading) ?></h1>
         <p><?= e($tabs[$tab]['desc']) ?></p>
@@ -24,6 +15,7 @@ $link = function ($key, $value) use ($base_url) {
 
     <nav class="dating-tabs" aria-label="Nhóm tâm sự">
         <?php foreach ($tabs as $key => $t): ?>
+            <?php if (in_array($key, array('gay', 'les'), true)) continue; ?>
             <a class="<?= $key === $tab ? 'on' : '' ?>"
                href="<?= site_url('tam-su' . ($key ? '/' . $key : '')) ?>"><?= e($t['label']) ?></a>
         <?php endforeach; ?>

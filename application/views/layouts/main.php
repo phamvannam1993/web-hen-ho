@@ -12,8 +12,8 @@ $flash = $this->session->flashdata('flash');
 
   gtag('config', 'G-NXYG6XSVEK');
 </script>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <?php
 /*
  * Tiêu đề trang: nếu controller đặt sẵn $meta_title thì dùng nguyên văn,
@@ -24,38 +24,46 @@ $page_title = !empty($meta_title)
     ? $meta_title
     : (($title ?? 'Hẹn hò kết bạn') . ' - ' . $site_name);
 ?>
-<title><?= e($page_title) ?></title>
 <meta name="description" content="<?= e($meta_desc ?? '') ?>">
 <?php
-// Kiểm tra biến $allow_index hoặc $data['allow_index'] truyền từ controller
-$force_allow_index = (isset($allow_index) && $allow_index === true) 
-                  || (isset($data['allow_index']) && $data['allow_index'] === true);
-
-// Cấu hình chung của website
-$site_blocked = ($settings['site_noindex'] ?? '1') === '1';
-
-// Ưu tiên nếu controller chủ động bật allow_index = true thì LUÔN INDEX
-$can_index = $force_allow_index || !$site_blocked;
+$seo_path = trim(uri_string(), '/');
+$can_index = seo_indexable($seo_path);
+$canonical_url = site_url($seo_path);
+if (preg_match('~/trang/([0-9]+)$~', $seo_path, $match)) {
+    $page_title .= ' - Trang ' . (int) $match[1];
+}
+$this->load->view('layouts/seo', array('seo_path' => $seo_path, 'can_index' => $can_index,
+    'canonical_url' => $canonical_url, 'page_title' => $page_title, 'site_name' => $site_name,
+    'meta_desc' => $meta_desc ?? '', 'title' => $title ?? $site_name,
+    'settings' => $settings, 'article' => $article ?? null));
 ?>
-
-<?php if ($can_index): ?>
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="<?= current_url() ?>">
-<?php else: ?>
-    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
-    <meta name="googlebot" content="noindex, nofollow">
-<?php endif; ?>
 <link rel="stylesheet" href="<?= base_url('assets/site/css/style.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/style.css') ?>">
 <link rel="icon" type="image/x-icon" href="<?= base_url('assets/site/img/favicon.ico?v=1232312131') ?>">
 <link rel="apple-touch-icon" sizes="180x180" href="<?= base_url('assets/site/img/apple-touch-icon.png?V=1243324243') ?>">
 
-<link rel="stylesheet" href="<?= base_url('assets/site/css/style.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/style.css') ?>">
-<?php /* Giao diện khu Tài khoản — chỉ nạp ở đúng khu đó, khỏi bắt mọi trang tải thêm */ ?>
-<?php if (!empty($content_view) && strpos($content_view, 'account/') === 0): ?>
-<link rel="stylesheet" href="<?= base_url('assets/site/css/account.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/account.css') ?>">
+<?php
+/* Khu Tài khoản bọc nội dung trong khung riêng (cột trái + thanh dưới trên điện
+   thoại) theo bản thiết kế SaigonCupid, nằm giữa đầu trang và chân trang của site. */
+$tk_app = !empty($tk) && !empty($content_view) && strpos($content_view, 'account/') === 0;
+$tk_inbox_open = $tk_app && $content_view === 'account/messages' && !empty($partner);
+$guest_banner = !$user && empty($bare) && strpos($content_view, 'auth/') !== 0;
+?>
+<?php if ($tk_app || $content_view === 'members/profile'): ?>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap">
 <?php endif; ?>
+<?php if ($tk_app): ?>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/account.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/account.css') ?>">
+<?php /* Phần riêng của từng trang (nếu có): assets/site/css/account/<tên view>.css */ ?>
+<?php $tk_css = 'assets/site/css/account/' . basename($content_view) . '.css'; ?>
+<?php if (is_file(FCPATH . $tk_css)): ?>
+<link rel="stylesheet" href="<?= base_url($tk_css) ?>?v=<?= @filemtime(FCPATH . $tk_css) ?>">
+<?php endif; ?>
+<?php endif; ?>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/mobile-nav.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/mobile-nav.css') ?>">
 </head>
-<body class="<?= !empty($bare) ? 'is-bare' : '' ?>">
+<body class="<?= !empty($bare) ? 'is-bare' : '' ?><?= $tk_app ? 'tk-app' : '' ?><?= $content_view === 'account/messages' ? ' is-messages-page' : '' ?><?= $tk_inbox_open ? ' is-inbox-open' : '' ?><?= $guest_banner ? ' has-guest-banner' : '' ?>">
 
 <!-- Dải mảnh trên cùng: khẩu hiệu + hotline -->
 <?php /* Chế độ toàn màn hình (trang Khám phá): bỏ thanh trên, menu và chân trang */ ?>
@@ -63,12 +71,17 @@ $can_index = $force_allow_index || !$site_blocked;
 <?php
 /* Thanh trên cùng: liên hệ bên trái, trang tĩnh và mạng xã hội bên phải.
    Mục nào chưa khai trong Quản trị -> Cấu hình thì tự ẩn đi. */
-$mxh = array_filter(array(
-    'facebook'  => $settings['facebook_url']  ?? '',
-    'instagram' => $settings['instagram_url'] ?? '',
-    'youtube'   => $settings['youtube_url']   ?? '',
-    'tiktok'    => $settings['tiktok_url']    ?? '',
-));
+$mxh = array();
+foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
+    $social_url = trim($settings[$social_name . '_url'] ?? '');
+    if ($social_url === '') continue;
+    if (strpos($social_url, '//') === 0) $social_url = 'https:' . $social_url;
+    elseif (!preg_match('~^[a-z][a-z0-9+.-]*:~i', $social_url)) $social_url = 'https://' . $social_url;
+    if (filter_var($social_url, FILTER_VALIDATE_URL)
+        && in_array(strtolower(parse_url($social_url, PHP_URL_SCHEME) ?? ''), array('http', 'https'), true)) {
+        $mxh[$social_name] = $social_url;
+    }
+}
 ?>
 <div class="topbar">
     <div class="container topbar-inner">
@@ -110,18 +123,19 @@ $mxh = array_filter(array(
 <header class="site-header">
     <div class="container header-inner">
         <a class="brand" href="<?= site_url() ?>">
-    <img src="https://saigoncupid.com/assets/images/logo.png" alt="<?= e($settings['site_name'] ?? 'Saigon Cupid') ?>" class="brand-logo">
+    <img src="/assets/images/logo.png" alt="<?= e($settings['site_name'] ?? 'Saigon Cupid') ?>" class="brand-logo">
     <span class="brand-text"><?= e($settings['site_name'] ?? 'Saigon Cupid') ?></span>
 </a>
 
         <?php /* Ô tìm kiếm gọn ở giữa hàng trên, lấp khoảng trống giữa logo và nhóm nút.
                  Chỉ hiện trên màn rộng; màn hẹp dùng bộ lọc trong trang Thành viên. */ ?>
-        <form class="header-search" method="get" action="<?= site_url('tim-kiem') ?>" role="search">
+        <form id="header-search" class="header-search" method="get" action="<?= site_url('tim-kiem') ?>" role="search">
             <svg viewBox="0 0 24 24" class="ic" aria-hidden="true">
                 <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/>
             </svg>
             <input type="text" name="q" value="<?= e($this->input->get('q')) ?>"
                    placeholder="Tìm theo tên, khu vực hoặc nghề nghiệp..." aria-label="Tìm thành viên">
+            <button class="header-search-submit" type="submit">Tìm</button>
         </form>
 
         <?php /* Nhóm nút cạnh nút mở menu: tìm kiếm (chỉ mobile) + chuông thông báo.
@@ -131,11 +145,11 @@ $mxh = array_filter(array(
                  Chuyển hẳn chứ không nhân bản: hai khối cùng id (#noti-toggle,
                  #noti-panel) thì JS bắt nhầm phần tử, khay không xổ được. */ ?>
         <div class="hd-mini">
-            <a class="hd-mini-btn" href="<?= site_url('tim-kiem') ?>" aria-label="Tìm kiếm">
+            <button type="button" id="header-search-toggle" class="hd-mini-btn" aria-label="Tìm kiếm" aria-controls="header-search" aria-expanded="false">
                 <svg viewBox="0 0 24 24" class="ic" aria-hidden="true">
                     <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/>
                 </svg>
-            </a>
+            </button>
             <?php /* Chuỗi ngày hoạt động: chỉ hiện khi đã có chuỗi, để không
                      làm rối thanh đầu trang với con số 0.
                      Trên điện thoại ô này ẩn đi và hiện lại TRONG ngăn kéo menu
@@ -149,8 +163,8 @@ $mxh = array_filter(array(
                     <button type="button" class="hd-bell" id="noti-toggle"
                             aria-label="Thông báo" aria-expanded="false" aria-haspopup="dialog">
                         <svg viewBox="0 0 24 24" class="ic" aria-hidden="true">
-                            <path d="M18 16.5V11a6 6 0 1 0-12 0v5.5L4.5 18.5h15z"/>
-                            <path d="M10 21.2a2.2 2.2 0 0 0 4 0"/>
+                            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+                            <path d="M10 21a2 2 0 0 0 4 0"/>
                         </svg>
                         <span class="hd-bell-badge" id="noti-badge"
                               <?= empty($unread_noti) ? 'hidden' : '' ?>><?= $unread_noti > 99 ? '99+' : (int) $unread_noti ?></span>
@@ -221,9 +235,10 @@ $mxh = array_filter(array(
 
         <div class="header-actions">
             <?php if ($user): ?>
-                <a class="btn-account" href="<?= site_url('tai-khoan') ?>">
+                <a class="btn-account" href="<?= site_url('tai-khoan/ho-so') ?>">
                     <img src="<?= avatar_url($user['avatar'], $user['gender']) ?>" alt="">
                     <span><?= e(display_name($user)) ?></span>
+                    <span class="account-total-badge" data-account-total-count <?= empty($account_badge_total) ? 'hidden' : '' ?> aria-label="<?= (int) ($account_badge_total ?? 0) ?> thông báo trong tài khoản"><?= ($account_badge_total ?? 0) > 99 ? '99+' : (int) ($account_badge_total ?? 0) ?></span>
                 </a>
                 <a class="btn-nav-ghost" href="<?= site_url('dang-xuat') ?>">Đăng xuất</a>
             <?php else: ?>
@@ -237,17 +252,23 @@ $mxh = array_filter(array(
         <div class="nav-overlay" id="nav-overlay" hidden></div>
     </div>
 </header>
+<?php $this->load->view('layouts/_nudge'); ?>
 <?php endif; ?>
 
+<?php if ($tk_app): ?>
+<?php /* Khung khu Tài khoản tự hiện thông báo flash bên trong cột nội dung */ ?>
+<?php $this->load->view('account/_shell', array('flash' => $flash)); ?>
+<?php else: ?>
 <div class="container">
     <?php if ($flash): ?>
         <div class="alert alert-<?= e($flash['type']) ?>"><?= e($flash['message']) ?></div>
     <?php endif; ?>
 </div>
 
-<main>
-    <?php $this->load->view($content_view); ?>
+<main<?= empty($bare) && $content_view !== 'home/index' ? ' class="site-page-content"' : '' ?>>
+    <?php $this->load->view($content_view, array('user' => $user)); ?>
 </main>
+<?php endif; ?>
 
 <?php if (empty($bare)): ?>
 <footer class="site-footer">
@@ -261,8 +282,9 @@ $mxh = array_filter(array(
 
         <nav class="site-footer__policy-nav" aria-label="Liên kết chính sách">
             <a href="<?= site_url('gioi-thieu') ?>">Về chúng tôi</a>
-            <a href="<?= site_url('noi-quy') ?>">Người điều hành</a>
-            <a href="<?= site_url('dieu-khoan') ?>">Faqs</a>
+            <a href="<?= site_url('noi-quy') ?>">Nội quy cộng đồng</a>
+            <a href="<?= site_url('dieu-khoan') ?>">Điều khoản sử dụng</a>
+            <a href="<?= site_url('an-toan') ?>">Hẹn hò an toàn</a>
             <a href="<?= site_url('bao-mat') ?>">Chính sách bảo mật</a>
             <a href="<?= site_url('lien-he') ?>">Liên hệ</a>
         </nav>
@@ -306,12 +328,9 @@ $mxh = array_filter(array(
                 <div class="footer-col">
                     <h3 class="footer-col__title">Kết nối chúng tôi</h3>
                     <ul class="footer-col__list footer-col__list--social">
-                        <ul class="footer-col__list footer-col__list--social">
-            <li><a target="_blank" href="#"><span><img src="/assets/images/tiktok.png" alt="Tiktok" /></span> Tiktok</a></li>
-            <li><a target="_blank" href="#"><span><img src="/assets/images/youtube.png?v=345345435435" alt="Youtube" /></span> Youtube</a></li>
-            <li><a target="_blank" href="#"><span><img src="/assets/images/insta.png" alt="Instagram" /></span> Instagram</a></li>
-            <li><a target="_blank" href="#"><span><img src="/assets/images/facebook.png" alt="Facebook" /></span> Facebook</a></li>
-          </ul>
+                        <?php foreach ($mxh as $name => $url): ?>
+                        <li><a href="<?= e($url) ?>" target="_blank" rel="noopener noreferrer"><img class="footer-social-icon" src="<?= base_url('assets/images/' . ($name === 'instagram' ? 'insta' : $name) . '.png') ?>" width="20" height="20" alt="" aria-hidden="true" loading="lazy"><?= e(ucfirst($name)) ?></a></li>
+                        <?php endforeach; ?>
                         
                         
                     </ul>
@@ -361,11 +380,11 @@ $mxh = array_filter(array(
      Thành viên chưa khai xong hồ sơ cũng chỉ được xem như khách. -->
 <div id="chat-widget" class="chat-widget" data-base="<?= site_url() ?>"
      data-ws-url="<?= e($ws_url ?? '') ?>" data-ws-token="<?= e($ws_token ?? '') ?>"
-     data-guest="<?= ($user && empty($ho_so_chua_xong)) ? '0' : '1' ?>"
-     data-need-profile="<?= !empty($ho_so_chua_xong) ? '1' : '0' ?>">
-    <button type="button" class="cw-tab" id="cw-bubble" aria-label="Mở trò chuyện">
+     data-guest="<?= $user ? '0' : '1' ?>"
+     data-need-verify="<?= !empty($chua_xac_thuc) ? '1' : '0' ?>">
+    <button type="button" class="cw-tab" id="cw-bubble" aria-label="Mở Chat" aria-expanded="false" aria-controls="cw-panel">
         <span class="cw-tab-arrow" aria-hidden="true">&laquo;</span>
-        <span class="cw-tab-label">Trò chuyện</span>
+        <span class="cw-tab-label">Chat</span>
         <span class="cw-tab-online" id="cw-tab-online" hidden><i class="cw-tab-dot"></i><b id="cw-tab-count"></b></span>
         <span class="cw-tab-icons" aria-hidden="true">
             <svg viewBox="0 0 40 32" class="cw-tab-bubbles">
@@ -394,14 +413,17 @@ $mxh = array_filter(array(
 
             <div class="cw-side-list" id="cw-side-list">
                 <?php /* Phòng chung luôn đứng đầu, ai cũng vào được kể cả khách */ ?>
-                <button type="button" class="cw-row is-room" id="cw-row-room" data-name="Phòng chat chung">
+                <button type="button" class="cw-row is-room" id="cw-row-room" data-name="Nhóm Hẹn Hò 4 Phương">
                     <span class="cw-row-avatar cw-row-room-ic" aria-hidden="true">
                         <svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><path d="M16.2 5.8a3.2 3.2 0 0 1 0 5.4M17.5 19a6 6 0 0 0-1.6-4"/></svg>
                     </span>
                     <span class="cw-row-text">
-                        <span class="cw-row-top">
-                            <b><span class="cw-row-name">Phòng chat chung</span><i class="cw-tag">Cộng đồng</i></b>
+                        <span class="cw-room-meta">
+                            <i class="cw-tag">Cộng đồng</i>
                             <small id="cw-room-time"></small>
+                        </span>
+                        <span class="cw-row-top">
+                            <b><span class="cw-row-name">Nhóm Hẹn Hò 4 Phương</span></b>
                         </span>
                         <span class="cw-row-last" id="cw-room-last">Đang tải…</span>
                     </span>
@@ -434,19 +456,31 @@ $mxh = array_filter(array(
             <div class="cw-convo" id="cw-convo" hidden>
                 <header class="cw-head">
                     <button type="button" class="cw-back" id="cw-back" aria-label="Về danh sách">‹</button>
-                    <img class="cw-avatar" id="cw-avatar" src="" alt="" hidden>
+                    <a id="cw-avatar-link" class="cw-profile-avatar" hidden aria-label="Xem trang cá nhân"><img class="cw-avatar" id="cw-avatar" alt="" hidden></a>
                     <span class="cw-avatar cw-row-room-ic" id="cw-avatar-room" hidden aria-hidden="true">
                         <svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><path d="M16.2 5.8a3.2 3.2 0 0 1 0 5.4M17.5 19a6 6 0 0 0-1.6-4"/></svg>
                     </span>
                     <div class="cw-peer">
-                        <b id="cw-name"></b>
+                        <a id="cw-profile-link"><b id="cw-name"></b></a>
                         <small id="cw-status"></small>
+                        <button type="button" class="cw-online-toggle" id="cw-online-toggle" hidden
+                                aria-expanded="false" aria-controls="cw-online-panel" aria-haspopup="dialog">
+                            <span id="cw-online-toggle-count">Người đang online</span> <span aria-hidden="true">▾</span>
+                        </button>
                     </div>
                     <button type="button" class="cw-close" data-close aria-label="Đóng">&times;</button>
                 </header>
 
                 <div class="cw-body-wrap">
                     <div class="cw-body" id="cw-body"></div>
+                    <aside class="cw-online-panel" id="cw-online-panel" hidden aria-labelledby="cw-online-title">
+                        <div class="cw-online-head">
+                            <b id="cw-online-title">Đang online</b>
+                            <button type="button" id="cw-online-close" aria-label="Đóng danh sách online">×</button>
+                        </div>
+                        <p class="cw-online-hint">Hoạt động trong 5 phút gần đây</p>
+                        <div class="cw-online-list" id="cw-online-list" aria-live="polite"></div>
+                    </aside>
                     <button type="button" class="cw-jump" id="cw-jump" hidden>
                         <span class="cw-jump-arrow" aria-hidden="true">&raquo;</span>
                         <b class="cw-jump-text">Tin nhắn mới</b>
@@ -468,10 +502,10 @@ $mxh = array_filter(array(
                     </label>
                     <div class="cw-input-wrap">
                         <input type="text" name="content" id="cw-input" autocomplete="off"
-                               placeholder="<?= $user ? 'Vui lòng nhập tin nhắn' : 'Đăng nhập để trò chuyện…' ?>"
+                               placeholder="<?= $user ? 'Nhập tin nhắn...' : 'Đăng nhập để trò chuyện…' ?>"
                                <?= $user ? '' : 'disabled' ?>>
                         <button type="button" class="cw-emoji-btn" id="cw-emoji-btn"
-                                title="Biểu tượng cảm xúc" <?= $user ? '' : 'disabled' ?>>☺</button>
+                                title="Biểu tượng cảm xúc" aria-label="Biểu tượng cảm xúc" <?= $user ? '' : 'disabled' ?>><?= tk_icon('smile') ?></button>
                     </div>
                     <button class="cw-send" type="submit" aria-label="Gửi" <?= $user ? '' : 'disabled' ?>>
                         <svg viewBox="0 0 24 24" class="cw-send-ic" aria-hidden="true"><path d="M21.4 3.6 2.9 10.3c-1 .4-1 1.8 0 2.1l6.2 2 2.4 6.6c.3.9 1.6 1 2 .1l8-16.2c.4-.8-.4-1.6-1.2-1.3z"/><path d="M9.4 14.6 21 3.9"/></svg>
@@ -493,13 +527,24 @@ $mxh = array_filter(array(
     </div>
 </div>
 
-<script src="<?= base_url('assets/site/js/password-toggle.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/password-toggle.js') ?>"></script>
-<script src="<?= base_url('assets/site/js/app.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/app.js') ?>"></script>
-<script src="<?= base_url('assets/site/js/searchable-select.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/searchable-select.js') ?>"></script>
-<script src="<?= base_url('assets/site/js/notifications.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/notifications.js') ?>"></script>
+<script defer src="<?= base_url('assets/site/js/password-toggle.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/password-toggle.js') ?>"></script>
+<script defer src="<?= base_url('assets/site/js/app.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/app.js') ?>" data-base="<?= e(rtrim(site_url(), '/') . '/') ?>"></script>
+<script defer src="<?= base_url('assets/site/js/date-select.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/date-select.js') ?>"></script>
+<script defer src="<?= base_url('assets/site/js/searchable-select.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/searchable-select.js') ?>"></script>
+<script defer src="<?= base_url('assets/site/js/notifications.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/notifications.js') ?>"></script>
 <!-- Chat nạp cho cả khách: xem được phòng chung, muốn gửi thì phải đăng nhập -->
-<script src="<?= base_url('assets/site/js/realtime.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/realtime.js') ?>"></script>
-<script src="<?= base_url('assets/site/js/chat-widget.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/chat-widget.js') ?>"></script>
+<script defer src="<?= base_url('assets/site/js/realtime.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/realtime.js') ?>"></script>
+<script defer src="<?= base_url('assets/site/js/chat-widget.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/chat-widget.js') ?>"></script>
 
+<?php $this->load->view('layouts/_mobile_nav'); ?>
+<?php if ($guest_banner): ?>
+<aside class="guest-banner" aria-label="Tham gia Saigon Cupid">
+    <p><strong>Gặp người phù hợp, bắt đầu kết nối</strong><span>Đăng nhập hoặc tạo tài khoản để thích và nhắn tin.</span></p>
+    <div class="guest-banner-actions">
+        <a class="guest-banner-login" href="<?= site_url('dang-nhap') ?>">Đăng nhập</a>
+        <a class="guest-banner-register" href="<?= site_url('dang-ky') ?>">Đăng ký</a>
+    </div>
+</aside>
+<?php endif; ?>
 </body>
 </html>

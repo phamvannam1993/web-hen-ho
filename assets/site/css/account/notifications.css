@@ -1,0 +1,22 @@
+/* Trang Thông báo — theo `src/routes/tai-khoan.thong-bao.tsx`. */
+
+.tk-tb-list { margin: 0; padding: 0; list-style: none; }
+.tk-tb-list > li + li { border-top: 1px solid var(--tk-border); }
+.tk-tb-list > li[hidden] + li { border-top: 0; }
+.tk-tb-item { display: flex; align-items: flex-start; gap: 12px; padding: 16px; transition: background-color .15s; }
+a.tk-tb-item:hover { background: oklch(0.966 0.012 350 / 70%); }
+.tk-tb-item.is-unread { background: var(--tk-primary-tint); }
+.tk-tb-ic {
+  width: 40px; height: 40px; flex: 0 0 40px; display: grid; place-items: center;
+  border-radius: 999px; background: var(--tk-accent); color: var(--tk-primary);
+}
+.tk-tb-ic .tk-ic { width: 20px; height: 20px; }
+.tk-tb-ic.has-avatar { position: relative; }
+.tk-tb-ic > img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+.tk-tb-type { position: absolute; right: -3px; bottom: -3px; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff; background: var(--tk-accent); }
+.tk-tb-type .tk-ic { width: 12px; height: 12px; }
+.tk-tb-b { flex: 1; min-width: 0; }
+.tk-tb-t { display: block; font-size: 14px; line-height: 20px; font-weight: 600; }
+.tk-tb-d { display: block; margin-top: 2px; font-size: 14px; line-height: 20px; color: var(--tk-muted-fg); overflow-wrap: anywhere; }
+.tk-tb-time { display: block; margin-top: 4px; font-size: 12px; line-height: 16px; color: var(--tk-muted-fg); }
+.tk-tb-dot { margin-top: 8px; width: 10px; height: 10px; flex: 0 0 10px; border-radius: 999px; background: var(--tk-primary); }

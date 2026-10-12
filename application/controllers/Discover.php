@@ -79,17 +79,29 @@ class Discover extends MY_Controller
         if (!$this->require_login()) {
             return;
         }
+        // Chưa xác thực email thì xem hồ sơ được, nhưng chưa thả tim được
+        if (!$this->auth->da_xac_thuc()) {
+            return $this->json(array(
+                'ok' => false, 'need' => 'verify', 'url' => site_url('xac-thuc'),
+                'message' => 'Bạn cần xác thực email (bấm link trong thư chúng tôi đã gửi) để thả tim.',
+            ), 403);
+        }
         $me = $this->auth->user();
         if ((int) $target_id === (int) $me['id']) {
             return $this->json(array('ok' => false, 'message' => 'Không thể tự thích hồ sơ của mình.'));
         }
 
         $result = $this->m_interaction->toggle_like($me['id'], 'user', $target_id);
+        if (isset($result['ok']) && !$result['ok']) {
+            return $this->json($result, 403);
+        }
         $doi    = $this->m_user->find($target_id);
+        $this->load->model('m_interest_badge');
 
         return $this->json(array(
             'ok'      => true,
             'liked'   => (bool) $result['liked'],
+            'account_counts' => $this->m_interest_badge->menu_counts($me['id']),
             'matched' => $result['matched'],
             // Dữ liệu để dựng hộp chúc mừng khi hai bên cùng thích
             'partner' => $result['matched'] ? array(
@@ -98,6 +110,8 @@ class Discover extends MY_Controller
                 'slug'   => $doi['slug'],
             ) : null,
             'me_avatar' => avatar_url($me['avatar'], $me['gender']),
+            // Thích mà chưa có ảnh thì nhắc thêm ảnh ngay lúc đó (mỗi phiên một lần)
+            'nudge'   => ($result['liked'] && !$result['matched']) ? $this->nhac_them_anh() : null,
             'message' => $result['matched']
                 ? 'Ghép đôi thành công! Hai bạn đã thích nhau.'
                 : ($result['liked'] ? 'Đã gửi lượt thích.' : 'Đã bỏ thích.'),

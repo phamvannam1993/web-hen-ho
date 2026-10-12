@@ -18,6 +18,10 @@
 
 Lệnh ở bước 4 in ra tiến trình theo từng phần:
 
+Trang `/hen-ho` cần chạy bước 4 để bổ sung `users.location_updated_at` và tọa độ tỉnh/thành. Tọa độ thành viên cũ chưa có thời điểm cấp quyền được xem là dữ liệu ước tính; trang dùng tọa độ tỉnh/thành thay thế. Vị trí trình duyệt được ưu tiên trong 30 ngày sau khi người dùng bấm “Dùng vị trí hiện tại” và cấp quyền. Khoảng cách tính theo đường chim bay, không phải quãng đường di chuyển. Trình duyệt cần HTTPS (hoặc localhost) để lấy vị trí.
+
+Badge chưa xem của “Quan tâm & ghép đôi” cần bảng `account_interest_seen`. Ứng dụng tự tạo bảng khi thiếu nếu tài khoản DB có quyền CREATE. Nếu máy chủ giới hạn quyền này, chạy `php database/update.php`, hoặc chỉ nhập [database/interest_seen.sql](database/interest_seen.sql). Trạng thái lưu theo tài khoản và từng tab; dữ liệu cũ chưa xem được tính lần đầu.
+
     == 1. Khoá cấu hình mới ==
     == 2. Danh mục tỉnh/thành ==
     == 3. Cột dữ liệu mới ==
@@ -75,9 +79,14 @@ làm hỏng dữ liệu — nhưng người dùng mới sẽ không nhận đư�
 
     REALTIME_WS_URL=wss://.../ws
     REALTIME_SECRET=...
+    REALTIME_HTTP_URL=http://127.0.0.1:3001
 
 Bỏ trống thì khung chat vẫn chạy, chỉ là tải tin mới theo chu kỳ 4 giây thay vì
 tức thời.
+
+Có điền thì phải chạy thêm máy chủ Node ở thư mục `websoket/` (dùng chung cho
+web và ứng dụng di động) và cho nginx chuyển `/ws` sang nó — làm theo
+`websoket/README.md`.
 
 ---
 
@@ -129,17 +138,18 @@ của bạn**:
     # Chốt gợi ý mỗi ngày cho từng người + đánh dấu gợi ý cũ hết hạn — 8h sáng
     0 8 * * *  cd /var/www/web-hen-ho && /usr/bin/php index.php cron goi_y_ngay >> /var/log/cupid-mail.log 2>&1
 
-    # Email gợi ý người phù hợp — 8h05 sáng
+    # Email quay lại: xác nhận email / bổ sung hồ sơ / gợi ý / khám phá — 8h05 sáng
     5 8 * * *  cd /var/www/web-hen-ho && /usr/bin/php index.php cron goi_y >> /var/log/cupid-mail.log 2>&1
 
-    # Nhắc người đã 7 ngày không vào — 10h sáng
-    0 10 * * * cd /var/www/web-hen-ho && /usr/bin/php index.php cron keo_lai >> /var/log/cupid-mail.log 2>&1
+    # Không cần lịch keo_lai riêng: đã hợp nhất vào goi_y.
 
     # Gom lượt thích và lượt xem trong ngày — 20h
     0 20 * * * cd /var/www/web-hen-ho && /usr/bin/php index.php cron gom_thong_bao >> /var/log/cupid-mail.log 2>&1
 
     # Nhắc người sắp mất chuỗi ngày hoạt động — 20h
     0 20 * * * cd /var/www/web-hen-ho && /usr/bin/php index.php cron nhac_chuoi >> /var/log/cupid-mail.log 2>&1
+
+    # Không cần lịch nhac_ho_so riêng: đã hợp nhất vào goi_y.
 
 Lưu lại rồi kiểm tra đã nhận chưa:
 
