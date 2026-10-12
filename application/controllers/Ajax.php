@@ -309,9 +309,11 @@ class Ajax extends MY_Controller
 
         if ($image) {
             $this->db->insert('room_messages', array('user_id' => $me, 'type' => 'image', 'content' => $image));
+            $this->realtime->phong_moi($this->db->insert_id());
         }
         if ($content !== '') {
             $this->db->insert('room_messages', array('user_id' => $me, 'type' => 'text', 'content' => $content));
+            $this->realtime->phong_moi($this->db->insert_id());
         }
 
         $out = array('ok' => true);

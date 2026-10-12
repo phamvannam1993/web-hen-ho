@@ -35,7 +35,7 @@ class Engagement extends Api_Controller
         if (!$this->can_auth()) {
             return;
         }
-        $la_vip = (bool) $this->me['is_vip'];
+        $la_vip = $this->la_vip();
 
         return $this->ok(array(
             'total'  => $this->m_interaction->liked_me_count($this->me['id']),
@@ -59,9 +59,11 @@ class Engagement extends Api_Controller
         if (!$this->can_auth()) {
             return;
         }
-        if (!$this->me['is_vip'] && $act === 'like') {
-            return $this->loi('Tính năng thả tim lại dành cho thành viên VIP.', 403,
-                array('need_vip' => true));
+        // Giống web (ajax/tra-loi-thich): ai cũng thích lại được người mình nhìn
+        // thấy — bản thường chỉ biết id của 2 người đầu nên không cần chặn VIP ở
+        // đây, chỉ cần đã xác thực email như mọi lượt thả tim khác.
+        if (!$this->can_xac_thuc()) {
+            return;
         }
 
         $kq = $this->m_interaction->respond_like($this->me['id'], (int) $id,
@@ -78,7 +80,7 @@ class Engagement extends Api_Controller
         if (!$this->can_auth()) {
             return;
         }
-        $la_vip = (bool) $this->me['is_vip'];
+        $la_vip = $this->la_vip();
         $list   = $this->m_interaction->viewers($this->me['id'], 60);
 
         $items = $this->che_bot($list, $la_vip);
@@ -121,6 +123,10 @@ class Engagement extends Api_Controller
             'boost'    => $this->m_streak->boost($this->me['id']),
             'next'     => $this->m_streak->moc_ke_tiep((int) $s['current_streak']),
             'badges'   => $this->m_streak->badges($this->me['id']),
+            // Toàn bộ mốc để vẽ thang huy hiệu như trang /tai-khoan/chuoi
+            'milestones' => array_map(function ($ngay, $m) {
+                return array('ngay' => $ngay, 'ma' => $m[0], 'ten' => $m[1], 'xu' => $m[2], 'hien_thi' => $m[3]);
+            }, array_keys(M_streak::MOC), array_values(M_streak::MOC)),
         ));
     }
 
