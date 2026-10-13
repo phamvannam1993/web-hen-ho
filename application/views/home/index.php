@@ -23,33 +23,50 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
 ?>
 
 <?php /* ===================== Khối mở đầu ===================== */ ?>
-<?php
-/* Ảnh banner trang chủ được chọn theo thiết kế hiện tại. */
-$hero_img = 'assets/images/banner.webp';
-?>
-<section class="hm-hero">
-    <div class="hm-hero-bg" aria-hidden="true"
-         style="background-image:url('<?= base_url(ltrim($hero_img, '/')) ?>')"></div>
-    <div class="container hm-hero-inner">
-        <h1 class="hm-hero-title">Nơi trái tim Việt Nam tìm thấy nhau</h1>
-        <p class="hm-hero-sub">Kết nối với người phù hợp – Chủ động nhắn tin để làm quen ❤️</p>
-
-        <form class="hm-hero-search" method="get" action="<?= site_url('tim-kiem') ?>">
-            <span class="hm-hero-search-ic" aria-hidden="true"><?= $ic($ic_search) ?></span>
-            <input type="text" name="q" value="<?= e($this->input->get('q')) ?>"
-                   placeholder="Tìm kiếm bạn đời theo sở thích, nghề nghiệp, địa điểm…">
-            <button class="btn-hm btn-hm-solid" type="submit">Tìm kiếm</button>
-        </form>
-
-        <a class="btn-hm btn-hm-solid btn-hm-lg hm-hero-cta" href="<?= site_url('swipe-match') ?>">Ghép Đôi Online</a>
-
-        <ul class="hm-hero-stats">
-            <li><?= $ic($ic_userpl) ?><b><?= number_format($stats['total'], 0, ',', '.') ?>+</b> Thành viên</li>
-            <li><?= $ic($ic_heart) ?><b><?= number_format($couple_count, 0, ',', '.') ?>+</b> Cặp đôi</li>
-            <li><?= $ic($ic_star) ?><b>18+</b> Cộng đồng trưởng thành</li>
-        </ul>
-    </div>
-</section>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/home-intro.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/home-intro.css') ?>">
+<div class="home-intro container">
+    <section class="home-intro-hero" aria-labelledby="home-heading">
+        <div class="home-intro-copy">
+            <p class="home-intro-eyebrow">SAIGON CUPID – KẾT NỐI TRÁI TIM VIỆT</p>
+            <h1 id="home-heading">Gặp đúng người,<br><span>đúng nhịp trái tim.</span></h1>
+            <p class="home-intro-description">Khám phá những người phù hợp, kết nối chân thành và bắt đầu câu chuyện của riêng bạn.</p>
+            <form class="home-intro-search" method="get" action="<?= site_url('tim-kiem') ?>" role="search">
+                <span aria-hidden="true"><?= $ic($ic_search) ?></span>
+                <input type="search" name="q" value="<?= e($this->input->get('q')) ?>"
+                       aria-label="Tìm kiếm bạn đời theo sở thích, nghề nghiệp, địa điểm"
+                       placeholder="Sở thích, nghề nghiệp, địa điểm...">
+                <button type="submit">Tìm kiếm</button>
+            </form>
+            <div class="home-intro-actions">
+                <a class="home-intro-button" href="<?= site_url('swipe-match') ?>">Ghép đôi online <span aria-hidden="true">→</span></a>
+                <span class="home-intro-trust"><?= $ic($ic_shield) ?> Chân thành &amp; riêng tư</span>
+            </div>
+        </div>
+        <div class="home-intro-photo">
+            <img src="<?= base_url('assets/images/banner.webp') ?>"
+                 alt="Saigon Cupid – Kết nối trái tim Việt"
+                 fetchpriority="high">
+            <span class="home-intro-caption"><?= $ic($ic_heart) ?> Một kết nối. Một khởi đầu mới.</span>
+        </div>
+    </section>
+    <nav class="home-intro-features" aria-label="Khám phá tính năng">
+        <?php
+        $features = array(
+            array($ic_heart, 'Ghép đôi thông minh', 'Khám phá những người phù hợp với bạn.', 'swipe-match'),
+            array($ic_chat, 'Trò chuyện & kết nối', 'Bắt đầu trò chuyện, làm quen người bạn thích.', 'tai-khoan/tin-nhan'),
+            array($ic_users, 'Cộng đồng tâm sự', 'Chia sẻ câu chuyện, kết nối bạn mới.', 'tam-su'),
+            array($ic_star, 'Gợi ý phù hợp mỗi ngày', 'Những kết nối mới dành riêng cho bạn.', 'tai-khoan/goi-y'),
+            array('<path d="M12 3s2 4 0 7c-2-1-3-3-3-3s-5 5-5 9a8 8 0 0 0 16 0c0-6-8-13-8-13z"/>', 'Chuỗi hoạt động', 'Duy trì hoạt động, nhận những phần thưởng thú vị.', 'tai-khoan/chuoi'),
+        );
+        foreach ($features as $feature): ?>
+            <a class="home-intro-feature" href="<?= site_url($feature[3]) ?>">
+                <span class="home-intro-feature-icon" aria-hidden="true"><?= $ic($feature[0]) ?></span>
+                <h2><?= e($feature[1]) ?></h2>
+                <p><?= e($feature[2]) ?></p>
+            </a>
+        <?php endforeach; ?>
+    </nav>
+</div>
 
 <?php /* Thẻ gợi ý hôm nay đặt ngay dưới khối mở đầu cho dễ thấy */ ?>
 <?php if ($user) { $this->load->view('_daily_card', array('daily' => $daily)); } ?>
