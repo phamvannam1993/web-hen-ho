@@ -109,6 +109,33 @@ class MY_Controller extends CI_Controller
         }
     }
 
+    /** Load member lists in batches while preserving filters and sorting. */
+    protected function render_member_list($view, $page, $data)
+    {
+        $query = (array) $this->input->get();
+        unset($query['member_feed']);
+        $next = $page * 10 < $data['total'] && !empty($data['members'])
+            ? site_url($data['base_url'] . '/trang/' . ($page + 1))
+                . ($query ? '?' . http_build_query($query) : '')
+            : null;
+        if ($this->input->get('member_feed') === '1') {
+            $html = '';
+            $card = $view === 'confide/index' ? 'confide/_card' : 'members/_card';
+            foreach ($data['members'] as $member) {
+                $html .= $this->load->view($card, array_merge($this->data, array(
+                    'm' => $member, 'dating_card' => $view === 'dating/index',
+                )), true);
+            }
+            $this->output->set_header('Cache-Control: private, no-store');
+            return $this->json(array('html' => $html, 'next' => $next));
+        }
+        $data['pagination'] = $next
+            ? '<div data-member-feed><a class="btn-nav-ghost" data-feed-next href="' . e($next)
+                . '">Xem thêm</a><p data-feed-status role="status" aria-live="polite"></p></div>'
+            : '';
+        return $this->render($view, $data);
+    }
+
     protected function render($view, $data = array())
     {
         $data = array_merge($this->data, $data);

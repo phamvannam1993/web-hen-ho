@@ -3,7 +3,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Members extends MY_Controller
 {
-    private $per_page = 16;
+    private $per_page = 10;
 
     public function __construct()
     {
@@ -52,7 +52,7 @@ class Members extends MY_Controller
         $page  = max(1, (int) $page);
         $total = $this->m_user->count_search($filters);
 
-        $this->render('members/index', array(
+        $this->render_member_list('members/index', $page, array(
             'title'      => $title,
             'keyword'    => $this->input->get('q', true),
             'filters'    => $filters,

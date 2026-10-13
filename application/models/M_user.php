@@ -160,7 +160,7 @@ class M_user extends CI_Model
                 break;
             default:      $this->db->order_by('u.last_active_at', 'DESC');
         }
-        return $this->db->limit($limit, $offset)->get()->result_array();
+        return $this->db->order_by('u.id', 'DESC')->limit($limit, $offset)->get()->result_array();
     }
 
     public function count_search(array $filters)

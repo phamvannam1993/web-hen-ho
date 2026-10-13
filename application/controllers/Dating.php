@@ -10,7 +10,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 class Dating extends MY_Controller
 {
-    private $per_page = 24;
+    private $per_page = 10;
 
     /**
      * Cấu hình từng tab: nhãn hiển thị, bộ lọc áp dụng, và phần thẻ tiêu đề
@@ -152,7 +152,7 @@ class Dating extends MY_Controller
         $total = $this->m_user->count_search($filters);
         $base  = 'hen-ho' . ($tab ? '/' . $tab : '');
 
-        $this->render('dating/index', array(
+        $this->render_member_list('dating/index', $page, array(
             'allow_index'    => true,
             'title'      => $current['title'],
             'meta_desc'  => $current['desc'],

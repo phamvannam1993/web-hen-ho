@@ -9,7 +9,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 class Confide extends MY_Controller
 {
-    private $per_page = 24;
+    private $per_page = 10;
 
     /** Nhãn chủ đề tâm sự, dùng chung cho thẻ và bộ lọc. */
     public static function topics()
@@ -102,7 +102,7 @@ class Confide extends MY_Controller
         $total = $this->m_user->count_search($filters);
         $base  = 'tam-su' . ($tab ? '/' . $tab : '');
 
-        $this->render('confide/index', array(
+        $this->render_member_list('confide/index', $page, array(
             'allow_index'    => true,
             'title'      => $current['title'],
             'meta_desc'  => $current['desc'],
