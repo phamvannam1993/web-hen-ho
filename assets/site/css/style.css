@@ -5162,3 +5162,30 @@ button.cw-close {
 @media (max-width: 760px) {
     .cw-form { padding: 12px max(12px, env(safe-area-inset-right)) 12px max(12px, env(safe-area-inset-left)); }
 }
+[data-member-feed] {
+    min-height: 64px;
+    padding: 16px;
+    text-align: center;
+}
+[data-feed-status] {
+    margin: 8px 0;
+    font-weight: 600;
+}
+[data-member-feed].is-loading [data-feed-status]::before {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    vertical-align: -3px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: member-feed-spin 0.8s linear infinite;
+}
+@keyframes member-feed-spin {
+    to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+    [data-member-feed].is-loading [data-feed-status]::before { animation: none; }
+}

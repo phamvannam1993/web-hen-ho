@@ -237,7 +237,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
             <?php if ($user): ?>
                 <a class="btn-account" href="<?= site_url('tai-khoan/ho-so') ?>">
                     <img src="<?= avatar_url($user['avatar'], $user['gender']) ?>" alt="">
-                    <span><?= e(display_name($user)) ?></span>
+                    <span>Tài Khoản</span>
                     <span class="account-total-badge" data-account-total-count <?= empty($account_badge_total) ? 'hidden' : '' ?> aria-label="<?= (int) ($account_badge_total ?? 0) ?> thông báo trong tài khoản"><?= ($account_badge_total ?? 0) > 99 ? '99+' : (int) ($account_badge_total ?? 0) ?></span>
                 </a>
                 <a class="btn-nav-ghost" href="<?= site_url('dang-xuat') ?>">Đăng xuất</a>
@@ -529,6 +529,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 
 <script defer src="<?= base_url('assets/site/js/password-toggle.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/password-toggle.js') ?>"></script>
 <script defer src="<?= base_url('assets/site/js/app.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/app.js') ?>" data-base="<?= e(rtrim(site_url(), '/') . '/') ?>"></script>
+<script defer src="<?= base_url('assets/site/js/member-feed.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/member-feed.js') ?>"></script>
 <script defer src="<?= base_url('assets/site/js/date-select.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/date-select.js') ?>"></script>
 <script defer src="<?= base_url('assets/site/js/searchable-select.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/searchable-select.js') ?>"></script>
 <script defer src="<?= base_url('assets/site/js/notifications.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/notifications.js') ?>"></script>
