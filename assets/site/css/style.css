@@ -2779,7 +2779,7 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
 .safety-box h2::before {
     content: ""; width: 4px; height: 18px; border-radius: 3px; background: var(--pink);
 }
-.safety-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.safety-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 .safety-item {
     padding: 16px; border-radius: 12px;
     background: #fbfbfc; border: 1px solid #f0f1f4;
@@ -2827,9 +2827,6 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
 }
 .seo-toggle:hover { background: #fbe0ee; }
 
-@media (max-width: 900px) {
-    .safety-grid { grid-template-columns: repeat(2, 1fr); }
-}
 @media (max-width: 640px) {
     .dating-page { padding: 12px 0 28px; }
     .dating-head h1 { font-size: 22px; }
@@ -3876,7 +3873,7 @@ html.cw-page-locked .site-mobile-nav { bottom: var(--cw-keyboard-inset, 0px); }
 /* Chỗ trống giữ đúng lề cho tin nối tiếp */
 .cw-msg-avatar.is-blank { visibility: hidden; box-shadow: none; }
 
-.cw-msg-col { min-width: 0; display: flex; flex-direction: column; }
+.cw-msg-col { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
 .cw-msg.mine .cw-msg-col { align-items: flex-end; }
 .cw-msg-name {
     display: block; font-size: 13px; font-weight: 700; color: #8b5cf6;
@@ -3889,7 +3886,7 @@ html.cw-page-locked .site-mobile-nav { bottom: var(--cw-keyboard-inset, 0px); }
     margin: 0; padding: 10px 15px; border-radius: 16px;
     background: #fff; color: var(--ink); font-size: 15px; line-height: 1.5;
     word-break: break-word; box-shadow: 0 1px 4px rgba(17, 24, 39, .07);
-    display: inline-block; max-width: 100%;
+    display: inline-block; width: fit-content; max-width: 100%;
 }
 .cw-msg.mine .cw-msg-col p {
     background: linear-gradient(135deg, #e2596c, var(--pink)); color: #fff;

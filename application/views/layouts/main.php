@@ -37,7 +37,7 @@ $this->load->view('layouts/seo', array('seo_path' => $seo_path, 'can_index' => $
     'meta_desc' => $meta_desc ?? '', 'title' => $title ?? $site_name,
     'settings' => $settings, 'article' => $article ?? null));
 ?>
-<link rel="stylesheet" href="<?= base_url('assets/site/css/style.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/style.css') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/site/css/style.css') ?>?v=<?= @md5_file(FCPATH.'assets/site/css/style.css') ?>">
 <link rel="icon" type="image/x-icon" href="<?= base_url('assets/site/img/favicon.ico?v=1232312131') ?>">
 <link rel="apple-touch-icon" sizes="180x180" href="<?= base_url('assets/site/img/apple-touch-icon.png?V=1243324243') ?>">
 

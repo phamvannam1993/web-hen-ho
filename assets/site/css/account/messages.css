@@ -85,7 +85,7 @@
 
 /* Bong bóng tin nhắn */
 .tk-ms .chat-msg {
-  align-self: flex-start; max-width: 80%;
+  align-self: flex-start; width: fit-content; max-width: 80%;
   padding: 8px 14px; border-radius: var(--tk-r);
   background: var(--tk-card); color: var(--tk-fg);
   font-size: 13px; line-height: 1.625;
