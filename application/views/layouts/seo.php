@@ -17,7 +17,7 @@ if ($seo_path === '') {
 }
 $type = !empty($article) ? 'BlogPosting' : (preg_match('~^(hen-ho|tam-su|tin-tuc)(/|$)~', $seo_path) ? 'CollectionPage' : 'WebPage');
 if ($seo_path === 'gioi-thieu') $type = 'AboutPage';
-if ($seo_path === 'lien-he') $type = 'ContactPage';
+if ($seo_path === 'contact-us') $type = 'ContactPage';
 if ($can_index) {
     $webpage = array('@type' => $type, '@id' => $canonical_url, 'url' => $canonical_url,
         'name' => $page_title, 'description' => $description, 'inLanguage' => 'vi');

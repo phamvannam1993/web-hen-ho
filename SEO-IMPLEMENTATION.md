@@ -7,7 +7,7 @@
 - Organization, WebSite, CollectionPage, BlogPosting, AboutPage, ContactPage và BreadcrumbList; OG/Twitter dùng ảnh bài viết hoặc logo hiện có. Không thêm tác giả, đánh giá hoặc tài khoản xã hội chưa được xác minh.
 - Sitemap thêm trang chủ/bảo mật/an toàn, loại URL noindex và URL trùng, bỏ priority/changefreq và lastmod giả. Bài chưa đến ngày xuất bản không được đưa vào sitemap hoặc hiển thị công khai.
 - Link xã hội chỉ hiển thị URL HTTPS đúng tên miền được cấu hình; placeholder tự ẩn. Sửa nhãn link footer.
-- Trang `/bao-mat`, `/an-toan`, `/lien-he` có nội dung và đường dẫn riêng, hoạt động không phụ thuộc bản ghi pages. Nội dung liên hệ dùng cấu hình doanh nghiệp và bỏ email/hotline placeholder.
+- Trang `/bao-mat`, `/an-toan`, `/contact-us` có nội dung và đường dẫn riêng, hoạt động không phụ thuộc bản ghi pages. Nội dung liên hệ dùng cấu hình doanh nghiệp và bỏ email/hotline placeholder.
 - Bộ lọc hồ sơ hoàn chỉnh loại ngày sinh chưa đủ 18 tuổi ở danh sách và gợi ý. Bio trên thẻ không hiển thị với khách. Đăng ký đã có kiểm tra 18 tuổi trên máy chủ.
 - Bỏ số thành viên/cặp đôi tối thiểu giả và đánh giá 4.8/5; bỏ lời hứa bảo mật tuyệt đối.
 - Bỏ CSS nạp hai lần, cho phép zoom, defer script ngoài, thêm H1 cho khám phá và sửa avatar chat có src rỗng.

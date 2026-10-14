@@ -6,7 +6,7 @@ if (!$phone || preg_replace('/\D/', '', $phone) === '0900000000') $phone = '0899
 ?>
 <div class="container"><article class="content-box static-page">
 <h1><?= e($title) ?></h1>
-<?php if ($policy_slug === 'lien-he'): ?>
+<?php if ($policy_slug === 'contact-us'): ?>
 <p>Liên hệ để được hỗ trợ tài khoản, phản ánh hồ sơ hoặc gửi yêu cầu liên quan đến dữ liệu cá nhân.</p>
 <h2>Đơn vị vận hành</h2>
 <p><?= e($settings['company_name'] ?? 'CÔNG TY TNHH KỸ THUẬT TÂM QUANG EMT') ?></p>

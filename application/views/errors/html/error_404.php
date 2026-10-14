@@ -109,7 +109,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
             <a href="/thanh-vien">Thành viên</a>
             <a href="/hen-ho">Hẹn hò</a>
             <a href="/tam-su">Tâm sự</a>
-            <a href="/lien-he">Liên hệ</a>
+            <a href="/contact-us">Liên hệ</a>
         </nav>
     </main>
 </body>
