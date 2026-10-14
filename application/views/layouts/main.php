@@ -107,7 +107,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
         <div class="topbar-right">
             <a href="<?= site_url('dieu-khoan') ?>">Điều khoản</a>
             <a href="<?= site_url('noi-quy') ?>">Nội quy</a>
-            <a href="<?= site_url('lien-he') ?>">Liên hệ</a>
+            <a href="<?= site_url('contact-us') ?>">Liên hệ</a>
             <?php foreach ($mxh as $ten => $url): ?>
                 <a class="topbar-social" href="<?= e($url) ?>" target="_blank" rel="noopener"
                    aria-label="<?= e(ucfirst($ten)) ?>">
@@ -286,7 +286,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
             <a href="<?= site_url('dieu-khoan') ?>">Điều khoản sử dụng</a>
             <a href="<?= site_url('an-toan') ?>">Hẹn hò an toàn</a>
             <a href="<?= site_url('bao-mat') ?>">Chính sách bảo mật</a>
-            <a href="<?= site_url('lien-he') ?>">Liên hệ</a>
+            <a href="<?= site_url('contact-us') ?>">Liên hệ</a>
         </nav>
 
         <div class="site-footer__line"></div>

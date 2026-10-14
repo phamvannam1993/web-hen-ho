@@ -40,7 +40,7 @@ class Sitemap extends MY_Controller
             array('swipe-match', null, 'weekly',  '0.6'),
             array('bao-mat', null),
             array('an-toan', null),
-            array('lien-he', null),
+            array('contact-us', null),
         );
         foreach ($this->db->select('slug, updated_at')->where('is_active', 1)
                      ->order_by('id')->get('pages')->result_array() as $p) {

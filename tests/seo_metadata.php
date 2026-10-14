@@ -5,7 +5,7 @@ function check($ok, $message) { if (!$ok) throw new Exception($message); }
 function site_url($path = '') { return 'https://saigoncupid.com/' . $path; }
 function base_url($path = '') { return site_url($path); }
 function e($text) { return htmlspecialchars($text, ENT_QUOTES, 'UTF-8'); }
-foreach (array('', 'hen-ho', 'tam-su/nu/trang/2', 'tin-tuc', 'tin-tuc/bai-viet', 'bao-mat', 'lien-he') as $path) check(seo_indexable($path), 'Public page: ' . $path);
+foreach (array('', 'hen-ho', 'tam-su/nu/trang/2', 'tin-tuc', 'tin-tuc/bai-viet', 'bao-mat', 'contact-us') as $path) check(seo_indexable($path), 'Public page: ' . $path);
 foreach (array('profile/member', 'tai-khoan', 'tim-kiem', 'ha-noi', 'thanh-vien', 'khu-vuc', 'hen-ho/unknown') as $path) check(!seo_indexable($path), 'Private/thin page: ' . $path);
 check(!seo_social_urls(array('facebook_url' => 'saigoncupid', 'youtube_url' => 'https://youtube.com.evil.example/a')), 'Reject broken or deceptive URLs');
 check(count(seo_social_urls(array('facebook_url' => 'https://www.facebook.com/saigoncupid'))) === 1, 'Valid configured profile');

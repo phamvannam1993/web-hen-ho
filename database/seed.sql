@@ -122,7 +122,7 @@ INSERT INTO `packages` (`type`,`name`,`price`,`duration_days`,`coin_amount`,`bon
 INSERT INTO `pages` (`title`,`slug`,`content`) VALUES
 ('Nội quy','noi-quy','<p>Nghiêm cấm đăng ảnh phản cảm, thông tin lừa đảo, mua bán dịch vụ trái pháp luật. Tin vi phạm sẽ bị gỡ và khoá tài khoản.</p>'),
 ('Điều khoản sử dụng','dieu-khoan','<p>Khi sử dụng website, bạn đồng ý chịu trách nhiệm với nội dung mình đăng tải.</p>'),
-('Liên hệ','lien-he','<p>Email: support@henho24.local — Hotline: 0900 000 000</p>');
+('Liên hệ','contact-us','<p>Email: support@henho24.local — Hotline: 0900 000 000</p>');
 
 /* ------------------------- Banner mẫu ------------------------- */
 INSERT INTO `banners` (`position`,`title`,`image`,`link`,`sort`) VALUES

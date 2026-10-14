@@ -159,8 +159,11 @@ $route['tai-khoan/doi-mat-khau']  = 'account/password';
 $route['tin-tuc']                 = 'blog/index';
 $route['tin-tuc/trang/(:num)']    = 'blog/index/$1';
 $route['tin-tuc/(:any)']          = 'blog/detail/$1';
+$route['lien-he'] = 'pages/contact_redirect';
+$route['trang/lien-he'] = 'pages/contact_redirect';
+$route['trang/contact-us'] = 'pages/contact_redirect';
 $route['trang/(:any)']            = 'pages/view/$1';
-$route['(bao-mat|an-toan|lien-he)'] = 'pages/policy/$1';
+$route['(bao-mat|an-toan|contact-us)'] = 'pages/policy/$1';
 
 /* AJAX */
 $route['ajax/like']            = 'ajax/like';
