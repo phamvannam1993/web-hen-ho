@@ -11,6 +11,7 @@ $menu  = array(
     'jobs'         => array('Nghề nghiệp', 'admin/jobs'),
     'emails'       => array('Email', 'admin/emails'),
     'reports'      => array('Báo cáo vi phạm', 'admin/reports'),
+    'chat_groups'  => array('Nhóm chat', 'admin/chat_groups'),
     'orders'       => array('Đơn nạp / VIP', 'admin/orders'),
     'packages'     => array('Gói dịch vụ', 'admin/packages'),
     'codes'        => array('Mã bảo mật', 'admin/codes'),

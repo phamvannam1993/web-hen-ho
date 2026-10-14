@@ -26,7 +26,7 @@
 .home-intro-caption .hm-ic { width: 16px; height: 16px; fill: var(--intro-primary); stroke: var(--intro-primary); }
 .home-intro-features { position: relative; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; margin: -28px 24px 0; padding: 4px 0 28px; }
 .home-intro-feature { display: block; min-width: 0; min-height: 172px; padding: 16px; border: 1px solid #eadfe5; border-radius: 18px; background: #fff; color: inherit; text-decoration: none; box-shadow: 0 10px 30px -15px #59283b33; transition: transform .2s; }
-.home-intro-feature:hover { transform: translateY(-5px); color: inherit; text-decoration: none; }
+a.home-intro-feature:hover { transform: translateY(-5px); color: inherit; text-decoration: none; }
 .home-intro a:focus-visible, .home-intro button:focus-visible { outline: 2px solid var(--intro-primary); outline-offset: 4px; }
 .home-intro-feature-icon { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; margin-bottom: 12px; border-radius: 50%; background: #fdf0f3; color: var(--intro-primary); }
 .home-intro-feature-icon .hm-ic { width: 23px; height: 23px; }
@@ -50,14 +50,18 @@
     .home-intro-search input { font-size: 12px; }
     .home-intro-search button { padding-inline: 14px; }
     .home-intro-features {
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         grid-auto-flow: row;
         grid-auto-columns: auto;
         overflow-x: visible;
         scroll-snap-type: none;
     }
-    .home-intro-feature { min-height: 0; text-align: center; }
-    .home-intro-feature-icon { margin-inline: auto; }
+    .home-intro-feature { min-height: 0; padding: 10px; border-radius: 14px; text-align: center; }
+    .home-intro-feature:last-child { grid-column: 1 / -1; }
+    .home-intro-feature-icon { width: 32px; height: 32px; margin-inline: auto; margin-bottom: 10px; }
+    .home-intro-feature-icon .hm-ic { width: 18px; height: 18px; }
+    .home-intro-feature h2 { font-size: 11px; line-height: 18px; }
+    .home-intro-feature p { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
     .home-intro-feature { transition: none; }

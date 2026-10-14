@@ -46,6 +46,12 @@ class Sitemap extends MY_Controller
                      ->order_by('id')->get('pages')->result_array() as $p) {
             if (seo_indexable($p['slug'])) $urls[] = array($p['slug'], $p['updated_at'], 'monthly', '0.5');
         }
+        if (chat_groups_enabled()) {
+            $urls[] = array('nhom', null, 'daily', '0.7');
+            foreach ($this->db->where_in('status', array('active','readonly'))->get('chat_groups')->result_array() as $g) {
+                $urls[] = array('nhom/' . $g['slug'], $g['updated_at'], 'weekly', '0.5');
+            }
+        }
         $this->tra_ve($this->bo_url($urls));
     }
 

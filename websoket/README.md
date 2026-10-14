@@ -1,5 +1,7 @@
 # Máy chủ chat thời gian thực
 
+Nhóm chat mới dùng `/ws/groups?ticket=...` riêng, hỗ trợ khách và chỉ phát `group.changed`. Node xác thực ticket/quyền qua PHP, lấy outbox mỗi 2 giây và kiểm tra lại subscription mỗi 15 giây. Cấu hình và triển khai: xem `../CHAT-GROUPS-DEPLOYMENT.md`. Luồng `/ws?token=...` cho chat riêng/client cũ vẫn được giữ.
+
 Đẩy tin nhắn tức thời tới web (`assets/site/js/realtime.js`) và ứng dụng di động
 (`app-hen-ho`). Không đụng cơ sở dữ liệu: PHP vẫn lưu tin và kiểm tra quyền, máy
 chủ này chỉ chuyển sự kiện tới đúng người.

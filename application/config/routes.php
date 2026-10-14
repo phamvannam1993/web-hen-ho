@@ -166,6 +166,14 @@ $route['trang/(:any)']            = 'pages/view/$1';
 $route['(bao-mat|an-toan|contact-us)'] = 'pages/policy/$1';
 
 /* AJAX */
+$route['nhom'] = 'groups/index';
+$route['nhom/([a-z0-9-]+)'] = 'groups/detail/$1';
+$route['nhom-media/(:num)'] = 'groups/media/$1';
+$route['ajax/nhom/(:num)/(:any)'] = 'groups/api/$1/$2';
+$route['ajax/nhom-panel/(:num)'] = 'groups/panel/$1';
+$route['internal/chat-groups/authorize'] = 'group_events/authorize';
+$route['internal/chat-groups/flush'] = 'group_events/flush';
+$route['internal/chat-groups/legacy'] = 'group_events/legacy';
 $route['ajax/like']            = 'ajax/like';
 $route['ajax/tra-loi-thich']   = 'ajax/respond_like';
 $route['ajax/thong-bao']       = 'ajax/notifications';

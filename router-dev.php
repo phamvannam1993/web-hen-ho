@@ -8,6 +8,9 @@
  * index.php, giống RewriteRule trong .htaccess của Apache trên máy chủ thật.
  */
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+if (preg_match('~^/(?:application|system|database|writable)(?:/|$)~i', rawurldecode($path))) {
+    http_response_code(403); exit;
+}
 if ($path !== '/' && is_file(__DIR__ . $path)) return false;
 
 $_SERVER['SCRIPT_NAME']     = '/index.php';
