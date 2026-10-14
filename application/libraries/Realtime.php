@@ -156,7 +156,16 @@ class Realtime
     /** Tin mới ở phòng chat chung — $row kèm display_name, nickname, avatar, gender, slug. */
     public function tin_phong(array $row)
     {
-        $tin = $this->tin($row, false) + array(
+        if (isset($row['room_id']) && (int) $row['room_id'] !== 1) return;
+        $tin = $this->room_payload($row);
+        $this->publish('all', array('t' => 'room.message', 'message' => $tin), (int) $row['user_id']);
+        $tin['mine'] = true;
+        $this->publish((int) $row['user_id'], array('t' => 'room.message', 'message' => $tin));
+    }
+
+    public function room_payload(array $row)
+    {
+        return $this->tin($row, false) + array(
             'name'    => display_name($row),
             'avatar'  => avatar_url($row['avatar'] ?? null, $row['gender'] ?? 'other'),
             'slug'    => $row['slug'] ?? null,
@@ -168,9 +177,6 @@ class Realtime
                 'avatar' => avatar_url($row['avatar'] ?? null, $row['gender'] ?? 'other'),
             ),
         );
-        $this->publish('all', array('t' => 'room.message', 'message' => $tin), (int) $row['user_id']);
-        $tin['mine'] = true;
-        $this->publish((int) $row['user_id'], array('t' => 'room.message', 'message' => $tin));
     }
 
     /** Đẩy tin phòng chung theo id vừa ghi (Ajax::room_send và api Chat::room_send). */
@@ -179,6 +185,7 @@ class Realtime
         if (!$this->enabled()) {
             return;
         }
+        if (function_exists('chat_group_default_scope')) chat_group_default_scope($this->CI->db);
         $row = $this->CI->db->select('r.id, r.user_id, r.type, r.content, r.created_at,
                                       u.display_name, u.nickname, u.avatar, u.gender, u.slug')
             ->from('room_messages r')->join('users u', 'u.id = r.user_id')
@@ -189,6 +196,23 @@ class Realtime
     }
 
     /** Người đọc vừa xem tin của $other_id trong hội thoại: báo để hiện "Đã xem". */
+    public function group_ticket($group_id, $public_id)
+    {
+        if (!$this->enabled()) return '';
+        $payload = $this->base64url(json_encode(array('scope' => 'group', 'group' => (int) $group_id, 'identity' => $public_id, 'exp' => time() + 600)));
+        return $payload . '.' . $this->base64url(hash_hmac('sha256', $payload, $this->secret(), true));
+    }
+
+    public function verify_group_ticket($ticket)
+    {
+        $parts = explode('.', (string) $ticket);
+        if (count($parts) !== 2 || !$this->secret() || !hash_equals($this->base64url(hash_hmac('sha256', $parts[0], $this->secret(), true)), $parts[1])) return null;
+        $data = json_decode(base64_decode(strtr($parts[0], '-_', '+/'), true), true);
+        if (!$data || ($data['scope'] ?? '') !== 'group' || ($data['exp'] ?? 0) <= time()
+            || !preg_match('/^[a-f0-9]{32}$/D', $data['identity'] ?? '')) return null;
+        return $data;
+    }
+
     public function da_doc($conversation_id, $other_id)
     {
         $this->publish((int) $other_id, array('t' => 'chat.seen', 'conversationId' => (int) $conversation_id));
@@ -203,7 +227,7 @@ class Realtime
             'id'      => (int) $r['id'],
             'mine'    => (bool) $cua_toi,
             'type'    => $r['type'],
-            'content' => $r['type'] === 'image' ? base_url(ltrim($r['content'], '/')) : $r['content'],
+            'content' => $r['type'] === 'image' ? (function_exists('chat_group_image_url') ? chat_group_image_url($r) : base_url(ltrim($r['content'], '/'))) : $r['content'],
             'time'    => date('H:i', strtotime($r['created_at'])),
             'day'     => $nhan,
         );

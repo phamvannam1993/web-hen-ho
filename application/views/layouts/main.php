@@ -28,6 +28,7 @@ $page_title = !empty($meta_title)
 <?php
 $seo_path = trim(uri_string(), '/');
 $can_index = seo_indexable($seo_path);
+if (!empty($seo_noindex)) $can_index = false;
 $canonical_url = site_url($seo_path);
 if (preg_match('~/trang/([0-9]+)$~', $seo_path, $match)) {
     $page_title .= ' - Trang ' . (int) $match[1];
@@ -46,7 +47,7 @@ $this->load->view('layouts/seo', array('seo_path' => $seo_path, 'can_index' => $
    thoại) theo bản thiết kế SaigonCupid, nằm giữa đầu trang và chân trang của site. */
 $tk_app = !empty($tk) && !empty($content_view) && strpos($content_view, 'account/') === 0;
 $tk_inbox_open = $tk_app && $content_view === 'account/messages' && !empty($partner);
-$guest_banner = !$user && empty($bare) && strpos($content_view, 'auth/') !== 0;
+$guest_banner = !$user && empty($bare) && strpos($content_view, 'auth/') !== 0 && $content_view !== 'groups/detail';
 ?>
 <?php if ($tk_app || $content_view === 'members/profile'): ?>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -63,7 +64,7 @@ $guest_banner = !$user && empty($bare) && strpos($content_view, 'auth/') !== 0;
 <?php endif; ?>
 <link rel="stylesheet" href="<?= base_url('assets/site/css/mobile-nav.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/mobile-nav.css') ?>">
 </head>
-<body class="<?= !empty($bare) ? 'is-bare' : '' ?><?= $tk_app ? 'tk-app' : '' ?><?= $content_view === 'account/messages' ? ' is-messages-page' : '' ?><?= $tk_inbox_open ? ' is-inbox-open' : '' ?><?= $guest_banner ? ' has-guest-banner' : '' ?>">
+<body class="<?= !empty($bare) ? 'is-bare' : '' ?><?= $tk_app ? 'tk-app' : '' ?><?= $content_view === 'account/messages' ? ' is-messages-page' : '' ?><?= $content_view === 'groups/detail' ? ' is-group-chat-page' : '' ?><?= $tk_inbox_open ? ' is-inbox-open' : '' ?><?= $guest_banner ? ' has-guest-banner' : '' ?>">
 
 <!-- Dải mảnh trên cùng: khẩu hiệu + hotline -->
 <?php /* Chế độ toàn màn hình (trang Khám phá): bỏ thanh trên, menu và chân trang */ ?>
@@ -207,12 +208,12 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
         <?php
         // Đánh dấu mục đang xem theo đường dẫn hiện tại.
         // 'match' liệt kê các nhánh URL cùng thuộc một mục, ví dụ trang cá nhân
-        // /profile/... vẫn tính là đang ở mục Thành viên.
+        // Các trang trong /nhom cùng dùng mục Nhóm chat.
         $nav_items = array(
             array('url' => '',              'label' => 'Trang chủ',  'match' => array('')),
             array('url' => 'hen-ho',        'label' => 'Hẹn hò',     'match' => array('hen-ho')),
             array('url' => 'tam-su',        'label' => 'Tâm sự',     'match' => array('tam-su')),
-            array('url' => 'thanh-vien',    'label' => 'Thành viên', 'match' => array('thanh-vien', 'profile', 'tim-kiem')),
+            array('url' => 'nhom',         'label' => 'Nhóm chat', 'match' => array('nhom')),
             array('url' => 'swipe-match',      'label' => 'Ghép đôi ẩn',   'match' => array('swipe-match')),
             array('url' => 'khu-vuc',       'label' => 'Khu vực',    'match' => array('khu-vuc')),
             array('url' => 'tin-tuc',       'label' => 'Sforum',   'match' => array('tin-tuc')),
@@ -429,6 +430,11 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
                     </span>
                 </button>
 
+                <?php if (chat_groups_enabled()): ?>
+                    <p class="cw-side-label cg-sticky-heading">Nhóm đã theo dõi</p>
+                    <div class="cg-saved-list" data-cg-saved="<?= site_url('ajax/nhom/0/saved') ?>" data-panel-base="<?= site_url('ajax/nhom-panel') ?>"></div>
+                    <a class="cg-sticky-discover" href="<?= site_url('nhom') ?>"><span class="cg-sticky-discover-icon" aria-hidden="true"><?= tk_icon('plus', 'cg-icon') ?></span><span><strong>Khám phá nhóm</strong><small>Tìm thêm những kết nối mới</small></span><?= tk_icon('chevron-right', 'cg-icon') ?></a>
+                <?php endif; ?>
                 <?php if ($user): ?>
                     <p class="cw-side-label">Trò chuyện riêng</p>
                     <div id="cw-list"><p class="cw-empty">Đang tải…</p></div>
@@ -536,6 +542,10 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 <!-- Chat nạp cho cả khách: xem được phòng chung, muốn gửi thì phải đăng nhập -->
 <script defer src="<?= base_url('assets/site/js/realtime.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/realtime.js') ?>"></script>
 <script defer src="<?= base_url('assets/site/js/chat-widget.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/chat-widget.js') ?>"></script>
+<?php if (chat_groups_enabled()): ?>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/chat-groups.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/chat-groups.css') ?>">
+<script defer src="<?= base_url('assets/site/js/chat-groups.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/chat-groups.js') ?>"></script>
+<?php endif; ?>
 
 <?php $this->load->view('layouts/_mobile_nav'); ?>
 <?php if ($guest_banner): ?>

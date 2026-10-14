@@ -16,6 +16,7 @@ application/config/email.php
 uploads/*
 !uploads/index.html
 writable/sessions/*
+writable/chat-media/*
 !writable/sessions/index.html
 application/logs/*.php
 application/cache/*

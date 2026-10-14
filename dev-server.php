@@ -13,6 +13,9 @@
  */
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $file = __DIR__ . urldecode($path);
+if (preg_match('~^/(?:application|system|database|writable)(?:/|$)~i', rawurldecode($path))) {
+    http_response_code(403); exit;
+}
 
 // Tệp có thật và không phải PHP thì để máy chủ tích hợp phục vụ
 if ($path !== '/' && is_file($file) && substr($file, -4) !== '.php') {

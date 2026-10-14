@@ -26,8 +26,9 @@ class MessageAuth { public $vip = false; public function is_vip() { return $this
 class MessageLoad { public function model($name) {} public function library($name) {} }
 class MessageNotification { public function push(...$args) {} }
 class MessageEmail { public function new_message(...$args) {} }
+class MessageRealtime { public function tin_rieng(...$args) {} }
 class MessageInteraction extends M_interaction {
-    public $db, $auth, $load, $m_notification, $emailer, $blocked = false;
+    public $db, $auth, $load, $m_notification, $emailer, $realtime, $blocked = false;
     public function is_blocked($a, $b) { return $this->blocked; }
     public function is_matched($a, $b) { throw new Exception('Messaging must not query match status'); }
     public function like_profile_error($id) { return null; }
@@ -38,6 +39,7 @@ function check_message($condition, $message) { if (!$condition) throw new Except
 $model = new MessageInteraction();
 $model->db = new MessageDb(); $model->auth = new MessageAuth(); $model->load = new MessageLoad();
 $model->m_notification = new MessageNotification(); $model->emailer = new MessageEmail();
+$model->realtime = new MessageRealtime();
 check_message($model->conversation_with(1, 2)['id'] === 9, 'Create conversation without match');
 $model->db->conversation = null;
 check_message($model->toggle_like(1, 'user', 2)['liked'], 'Like adds contact');

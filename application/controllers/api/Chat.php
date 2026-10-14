@@ -171,9 +171,11 @@ class Chat extends Api_Controller
         if (!$this->thu_auth()) {
             return;
         }
+        if (function_exists('chat_group_legacy_error') && ($error = chat_group_legacy_error())) return $this->loi($error, 403);
         $me    = $this->me ? (int) $this->me['id'] : 0;
         $after = (int) $this->input->get('after');
 
+        if (function_exists('chat_group_default_scope')) chat_group_default_scope($this->db);
         $this->db->select('r.id, r.user_id, r.type, r.content, r.created_at,
                            u.display_name, u.nickname, u.avatar, u.gender, u.slug')
             ->from('room_messages r')->join('users u', 'u.id = r.user_id')
@@ -208,6 +210,7 @@ class Chat extends Api_Controller
         if (!$this->can_auth() || !$this->can_xac_thuc('nhắn tin')) {
             return;
         }
+        if (function_exists('chat_group_legacy_error') && ($error = chat_group_legacy_error(true))) return $this->loi($error, 403);
         $me      = (int) $this->me['id'];
         $content = trim(strip_tags((string) $this->body('content')));
         $image   = $this->tai_anh('image', 'chat', 10240);
@@ -315,7 +318,7 @@ class Chat extends Api_Controller
             'id'      => (int) $r['id'],
             'mine'    => (bool) $cua_toi,
             'type'    => $r['type'],
-            'content' => $r['type'] === 'image' ? base_url(ltrim($r['content'], '/')) : $r['content'],
+            'content' => $r['type'] === 'image' ? (function_exists('chat_group_image_url') ? chat_group_image_url($r) : base_url(ltrim($r['content'], '/'))) : $r['content'],
             'time'    => date('H:i', strtotime($r['created_at'])),
             'day'     => $this->nhan_ngay($r['created_at']),
         );

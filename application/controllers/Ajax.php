@@ -257,12 +257,14 @@ class Ajax extends MY_Controller
      */
     public function room_messages()
     {
+        if (function_exists('chat_group_legacy_error') && ($error = chat_group_legacy_error())) return $this->json(array('ok' => false, 'message' => $error), 403);
         $me    = $this->auth->id();   // null nếu là khách
         $after = (int) $this->input->get('after');
 
         // Thẻ "Trò chuyện" và dòng phòng chung trong danh sách chỉ cần con số
         // online + tin cuối, gọi kèm ?only=online để khỏi kéo cả danh sách tin.
         if ($this->input->get('only') === 'online') {
+            if (function_exists('chat_group_default_scope')) chat_group_default_scope($this->db);
             $cuoi = $this->db->select('r.type, r.content, r.created_at, u.display_name, u.nickname')
                 ->from('room_messages r')->join('users u', 'u.id = r.user_id')
                 ->where('r.deleted_at', null)
@@ -280,6 +282,7 @@ class Ajax extends MY_Controller
             ));
         }
 
+        if (function_exists('chat_group_default_scope')) chat_group_default_scope($this->db);
         $this->db->select('r.id, r.user_id, r.type, r.content, r.created_at,
                            u.display_name, u.nickname, u.avatar, u.gender, u.slug')
             ->from('room_messages r')->join('users u', 'u.id = r.user_id')
@@ -306,7 +309,7 @@ class Ajax extends MY_Controller
                 'slug'    => $r['slug'],
                 'user_id' => (int) $r['user_id'],
                 'type'    => $r['type'],
-                'content' => $r['type'] === 'image' ? base_url(ltrim($r['content'], '/')) : $r['content'],
+                'content' => $r['type'] === 'image' ? (function_exists('chat_group_image_url') ? chat_group_image_url($r) : base_url(ltrim($r['content'], '/'))) : $r['content'],
                 'time'    => date('H:i', strtotime($r['created_at'])),
                 'day'     => $this->nhan_ngay($r['created_at']),
             );
@@ -375,6 +378,7 @@ class Ajax extends MY_Controller
         if (!$this->require_login(true)) {
             return;
         }
+        if (function_exists('chat_group_legacy_error') && ($error = chat_group_legacy_error(true))) return $this->json(array('ok' => false, 'message' => $error), 403);
         $me      = $this->auth->id();
         $content = trim((string) $this->input->post('content', true));
         $image   = $this->upload_chat_image();

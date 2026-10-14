@@ -29,11 +29,13 @@ const { WebSocketServer } = require('ws');
 
 const config = require('./config');
 const { verify, sameSecret } = require('./auth');
+const { createGroups } = require('./groups');
 
 if (!config.secret) {
   console.error('[realtime] Thiếu REALTIME_SECRET (đặt trong websoket/.env hoặc .env của web).');
   process.exit(1);
 }
+const groups = createGroups(config);
 
 /** uid -> tập kết nối (một người có thể mở web và app cùng lúc) */
 const clients = new Map();
@@ -107,6 +109,14 @@ const server = http.createServer((req, res) => {
     // {items: [{to: uid | 'all', except?: uid, event: {...}}]}
     for (const it of Array.isArray(goi.items) ? goi.items : []) {
       if (!it || !it.event || !it.event.t) continue;
+      if (it.event.t === 'group.changed') { groups.notify(it.event.groupId); continue; }
+      if (it.event.t === 'room.message') {
+        const ids = it.to === 'all' ? Array.from(clients.keys()).filter((id) => id !== Number(it.except)) : [Number(it.to)];
+        groups.legacyRecipients(ids, Number(it.event.message && it.event.message.user_id)).then((allowed) => {
+          for (const id of allowed) guiCho(id, it.event);
+        }).catch(() => {});
+        continue;
+      }
       if (it.to === 'all') guiTatCa(it.event, it.except ? parseInt(it.except, 10) : null);
       else guiCho(parseInt(it.to, 10), it.event);
     }
@@ -121,6 +131,7 @@ const wss = new WebSocketServer({ noServer: true, maxPayload: 16 * 1024 });
 
 server.on('upgrade', (req, socket, head) => {
   const url = new URL(req.url, 'http://x');
+  if (url.pathname === '/ws/groups') return groups.upgrade(req, socket, head, url.searchParams.get('ticket'));
   if (url.pathname !== '/ws') return socket.destroy();
 
   const uid = verify(url.searchParams.get('token'), config.secret);

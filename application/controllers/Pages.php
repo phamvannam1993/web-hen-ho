@@ -12,7 +12,7 @@ class Pages extends MY_Controller
     public function policy($slug)
     {
         if (!in_array($slug, array('bao-mat', 'an-toan', 'contact-us'), true)) show_404();
-        $titles = array('bao-mat' => 'Chính sách bảo mật', 'an-toan' => 'Hướng dẫn hẹn hò an toàn', 'contact-us' => 'Liên hệ Saigon Cupid');
+        $titles = array('bao-mat' => 'Chính sách bảo mật', 'an-toan' => 'Hướng dẫn hẹn hò an toàn', 'contact-us' => 'Contact for Work Saigon Cupid');
         $this->render('pages/policy', array('title' => $titles[$slug], 'policy_slug' => $slug,
             'meta_desc' => $slug === 'contact-us' ? 'Thông tin liên hệ và hỗ trợ thành viên Saigon Cupid.' : $titles[$slug] . ' dành cho thành viên Saigon Cupid: bảo vệ thông tin cá nhân và kết nối có trách nhiệm.'));
     }
