@@ -4,7 +4,7 @@ $mobile_items = array(
     array('', 'Trang chủ', 'home'),
     array('hen-ho', 'Hẹn hò', 'match'),
     array('swipe-match', 'Ghép đôi', 'sparkles'),
-    array('tai-khoan/tin-nhan', 'Tin nhắn', 'message'),
+    array('messenger', 'Tin nhắn', 'message'),
     array('tai-khoan/ho-so', 'Hồ sơ', 'user'),
 );
 ?>
@@ -20,7 +20,7 @@ $mobile_items = array(
                         <?php $interest_count = (int) ($account_menu_counts['interest'] ?? 0); ?>
                         <span class="tk-dot-count" data-account-menu-count="interest" <?= $interest_count ? '' : 'hidden' ?> aria-label="<?= $interest_count ?> mục quan tâm chưa xem"><?= $interest_count > 99 ? '99+' : $interest_count ?></span>
                     <?php endif; ?>
-                    <?php if ($item[0] === 'tai-khoan/tin-nhan' && $user): ?>
+                    <?php if ($item[0] === 'messenger' && $user): ?>
                         <?php $message_count = (int) ($account_menu_counts['msg'] ?? 0); ?>
                         <span class="tk-dot-count" data-account-menu-count="msg" <?= $message_count ? '' : 'hidden' ?> aria-label="<?= $message_count ?> tin nhắn chưa đọc"><?= $message_count > 99 ? '99+' : $message_count ?></span>
                     <?php endif; ?>

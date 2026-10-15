@@ -16,9 +16,23 @@
     --bg: #fdf0f4;
     --card: #ffffff;
     --radius: 4px;
+    --scroll-thumb: #d98998;
+    --scroll-thumb-hover: #c9657c;
+    --scroll-track: #f8edf0;
 }
 
 * { box-sizing: border-box; }
+
+/* Thanh cuộn chung cho trang, danh sách, hộp thoại và ô nhập nhiều dòng. */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+}
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: var(--scroll-track); border-radius: 999px; }
+*::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 999px; }
+*::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); }
+*::-webkit-scrollbar-corner { background: var(--scroll-track); }
 .brand-logo {
     height: 32px; /* Hoặc điều chỉnh kích thước phù hợp với header */
     width: auto;
@@ -137,10 +151,10 @@ img { max-width: 100%; height: auto; display: block; }
 
 .noti-list {
     flex: 1; min-height: 0; max-height: 430px; overflow-y: auto;
-    scrollbar-width: thin; scrollbar-color: #d6d6dd transparent;
+    scrollbar-width: thin; scrollbar-color: var(--scroll-thumb) var(--scroll-track);
 }
 .noti-list::-webkit-scrollbar { width: 6px; }
-.noti-list::-webkit-scrollbar-thumb { background: #d6d6dd; border-radius: 3px; }
+.noti-list::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 3px; }
 .noti-empty { padding: 34px 20px; margin: 0; text-align: center; color: var(--muted); font-size: 14px; }
 
 .noti-item {
@@ -2938,7 +2952,7 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
 .filter-panel .ss-toggle[aria-expanded="true"] { outline: 2px solid #f6d3da; outline-offset: 2px; border-color: var(--pink); }
 .filter-panel .ss-panel { padding: 6px; border: 1px solid #f0dce3; border-radius: 12px; box-shadow: 0 8px 24px rgb(70 58 77 / 12%); }
 .filter-panel .ss-search { border: 0; border-bottom: 1px solid #f0dce3; font-size: 14px; }
-.filter-panel .ss-list { max-height: 220px; scrollbar-width: thin; scrollbar-color: #f0dce3 transparent; }
+.filter-panel .ss-list { max-height: 220px; scrollbar-width: thin; scrollbar-color: var(--scroll-thumb) var(--scroll-track); }
 .filter-panel .ss-item { padding: 10px 12px; border-radius: 8px; font-size: 14px; color: #463a4d; }
 .filter-panel .ss-item:hover, .filter-panel .ss-item:focus-visible { background: #fdf0f4; outline: none; }
 .filter-panel .ss-item.is-on { background: #ffe3ed; color: var(--pink-dark); }
@@ -3543,10 +3557,10 @@ html.cw-page-locked .site-mobile-nav { bottom: var(--cw-keyboard-inset, 0px); }
 
 .cw-side-list {
     flex: 1; min-height: 0; overflow-y: auto;
-    scrollbar-width: thin; scrollbar-color: #d6d6dd transparent;
+    scrollbar-width: thin; scrollbar-color: var(--scroll-thumb) var(--scroll-track);
 }
 .cw-side-list::-webkit-scrollbar { width: 6px; }
-.cw-side-list::-webkit-scrollbar-thumb { background: #d6d6dd; border-radius: 3px; }
+.cw-side-list::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 3px; }
 .cw-side-label {
     margin: 10px 0 2px; padding: 0 16px; font-size: 12px; font-weight: 700;
     letter-spacing: .6px; text-transform: uppercase; color: #9aa0a6;
@@ -3717,7 +3731,7 @@ html.cw-page-locked .site-mobile-nav { bottom: var(--cw-keyboard-inset, 0px); }
         background: linear-gradient(180deg, #fff 0%, #fafaff 100%);
         box-shadow: 0 4px 18px rgba(55, 45, 90, .04);
         scrollbar-width: thin;
-        scrollbar-color: #dddbea transparent;
+        scrollbar-color: var(--scroll-thumb) var(--scroll-track);
     }
     .cw-online-head {
         justify-content: flex-start;
@@ -3817,16 +3831,16 @@ html.cw-page-locked .site-mobile-nav { bottom: var(--cw-keyboard-inset, 0px); }
     flex: 1; overflow-y: auto; min-height: 0; padding: 18px 18px 22px;
     display: flex; flex-direction: column; gap: 4px;
     background: #f4f5f7;
-    scrollbar-width: thin; scrollbar-color: #d6d6dd transparent;
+    scrollbar-width: thin; scrollbar-color: var(--scroll-thumb) var(--scroll-track);
 }
 .cw-body::-webkit-scrollbar { width: 6px; }
-.cw-body::-webkit-scrollbar-thumb { background: #d6d6dd; border-radius: 3px; }
+.cw-body::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 3px; }
 
 /* Thanh cuộn chat dùng màu chủ đạo của website, gồm cả popup online. */
 .chat-widget :is(.cw-body, .cw-side-list, .cw-online-panel, .cw-emoji-list),
 :is(.chat-body, .chat-list) {
     scrollbar-width: thin;
-    scrollbar-color: #d98998 #f8edf0;
+    scrollbar-color: var(--scroll-thumb) var(--scroll-track);
 }
 .chat-widget :is(.cw-body, .cw-side-list, .cw-online-panel, .cw-emoji-list)::-webkit-scrollbar,
 :is(.chat-body, .chat-list)::-webkit-scrollbar {
@@ -4270,9 +4284,10 @@ html.cw-page-locked .site-mobile-nav { bottom: var(--cw-keyboard-inset, 0px); }
         gap: 4px; margin: 12px 0 0;
         border-top: 1px solid #eef0f3;
     }
+    .nav-list > li { flex: 1 1 0; text-align: center; }
     /* Mục menu: chữ thoáng hai bên, gạch chân nằm sát mép dưới header */
     .nav-list > li > a {
-        position: relative; padding: 14px 16px 13px;
+        position: relative; padding: 14px 8px 13px;
         border-radius: 8px 8px 0 0; font-size: 13px;
     }
     .nav-list > li > a:hover { background: #fdf3f8; }

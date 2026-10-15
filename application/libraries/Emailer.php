@@ -68,7 +68,7 @@ class Emailer
             array(
                 'sender'  => $this->ten($sender),
                 'avatar'  => avatar_url($sender['avatar'] ?? null, $sender['gender'] ?? 'other'),
-                'link'    => site_url('tai-khoan/tin-nhan/' . (int) $conversation_id),
+                'link'    => site_url('messenger/' . (int) $conversation_id),
             ),
             array('related_id' => $conversation_id)
         );
@@ -92,7 +92,7 @@ class Emailer
                     'match_name'   => $this->ten($doi),
                     'my_avatar'    => avatar_url($nguoi['avatar'], $nguoi['gender']),
                     'match_avatar' => avatar_url($doi['avatar'], $doi['gender']),
-                    'link'         => site_url('tai-khoan/tin-nhan'),
+                    'link'         => site_url('messenger'),
                 ),
                 array('related_id' => $doi['id'])
             );

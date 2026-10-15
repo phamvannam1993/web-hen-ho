@@ -48,7 +48,7 @@ foreach ($emailTestCI->m_email->rows as $row) {
     verify($row['id'] === 7 && $row['type'] === 'new_message', 'Correct recipient and email type');
     verify($row['payload']['sender'] === 'Bằng Lăng', 'Use public name');
     verify($row['payload']['avatar'] === 'https://example.test/uploads/avatar.jpg', 'Sender avatar');
-    verify($row['payload']['link'] === 'https://example.test/tai-khoan/tin-nhan/42', 'Open exact inbox');
+    verify($row['payload']['link'] === 'https://example.test/messenger/42', 'Open exact inbox');
     verify(!isset($row['payload']['preview']) && !isset($row['payload']['content']), 'No message content in queue');
     verify(empty($row['opts']['delay_minutes']), 'Ready for next worker run');
 }

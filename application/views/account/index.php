@@ -22,7 +22,7 @@ $stats = array(
     array('coins',   number_format((int) $me['coin_balance']), 'Số dư xu',        site_url('tai-khoan/nap-xu'),       'gold'),
     array('heart',   number_format($liked_count),              'Người thích bạn', site_url('tai-khoan/ai-thich-ban'), 'brand'),
     array('match',   number_format(count($matches)),           'Đã ghép đôi',     site_url('tai-khoan/quan-tam'),     ''),
-    array('message', number_format($unread_msg),               'Tin nhắn mới',    site_url('tai-khoan/tin-nhan'),     ''),
+    array('message', number_format($unread_msg),               'Tin nhắn mới',    site_url('messenger'),     ''),
     array('eye',     number_format($viewer_count),             'Lượt xem hồ sơ',  site_url('tai-khoan/ai-xem-ho-so'), ''),
     array('file',    number_format($post_count),               'Tin đăng',        $co_tin_dang ? site_url('tai-khoan/tin-dang') : null, ''),
     array('bell',    number_format($unread_noti),              'Thông báo',       site_url('tai-khoan/thong-bao'),    ''),

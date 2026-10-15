@@ -52,7 +52,7 @@ $gio_ngan = function ($t) {
                     ?>
                     <li data-name="<?= e(mb_strtolower($ten)) ?>">
                         <a class="tk-ms-item<?= $conversation_id == $c['id'] ? ' is-active' : '' ?>"
-                           href="<?= site_url('tai-khoan/tin-nhan/' . $c['id']) ?>"<?= $conversation_id == $c['id'] ? ' aria-current="page"' : '' ?>>
+                           href="<?= site_url('messenger/' . $c['id']) ?>"<?= $conversation_id == $c['id'] ? ' aria-current="page"' : '' ?>>
                             <span class="tk-ms-av">
                                 <img src="<?= e(avatar_url($c['avatar'], $c['gender'])) ?>" alt="<?= e($ten) ?>" loading="lazy">
                                 <?php if (is_online($c['last_active_at'])): ?><span class="tk-ms-online"></span><?php endif; ?>
@@ -83,7 +83,7 @@ $gio_ngan = function ($t) {
             </div>
         <?php else: ?>
             <div class="tk-ms-head">
-                <a class="tk-btn tk-btn--ghost tk-btn--icon-sm tk-ms-back" href="<?= site_url('tai-khoan/tin-nhan') ?>" aria-label="Quay lại"><?= tk_icon('arrow-left') ?></a>
+                <a class="tk-btn tk-btn--ghost tk-btn--icon-sm tk-ms-back" href="<?= site_url('messenger') ?>" aria-label="Quay lại"><?= tk_icon('arrow-left') ?></a>
                 <a class="tk-ms-head__who" href="<?= site_url('profile/' . ($partner['slug'] ?: $partner['id'])) ?>">
                     <span class="tk-ms-av tk-ms-av--sm">
                         <img src="<?= e(avatar_url($partner['avatar'], $partner['gender'])) ?>" alt="<?= e(display_name($partner)) ?>">

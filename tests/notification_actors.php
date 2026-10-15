@@ -54,10 +54,10 @@ verify($rows[2]['actor'] === null && $rows[2]['title'] === 'Deleted user notific
 $model->db->rows[0]['actor_avatar'] = '';
 verify(strpos($model->for_user(7)[0]['actor']['avatar'], 'avatar-female.svg') !== false, 'Fallback avatar');
 $model->db->rows[0]['type'] = 'match';
-$model->db->rows[0]['url'] = '/tai-khoan/tin-nhan';
-verify($model->for_user(7)[0]['url'] === '/site-root/tai-khoan/tin-nhan?to=42', 'Existing match notification opens actor inbox');
+$model->db->rows[0]['url'] = '/messenger';
+verify($model->for_user(7)[0]['url'] === '/site-root/messenger?to=42', 'Existing match notification opens actor inbox');
 $model->db->rows[0]['actor_id'] = 7;
-verify($model->for_user(42)[0]['url'] === '/site-root/tai-khoan/tin-nhan?to=7', 'Other recipient opens opposite partner inbox');
+verify($model->for_user(42)[0]['url'] === '/site-root/messenger?to=7', 'Other recipient opens opposite partner inbox');
 $legacy = new NotificationTestModel();
 $legacy->db = new NotificationTestDB();
 $legacy->db->supports = false;

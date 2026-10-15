@@ -52,11 +52,11 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
     <nav class="home-intro-features" aria-label="Khám phá tính năng">
         <?php
         $features = array(
-            array('<path d="M4 4h16v12H9l-5 4z"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/>', 'Phòng Chat Ẩn Danh', 'Khách chat ẩn danh, thành viên dùng hồ sơ thật.', chat_groups_enabled() ? 'nhom/phong-chat-an-danh' : null),
-            array($ic_chat, 'Trò chuyện & kết nối', 'Bắt đầu trò chuyện, làm quen người bạn thích.', 'tai-khoan/tin-nhan'),
+            array($ic_heart, 'Ghép đôi ẩn danh', 'Khám phá những người phù hợp với bạn.', 'swipe-match'),
+            array($ic_chat, 'Phòng Chat ẩn danh', 'Bắt đầu trò chuyện, làm quen người bạn thích.', 'nhom/phong-chat-an-danh'),
             array($ic_users, 'Cộng đồng tâm sự', 'Chia sẻ câu chuyện, kết nối bạn mới.', 'tam-su'),
-            array('<path d="M3 8c3-2 6 0 9 0s6-2 9 0v4a9 9 0 0 1-18 0z"/><path d="M6 11h3M15 11h3M9 16c2 1 4 1 6 0"/>', 'Ghép Đôi Ẩn Danh', 'Làm quen người mới, giữ riêng danh tính của bạn.', null),
-            array($ic_pin, 'Tìm Bạn Quanh Đây', 'Khám phá và kết nối với những người bạn gần bạn.', 'hen-ho'),
+            array($ic_star, 'Hẹn hò Online', 'Những kết nối mới dành riêng cho bạn.', 'hen-ho'),
+            array('<path d="M12 3c1 4-3 5-3 8 0 1.5 1 2 2 2-1-3 3-4 3-6 3 3 6 6 6 10a8 8 0 0 1-16 0c0-4 3-7 4-9 0 3 1 4 2 4-1-4 2-5 2-9z"/>', 'Chuỗi hoạt động', 'Duy trì hoạt động, nhận những phần thưởng thú vị.', 'tai-khoan/chuoi'),
         );
         foreach ($features as $feature): ?>
             <?php if ($feature[3] !== null): ?>
@@ -220,7 +220,7 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
 <section class="hm-band">
     <div class="container">
         <ul class="hm-band-stats">
-            <li><span class="hm-band-ic"><?= $ic($ic_userpl) ?></span>
+            <li><span class="hm-band-ic"><?= $ic('<circle cx="12" cy="8" r="3.6"/><path d="M5.5 19.5a6.5 6.5 0 0 1 13 0"/>') ?></span>
                 <b><?= number_format($stats['total'], 0, ',', '.') ?>+</b><small>Thành viên đăng ký</small></li>
             <li><span class="hm-band-ic"><?= $ic($ic_heart) ?></span>
                 <b><?= number_format($couple_count, 0, ',', '.') ?>+</b><small>Cặp đôi kết nối</small></li>

@@ -190,7 +190,7 @@ class M_interaction extends CI_Model
             $partner_id = (int) $uid === (int) $user_id ? $other_id : $user_id;
             $this->m_notification->push($uid, 'match', 'Ghép đôi thành công!',
                 'Hai bạn đã thích nhau, hãy bắt đầu trò chuyện.',
-                site_url('tai-khoan/tin-nhan') . '?to=' . (int) $partner_id, $partner_id);
+                site_url('messenger') . '?to=' . (int) $partner_id, $partner_id);
         }
 
         // Ghép đôi là tin đáng báo ngay, không gom vào lô cuối ngày

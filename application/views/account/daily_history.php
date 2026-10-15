@@ -68,7 +68,7 @@ if ($today) {
                     <p class="dm-state">Đã thả tim — đang chờ người ấy trả lời.</p>
                 <?php elseif ($today['status'] === 'matched'): ?>
                     <p class="dm-state is-ok">Đã ghép đôi!</p>
-                    <a class="btn-hm btn-hm-solid" href="<?= site_url('tai-khoan/tin-nhan') . '?to=' . (int) $today['match_user_id'] ?>">Nhắn tin ngay</a>
+                    <a class="btn-hm btn-hm-solid" href="<?= site_url('messenger') . '?to=' . (int) $today['match_user_id'] ?>">Nhắn tin ngay</a>
                 <?php elseif ($today['status'] === 'skipped'): ?>
                     <p class="dm-state">Đã bỏ qua — hẹn gặp ngày mai.</p>
                 <?php else: ?>

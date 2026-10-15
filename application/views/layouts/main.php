@@ -447,7 +447,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 
             <?php if ($user): ?>
                 <footer class="cw-foot">
-                    <a href="<?= site_url('tai-khoan/tin-nhan') ?>">Xem tất cả tin nhắn</a>
+                    <a href="<?= site_url('messenger') ?>">Xem tất cả tin nhắn</a>
                 </footer>
             <?php endif; ?>
         </aside>

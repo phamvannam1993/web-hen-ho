@@ -561,7 +561,7 @@
                 if (res.matched) {
                     var a = document.createElement('a');
                     a.className = 'btn-hm btn-hm-solid';
-                    a.href = base + 'tai-khoan/tin-nhan';
+                    a.href = base + 'messenger';
                     a.textContent = 'Nhắn tin ngay';
                     oNut.appendChild(a);
 

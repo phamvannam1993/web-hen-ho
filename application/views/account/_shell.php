@@ -17,6 +17,9 @@
  */
 $me      = $tk['me'];
 $current = (string) $this->uri->segment(2);
+if ($this->uri->segment(1) === 'messenger') {
+    $current = 'tin-nhan';
+}
 // Trang sửa tin thuộc mục "Tin đăng của tôi"
 if ($current === 'sua-tin') {
     $current = 'tin-dang';
@@ -124,7 +127,7 @@ foreach ($groups as $items) {
                                 <li>
                                     <a class="tk-nav__a<?= $active ? ' is-active' : '' ?>" title="<?= e($it[0]) ?>"
                                        <?= $active ? 'aria-current="page"' : '' ?>
-                                       href="<?= site_url('tai-khoan' . ($slug !== '' ? '/' . $slug : '')) ?>">
+                                       href="<?= site_url($slug === 'tin-nhan' ? 'messenger' : 'tai-khoan' . ($slug !== '' ? '/' . $slug : '')) ?>">
                                         <?= tk_icon($it[1]) ?>
                                         <span class="tk-nav__txt"><?= e($it[0]) ?></span>
                                         <?php if ($slug === 'quan-tam'): ?>
@@ -190,7 +193,8 @@ foreach ($groups as $items) {
         var nhan = on ? 'Mở rộng menu' : 'Thu gọn menu';
         btn.setAttribute('aria-label', nhan); btn.title = nhan;
     }
-    try { collapse(localStorage.getItem(KEY) === '1'); } catch (e) {}
+    collapse(true);
+    try { collapse(localStorage.getItem(KEY) !== '0'); } catch (e) {}
     btn.addEventListener('click', function () {
         var on = !body.classList.contains('tk-collapsed');
         collapse(on);
