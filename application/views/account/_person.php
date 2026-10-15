@@ -38,7 +38,7 @@ $nghe   = trim(implode(' • ', array_filter(array(
 ))));
 $link   = site_url('profile/' . ($p['slug'] ?? $p['id']));
 $anh    = avatar_url($p['avatar'] ?? null, $p['gender'] ?? 'other');
-$chat   = $o['chat_url'] ?? site_url('tai-khoan/tin-nhan');
+$chat   = $o['chat_url'] ?? site_url('messenger');
 
 $tieu_de = $locked ? 'Hồ sơ bị giới hạn' : $ten . ($tuoi ? ', ' . $tuoi : '');
 ?>

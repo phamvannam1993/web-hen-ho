@@ -137,7 +137,7 @@ $nhom = array('female' => 'Bạn gái', 'male' => 'Bạn trai');
         </div>
         <p class="sw-match-text">Bạn và <b id="sw-match-name"></b> đã thích nhau!</p>
         <div class="sw-match-actions">
-            <a class="btn btn-primary" id="sw-match-chat" href="<?= site_url('tai-khoan/tin-nhan') ?>">Nhắn tin ngay</a>
+            <a class="btn btn-primary" id="sw-match-chat" href="<?= site_url('messenger') ?>">Nhắn tin ngay</a>
             <button type="button" class="btn btn-ghost" data-close-match>Tiếp tục vuốt</button>
         </div>
     </div>

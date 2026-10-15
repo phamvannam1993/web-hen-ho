@@ -150,13 +150,13 @@ class Ajax extends MY_Controller
                     return $this->json($sent);
                 }
                 set_flash('danger', $sent['message']);
-                redirect('tai-khoan/tin-nhan');
+                redirect('messenger');
             }
             if ($content === '') {
                 if ($this->input->is_ajax_request()) {
                     return $this->json($sent);
                 }
-                redirect('tai-khoan/tin-nhan/' . $sent['conversation_id']);
+                redirect('messenger/' . $sent['conversation_id']);
             }
         }
 
@@ -168,7 +168,7 @@ class Ajax extends MY_Controller
                 return $this->json(array('ok' => false, 'message' => $msg));
             }
             set_flash('danger', $msg);
-            redirect('tai-khoan/tin-nhan');
+            redirect('messenger');
         }
 
         $result = $this->m_interaction->send_message($this->auth->id(), $receiver, $content);
@@ -180,7 +180,7 @@ class Ajax extends MY_Controller
             return $this->json($result);
         }
         set_flash($result['ok'] ? 'success' : 'danger', $result['ok'] ? 'Đã gửi tin nhắn.' : $result['message']);
-        redirect($result['ok'] ? 'tai-khoan/tin-nhan/' . $result['conversation_id'] : 'tai-khoan/tin-nhan');
+        redirect($result['ok'] ? 'messenger/' . $result['conversation_id'] : 'messenger');
     }
 
     /** Trả lời gợi ý hôm nay: Thích hoặc Bỏ qua. */

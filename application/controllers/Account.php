@@ -385,7 +385,7 @@ class Account extends Member_Controller
             $error = $this->m_interaction->message_permission($me['id'], $to);
             $conv = $this->m_interaction->conversation_with($me['id'], $to);
             if ($conv) {
-                redirect('tai-khoan/tin-nhan/' . $conv['id']);
+                redirect('messenger/' . $conv['id']);
             }
             set_flash('danger', $error ?: 'Không mở được hội thoại với người này.');
             redirect('tai-khoan/quan-tam');

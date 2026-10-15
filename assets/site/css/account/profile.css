@@ -57,7 +57,7 @@
   outline: 2px solid var(--tk-primary); outline-offset: 2px; border-color: var(--tk-primary);
 }
 .tk-pf .ss-panel { padding: 6px; margin-top: 4px; }
-.tk-pf .ss-list { scrollbar-width: thin; scrollbar-color: var(--tk-border) transparent; }
+.tk-pf .ss-list { scrollbar-width: thin; scrollbar-color: var(--scroll-thumb) var(--scroll-track); }
 .tk-pf .ss-item { border-radius: 8px; padding: 10px 12px; }
 .tk-pf .ss-item:focus-visible { outline: none; background: var(--tk-secondary); box-shadow: inset 0 0 0 1px var(--tk-primary); }
 .tk-pf .ss-item.is-on { font-weight: 600; }

@@ -18,7 +18,7 @@ $nhom = function ($type) {
     return 'other';
 };
 
-/** Đường dẫn trong thông báo lưu dạng tương đối ("tai-khoan/tin-nhan") — đổi sang tuyệt đối như notifications.js. */
+/** Đường dẫn trong thông báo lưu dạng tương đối ("messenger") — đổi sang tuyệt đối như notifications.js. */
 $link = function ($url) {
     if (!$url) return null;
     return preg_match('#^(https?:)?//#', $url) || $url[0] === '/' ? $url : site_url(preg_replace('#^\.?/#', '', $url));

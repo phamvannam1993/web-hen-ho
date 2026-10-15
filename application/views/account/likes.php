@@ -106,7 +106,7 @@ $cho_tra_loi = function ($m, $o) {
             </div>
             <?php $luoi($matches, array('matched' => true), function ($m, $o) {
                 $this->load->view('account/_person', array('p' => $m, 'o' => $o + array(
-                    'chat_url' => site_url('tai-khoan/tin-nhan') . '?to=' . (int) $m['id'],
+                    'chat_url' => site_url('messenger') . '?to=' . (int) $m['id'],
                 )));
             }); ?>
         </section>

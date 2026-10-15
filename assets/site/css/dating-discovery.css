@@ -34,7 +34,7 @@
 .dating-discovery-form .ss-toggle[aria-expanded="true"] { border-color: var(--pink); background-color: #fff; box-shadow: 0 0 0 3px #d1273f12; }
 .dating-discovery-form .ss-panel { z-index: 60; padding: 5px; border-color: #efd5dd; border-radius: 9px; background: #fffafb; box-shadow: 0 8px 24px #7c283b1a; }
 .dating-discovery-form .ss-panel[hidden] { display: none; }
-.dating-discovery-form .ss-list { max-height: 230px; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #edc5d0 transparent; }
+.dating-discovery-form .ss-list { max-height: 230px; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--scroll-thumb) var(--scroll-track); }
 .dating-discovery-form .ss-item { padding: 8px 10px; border-radius: 5px; color: #65434d; font-size: 13px; line-height: 1.4; }
 .dating-discovery-form .ss-item:hover, .dating-discovery-form .ss-item:focus-visible { background: var(--bg); color: var(--pink-dark); outline: none; }
 .dating-discovery-form .ss-item.is-on { background: #f9dce3; color: var(--pink-dark); font-weight: 600; }

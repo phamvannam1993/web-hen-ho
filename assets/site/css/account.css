@@ -133,6 +133,14 @@ body.tk-app {
 .tk-me__bal strong { font-size: 14px; font-weight: 700; }
 
 .tk-nav { flex: 1; overflow-y: auto; margin-top: 8px; padding: 0 12px 24px; }
+.tk-side .tk-nav {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+}
+.tk-side .tk-nav::-webkit-scrollbar { width: 6px; }
+.tk-side .tk-nav::-webkit-scrollbar-track { background: var(--tk-secondary); border-radius: 999px; }
+.tk-side .tk-nav::-webkit-scrollbar-thumb { background: var(--tk-primary-soft); border-radius: 999px; }
+.tk-side .tk-nav::-webkit-scrollbar-thumb:hover { background: var(--tk-primary); }
 .tk-nav__group { margin-top: 16px; }
 .tk-nav__label {
   padding: 0 8px 6px;

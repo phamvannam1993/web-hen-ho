@@ -70,7 +70,7 @@ class M_notification extends CI_Model
                 );
                 $row['title'] = $this->actor_title($row['type'], $name, $row['title']);
                 if ($row['type'] === 'match') {
-                    $row['url'] = site_url('tai-khoan/tin-nhan') . '?to=' . (int) $row['actor_id'];
+                    $row['url'] = site_url('messenger') . '?to=' . (int) $row['actor_id'];
                 }
             }
         }
