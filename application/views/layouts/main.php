@@ -391,6 +391,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
             </div>
 
             <div class="cw-side-list" id="cw-side-list">
+                <?php if (!chat_groups_enabled()): ?>
                 <?php /* Phòng chung luôn đứng đầu, ai cũng vào được kể cả khách */ ?>
                 <button type="button" class="cw-row is-room" id="cw-row-room" data-name="Nhóm Hẹn Hò 4 Phương">
                     <span class="cw-row-avatar cw-row-room-ic" aria-hidden="true">
@@ -407,6 +408,8 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
                         <span class="cw-row-last" id="cw-room-last">Đang tải…</span>
                     </span>
                 </button>
+
+                <?php endif; ?>
 
                 <?php if (chat_groups_enabled()): ?>
                     <p class="cw-side-label cg-sticky-heading">Nhóm đã theo dõi</p>

@@ -32,8 +32,8 @@ class M_chat_group extends CI_Model
             for ($attempt = 0; $attempt < 10 && !$p; $attempt++) {
             $name = $names[random_int(0, count($names) - 1)] . ' ' . random_int(1000, 9999);
             $public = bin2hex(random_bytes(16));
-            $this->db->query('INSERT IGNORE INTO chat_group_people (group_id,actor_key,public_id,nickname,user_id) VALUES (?,?,?,?,?)',
-                array($group_id, $actor['key'], $public, $name, $actor['user']['id'] ?? null));
+            $this->db->query('INSERT IGNORE INTO chat_group_people (group_id,actor_key,public_id,nickname,user_id,is_following) VALUES (?,?,?,?,?,?)',
+                array($group_id, $actor['key'], $public, $name, $actor['user']['id'] ?? null, (int) $group_id === 1 ? 1 : 0));
             $p = $this->person($group_id, $actor);
             }
             if (!$p) throw new RuntimeException('Chưa cấp được nickname. Hãy thử lại.', 503);
@@ -174,7 +174,7 @@ class M_chat_group extends CI_Model
         }
         return array('id' => (int) $group['id'], 'name' => $group['name'], 'url' => site_url('nhom/' . $group['slug']),
             'mode' => $group['identity_mode'], 'status' => $group['status'], 'rules' => $group['rules'],
-            'avatar' => $group['avatar'] ? base_url($group['avatar']) : base_url('assets/images/chat-guest.svg'),
+            'avatar' => $group['avatar'] ? base_url($group['avatar']) : base_url('assets/images/' . ($group['identity_mode'] === 'guest' ? 'chat-guest.svg' : 'chat-community.svg')),
             'online' => (int) $this->db->where('group_id', $group['id'])->where('is_banned', 0)
                 ->where('last_active_at >', date('Y-m-d H:i:s', time() - 45))->count_all_results('chat_group_people'),
             'following' => $p && (bool) $p['is_following'] && !$p['is_hidden'], 'notifications' => !$p || (bool) $p['notifications_enabled'],
@@ -325,6 +325,14 @@ class M_chat_group extends CI_Model
     public function saved($actor)
     {
         if (!$actor) return array();
+        $default = $this->group(1);
+        if ($default && in_array($default['status'], array('active', 'readonly'), true)) {
+            $this->person(1, $actor, true);
+            // Explicit unfollow/hide sets is_hidden; preserve that choice on every visit.
+            $this->db->where('group_id', 1)->where('actor_key', $actor['key'])
+                ->where('is_following', 0)->where('is_hidden', 0)->where('is_banned', 0)
+                ->update('chat_group_people', array('is_following' => 1));
+        }
         $groups = $this->db->select('g.*')->from('chat_groups g')->join('chat_group_people p', 'p.group_id=g.id')
             ->where('p.actor_key', $actor['key'])->where('p.is_following', 1)->where('p.is_hidden', 0)->where('p.is_banned', 0)
             ->where_in('g.status', array('active', 'readonly'))->order_by('g.last_activity_at', 'DESC')->get()->result_array();

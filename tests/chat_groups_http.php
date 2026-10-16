@@ -42,6 +42,18 @@ function chat_http($path,$data=null,$token=null,$cookieFile=null) {
 }
 try {
     for($i=0;$i<30;$i++) { usleep(100000); $probe=@fsockopen('127.0.0.1',18937); if ($probe) {fclose($probe);break;} }
+    $catalog = chat_http('nhom');
+    check_group($catalog[0]===200 && strpos($catalog[1], 'data-cg-card-follow')!==false, 'Discovery includes follow buttons');
+    preg_match('/data-csrf="([a-f0-9]+)"/', $catalog[1], $catalogCsrf);
+    check_group(chat_http('ajax/nhom/2/follow', array())[0]===403, 'Discovery follow requires CSRF');
+    check_group(chat_http('ajax/nhom/2/follow', array(), $catalogCsrf[1])[0]===200, 'New guest follows directly without opening room');
+    $savedGroups = chat_http('ajax/nhom/0/saved');
+    check_group(in_array(2, array_column($savedGroups[2]['groups'], 'id')), 'Discovery follow persists in saved groups');
+    $catalog = chat_http('nhom');
+    check_group(strpos($catalog[1], 'Đã theo dõi')!==false, 'Discovery displays followed state');
+    check_group(chat_http('ajax/nhom/2/unfollow', array(), $catalogCsrf[1])[0]===200, 'Discovery allows unfollow');
+    $savedGroups = chat_http('ajax/nhom/0/saved');
+    check_group(!in_array(2, array_column($savedGroups[2]['groups'], 'id')), 'Discovery unfollow removes saved group');
     $landing = chat_http('nhom/phong-chat-an-danh');
     if ($landing[0] !== 200) { echo $landing[1]; throw new RuntimeException('Landing failed. Log: '.$log); }
     check_group(strpos($landing[1],'data-group-chat') !== false,'Group landing renders real chat panel');
@@ -52,7 +64,7 @@ try {
     $open = chat_http('ajax/nhom/2/open',array(),$csrf[1]);
     check_group($open[0]===200 && $open[2]['identity']['guest'],'Guest opens room without logging in');
     check_group(!empty($open[2]['ticket']),'Guest gets scoped realtime ticket');
-    $send = array('content'=>'HTTP guest message','client_message_id'=>'http_guest_message_01','guest_consent'=>'1');
+    $send = array('content'=>'HTTP guest message','client_message_id'=>'http_guest_message_01');
     $sent = chat_http('ajax/nhom/2/send',$send,$csrf[1]);
     check_group($sent[0]===200 && $sent[2]['message']['sender']['guest'],'Guest cookie authorizes anonymous send');
     $again = chat_http('ajax/nhom/2/send',$send,$csrf[1]);
@@ -64,7 +76,7 @@ try {
     $legacy = chat_http('ajax/phong-chat');
     check_group($legacy[0]===200 && strpos($legacy[1],'HTTP guest message')===false,'Legacy room endpoint excludes new room');
     $withoutConsent = $send; $withoutConsent['guest_consent']='0'; $withoutConsent['client_message_id']='http_guest_message_02';
-    check_group(chat_http('ajax/nhom/2/send',$withoutConsent,$csrf[1])[0]===422,'Server requires guest acknowledgement');
+    check_group(chat_http('ajax/nhom/2/send',$withoutConsent,$csrf[1])[0]===200,'Guest can send without acknowledgement');
     $public = chat_http('ajax/nhom/1/send',$send,$csrf[1]);
     check_group($public[0]===401,'Guest cannot use public-room send endpoint');
     check_group(chat_http('writable/chat-media/does-not-exist.webp')[0]===403,'Dev server blocks direct private-media paths');

@@ -44,13 +44,16 @@ class Groups extends MY_Controller
         $groups = $this->m_chat_group->catalog($q, $mode, $category, $province, $page);
         $more = count($groups) > 20;
         $groups = array_slice($groups, 0, 20);
+        $actor = $this->m_chat_group->actor();
         // Public landing counts only; never include chat previews in discovery HTML.
         foreach ($groups as &$g) {
+            $person = $this->m_chat_group->person($g['id'], $actor);
+            $g['following'] = $person ? $person['is_following'] && !$person['is_hidden'] : (int) $g['id'] === 1;
             $g['online'] = (int) $this->db->where('group_id', $g['id'])->where('is_banned', 0)
                 ->where('last_active_at >', date('Y-m-d H:i:s', time() - 45))->count_all_results('chat_group_people');
         }
         unset($g);
-        $this->render('groups/index', compact('q','mode','category','province','page','groups','more') + array('title' => 'Khám phá nhóm chat', 'meta_desc' => 'Tìm nhóm trò chuyện và làm quen trên Saigon Cupid.'));
+        $this->render('groups/index', compact('q','mode','category','province','page','groups','more') + array('chat_csrf' => $this->csrf(), 'title' => 'Khám phá nhóm chat', 'meta_desc' => 'Tìm nhóm trò chuyện và làm quen trên Saigon Cupid.'));
     }
 
     public function detail($slug)
@@ -64,7 +67,7 @@ class Groups extends MY_Controller
     public function api($id = 0, $action = 'messages')
     {
         return $this->respond(function () use ($id, $action) {
-            if ($action === 'saved') return array('groups' => $this->m_chat_group->saved($this->m_chat_group->actor()));
+            if ($action === 'saved') return array('groups' => $this->m_chat_group->saved($this->m_chat_group->actor(true)));
             $group = $this->m_chat_group->group($id);
             $actor = $this->m_chat_group->actor();
             if ($action === 'messages' || $action === 'online') {
@@ -77,6 +80,7 @@ class Groups extends MY_Controller
                     'group' => $this->m_chat_group->summary($group, $actor)) + $changes;
             }
             $this->guard();
+            if ($action === 'follow' || $action === 'unfollow') $actor = $this->m_chat_group->actor(true);
             // Create guest identity only on explicit open, not a background GET.
             if ($action === 'open') {
                 $this->m_chat_group->access($group, $actor);
@@ -88,7 +92,6 @@ class Groups extends MY_Controller
             }
             if ($action === 'send') {
                 $this->m_chat_group->access($group, $actor, true);
-                if (!$actor['user'] && $this->input->post('guest_consent') !== '1') throw new RuntimeException('Hãy xác nhận quy định chat dành cho khách.', 422);
                 return array('message' => $this->m_chat_group->send($group, $actor, (string) $this->input->post('content'),
                     (string) $this->input->post('client_message_id'), (int) $this->input->post('reply_to_id')));
             }

@@ -80,7 +80,7 @@
     }, { passive: true });
     document.addEventListener('touchmove', function (event) {
         if (!pageLocked || event.touches.length !== 1) return;
-        var area = event.target.closest('.cw-body, .cw-side-list, .cw-online-panel, .cw-emoji-list');
+        var area = event.target.closest('.cw-body, .cw-side-list, .cw-online-panel, .cw-emoji-list, .cg-feed, .cg-info, .cg-composer textarea');
         var delta = event.touches[0].clientY - previousTouchY;
         previousTouchY = event.touches[0].clientY;
         if (!area || !panel.contains(area) || area.scrollHeight <= area.clientHeight ||
@@ -377,7 +377,7 @@
 
         if (!dang_mo) { return; }
         if (dang_mo.kind === 'room') {
-            rowRoom.classList.add('is-on');
+            if (rowRoom) rowRoom.classList.add('is-on');
             return;
         }
         // Tra theo id gắn trên từng dòng, không theo thứ tự: danh sách hiển thị
@@ -577,6 +577,7 @@
     /* ------------------------- Mở hội thoại ------------------------- */
 
     function moKhung() {
+        root.dispatchEvent(new CustomEvent('cw:close-group'));
         if (idleEl) { idleEl.hidden = true; }
         convoEl.hidden = false;
         root.classList.add('is-chat');   // màn hẹp: trượt sang khung chat
@@ -655,6 +656,7 @@
 
     /** Quay lại danh sách (màn hẹp). */
     function veDanhSach() {
+        root.dispatchEvent(new CustomEvent('cw:close-group'));
         closeOnline(false);
         root.classList.remove('is-chat');
         dang_mo = null;
@@ -898,6 +900,7 @@
     });
 
     function dongChat() {
+            root.dispatchEvent(new CustomEvent('cw:close-group'));
             showOnlineRoom(false);
             panel.hidden = true;
             bubble.setAttribute('aria-expanded', 'false');
@@ -918,6 +921,17 @@
     });
 
     if (rowRoom) { rowRoom.addEventListener('click', moPhong); }
+
+    root.addEventListener('cw:open-group', function () {
+        closeOnline(false);
+        clearInterval(timer);
+        dang_mo = null;
+        convoEl.hidden = true;
+        if (idleEl) idleEl.hidden = true;
+        root.classList.add('is-chat');
+        danhDauDangMo();
+    });
+    root.addEventListener('cw:group-back', veDanhSach);
 
     var backBtn = document.getElementById('cw-back');
     if (backBtn) { backBtn.addEventListener('click', veDanhSach); }
