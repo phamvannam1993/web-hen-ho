@@ -2,16 +2,37 @@
     'use strict';
     function node(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; }
     function key() { var a = new Uint8Array(16); crypto.getRandomValues(a); return Array.from(a, function (x) { return x.toString(16).padStart(2, '0'); }).join(''); }
+    var page = document.querySelector('.cg-page');
+    if (page) {
+        function fitPage() {
+            page.style.setProperty('--cg-page-top', Math.max(0, page.getBoundingClientRect().top + window.scrollY) + 'px');
+        }
+        fitPage();
+        window.addEventListener('resize', fitPage);
+        window.addEventListener('load', fitPage);
+        if (window.ResizeObserver) {
+            var layoutObserver = new ResizeObserver(fitPage);
+            document.querySelectorAll('.site-header,.topbar,.nudge-bar').forEach(function (element) { layoutObserver.observe(element); });
+        }
+    }
     function Chat(root) {
         var self = this; this.root = root; this.api = root.dataset.api; this.csrf = root.dataset.csrf;
         this.feed = root.querySelector('[data-cg-feed]'); this.status = root.querySelector('[data-cg-status]');
         this.messages = new Map(); this.last = 0; this.first = 0; this.reply = null; this.pending = null; this.busy = false; this.polling = false; this.destroyed = false;
         this.group = null; this.identity = null; this.hasOlder = true;
-        this.form = root.querySelector('[data-cg-form]'); this.older = root.querySelector('[data-cg-older]');
+        this.form = root.querySelector('[data-cg-form]'); this.loading = root.querySelector('[data-cg-loading]');
+        this.scrollTop = this.feed.scrollTop;
         this.jump = root.querySelector('[data-cg-jump]');
         this.jump.onclick = function () { self.feed.scrollTop = self.feed.scrollHeight; self.jump.hidden = true; self.read(); };
-        this.feed.addEventListener('scroll', function () { if (self.bottom()) { self.jump.hidden = true; self.read(); } });
-        this.older.onclick = function () { self.load(true); };
+        this.feed.addEventListener('scroll', function () {
+            var top = self.feed.scrollTop, upward = top < self.scrollTop;
+            self.scrollTop = top;
+            if (self.bottom()) { self.jump.hidden = true; self.read(); }
+            if (upward && top < 80 && self.first && self.hasOlder) {
+                if (self.polling) self.pendingOlder = true;
+                else self.load(true);
+            }
+        });
         if (this.form) {
             this.form.onsubmit = function (e) { e.preventDefault(); self.send(); };
             this.form.content.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); self.send(); } });
@@ -80,9 +101,10 @@
         }).catch(function () {});
     };
     Chat.prototype.load = function (older) {
-        if (this.polling || this.destroyed || (older && !this.hasOlder)) return Promise.resolve();
+        if (this.polling || this.destroyed || (older && (!this.hasOlder || !this.first))) return Promise.resolve();
         this.polling = true; var self = this, atBottom = this.bottom(), height = this.feed.scrollHeight, top = this.feed.scrollTop;
-        this.older.disabled = true;
+        this.loading.hidden = !(older || !this.last);
+        this.feed.setAttribute('aria-busy', 'true');
         var query = older ? {before_id: this.first} : {after_id: this.last};
         query.known_ids = Array.from(this.messages.keys()).slice(-200).join(',');
         query.events_cursor = this.eventsCursor || 0;
@@ -102,7 +124,8 @@
             if (changed) Array.from(self.feed.children).sort(function (a, b) { return Number(a.dataset.message) - Number(b.dataset.message); }).forEach(function (n) { self.feed.append(n); });
             var ids = Array.from(self.messages.keys()); self.last = ids.length ? Math.max.apply(null, ids) : 0; self.first = ids.length ? Math.min.apply(null, ids) : 0;
             self.refreshQuotes();
-            if (older) { self.hasOlder = r.messages.length === 30; self.feed.scrollTop = top + self.feed.scrollHeight - height; }
+            if (older || !query.after_id) self.hasOlder = r.messages.length === 30;
+            if (older) { self.feed.scrollTop = top + self.feed.scrollHeight - height; }
             else if (atBottom) self.feed.scrollTop = self.feed.scrollHeight;
             else if (changed) self.jump.hidden = false;
             self.root.querySelector('[data-cg-online]').textContent = r.group.online + ' đang online';
@@ -115,7 +138,16 @@
         }).catch(function (e) {
             self.status.textContent = e.message;
             if (e.code === 403 || e.code === 404) { self.feed.replaceChildren(); self.messages.clear(); var pin = self.root.querySelector('[data-cg-pin]'); pin.hidden = true; pin.textContent = ''; self.root.querySelector('[data-cg-people]').replaceChildren(); if (self.socket) self.socket.close(); }
-        }).finally(function () { self.polling = false; self.older.disabled = false; self.older.hidden = !self.hasOlder; });
+        }).finally(function () {
+            self.polling = false;
+            self.loading.hidden = true;
+            self.feed.setAttribute('aria-busy', 'false');
+            self.scrollTop = self.feed.scrollTop;
+            if (self.pendingOlder) {
+                self.pendingOlder = false;
+                if (self.feed.scrollTop < 80) self.load(true);
+            }
+        });
     };
     Chat.prototype.refreshQuotes = function () {
         var self = this;
@@ -135,7 +167,7 @@
         function button(label, fn) { var b = node('button', '', label); b.type = 'button'; b.onclick = fn; actions.append(b); }
         if (this.form) button('Trả lời', function () { self.reply = m; var r = self.root.querySelector('[data-cg-reply]'); r.hidden = false; r.querySelector('span').textContent = 'Trả lời ' + m.sender.name; self.form.content.focus(); });
         if (!m.mine && m.sender.id) button('Chặn', function () { if (confirm('Ẩn tin nhắn của người này khỏi bạn?')) self.act('block', {target: m.sender.id}); });
-        button('Báo cáo', function () { var reason = prompt('Lý do báo cáo (spam, quấy rối, lừa đảo, lộ thông tin hoặc khác):'); if (reason) self.act('report', {message_id: m.id, reason: reason}); });
+        if (!m.mine) button('Báo cáo', function () { var reason = prompt('Lý do báo cáo (spam, quấy rối, lừa đảo, lộ thông tin hoặc khác):'); if (reason) self.act('report', {message_id: m.id, reason: reason}); });
         if (this.group && this.group.moderator) {
             [['Ghim','pin',m.id],['Bỏ ghim','unpin',m.id],['Xóa','delete',m.id]].forEach(function (a) { button(a[0], function () { self.moderate(a[1], a[2]); }); });
             if (m.sender.id) [['Cấm gửi 1 giờ','mute'],['Gỡ cấm gửi','unmute'],['Cấm khỏi nhóm','ban'],['Gỡ cấm nhóm','unban']].forEach(function (a) { button(a[0], function () { self.moderate(a[1], m.sender.id); }); });
@@ -151,12 +183,10 @@
     }).catch(function (e) { self.status.textContent = e.message; }); };
     Chat.prototype.send = function (file) {
         if (this.busy || !this.form || !this.identity) return;
-        var consent = this.root.querySelector('[data-cg-consent]');
-        if (consent && !consent.checked) { this.status.textContent = 'Hãy xác nhận đủ 18 tuổi và đồng ý nội quy trước khi gửi.'; return; }
         var self = this, content = this.form.content.value.trim(), signature = file ? file.name + ':' + file.size + ':' + file.lastModified : content;
         if (!file && !content) return;
         if (!this.pending || this.pending.signature !== signature || this.pending.reply !== (this.reply && this.reply.id)) this.pending = {id: key(), signature: signature, reply: this.reply && this.reply.id};
-        var data = {content: content, client_message_id: this.pending.id, reply_to_id: this.pending.reply || '', guest_consent: consent ? '1' : '0'};
+        var data = {content: content, client_message_id: this.pending.id, reply_to_id: this.pending.reply || ''};
         if (file) { var form = new FormData(); Object.keys(data).forEach(function (k) { form.append(k, data[k]); }); form.append('image', file); data = form; }
         this.busy = true; this.form.querySelector('button[type=submit]').disabled = true;
         this.request(file ? 'image' : 'send', data).then(function () {
@@ -176,26 +206,60 @@
     };
     function mount(root) { if (root && !root.groupChat) root.groupChat = new Chat(root); return root && root.groupChat; }
     document.querySelectorAll('[data-group-chat]').forEach(mount);
-    var saved = document.querySelector('[data-cg-saved]'), overlay = null, previousFocus = null;
-    function close() { if (!overlay) return; var root = overlay.querySelector('[data-group-chat]'); if (root && root.groupChat) root.groupChat.destroy(); overlay.remove(); overlay = null; if (previousFocus) previousFocus.focus(); refreshSaved(); }
-    function openPanel(id) {
-        if (!saved) return; close(); previousFocus = document.activeElement;
-        overlay = node('div', 'cg-overlay'); overlay.setAttribute('role', 'dialog'); overlay.setAttribute('aria-modal', 'true'); overlay.setAttribute('aria-label', 'Nhóm chat');
-        var inner = node('div', 'cg-overlay-inner'), b = node('button', 'cg-overlay-close', 'Đóng ×'); b.type = 'button'; b.onclick = close;
-        var content = node('div', '', 'Đang tải nhóm…'); inner.append(b, content); overlay.append(inner); document.body.append(overlay); b.focus();
-        overlay.onclick = function (e) { if (e.target === overlay) close(); };
-        var current = overlay;
-        fetch(saved.dataset.panelBase + '/' + id, {credentials:'same-origin'}).then(function (r) { if (!r.ok) throw new Error('Chưa mở được nhóm. Hãy tải lại hoặc thử nhóm khác.'); return r.text(); }).then(function (html) { if (overlay !== current) return; content.innerHTML = html; mount(content.querySelector('[data-group-chat]')); }).catch(function (e) { if (overlay === current) content.textContent = e.message; });
-    }
-    document.addEventListener('keydown', function (e) {
-        if (!overlay) return; if (e.key === 'Escape') close();
-        if (e.key === 'Tab') { var controls = Array.from(overlay.querySelectorAll('a,button,input,textarea,summary,[tabindex="0"]')).filter(function (n) { return !n.disabled && n.getClientRects().length; }); var first = controls[0], last = controls[controls.length-1]; if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); } }
+    document.querySelectorAll('[data-cg-card-follow]').forEach(function (button) {
+        button.onclick = function () {
+            if (button.disabled) return;
+            var following = button.dataset.following === '1';
+            var status = button.closest('.cg-group-card').querySelector('[data-cg-card-status]');
+            button.disabled = true; status.textContent = '';
+            fetch(button.dataset.cgCardFollow + (following ? '/unfollow' : '/follow'), {
+                method: 'POST', credentials: 'same-origin',
+                headers: {'X-Chat-CSRF': button.dataset.csrf}, body: new URLSearchParams()
+            }).then(function (r) {
+                return r.json().then(function (v) { if (!r.ok || !v.ok) throw new Error(v.message || 'Chưa theo dõi được nhóm.'); });
+            }).then(function () {
+                button.dataset.following = following ? '0' : '1';
+                button.setAttribute('aria-pressed', following ? 'false' : 'true');
+                button.textContent = following ? 'Theo dõi' : 'Đã theo dõi'; status.textContent = ''; refreshSaved();
+            }).catch(function (e) { status.textContent = e.message; })
+                .finally(function () { button.disabled = false; });
+        };
     });
+    var saved = document.querySelector('[data-cg-saved]'), groupPanel = null;
+    var widget = document.getElementById('chat-widget');
+    function close() {
+        if (!groupPanel) return;
+        var root = groupPanel.querySelector('[data-group-chat]');
+        if (root && root.groupChat) root.groupChat.destroy();
+        groupPanel.remove(); groupPanel = null;
+        refreshSaved();
+    }
+    if (widget) widget.addEventListener('cw:close-group', close);
+    function openPanel(id) {
+        var main = document.getElementById('cw-main');
+        if (!saved || !widget || !main) return;
+        close();
+        widget.dispatchEvent(new CustomEvent('cw:open-group'));
+        groupPanel = node('div', 'cg-widget-panel');
+        var back = node('button', 'cg-widget-back', '‹ Về danh sách');
+        back.type = 'button';
+        back.onclick = function () { widget.dispatchEvent(new CustomEvent('cw:group-back')); };
+        var content = node('div', 'cg-widget-content', 'Đang tải nhóm…');
+        groupPanel.append(back, content); main.append(groupPanel);
+        var current = groupPanel;
+        fetch(saved.dataset.panelBase + '/' + id, {credentials:'same-origin'}).then(function (r) {
+            if (!r.ok) throw new Error('Chưa mở được nhóm. Hãy tải lại hoặc thử nhóm khác.');
+            return r.text();
+        }).then(function (html) {
+            if (groupPanel !== current) return;
+            content.innerHTML = html; mount(content.querySelector('[data-group-chat]'));
+        }).catch(function (e) { if (groupPanel === current) content.textContent = e.message; });
+    }
     function refreshSaved() {
         if (!saved || document.hidden) return;
         fetch(saved.dataset.cgSaved, {credentials:'same-origin'}).then(function (r) { return r.json(); }).then(function (r) {
             if (!r.ok) return; saved.replaceChildren();
-            var groups = r.groups.filter(function (g) { return g.id !== 1; });
+            var groups = r.groups;
             groups.forEach(function (g) {
                 var a = node('a', 'cw-row cg-sticky-row' + (g.unread ? ' is-unread' : ''));
                 a.href = g.url;
@@ -218,7 +282,6 @@
         }).catch(function () {});
     }
     if (saved) {
-        document.addEventListener('click', function (e) { if (e.target.closest('#cw-row-room')) { e.preventDefault(); e.stopImmediatePropagation(); openPanel(1); } }, true);
         refreshSaved(); setInterval(refreshSaved, 15000);
     }
     window.addEventListener('pagehide', function () { document.querySelectorAll('[data-group-chat]').forEach(function (root) { if (root.groupChat) root.groupChat.destroy(); }); });
