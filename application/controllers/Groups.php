@@ -82,7 +82,8 @@ class Groups extends MY_Controller
                 $this->m_chat_group->access($group, $actor);
                 $actor = $this->m_chat_group->actor(true);
                 $p = $this->m_chat_group->person($id, $actor, true);
-                return array('identity' => array('id' => $p['public_id'], 'name' => $actor['user'] ? display_name($actor['user']) : $p['nickname'], 'guest' => !$actor['user']),
+                return array('identity' => array('id' => $p['public_id'], 'name' => $actor['user'] ? display_name($actor['user']) : $p['nickname'],
+                    'avatar' => $actor['user'] ? avatar_url($actor['user']['avatar'], $actor['user']['gender']) : chat_group_guest_avatar_url($p['public_id']), 'guest' => !$actor['user']),
                     'ticket' => $this->realtime->group_ticket($id, $p['public_id']), 'ws_url' => $this->realtime->url());
             }
             if ($action === 'send') {

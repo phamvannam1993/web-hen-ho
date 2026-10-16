@@ -66,11 +66,11 @@ $guest_banner = !$user && empty($bare) && strpos($content_view, 'auth/') !== 0 &
 </head>
 <body class="<?= !empty($bare) ? 'is-bare' : '' ?><?= $tk_app ? 'tk-app' : '' ?><?= $content_view === 'account/messages' ? ' is-messages-page' : '' ?><?= $content_view === 'groups/detail' ? ' is-group-chat-page' : '' ?><?= $tk_inbox_open ? ' is-inbox-open' : '' ?><?= $guest_banner ? ' has-guest-banner' : '' ?>">
 
-<!-- Dải mảnh trên cùng: khẩu hiệu + hotline -->
+<!-- Dải mạng xã hội trên cùng -->
 <?php /* Chế độ toàn màn hình (trang Khám phá): bỏ thanh trên, menu và chân trang */ ?>
 <?php if (empty($bare)): ?>
 <?php
-/* Thanh trên cùng: liên hệ bên trái, trang tĩnh và mạng xã hội bên phải.
+/* Thanh trên cùng chỉ hiển thị mạng xã hội.
    Mục nào chưa khai trong Quản trị -> Cấu hình thì tự ẩn đi. */
 $mxh = array();
 foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
@@ -86,29 +86,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 ?>
 <div class="topbar">
     <div class="container topbar-inner">
-        <div class="topbar-contact">
-            <?php if (!empty($settings['hotline'])): ?>
-                <a class="topbar-item" href="tel:<?= e(preg_replace('/\D+/', '', $settings['hotline'])) ?>">
-                    <svg viewBox="0 0 24 24" class="ic" aria-hidden="true">
-                        <path d="M6.5 3.5h3l1.5 4-2 1.4a12 12 0 0 0 6.1 6.1l1.4-2 4 1.5v3a2 2 0 0 1-2.2 2A17 17 0 0 1 4.5 5.7a2 2 0 0 1 2-2.2z"/>
-                    </svg>
-                    Hỗ trợ: <b><?= e($settings['hotline']) ?></b>
-                </a>
-            <?php endif; ?>
-            <?php if (!empty($settings['contact_email'])): ?>
-                <a class="topbar-item" href="mailto:<?= e($settings['contact_email']) ?>">
-                    <svg viewBox="0 0 24 24" class="ic" aria-hidden="true">
-                        <rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="m3.8 6.8 8.2 5.7 8.2-5.7"/>
-                    </svg>
-                    <?= e($settings['contact_email']) ?>
-                </a>
-            <?php endif; ?>
-        </div>
-
         <div class="topbar-right">
-            <a href="<?= site_url('dieu-khoan') ?>">Điều khoản</a>
-            <a href="<?= site_url('noi-quy') ?>">Nội quy</a>
-            <a href="<?= site_url('contact-us') ?>">Liên hệ</a>
             <?php foreach ($mxh as $ten => $url): ?>
                 <a class="topbar-social" href="<?= e($url) ?>" target="_blank" rel="noopener"
                    aria-label="<?= e(ucfirst($ten)) ?>">

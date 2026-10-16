@@ -68,7 +68,7 @@ img { max-width: 100%; height: auto; display: block; }
 .topbar a { color: rgba(255,255,255,.92); text-decoration: none; }
 .topbar a:hover { color: #fff; text-decoration: none; }
 .topbar-inner {
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: center; justify-content: flex-end;
     gap: 16px; min-height: 40px; flex-wrap: wrap;
 }
 .topbar-contact, .topbar-right { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }

@@ -42,6 +42,14 @@ function chat_group_content($text)
     return $text;
 }
 
+/** Random public IDs give guests a stable avatar without a schema change. */
+function chat_group_guest_avatar_url($public_id)
+{
+    if (!$public_id) return base_url('assets/images/chat-guest.svg');
+    $number = (hexdec(substr(hash('sha256', (string) $public_id), 0, 8)) % 30) + 1;
+    return base_url('assets/images/monster-avatar/' . $number . '.png');
+}
+
 function chat_group_image_url($row)
 {
     return preg_match('/^[a-f0-9]{48}\.webp$/D', $row['content'])
