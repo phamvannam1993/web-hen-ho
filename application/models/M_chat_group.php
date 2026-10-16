@@ -115,7 +115,7 @@ class M_chat_group extends CI_Model
         $member = !empty($r['user_id']);
         return array('id' => (int) $r['id'], 'mine' => $actor && $key === $actor['key'],
             'sender' => array('id' => $r['person_id'] ?: null, 'name' => $member ? display_name($r) : ($r['guest_name'] ?: 'Khách ẩn danh'),
-                'avatar' => $member ? avatar_url($r['avatar'], $r['gender']) : base_url('assets/images/chat-guest.svg'),
+                'avatar' => $member ? avatar_url($r['avatar'], $r['gender']) : chat_group_guest_avatar_url($r['person_id']),
                 'url' => $member && $r['slug'] ? site_url('profile/' . $r['slug']) : null, 'guest' => !$member),
             'type' => $r['type'], 'content' => $r['type'] === 'image' && preg_match('/^[a-f0-9]{48}\.webp$/D', $r['content'])
                 ? site_url('nhom-media/' . $r['id']) : ($r['type'] === 'image' ? base_url(ltrim($r['content'], '/')) : $r['content']),
@@ -193,7 +193,7 @@ class M_chat_group extends CI_Model
         if ($keys) $this->db->where_not_in('p.actor_key', $keys);
         return array_map(function ($p) {
             return array('id' => $p['public_id'], 'name' => $p['user_id'] ? display_name($p) : $p['guest_name'],
-                'avatar' => $p['user_id'] ? avatar_url($p['avatar'], $p['gender']) : base_url('assets/images/chat-guest.svg'),
+                'avatar' => $p['user_id'] ? avatar_url($p['avatar'], $p['gender']) : chat_group_guest_avatar_url($p['public_id']),
                 'url' => $p['user_id'] && $p['slug'] ? site_url('profile/' . $p['slug']) : null);
         }, $this->db->order_by('p.id', 'DESC')->limit(100)->get()->result_array());
     }
