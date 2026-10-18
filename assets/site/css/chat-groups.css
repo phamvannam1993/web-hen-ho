@@ -205,7 +205,10 @@
 
 /* Group conversations share the sticky widget's desktop and mobile navigation. */
 .cg-widget-panel { display:flex; flex:1; flex-direction:column; min-width:0; min-height:0; overflow:hidden; background:#fff; }
-.cg-widget-back { flex-shrink:0; align-self:flex-start; padding:8px 14px; border:0; background:#fff; color:var(--cg-brand); font:inherit; font-size:13px; cursor:pointer; }
+.cg-widget-back,.cg-chat .cg-widget-back { display:inline-flex; align-items:center; justify-content:center; flex:0 0 36px; width:36px; height:36px; min-height:36px; padding:0; border:1px solid var(--cg-border); border-radius:50%; background:var(--cg-soft); color:var(--cg-brand); cursor:pointer; }
+@media(min-width:761px) {
+    .cg-widget-panel .cg-widget-back { display:none; }
+}
 .cg-widget-content { display:flex; flex:1; flex-direction:column; min-height:0; overflow:hidden; }
 .cg-widget-panel .cg-chat { flex:1; height:100%; min-height:0; border:0; border-radius:0; box-shadow:none; }
 .cg-widget-panel .cg-header { flex-wrap:wrap; }
@@ -327,3 +330,13 @@ body.is-group-chat-page { height:100dvh; overflow:hidden; overscroll-behavior:no
 .cg-composer-emoji-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(36px,1fr)); gap:3px; max-height:min(160px,25dvh); overflow-y:auto; overscroll-behavior:contain; }
 .cg-chat .cg-composer-emoji-grid button { min-width:0; min-height:36px; padding:3px; border:0; border-radius:9px; background:transparent; font-size:24px; line-height:1.2; }
 .cg-chat .cg-composer-emoji-grid button:hover { background:var(--cg-soft); }
+
+.cg-chat .cg-header { flex-wrap:nowrap; }
+.cg-header-who { flex:1; }
+.cg-header-more { flex:0 0 auto; margin-left:auto; }
+.cg-chat .cg-group-menu-toggle { width:36px; height:36px; min-height:36px; padding:0; border:0; border-radius:50%; background:var(--cg-soft); color:var(--cg-brand); }
+.cg-group-menu-toggle > span { font-size:26px; line-height:1; }
+.cg-group-menu { position:fixed; inset:auto; min-width:170px; max-width:calc(100vw - 16px); max-height:70dvh; overflow:auto; margin:0; padding:6px; border:1px solid var(--cg-border); border-radius:14px; background:#fff; color:var(--cg-ink); box-shadow:0 8px 30px #382d3826; }
+.cg-group-menu:popover-open { display:flex; flex-direction:column; gap:2px; }
+.cg-chat .cg-group-menu button { justify-content:flex-start; min-height:40px; padding:9px 12px; border:0; border-radius:8px; background:transparent; color:var(--cg-ink); font-size:12px; text-align:left; }
+.cg-chat .cg-group-menu button:hover { background:var(--cg-soft); color:var(--cg-brand); }
