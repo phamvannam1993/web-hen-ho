@@ -80,7 +80,7 @@
     }, { passive: true });
     document.addEventListener('touchmove', function (event) {
         if (!pageLocked || event.touches.length !== 1) return;
-        var area = event.target.closest('.cw-body, .cw-side-list, .cw-online-panel, .cw-emoji-list, .cg-feed, .cg-info, .cg-composer textarea');
+        var area = event.target.closest('.cw-body, .cw-side-list, .cw-online-panel, .cw-emoji-list, .cg-feed, .cg-info, .cg-composer-emoji-grid, .cg-composer textarea');
         var delta = event.touches[0].clientY - previousTouchY;
         previousTouchY = event.touches[0].clientY;
         if (!area || !panel.contains(area) || area.scrollHeight <= area.clientHeight ||

@@ -48,7 +48,7 @@
         if (this.form) {
             this.form.onsubmit = function (e) { e.preventDefault(); self.send(); };
             this.form.content.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); self.send(); } });
-            root.querySelector('[data-cg-emoji]').onclick = function () { self.form.content.value += ' 😊'; self.form.content.focus(); };
+            this.setupEmojiPicker();
             root.querySelector('[data-cg-cancel-reply]').onclick = function () { self.reply = null; root.querySelector('[data-cg-reply]').hidden = true; };
         }
         var nickname = root.querySelector('[data-cg-nickname]');
@@ -106,6 +106,53 @@
         this.open().then(function () { self.presence(); self.load(); }).catch(function (e) { self.status.textContent = e.message; self.load(); });
         this.timer = setInterval(function () { if (self.active()) { self.load(); if (!self.heart || Date.now() - self.heart > 15000) self.presence(); } }, 4000);
     }
+    Chat.prototype.setupEmojiPicker = function () {
+        var self = this, input = this.form.content, trigger = this.root.querySelector('[data-cg-emoji]');
+        var panel = node('div', 'cg-composer-emojis'); panel.hidden = true;
+        panel.id = 'cg-emojis-' + key(); panel.setAttribute('role', 'region'); panel.setAttribute('aria-label', 'Chọn biểu tượng cảm xúc');
+        trigger.setAttribute('aria-controls', panel.id); trigger.setAttribute('aria-expanded', 'false');
+        var header = node('div', 'cg-composer-emojis-header'), tabs = node('div', 'cg-composer-emoji-tabs');
+        var close = node('button', '', '×'); close.type = 'button'; close.setAttribute('aria-label', 'Đóng bảng emoji');
+        header.append(tabs, close);
+        var grid = node('div', 'cg-composer-emoji-grid'); panel.append(header, grid); this.form.before(panel);
+        var start = 0, end = 0;
+        function remember() { start = input.selectionStart; end = input.selectionEnd; }
+        this.closeEmojiPicker = function () { panel.hidden = true; trigger.setAttribute('aria-expanded', 'false'); };
+        function populate(group) {
+            grid.replaceChildren();
+            group.items.split(' ').forEach(function (emoji) {
+                var button = node('button', '', emoji); button.type = 'button'; button.setAttribute('aria-label', 'Chèn ' + emoji);
+                button.onclick = function () {
+                    if (input.disabled || input.readOnly) return;
+                    var value = input.value.slice(0, start) + emoji + input.value.slice(end);
+                    if (input.maxLength > 0 && value.length > input.maxLength) return;
+                    input.value = value; start += emoji.length; end = start;
+                    input.setSelectionRange(start, end);
+                    input.dispatchEvent(new Event('input', {bubbles:true}));
+                };
+                grid.append(button);
+            });
+        }
+        [
+            {name:'Cảm xúc', items:'😀 😃 😄 😁 😆 😅 😂 🤣 😊 🙂 🙃 😉 😍 🥰 😘 😋 😎 🤩 🥳 😏 😌 🤗 🤔 🫣 🥺 😢 😭 😮 😲 😴 😤 😡'},
+            {name:'Yêu thương', items:'❤️ 🩷 🧡 💛 💚 💙 💜 🤍 💕 💞 💓 💖 💘 💝 💌 💋 🌹 🌷 💐 🫶 🤝 👏 👍 🙌 🙏 👋 ✌️ 💪'},
+            {name:'Cuộc sống', items:'🔥 ✨ ⭐ 🌟 🎉 🎊 🎁 🎂 ☕ 🍵 🧋 🍰 🍜 🍕 🎵 🎶 📷 🎬 🐶 🐱 🌻 🌈 ☀️ 🌙 🏖️ ✈️ 💯 ✅'}
+        ].forEach(function (group, index) {
+            var tab = node('button', '', group.name); tab.type = 'button'; tab.setAttribute('aria-pressed', index === 0 ? 'true' : 'false');
+            tab.onclick = function () { tabs.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', b === tab ? 'true' : 'false'); }); populate(group); };
+            tabs.append(tab); if (index === 0) populate(group);
+        });
+        trigger.onclick = function () {
+            if (!panel.hidden) { self.closeEmojiPicker(); return; }
+            remember(); input.blur(); panel.hidden = false; trigger.setAttribute('aria-expanded', 'true');
+        };
+        close.onclick = this.closeEmojiPicker;
+        input.addEventListener('focus', this.closeEmojiPicker);
+        panel.addEventListener('keydown', function (event) { if (event.key === 'Escape') { self.closeEmojiPicker(); trigger.focus(); } });
+        this.emojiOutsideClick = function (event) { if (!panel.contains(event.target) && !trigger.contains(event.target)) self.closeEmojiPicker(); };
+        document.addEventListener('click', this.emojiOutsideClick);
+        this.emojiPanel = panel;
+    };
     Chat.prototype.active = function () { return !this.destroyed && !document.hidden && document.hasFocus() && this.root.isConnected; };
     Chat.prototype.request = function (action, data, query) {
         var options = {credentials: 'same-origin', headers: {}};
@@ -278,8 +325,9 @@
     Chat.prototype.renderReactions = function (target, m) {
         var self = this; target.replaceChildren();
         (m.reactions || []).forEach(function (r) {
-            var b = node('button', r.mine ? 'is-mine' : '', r.emoji + ' ' + r.count); b.type = 'button';
+            var b = node('button', r.mine ? 'is-mine' : '', r.emoji + (r.count > 1 ? ' ' + r.count : '')); b.type = 'button';
             b.title = (r.mine ? 'Gỡ cảm xúc ' : 'Thả ') + r.emoji;
+            b.setAttribute('aria-label', r.emoji + ': ' + r.count + ' lượt' + (r.mine ? ', bấm để gỡ cảm xúc của bạn' : ''));
             b.setAttribute('aria-pressed', r.mine ? 'true' : 'false');
             b.disabled = !self.form;
             b.onclick = function () { self.act('react', {message_id:m.id, emoji:r.emoji}); }; target.append(b);
@@ -288,7 +336,7 @@
     };
     Chat.prototype.moderate = function (action, target) { var reason = prompt('Lý do xử lý:'); if (reason) this.act('moderate', {action: action, target: target, reason: reason}); };
     Chat.prototype.act = function (action, data) { var self = this; return this.request(action, data || {}).then(function () {
-        self.status.textContent = 'Đã cập nhật.';
+        self.status.textContent = action === 'react' ? '' : 'Đã cập nhật.';
         if (action === 'block') { self.messages.clear(); self.feed.replaceChildren(); self.last = 0; self.first = 0; self.reply = null; }
         self.load(); refreshSaved();
     }).catch(function (e) { self.status.textContent = e.message; }); };
@@ -310,6 +358,9 @@
     };
     Chat.prototype.destroy = function () {
         if (this.destroyed) return;
+        if (this.emojiOutsideClick) document.removeEventListener('click', this.emojiOutsideClick);
+        if (this.form && this.closeEmojiPicker) this.form.content.removeEventListener('focus', this.closeEmojiPicker);
+        if (this.emojiPanel) this.emojiPanel.remove();
         if (this.nicknameDialog && this.nicknameDialog.open) this.nicknameDialog.close();
         if (this.uploadAuth && this.uploadAuth.open) this.uploadAuth.close();
         [this.onlineDialog, this.rulesDialog].forEach(function (dialog) { if (dialog && dialog.open) dialog.close(); });

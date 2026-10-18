@@ -127,7 +127,7 @@ class Groups extends MY_Controller
         // Deterministic per sender/retry, opaque to recipients. Re-encoding removes metadata.
         $name = substr(hash_hmac('sha256', $group['id'] . ':' . $actor['key'] . ':' . $key, $this->config->item('encryption_key')), 0, 48) . '.webp';
         if (!file_exists($dir . '/' . $name) && !imagewebp($img, $dir . '/' . $name, 85)) throw new RuntimeException('Chưa lưu được ảnh.', 503);
-        imagedestroy($img);
+        unset($img);
         return array('message' => $this->m_chat_group->send($group, $actor, $name, $key, (int) $this->input->post('reply_to_id'), 'image'));
     }
 
