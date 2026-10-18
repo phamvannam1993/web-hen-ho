@@ -1,5 +1,51 @@
 (function () {
     'use strict';
+    var nativePopover = typeof HTMLElement.prototype.showPopover === 'function';
+    var fallbackPopover = null;
+    function popoverOpen(panel) {
+        return nativePopover ? panel.matches(':popover-open') : panel.classList.contains('cg-popover-open');
+    }
+    function closePopover(panel) {
+        if (nativePopover) { if (popoverOpen(panel)) panel.hidePopover(); return; }
+        panel.classList.remove('cg-popover-open');
+        if (panel.cgAnchor) { panel.cgAnchor.replaceWith(panel); panel.cgAnchor = null; }
+        if (panel.cgTrigger) panel.cgTrigger.setAttribute('aria-expanded', 'false');
+        if (fallbackPopover === panel) fallbackPopover = null;
+    }
+    function showPopover(panel, trigger, alignRight) {
+        if (popoverOpen(panel)) { closePopover(panel); return; }
+        if (nativePopover) panel.showPopover();
+        else {
+            if (fallbackPopover) closePopover(fallbackPopover);
+            panel.cgAnchor = document.createComment('chat menu');
+            panel.before(panel.cgAnchor);
+            document.body.append(panel);
+            panel.classList.add('cg-popover-open');
+            panel.cgTrigger = trigger; fallbackPopover = panel;
+        }
+        trigger.setAttribute('aria-expanded', 'true');
+        var viewport = window.visualViewport;
+        var left = viewport ? viewport.offsetLeft : 0, top = viewport ? viewport.offsetTop : 0;
+        var width = viewport ? viewport.width : window.innerWidth, height = viewport ? viewport.height : window.innerHeight;
+        panel.style.maxWidth = Math.max(0, width - 16) + 'px';
+        panel.style.maxHeight = Math.max(0, height - 16) + 'px';
+        var bounds = trigger.getBoundingClientRect();
+        panel.style.left = Math.max(left + 8, Math.min(alignRight ? bounds.right - panel.offsetWidth : bounds.left, left + width - panel.offsetWidth - 8)) + 'px';
+        var y = bounds.bottom + 6;
+        if (y + panel.offsetHeight > top + height - 8) y = bounds.top - panel.offsetHeight - 6;
+        panel.style.top = Math.max(top + 8, Math.min(y, top + height - panel.offsetHeight - 8)) + 'px';
+    }
+    document.addEventListener('click', function (event) {
+        if (fallbackPopover && !fallbackPopover.contains(event.target) && !fallbackPopover.cgTrigger.contains(event.target)) closePopover(fallbackPopover);
+    });
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && fallbackPopover) { var trigger = fallbackPopover.cgTrigger; closePopover(fallbackPopover); trigger.focus(); }
+    });
+    function closeFallbackPopover() { if (fallbackPopover) closePopover(fallbackPopover); }
+    window.addEventListener('resize', closeFallbackPopover);
+    document.addEventListener('scroll', function (event) {
+        if (fallbackPopover && !fallbackPopover.contains(event.target)) closeFallbackPopover();
+    }, true);
     function node(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; }
     function key() { var a = new Uint8Array(16); crypto.getRandomValues(a); return Array.from(a, function (x) { return x.toString(16).padStart(2, '0'); }).join(''); }
     var page = document.querySelector('.cg-page');
@@ -90,15 +136,11 @@
         this.groupMenu = root.querySelector('[data-cg-group-menu]');
         this.groupMenu.id = 'cg-group-menu-' + key();
         groupMenuToggle.setAttribute('aria-controls', this.groupMenu.id);
-        this.groupMenu.addEventListener('toggle', function () { groupMenuToggle.setAttribute('aria-expanded', self.groupMenu.matches(':popover-open') ? 'true' : 'false'); });
+        this.groupMenu.addEventListener('toggle', function () { groupMenuToggle.setAttribute('aria-expanded', popoverOpen(self.groupMenu) ? 'true' : 'false'); });
         groupMenuToggle.onclick = function () {
-            if (self.groupMenu.matches(':popover-open')) { self.groupMenu.hidePopover(); return; }
-            self.groupMenu.showPopover();
-            var bounds = groupMenuToggle.getBoundingClientRect();
-            self.groupMenu.style.left = Math.max(8, Math.min(bounds.right - self.groupMenu.offsetWidth, window.innerWidth - self.groupMenu.offsetWidth - 8)) + 'px';
-            self.groupMenu.style.top = Math.max(8, Math.min(bounds.bottom + 6, window.innerHeight - self.groupMenu.offsetHeight - 8)) + 'px';
+            showPopover(self.groupMenu, groupMenuToggle, true);
         };
-        this.groupMenu.addEventListener('click', function (event) { if (event.target.closest('button')) self.groupMenu.hidePopover(); }, true);
+        this.groupMenu.addEventListener('click', function (event) { if (event.target.closest('button')) closePopover(self.groupMenu); }, true);
         root.querySelector('[data-cg-notifications]').onclick = function () { self.act('notifications', {enabled: self.group && self.group.notifications ? '0' : '1'}); };
         root.querySelector('[data-cg-share]').onclick = function () {
             var url = self.group ? self.group.url : location.href;
@@ -306,11 +348,7 @@
         var menu = node('div', 'cg-message-menu'); menu.setAttribute('popover', 'auto'); menu.setAttribute('aria-label', 'Thao tác tin nhắn');
         var picker = node('div', 'cg-reaction-picker'); picker.setAttribute('popover', 'auto'); picker.setAttribute('aria-label', 'Chọn cảm xúc');
         function show(popover, trigger) {
-            if (popover.matches(':popover-open')) { popover.hidePopover(); return; }
-            popover.showPopover();
-            var bounds = trigger.getBoundingClientRect();
-            popover.style.left = Math.max(8, Math.min(bounds.left, window.innerWidth - popover.offsetWidth - 8)) + 'px';
-            popover.style.top = Math.max(8, Math.min(bounds.bottom + 6, window.innerHeight - popover.offsetHeight - 8)) + 'px';
+            showPopover(popover, trigger);
         }
         function iconButton(label, path, fn) {
             var b = node('button', 'cg-action-icon'); b.type = 'button'; b.title = label; b.setAttribute('aria-label', label);
@@ -321,8 +359,23 @@
         var more = iconButton('Thêm thao tác', '<circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>', function (b) { show(menu, b); });
         more.setAttribute('aria-haspopup', 'true');
         if (this.form) iconButton('Thả cảm xúc', '<circle cx="12" cy="12" r="9"/><path d="M8 14s1 3 4 3 4-3 4-3M8 9h.01M16 9h.01"/>', function (b) { show(picker, b); });
-        ['❤️','👍','😂','😮','😢','😡'].forEach(function (emoji) { var b = node('button', '', emoji); b.type = 'button'; b.setAttribute('aria-label', 'Thả ' + emoji); b.onclick = function () { picker.hidePopover(); self.act('react', {message_id:m.id, emoji:emoji}); }; picker.append(b); });
-        function button(label, fn) { var b = node('button', '', label); b.type = 'button'; b.onclick = function () { menu.hidePopover(); fn(); }; menu.append(b); }
+        ['❤️','👍','😂','😮','😢','😡'].forEach(function (emoji) { var b = node('button', '', emoji); b.type = 'button'; b.setAttribute('aria-label', 'Thả ' + emoji); b.onclick = function () { closePopover(picker); self.act('react', {message_id:m.id, emoji:emoji}); }; picker.append(b); });
+        function button(label, fn) {
+            var b = node('button', 'cg-menu-item'); b.type = 'button';
+            var paths = {
+                'Chặn': '<circle cx="12" cy="12" r="8"/><path d="m6 6 12 12"/>',
+                'Báo cáo': '<path d="M5 21V4m0 0c5-4 9 4 14 0v10c-5 4-9-4-14 0"/>',
+                'Ghim': '<path d="m9 3 6 0-1 6 4 4v2H6v-2l4-4-1-6ZM12 15v6"/>',
+                'Bỏ ghim': '<path d="m9 3 6 0-1 6 4 4v2H9M12 15v6M3 3l18 18"/>',
+                'Xóa': '<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>'
+            };
+            var path = paths[label] || '<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>';
+            var icon = node('span', 'cg-menu-icon');
+            icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + path + '</svg>';
+            b.append(icon, node('span', '', label));
+            if (label === 'Xóa' || label === 'Chặn' || label === 'Cấm khỏi nhóm') b.classList.add('is-danger');
+            b.onclick = function () { closePopover(menu); fn(); }; menu.append(b);
+        }
         if (!m.mine && m.sender.id) button('Chặn', function () { if (confirm('Ẩn tin nhắn của người này khỏi bạn?')) self.act('block', {target: m.sender.id}); });
         if (!m.mine) button('Báo cáo', function () { var reason = prompt('Lý do báo cáo (spam, quấy rối, lừa đảo, lộ thông tin hoặc khác):'); if (reason) self.act('report', {message_id: m.id, reason: reason}); });
         if (this.group && this.group.moderator) {
@@ -371,7 +424,8 @@
     };
     Chat.prototype.destroy = function () {
         if (this.destroyed) return;
-        if (this.groupMenu && this.groupMenu.matches(':popover-open')) this.groupMenu.hidePopover();
+        if (fallbackPopover && this.root.contains(fallbackPopover.cgAnchor)) closePopover(fallbackPopover);
+        if (this.groupMenu) closePopover(this.groupMenu);
         if (this.emojiOutsideClick) document.removeEventListener('click', this.emojiOutsideClick);
         if (this.form && this.closeEmojiPicker) this.form.content.removeEventListener('focus', this.closeEmojiPicker);
         if (this.emojiPanel) this.emojiPanel.remove();
@@ -385,6 +439,48 @@
     };
     function mount(root) { if (root && !root.groupChat) root.groupChat = new Chat(root); return root && root.groupChat; }
     document.querySelectorAll('[data-group-chat]').forEach(mount);
+    var inbox = document.querySelector('.tk-ms');
+    if (inbox) {
+        var privatePane = inbox.querySelector('.tk-ms-pane');
+        var inboxGroupPane = node('div', 'tk-ms-pane tk-ms-group-pane');
+        inboxGroupPane.hidden = true; inbox.append(inboxGroupPane);
+        var inboxRequest = 0, privateWasOpen = inbox.classList.contains('is-open');
+        function closeInboxGroup() {
+            inboxRequest++;
+            var root = inboxGroupPane.querySelector('[data-group-chat]');
+            if (root && root.groupChat) root.groupChat.destroy();
+            inboxGroupPane.replaceChildren(); inboxGroupPane.hidden = true;
+            privatePane.hidden = false;
+            inbox.classList.toggle('is-open', privateWasOpen);
+            inbox.querySelectorAll('[data-inbox-group]').forEach(function (link) { link.classList.remove('is-active'); });
+            inbox.dispatchEvent(new CustomEvent('inbox:change'));
+        }
+        inbox.querySelectorAll('[data-inbox-group]').forEach(function (link) {
+            link.addEventListener('click', function (event) {
+                if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+                event.preventDefault(); closeInboxGroup();
+                var request = ++inboxRequest;
+                privatePane.hidden = true; inboxGroupPane.hidden = false;
+                inbox.classList.add('is-open'); link.classList.add('is-active');
+                var back = node('button', 'cg-widget-back', '←');
+                back.type = 'button'; back.setAttribute('aria-label', 'Về danh sách tin nhắn');
+                back.onclick = closeInboxGroup;
+                var content = node('div', 'cg-widget-content', 'Đang tải nhóm…');
+                inboxGroupPane.append(back, content);
+                inbox.dispatchEvent(new CustomEvent('inbox:change'));
+                fetch(link.dataset.panelUrl, {credentials:'same-origin'}).then(function (response) {
+                    if (!response.ok) throw new Error('Chưa mở được nhóm. Vui lòng thử lại.');
+                    return response.text();
+                }).then(function (html) {
+                    if (request !== inboxRequest) return;
+                    content.innerHTML = html;
+                    var pageBack = content.querySelector('.cg-groups-back');
+                    if (pageBack) pageBack.replaceWith(back);
+                    mount(content.querySelector('[data-group-chat]'));
+                }).catch(function (error) { if (request === inboxRequest) content.textContent = error.message; });
+            });
+        });
+    }
     var saved = document.querySelector('[data-cg-saved]'), groupPanel = null;
     var widget = document.getElementById('chat-widget');
     function close() {
@@ -440,14 +536,28 @@
                 meta.append(node('span', 'cg-sticky-tag', g.mode === 'guest' ? 'Khách ẩn danh' : 'Nhóm cộng đồng'));
                 if (!g.notifications) { var muted = node('span', 'cg-sticky-muted', 'Đã tắt thông báo'); muted.title = 'Đã tắt thông báo'; meta.append(muted); }
                 var top = node('span', 'cw-row-top'), name = node('b'); name.append(node('span', 'cw-row-name', g.name)); top.append(name);
-                text.append(meta, top, node('span', 'cw-row-last', g.last || 'Chưa có tin nhắn. Bắt đầu trò chuyện!'));
+                var preview = g.last ? (g.last_sender ? g.last_sender + ': ' : '') + g.last : 'Chưa có tin nhắn. Bắt đầu trò chuyện!';
+                text.append(meta, top, node('span', 'cw-row-last', preview));
                 a.append(avatar, text);
                 if (g.unread) { var badge = node('i', 'cw-row-unread', g.unread > 99 ? '99+' : String(g.unread)); badge.setAttribute('aria-label', g.unread + ' tin chưa đọc'); a.append(badge); }
                 a.onclick = function (e) { e.preventDefault(); openPanel(g.id); }; saved.append(a);
             });
             if (!groups.length) saved.append(node('p', 'cg-sticky-empty', 'Chưa có nhóm chat phù hợp.'));
             var sidebar = document.querySelector('[data-cg-sidebar]');
-            if (sidebar) { sidebar.replaceChildren(); r.groups.filter(function (g) { return g.id !== 1; }).forEach(function (g) { var a = node('a', '', g.name + (g.unread ? ' (' + g.unread + ')' : '')); a.href = g.url; sidebar.append(a); }); }
+            if (sidebar) {
+                sidebar.replaceChildren();
+                r.groups.forEach(function (g) {
+                    if (g.id === 1) {
+                        var defaultAvatar = sidebar.previousElementSibling.querySelector('.cg-sidebar-avatar');
+                        if (defaultAvatar) defaultAvatar.src = g.avatar;
+                        return;
+                    }
+                    var a = node('a'), avatar = node('img', 'cg-sidebar-avatar');
+                    a.href = g.url; avatar.src = g.avatar; avatar.alt = ''; avatar.width = 32; avatar.height = 32;
+                    a.append(avatar, node('span', '', g.name + (g.unread ? ' (' + g.unread + ')' : '')));
+                    sidebar.append(a);
+                });
+            }
         }).catch(function () {});
     }
     if (saved) {

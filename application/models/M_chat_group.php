@@ -191,6 +191,8 @@ class M_chat_group extends CI_Model
                 ->where('last_active_at >', date('Y-m-d H:i:s', time() - 45))->count_all_results('chat_group_people'),
             'following' => $p && (bool) $p['is_following'] && !$p['is_hidden'], 'notifications' => !$p || (bool) $p['notifications_enabled'],
             'unread' => $unread, 'last' => $last ? ($last['type'] === 'image' ? 'Hình ảnh' : mb_substr($last['content'], 0, 100)) : '',
+            'last_sender' => $last ? (!empty($last['user_id']) && $last['identity_mode'] !== 'guest'
+                ? display_name($last) : ($last['guest_name'] ?: 'Khách ẩn danh')) : '',
             'pinned' => $group['pinned_message_id'] && ($pin = $this->visible_message($group, $actor, $group['pinned_message_id'])) ? $this->serialize($pin, $actor) : null,
             'moderator' => $this->moderator($group['id']));
     }

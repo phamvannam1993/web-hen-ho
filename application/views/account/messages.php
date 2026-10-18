@@ -34,6 +34,31 @@ $gio_ngan = function ($t) {
             <?php endif; ?>
         </div>
 
+        <?php if (!empty($chat_groups)): ?>
+            <details class="tk-ms-groups">
+                <summary class="tk-ms-groups__toggle">
+                    <?= tk_icon('message') ?><span>Nhóm chat</span>
+                    <span class="tk-ms-groups__count"><?= count($chat_groups) ?></span>
+                    <svg class="tk-ic tk-ms-groups__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </summary>
+                <ul class="tk-ms-groups__list" aria-label="Nhóm chat">
+                    <?php foreach ($chat_groups as $g): ?>
+                        <li><a class="tk-ms-item" href="<?= e($g['url']) ?>" data-inbox-group="<?= (int) $g['id'] ?>" data-panel-url="<?= site_url('ajax/nhom-panel/' . (int) $g['id']) ?>">
+                            <span class="tk-ms-av"><img src="<?= e($g['avatar']) ?>" alt="" width="40" height="40" loading="lazy"></span>
+                            <span class="tk-ms-item__b">
+                                <span class="tk-ms-item__n"><?= e($g['name']) ?></span>
+                                <span class="tk-ms-item__l"><?= e($g['last'] !== '' ? (!empty($g['last_sender']) ? $g['last_sender'] . ': ' : '') . $g['last'] : 'Chưa có tin nhắn') ?></span>
+                            </span>
+                            <?php if ($g['unread']): ?><span class="tk-count"><?= $g['unread'] > 99 ? '99+' : (int) $g['unread'] ?></span><?php endif; ?>
+                        </a></li>
+                    <?php endforeach; ?>
+                </ul>
+            </details>
+        <?php endif; ?>
+
+        <section class="tk-ms-private is-expanded">
+        <button type="button" class="tk-ms-private-title" aria-expanded="true" aria-controls="tk-ms-private-content"><?= tk_icon('message') ?><span>Tin nhắn riêng</span><svg class="tk-ic tk-ms-private-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+        <div class="tk-ms-private-content" id="tk-ms-private-content">
         <?php if (empty($conversations)): ?>
             <div class="tk-ms-none">
                 <span class="tk-empty__ic"><?= tk_icon('message') ?></span>
@@ -71,6 +96,8 @@ $gio_ngan = function ($t) {
             </ul>
             <p class="tk-ms-nores" id="tk-ms-nores" hidden>Không tìm thấy cuộc trò chuyện nào.</p>
         <?php endif; ?>
+        </div>
+        </section>
     </div>
 
     <!-- Khung chat -->
@@ -197,3 +224,16 @@ $gio_ngan = function ($t) {
 })();
 </script>
 <?php endif; ?>
+
+<script>
+(function () {
+    var toggle = document.querySelector('.tk-ms-private-title');
+    var content = document.getElementById('tk-ms-private-content');
+    toggle.addEventListener('click', function () {
+        var expanded = toggle.getAttribute('aria-expanded') !== 'true';
+        toggle.setAttribute('aria-expanded', String(expanded));
+        content.hidden = !expanded;
+        toggle.parentElement.classList.toggle('is-expanded', expanded);
+    });
+})();
+</script>
