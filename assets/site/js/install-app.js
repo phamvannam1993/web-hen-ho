@@ -2,9 +2,14 @@
     'use strict';
     var script = document.currentScript;
     var deferred = null;
+    var installing = false;
     var standalone = window.matchMedia('(display-mode: standalone)');
     var dialog = document.getElementById('install-dialog');
     var buttons = document.querySelectorAll('[data-install-app]');
+    var banner = document.querySelector('[data-install-banner]');
+    var bannerClose = document.querySelector('[data-install-banner-close]');
+    var bannerDismissed = false;
+    try { bannerDismissed = sessionStorage.getItem('sgcp-install-banner-dismissed') === '1'; } catch (_) {}
     if (!dialog) return;
     var confirm = dialog.querySelector('[data-install-confirm]');
     var feedback = dialog.querySelector('[data-install-feedback]');
@@ -12,6 +17,7 @@
     function update() {
         buttons.forEach(function (button) { button.hidden = installed(); });
         confirm.hidden = !deferred || installed();
+        if (banner) banner.hidden = installed() || bannerDismissed;
     }
     function instructions() {
         var ua = navigator.userAgent;
@@ -32,23 +38,39 @@
         event.preventDefault(); deferred = event;
         if (dialog.open) instructions(); else update();
     });
-    window.addEventListener('appinstalled', function () { deferred = null; buttons.forEach(function (b) { b.hidden = true; }); dialog.close(); });
+    window.addEventListener('appinstalled', function () { deferred = null; buttons.forEach(function (b) { b.hidden = true; }); if (banner) banner.hidden = true; dialog.close(); });
     standalone.addEventListener('change', update);
+    function showGuide() {
+        instructions();
+        if (!dialog.open) dialog.showModal();
+    }
     buttons.forEach(function (button) { button.onclick = function () {
-        feedback.textContent = ''; instructions(); if (!dialog.open) dialog.showModal();
+        if (installed() || installing) return;
+        feedback.textContent = '';
+        if (deferred && !button.hasAttribute('data-install-guide')) return installNow();
+        showGuide();
     }; });
+    if (bannerClose) bannerClose.onclick = function () {
+        bannerDismissed = true;
+        try { sessionStorage.setItem('sgcp-install-banner-dismissed', '1'); } catch (_) {}
+        update();
+        window.dispatchEvent(new Event('resize'));
+    };
     dialog.querySelector('[data-install-close]').onclick = function () { dialog.close(); };
-    confirm.onclick = async function () {
-        if (!deferred) return;
-        var prompt = deferred; deferred = null; confirm.disabled = true;
+    async function installNow() {
+        if (!deferred || installing) return;
+        var prompt = deferred; deferred = null; installing = true; confirm.disabled = true;
         try {
             await prompt.prompt();
-            var result = await prompt.userChoice;
-            if (result.outcome === 'accepted') dialog.close();
-            else feedback.textContent = 'Bạn có thể thêm vào màn hình chính sau bất cứ lúc nào.';
-        } catch (_) { feedback.textContent = 'Bạn có thể thêm bằng menu trình duyệt theo hướng dẫn bên trên.'; }
-        finally { confirm.disabled = false; instructions(); }
-    };
+            await prompt.userChoice;
+            if (dialog.open) dialog.close();
+        } catch (_) {
+            feedback.textContent = 'Bạn có thể thêm bằng menu trình duyệt theo hướng dẫn bên trên.';
+            showGuide();
+        }
+        finally { installing = false; confirm.disabled = false; update(); }
+    }
+    confirm.onclick = installNow;
     update();
     if ('serviceWorker' in navigator && window.isSecureContext && script && script.dataset.worker) {
         navigator.serviceWorker.register(script.dataset.worker, {updateViaCache:'none'}).catch(function () {});

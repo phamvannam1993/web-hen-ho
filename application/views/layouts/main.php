@@ -105,6 +105,14 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 
 <!-- Thanh chính: logo - menu - nút hành động, dính khi cuộn -->
 <header class="site-header">
+    <aside class="install-banner" data-install-banner hidden aria-label="Thêm Saigon Cupid vào màn hình chính">
+        <button type="button" class="install-banner-close" data-install-banner-close aria-label="Ẩn lời mời tải app">×</button>
+        <button type="button" class="install-banner-main" data-install-app data-install-guide>
+            <img src="<?= base_url('assets/site/img/android-chrome-192x192.png') ?>" width="42" height="42" alt="">
+            <span class="install-banner-copy"><strong>Saigon Cupid</strong><small>Thêm vào màn hình chính, kết nối mỗi ngày</small></span>
+            <span class="install-banner-cta">Tải app</span>
+        </button>
+    </aside>
     <div class="container header-inner">
         <a class="brand" href="<?= site_url() ?>">
     <img src="/assets/images/logo.png" alt="<?= e($settings['site_name'] ?? 'Saigon Cupid') ?>" class="brand-logo">

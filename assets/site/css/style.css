@@ -5253,3 +5253,18 @@ button.cw-close {
     .site-header .nav-list > li > .install-menu-trigger { display:flex; align-items:center; width:100%; min-height:44px; padding:12px 14px; border-radius:10px; color:#5c5157; font-size:14px; font-weight:500; line-height:1.5; }
 }
 .site-header .nav-list > li > .install-menu-trigger[hidden] { display:none; }
+
+.install-banner { display:none; }
+.install-banner[hidden] { display:none; }
+.install-dialog .install-guide-image { display:block; width:calc(100% + 52px); max-width:none; height:auto; margin:-26px -26px 20px; border-radius:19px 19px 0 0; }
+@media(max-width:900px) {
+    .install-banner:not([hidden]) { display:flex; align-items:center; gap:4px; width:100%; padding:9px 12px 9px 6px; border-bottom:1px solid #f1d8e1; background:#fff2f6; }
+    .install-banner-close { flex:0 0 28px; width:28px; height:36px; padding:0; border:0; background:transparent; color:#9a6375; font-size:25px; cursor:pointer; }
+    .install-banner-main { display:flex; flex:1; align-items:center; gap:10px; min-width:0; padding:0; border:0; background:transparent; color:#37232d; text-align:left; font:inherit; cursor:pointer; }
+    .install-banner-main > img { flex-shrink:0; width:42px; height:42px; border-radius:11px; }
+    .install-banner-copy { flex:1; min-width:0; }
+    .install-banner-copy strong { display:block; font-size:13px; line-height:1.4; }
+    .install-banner-copy small { display:block; margin-top:2px; color:#82616e; font-size:11px; line-height:1.4; }
+    .install-banner-cta { flex-shrink:0; padding:8px 14px; border-radius:999px; background:var(--pink,#d1273f); color:#fff; font-size:12px; font-weight:700; }
+    .install-banner button:focus-visible { outline:2px solid var(--pink,#d1273f); outline-offset:2px; }
+}

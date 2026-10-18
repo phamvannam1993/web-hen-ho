@@ -1,6 +1,6 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
 <dialog class="install-dialog" id="install-dialog" aria-labelledby="install-title">
-    <img src="<?= base_url('assets/site/img/android-chrome-192x192.png') ?>" width="64" height="64" alt="">
+    <img class="install-guide-image" src="<?= base_url('assets/site/img/sgcp-pin-guide.webp') ?>" width="1000" height="542" loading="lazy" decoding="async" alt="Minh họa biểu tượng Saigon Cupid trên màn hình chính điện thoại">
     <h2 id="install-title">Saigon Cupid trên màn hình chính</h2>
     <p>Mở nhanh bằng một biểu tượng trên điện thoại hoặc máy tính, không cần tải từ kho ứng dụng.</p>
     <ol data-install-steps></ol>
