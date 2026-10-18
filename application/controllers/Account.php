@@ -472,7 +472,9 @@ class Account extends Member_Controller
             redirect('tai-khoan/chuoi');
         }
 
+        require_once APPPATH . 'libraries/Achievements.php';
         $this->render('account/streak', array(
+            'achievements' => Achievements::sync($this->db, $me['id']),
             'title'     => 'Chuỗi hoạt động',
             's'         => $s,
             'badges'    => $this->m_streak->badges($me['id']),

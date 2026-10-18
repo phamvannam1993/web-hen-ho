@@ -17,4 +17,7 @@ RewriteRule ^(application|system|database|writable)/ - [F,L]
     <FilesMatch "\.(css|js|jpg|jpeg|png|webp|gif|svg|woff2?)$">
         Header set Cache-Control "public, max-age=2592000"
     </FilesMatch>
+    <Files "service-worker.js">
+        Header set Cache-Control "no-cache"
+    </Files>
 </IfModule>

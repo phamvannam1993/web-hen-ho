@@ -1,5 +1,6 @@
 <?php
 define('BASEPATH', __DIR__);
+define('APPPATH', dirname(__DIR__) . '/application/');
 class CI_Model {}
 require __DIR__ . '/../application/models/M_interaction.php';
 function excerpt($text, $length) { return $text; }
@@ -10,7 +11,7 @@ class MessageDb {
     public function select($sql) { return $this; }
     public function get($table) { $this->table = $table; return $this; }
     public function row_array() {
-        if ($this->table === 'likes') return null;
+        if (in_array($this->table, array('likes', 'user_streaks'), true)) return null;
         if ($this->table === 'users') return $this->status === null ? null : array('id' => 2, 'status' => $this->status);
         if ($this->table === 'user_preferences') return array('allow_message' => $this->preference);
         return $this->conversation;
@@ -19,6 +20,8 @@ class MessageDb {
         $this->inserts[] = $table;
         if ($table === 'conversations') $this->conversation = array('id' => 9);
     }
+    public function query($sql, $params = array()) { return $this; }
+    public function result_array() { return array(); }
     public function insert_id() { return 9; }
     public function update($table, $data) { return true; }
 }

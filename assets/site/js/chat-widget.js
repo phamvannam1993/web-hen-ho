@@ -246,10 +246,18 @@
     }
     function scrollDown() { bodyEl.scrollTop = bodyEl.scrollHeight; }
 
+    var directUnread = 0, groupUnread = 0;
+    root.addEventListener('cw:group-unread', function (event) {
+        groupUnread = Number(event.detail) || 0;
+        setBadge(directUnread);
+    });
     function setBadge(n) {
+        directUnread = Number(n) || 0;
+        n = directUnread + groupUnread;
         if (!badge) { return; }
         badge.textContent = n > 99 ? '99+' : n;
         badge.hidden = n <= 0;
+        badge.setAttribute('aria-label', n + ' tin chưa đọc');
     }
 
     /** Nút "N tin nhắn mới" ở góc dưới khung tin. */

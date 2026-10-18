@@ -40,6 +40,11 @@ $this->load->view('layouts/seo', array('seo_path' => $seo_path, 'can_index' => $
 ?>
 <link rel="stylesheet" href="<?= base_url('assets/site/css/style.css') ?>?v=<?= @md5_file(FCPATH.'assets/site/css/style.css') ?>">
 <link rel="icon" type="image/x-icon" href="<?= base_url('assets/site/img/favicon.ico?v=1232312131') ?>">
+<link rel="manifest" href="<?= base_url('manifest.webmanifest') ?>">
+<meta name="theme-color" content="#d1273f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Saigon Cupid">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="apple-touch-icon" sizes="180x180" href="<?= base_url('assets/site/img/apple-touch-icon.png?V=1243324243') ?>">
 
 <?php
@@ -186,12 +191,12 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
         <?php
         // Đánh dấu mục đang xem theo đường dẫn hiện tại.
         // 'match' liệt kê các nhánh URL cùng thuộc một mục, ví dụ trang cá nhân
-        // Các trang trong /nhom cùng dùng mục Nhóm chat.
+        // Các trang trong /clubs cùng dùng mục Nhóm chat.
         $nav_items = array(
             array('url' => '',              'label' => 'Trang chủ',  'match' => array('')),
             array('url' => 'hen-ho',        'label' => 'Hẹn hò',     'match' => array('hen-ho')),
             array('url' => 'tam-su',        'label' => 'Tâm sự',     'match' => array('tam-su')),
-            array('url' => 'nhom',         'label' => 'Nhóm chat', 'match' => array('nhom')),
+            array('url' => 'clubs',         'label' => 'Nhóm chat', 'match' => array('clubs')),
             array('url' => 'swipe-match',      'label' => 'Ghép đôi ẩn',   'match' => array('swipe-match')),
             array('url' => 'khu-vuc',       'label' => 'Khu vực',    'match' => array('khu-vuc')),
             array('url' => 'tin-tuc',       'label' => 'Sforum',   'match' => array('tin-tuc')),
@@ -210,6 +215,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
                 <li><a<?= $is_active ? ' class="active" aria-current="page"' : '' ?>
                        href="<?= site_url($item['url']) ?>"><?= $item['label'] ?></a></li>
             <?php endforeach; ?>
+            <li><button type="button" class="install-menu-trigger" data-install-app>Tải app</button></li>
         </ul>
 
         <div class="header-actions">
@@ -249,7 +255,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 </main>
 <?php endif; ?>
 
-<?php if (empty($bare)): ?>
+<?php if (empty($bare) && $content_view !== 'groups/detail'): ?>
 <footer class="site-footer">
     <div class="site-footer__container">
         <div class="site-footer__top">
@@ -259,6 +265,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
             </div>
         </div>
 
+        <button type="button" class="install-app-trigger install-app-footer" data-install-app>Thêm Saigon Cupid vào màn hình chính</button>
         <nav class="site-footer__policy-nav" aria-label="Liên kết chính sách">
             <a href="<?= site_url('gioi-thieu') ?>">Về chúng tôi</a>
             <a href="<?= site_url('noi-quy') ?>">Nội quy cộng đồng</a>
@@ -355,6 +362,9 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 </footer>
 <?php endif; ?>
 
+<?php $this->load->view('layouts/_install'); ?>
+<script defer src="<?= base_url('assets/site/js/install-app.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/install-app.js') ?>" data-worker="<?= base_url('service-worker.js') ?>"></script>
+
 <!-- Chat nổi: khách xem được phòng chung, muốn gửi thì phải đăng nhập.
      Thành viên chưa khai xong hồ sơ cũng chỉ được xem như khách. -->
 <div id="chat-widget" class="chat-widget" data-base="<?= site_url() ?>"
@@ -412,9 +422,9 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
                 <?php endif; ?>
 
                 <?php if (chat_groups_enabled()): ?>
-                    <p class="cw-side-label cg-sticky-heading">Nhóm đã theo dõi</p>
-                    <div class="cg-saved-list" data-cg-saved="<?= site_url('ajax/nhom/0/saved') ?>" data-panel-base="<?= site_url('ajax/nhom-panel') ?>"></div>
-                    <a class="cg-sticky-discover" href="<?= site_url('nhom') ?>"><span class="cg-sticky-discover-icon" aria-hidden="true"><?= tk_icon('plus', 'cg-icon') ?></span><span><strong>Khám phá nhóm</strong><small>Tìm thêm những kết nối mới</small></span><?= tk_icon('chevron-right', 'cg-icon') ?></a>
+                    <p class="cw-side-label cg-sticky-heading">Danh sách nhóm chat</p>
+                    <div class="cg-saved-list" data-cg-saved="<?= site_url('ajax/nhom/0/sticky') ?>" data-panel-base="<?= site_url('ajax/nhom-panel') ?>"></div>
+                    <a class="cg-sticky-discover" href="<?= site_url('clubs') ?>"><span class="cg-sticky-discover-icon" aria-hidden="true"><?= tk_icon('plus', 'cg-icon') ?></span><span><strong>Khám phá nhóm</strong><small>Tìm thêm những kết nối mới</small></span><?= tk_icon('chevron-right', 'cg-icon') ?></a>
                 <?php endif; ?>
                 <?php if ($user): ?>
                     <p class="cw-side-label">Trò chuyện riêng</p>

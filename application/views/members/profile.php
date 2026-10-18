@@ -94,6 +94,11 @@ $pp_icon = function ($name) {
                         <?php if ($m['is_vip']): ?><span class="tag-vip">VIP</span><?php endif; ?>
                         <?php if ($m['kyc_status'] === 'verified'): ?><span class="tag-verified">Đã xác minh</span><?php endif; ?>
                     </p>
+                    <div class="achievement-badges" aria-label="Huy hiệu thành tựu">
+                        <?php foreach (($achievements ?? array()) as $badge): ?>
+                            <span class="achievement-badge" title="<?= e($badge['description']) ?>"><span aria-hidden="true"><?= e($badge['icon']) ?></span> <?= e($badge['name']) ?></span>
+                        <?php endforeach; ?>
+                    </div>
                     <p class="profile-active">
                         <?= is_online($m['last_active_at']) ? 'Đang online' : 'Hoạt động ' . time_ago($m['last_active_at']) ?>
                         · <?= number_format($like_count) ?> lượt thích

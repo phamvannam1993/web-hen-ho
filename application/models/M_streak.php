@@ -62,6 +62,8 @@ class M_streak extends CI_Model
             'last_active_date' => $hom_nay,
         ));
 
+        require_once APPPATH . 'libraries/Achievements.php';
+        Achievements::sync($this->db, $user_id);
         return array('streak' => $moi, 'moc_moi' => $this->trao_moc($user_id, $moi));
     }
 

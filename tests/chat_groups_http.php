@@ -42,19 +42,13 @@ function chat_http($path,$data=null,$token=null,$cookieFile=null) {
 }
 try {
     for($i=0;$i<30;$i++) { usleep(100000); $probe=@fsockopen('127.0.0.1',18937); if ($probe) {fclose($probe);break;} }
-    $catalog = chat_http('nhom');
-    check_group($catalog[0]===200 && strpos($catalog[1], 'data-cg-card-follow')!==false, 'Discovery includes follow buttons');
-    preg_match('/data-csrf="([a-f0-9]+)"/', $catalog[1], $catalogCsrf);
-    check_group(chat_http('ajax/nhom/2/follow', array())[0]===403, 'Discovery follow requires CSRF');
-    check_group(chat_http('ajax/nhom/2/follow', array(), $catalogCsrf[1])[0]===200, 'New guest follows directly without opening room');
-    $savedGroups = chat_http('ajax/nhom/0/saved');
-    check_group(in_array(2, array_column($savedGroups[2]['groups'], 'id')), 'Discovery follow persists in saved groups');
-    $catalog = chat_http('nhom');
-    check_group(strpos($catalog[1], 'Đã theo dõi')!==false, 'Discovery displays followed state');
-    check_group(chat_http('ajax/nhom/2/unfollow', array(), $catalogCsrf[1])[0]===200, 'Discovery allows unfollow');
-    $savedGroups = chat_http('ajax/nhom/0/saved');
-    check_group(!in_array(2, array_column($savedGroups[2]['groups'], 'id')), 'Discovery unfollow removes saved group');
-    $landing = chat_http('nhom/phong-chat-an-danh');
+    check_group(chat_http('clubs/hen-ho-4-phuong')[0]===401, 'Guest direct account-only group URL requires login');
+    check_group(chat_http('ajax/nhom/1/messages')[0]===401, 'Guest cannot read account-only history');
+    check_group(chat_http('ajax/nhom-panel/1')[0]===401, 'Guest cannot open account-only sticky panel');
+    $catalog = chat_http('clubs');
+    check_group($catalog[0]===200 && strpos($catalog[1], 'data-cg-card-follow')===false, 'Discovery omits follow buttons');
+    check_group(strpos($catalog[1], 'clubs/phong-chat-an-danh')!==false, 'Discovery includes direct room link');
+    $landing = chat_http('clubs/phong-chat-an-danh');
     if ($landing[0] !== 200) { echo $landing[1]; throw new RuntimeException('Landing failed. Log: '.$log); }
     check_group(strpos($landing[1],'data-group-chat') !== false,'Group landing renders real chat panel');
     preg_match('/data-csrf="([a-f0-9]+)"/',$landing[1],$csrf);
@@ -82,7 +76,7 @@ try {
     check_group(chat_http('writable/chat-media/does-not-exist.webp')[0]===403,'Dev server blocks direct private-media paths');
     // Create a logged-in fixture using only the session file issued to this isolated test client.
     $memberCookies=tempnam(sys_get_temp_dir(),'cg-member-');
-    $memberLanding=chat_http('nhom/phong-chat-an-danh',null,null,$memberCookies);
+    $memberLanding=chat_http('clubs/phong-chat-an-danh',null,null,$memberCookies);
     preg_match('/data-csrf="([a-f0-9]+)"/',$memberLanding[1],$memberCsrf);
     preg_match('/henho_session\t([^\r\n]+)/',file_get_contents($memberCookies),$sessionMatch);
     check_group(!empty($sessionMatch[1]) && preg_match('/^[a-zA-Z0-9,-]+$/D',$sessionMatch[1]),'Isolated member session established');
@@ -91,9 +85,10 @@ try {
     file_put_contents($sessionPath,file_get_contents($sessionPath).'user_id|i:2;');
     $db->where('id',2)->update('users',array('email_verified_at'=>date('Y-m-d H:i:s')));
     $memberOpen=chat_http('ajax/nhom/2/open',array(),$memberCsrf[1],$memberCookies);
-    check_group($memberOpen[0]===200 && !$memberOpen[2]['identity']['guest'],'Logged-in HTTP client uses member identity');
+    check_group($memberOpen[0]===200 && $memberOpen[2]['identity']['guest'],'Logged-in HTTP client uses anonymous identity');
+    check_group(chat_http('ajax/nhom/2/nickname',array('nickname'=>'Mây HTTP'),$memberCsrf[1],$memberCookies)[0]===200, 'Member can choose anonymous nickname');
     $memberSend=chat_http('ajax/nhom/2/send',array('content'=>'Member real profile','client_message_id'=>'http_member_message_01'),$memberCsrf[1],$memberCookies);
-    check_group($memberSend[0]===200 && $memberSend[2]['message']['sender']['url']!==null,'Member message includes actual public profile');
+    check_group($memberSend[0]===200 && $memberSend[2]['message']['sender']['url']===null && $memberSend[2]['message']['sender']['name']==='Mây HTTP','Member message hides actual profile');
     $imagePath=tempnam(sys_get_temp_dir(),'cg-image-');$img=imagecreatetruecolor(30,30);imagepng($img,$imagePath);imagedestroy($img);
     $upload=array('image'=>new CURLFile($imagePath,'image/png','test.png'),'client_message_id'=>'http_member_image_01');
     check_group(chat_http('ajax/nhom/2/image',$upload,$memberCsrf[1],$memberCookies)[0]===403,'Images disabled by default in guest-enabled rooms');
@@ -129,8 +124,8 @@ try {
     } else echo "SKIP realtime runtime: install websoket dependencies first.\n";
     $db->where('id',2)->update('chat_groups',array('status'=>'closed'));
     check_group(chat_http('ajax/nhom/2/messages')[0]===403,'Closed group blocks HTTP history');
-    $closed = chat_http('nhom/phong-chat-an-danh');
+    $closed = chat_http('clubs/phong-chat-an-danh');
     check_group($closed[0]===200 && strpos($closed[1],'noindex, follow')!==false && strpos($closed[1],'data-group-chat')===false,'Closed landing is noindex with no history panel');
-    check_group(chat_http('nhom/nonexistent-room')[0]===404,'Unknown slug returns 404');
+    check_group(chat_http('clubs/nonexistent-room')[0]===404,'Unknown slug returns 404');
     echo "HTTP checks passed. Server log: $log\n";
 } finally { if (is_resource($nodeServer)) {proc_terminate($nodeServer);proc_close($nodeServer);} proc_terminate($server); proc_close($server); }

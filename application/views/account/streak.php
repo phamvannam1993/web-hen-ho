@@ -38,6 +38,22 @@ $tien_do = $ke_tiep ? (int) round(($chuoi - $moc_truoc) / max(1, $ke_tiep['ngay'
     </div>
 </div>
 
+<section class="tk-card achievement-section">
+    <h2>Thành tựu của bạn</h2>
+    <p>Ghé thăm và trò chuyện mỗi ngày để mở khóa huy hiệu. Huy hiệu đã nhận được giữ vĩnh viễn và xuất hiện trên hồ sơ công khai lẫn danh tính ẩn danh.</p>
+    <div class="achievement-grid">
+    <?php foreach (($achievements ?? array()) as $achievement): ?>
+        <article class="achievement-card<?= $achievement['earned'] ? ' is-earned' : '' ?>">
+            <span class="achievement-emblem" aria-hidden="true"><?= e($achievement['icon']) ?></span>
+            <strong><?= e($achievement['name']) ?></strong>
+            <small><?= e($achievement['description']) ?></small>
+            <?php if ($achievement['earned']): ?><span class="achievement-state">✓ Đã đạt</span>
+            <?php else: ?><label><?= (int) $achievement['progress'] ?>/<?= (int) $achievement['goal'] ?> ngày <progress value="<?= (int) $achievement['progress'] ?>" max="<?= (int) $achievement['goal'] ?>" aria-label="<?= e($achievement['name']) ?>"></progress></label><?php endif; ?>
+        </article>
+    <?php endforeach; ?>
+    </div>
+</section>
+
 <!-- Ba ô số -->
 <div class="tk-sk-stats">
     <div class="tk-sk-stat tk-sk-stat--brand">

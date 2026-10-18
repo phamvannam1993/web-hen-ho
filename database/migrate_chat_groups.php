@@ -7,6 +7,7 @@ foreach (is_readable(__DIR__ . '/../.env') ? file(__DIR__ . '/../.env', FILE_IGN
     if (preg_match('/^([A-Z_]+)=(.*)$/', trim($line), $m) && getenv($m[1]) === false) putenv($m[1] . '=' . trim($m[2], " \t\"'"));
 }
 $tables = array(
+'chat_group_reactions' => 'message_id BIGINT UNSIGNED NOT NULL, actor_key VARCHAR(80) NOT NULL, emoji VARCHAR(16) NOT NULL, PRIMARY KEY(message_id,actor_key)',
 'chat_group_migrations' => 'version VARCHAR(80) PRIMARY KEY, applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP',
 'chat_groups' => "id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, slug VARCHAR(100) NOT NULL UNIQUE, name VARCHAR(120) NOT NULL,
  description TEXT NOT NULL, rules TEXT NOT NULL, avatar VARCHAR(255) DEFAULT NULL, category VARCHAR(80) NOT NULL DEFAULT '',
@@ -49,6 +50,9 @@ try {
     if (!$pdo->query("SELECT GET_LOCK('saigoncupid.chat-groups-v1', 10)")->fetchColumn()) throw new RuntimeException('Another migration is running.');
     foreach ($tables as $name => $body) $pdo->exec("CREATE TABLE IF NOT EXISTS `$name` ($body) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     if (!$pdo->query("SHOW COLUMNS FROM chat_group_outbox LIKE 'message_id'")->fetch()) $pdo->exec('ALTER TABLE chat_group_outbox ADD message_id BIGINT UNSIGNED DEFAULT NULL');
+    foreach (array('nickname_chosen' => 'TINYINT NOT NULL DEFAULT 0', 'joined_at' => 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP') as $column => $definition) {
+        if (!$pdo->query("SHOW COLUMNS FROM chat_group_people LIKE '$column'")->fetch()) $pdo->exec("ALTER TABLE chat_group_people ADD `$column` $definition");
+    }
     $columns = array_column($pdo->query('SHOW COLUMNS FROM room_messages')->fetchAll(PDO::FETCH_ASSOC), 'Field');
     $add = array('room_id' => 'BIGINT UNSIGNED NOT NULL DEFAULT 1', 'sender_public_id' => 'CHAR(32) DEFAULT NULL',
         'actor_key' => 'VARCHAR(80) DEFAULT NULL', 'reply_to_id' => 'BIGINT UNSIGNED DEFAULT NULL',
