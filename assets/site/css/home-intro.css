@@ -42,6 +42,13 @@ a.home-intro-feature:hover { transform: translateY(-5px); color: inherit; text-d
 @media (max-width: 639px) {
     .home-intro { padding-top: 24px; }
     .home-intro-hero { padding: 28px 20px 56px; border-radius: 24px; }
+    .home-intro-copy { display: contents; }
+    .home-intro-eyebrow { grid-row: 1; margin: 0; }
+    .home-intro h1 { grid-row: 2; }
+    .home-intro-description { grid-row: 3; margin: 0; }
+    .home-intro-photo { grid-row: 4; }
+    .home-intro-search { grid-row: 5; margin-top: 0; }
+    .home-intro-actions { grid-row: 6; margin-top: 0; }
     .home-intro h1 { font-size: 32px; letter-spacing: -.6px; }
     .home-intro-eyebrow { font-size: 10px; }
     .home-intro-description { font-size: 13px; }
