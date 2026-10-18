@@ -407,6 +407,9 @@ class Ajax extends MY_Controller
             $this->realtime->phong_moi($this->db->insert_id());
         }
 
+        require_once APPPATH . 'libraries/Achievements.php';
+        Achievements::sync($this->db, $me);
+
         $out = array('ok' => true);
         if ($this->chat_image_error) {
             $out['warning'] = $this->chat_image_error;

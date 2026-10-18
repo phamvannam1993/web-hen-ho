@@ -44,11 +44,8 @@ class Groups extends MY_Controller
         $groups = $this->m_chat_group->catalog($q, $mode, $category, $province, $page);
         $more = count($groups) > 20;
         $groups = array_slice($groups, 0, 20);
-        $actor = $this->m_chat_group->actor();
         // Public landing counts only; never include chat previews in discovery HTML.
         foreach ($groups as &$g) {
-            $person = $this->m_chat_group->person($g['id'], $actor);
-            $g['following'] = $person ? $person['is_following'] && !$person['is_hidden'] : (int) $g['id'] === 1;
             $g['online'] = (int) $this->db->where('group_id', $g['id'])->where('is_banned', 0)
                 ->where('last_active_at >', date('Y-m-d H:i:s', time() - 45))->count_all_results('chat_group_people');
         }
@@ -60,6 +57,10 @@ class Groups extends MY_Controller
     {
         $group = $this->db->where('slug', $slug)->get('chat_groups')->row_array();
         if (!$group) show_404();
+        if (!$this->auth->user() && $group['identity_mode'] !== 'guest') {
+            show_error('Đăng nhập để truy cập nhóm này.', 401);
+            return;
+        }
         $this->render('groups/detail', array('title' => $group['name'], 'meta_desc' => mb_substr($group['description'], 0, 160),
             'group' => $group, 'chat_csrf' => $this->csrf(), 'seo_noindex' => $group['status'] === 'closed'));
     }
@@ -67,9 +68,11 @@ class Groups extends MY_Controller
     public function api($id = 0, $action = 'messages')
     {
         return $this->respond(function () use ($id, $action) {
+            if ($action === 'sticky') return array('groups' => $this->m_chat_group->sticky($this->m_chat_group->actor(true)));
             if ($action === 'saved') return array('groups' => $this->m_chat_group->saved($this->m_chat_group->actor(true)));
             $group = $this->m_chat_group->group($id);
             $actor = $this->m_chat_group->actor();
+            if ($action === 'profile') return array('profile'=>$this->m_chat_group->anonymous_profile($group, $actor, (string) $this->input->get('person')));
             if ($action === 'messages' || $action === 'online') {
                 if ($this->input->method() !== 'get') throw new RuntimeException('Yêu cầu GET.', 405);
                 $this->m_chat_group->access($group, $actor);
@@ -86,10 +89,11 @@ class Groups extends MY_Controller
                 $this->m_chat_group->access($group, $actor);
                 $actor = $this->m_chat_group->actor(true);
                 $p = $this->m_chat_group->person($id, $actor, true);
-                return array('identity' => array('id' => $p['public_id'], 'name' => $actor['user'] ? display_name($actor['user']) : $p['nickname'],
-                    'avatar' => $actor['user'] ? avatar_url($actor['user']['avatar'], $actor['user']['gender']) : chat_group_guest_avatar_url($p['public_id']), 'guest' => !$actor['user']),
+                return array('identity' => array('id' => $p['public_id'], 'needs_nickname' => $group['identity_mode'] === 'guest' && $actor['user'] && !$p['nickname_chosen'], 'name' => $actor['user'] && $group['identity_mode'] !== 'guest' ? display_name($actor['user']) : $p['nickname'],
+                    'avatar' => $actor['user'] && $group['identity_mode'] !== 'guest' ? avatar_url($actor['user']['avatar'], $actor['user']['gender']) : chat_group_guest_avatar_url($p['public_id']), 'guest' => $group['identity_mode'] === 'guest' || !$actor['user']),
                     'ticket' => $this->realtime->group_ticket($id, $p['public_id']), 'ws_url' => $this->realtime->url());
             }
+            if ($action === 'nickname') { $this->m_chat_group->choose_nickname($group, $actor, (string) $this->input->post('nickname')); return array(); }
             if ($action === 'send') {
                 $this->m_chat_group->access($group, $actor, true);
                 return array('message' => $this->m_chat_group->send($group, $actor, (string) $this->input->post('content'),

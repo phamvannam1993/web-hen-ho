@@ -5204,3 +5204,52 @@ button.cw-close {
 @media (prefers-reduced-motion: reduce) {
     [data-member-feed].is-loading [data-feed-status]::before { animation: none; }
 }
+
+/* Achievement badges on public, account and anonymous profiles. */
+.achievement-badges { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
+.achievement-badge { display:inline-flex; align-items:center; gap:5px; padding:6px 10px; border:1px solid #e9c56b; border-radius:999px; background:#fff8e4; color:#75521b; font-size:12px; font-weight:700; }
+.achievement-section { padding:24px; margin-bottom:24px; }
+.achievement-section > p { color:#647386; line-height:1.6; }
+.achievement-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-top:16px; }
+.achievement-card { display:flex; flex-direction:column; gap:8px; padding:16px; border:1px solid #e4e7ec; border-radius:12px; background:#fafbfc; }
+.achievement-card.is-earned { border-color:#e9c56b; background:#fff8e4; }
+.achievement-emblem { font-size:30px; }
+.achievement-card small { line-height:1.5; color:#647386; }
+.achievement-state { color:#23794d; font-weight:700; }
+.achievement-card progress { display:block; width:100%; margin-top:6px; accent-color:#ce4168; }
+
+.install-app-trigger { display:inline-flex; align-items:center; justify-content:center; padding:8px 12px; border:1px solid #f1c5d0; border-radius:999px; background:#fff1f5; color:var(--pink,#d1273f); font:inherit; font-size:12px; font-weight:600; cursor:pointer; }
+.install-app-trigger:hover { background:#fce0e8; }
+.install-app-trigger[hidden] { display:none; }
+.install-app-footer { margin:12px 0 18px; }
+.install-dialog { box-sizing:border-box; width:min(440px,calc(100vw - 32px)); max-height:85dvh; overflow:auto; padding:26px; border:1px solid #eadfe5; border-radius:20px; background:#fff; color:#2c2c2c; box-shadow:0 16px 60px #382d3840; font-family:inherit; }
+.install-dialog::backdrop { background:#24182266; }
+.install-dialog > img { border-radius:14px; }
+.install-dialog h2 { margin:16px 0 10px; font-size:21px; line-height:1.4; }
+.install-dialog p,.install-dialog li { font-size:14px; line-height:1.7; }
+.install-dialog > p { color:#6d6d6d; }
+.install-dialog ol { padding-left:22px; }
+.install-dialog li { margin:10px 0; }
+.install-dialog-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+.install-dialog-actions button { padding:10px 16px; border:1px solid #eadfe5; border-radius:999px; background:#fff; color:#6d6d6d; font:inherit; font-size:13px; cursor:pointer; }
+.install-dialog-actions .install-confirm { border-color:var(--pink,#d1273f); background:var(--pink,#d1273f); color:#fff; }
+.install-confirm[hidden] { display:none; }
+.install-dialog :focus-visible,.install-app-trigger:focus-visible { outline:2px solid var(--pink,#d1273f); outline-offset:3px; }
+.install-feedback:empty { display:none; }
+
+.nav-list > li > .install-menu-trigger { display:block; padding:10px 13px; border:0; border-radius:8px; background:transparent; color:#40404a; font:inherit; font-size:13px; font-weight:600; white-space:nowrap; cursor:pointer; }
+.nav-list > li > .install-menu-trigger:hover { background:#fdf0f7; color:var(--pink); }
+.nav-list > li:has(> .install-menu-trigger[hidden]) { display:none; }
+.nav-list > li > .install-menu-trigger[hidden] { display:none; }
+@media(max-width:900px) { .nav-list > li > .install-menu-trigger { width:100%; padding:12px 16px; text-align:left; } }
+
+/* Every main-menu item occupies an equal column, including the install action. */
+@media(min-width:901px) {
+    .site-header .nav-list { width:100%; gap:0; justify-content:space-between; }
+    .site-header .nav-list > li { flex:1 1 0; min-width:0; }
+    .site-header .nav-list > li > :is(a,.install-menu-trigger) { box-sizing:border-box; display:flex; align-items:center; justify-content:center; width:100%; min-height:48px; margin:0; padding:14px 8px 13px; border-radius:8px 8px 0 0; font-size:13px; font-weight:600; line-height:20px; text-align:center; }
+}
+@media(max-width:900px) {
+    .site-header .nav-list > li > .install-menu-trigger { display:flex; align-items:center; width:100%; min-height:44px; padding:12px 14px; border-radius:10px; color:#5c5157; font-size:14px; font-weight:500; line-height:1.5; }
+}
+.site-header .nav-list > li > .install-menu-trigger[hidden] { display:none; }

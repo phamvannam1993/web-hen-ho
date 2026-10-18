@@ -8,7 +8,6 @@
     document.documentElement.classList.toggle('tk-inbox-open', isOpen);
     function fitInbox() {
         document.documentElement.classList.toggle('tk-inbox-list', !isOpen && mobile.matches);
-        if (!isOpen && !mobile.matches) return;
         var bottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
         document.querySelectorAll('.tk-bnav, .site-mobile-nav').forEach(function (nav) {
             if (nav.getClientRects().length && getComputedStyle(nav).visibility !== 'hidden') {

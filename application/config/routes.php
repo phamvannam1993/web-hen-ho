@@ -166,8 +166,8 @@ $route['trang/(:any)']            = 'pages/view/$1';
 $route['(bao-mat|an-toan|contact-us)'] = 'pages/policy/$1';
 
 /* AJAX */
-$route['nhom'] = 'groups/index';
-$route['nhom/([a-z0-9-]+)'] = 'groups/detail/$1';
+$route['clubs'] = 'groups/index';
+$route['clubs/([a-z0-9-]+)'] = 'groups/detail/$1';
 $route['nhom-media/(:num)'] = 'groups/media/$1';
 $route['ajax/nhom/(:num)/(:any)'] = 'groups/api/$1/$2';
 $route['ajax/nhom-panel/(:num)'] = 'groups/panel/$1';

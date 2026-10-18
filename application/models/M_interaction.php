@@ -469,6 +469,8 @@ class M_interaction extends CI_Model
             'content'         => $content,
         ));
         $message_id = $this->db->insert_id();
+        require_once APPPATH . 'libraries/Achievements.php';
+        Achievements::sync($this->db, $sender_id);
         $this->db->where('id', $conv['id'])->update('conversations', array(
             'last_message_id' => $message_id,
             'last_message_at' => date('Y-m-d H:i:s'),

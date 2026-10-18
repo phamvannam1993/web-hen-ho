@@ -67,3 +67,7 @@ a.home-intro-feature:hover { transform: translateY(-5px); color: inherit; text-d
     .home-intro-feature { transition: none; }
     .home-intro-feature:hover { transform: none; }
 }
+
+.home-intro-button.home-intro-install { border:1px solid var(--intro-primary); background:transparent; color:var(--intro-primary); }
+.home-intro-button.home-intro-install:hover { background:#fff1f5; }
+.home-intro-install[hidden] { display:none; }

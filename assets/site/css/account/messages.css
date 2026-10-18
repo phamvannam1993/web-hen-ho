@@ -227,8 +227,11 @@ html.tk-inbox-open .tk-card.tk-ms.is-open {
   body.is-messages-page .tk-main { padding: 0; }
   body.is-messages-page .tk-main__in { max-width: none; margin: 0; gap: 0; }
   body.is-messages-page .tk-card.tk-ms {
-    height: calc(100dvh - var(--tk-head, 0px));
+    height: var(--inbox-height, calc(100dvh - var(--tk-head, 0px)));
     min-height: 0;
+    grid-template-rows: minmax(0, 1fr);
     border: 0; border-radius: 0; box-shadow: none;
   }
+  body.is-messages-page .tk-ms-pane { overflow: hidden; }
+  body.is-messages-page :is(.tk-ms-head, .tk-ms-form, .tk-ms-seen, .tk-ms-side__h) { flex-shrink: 0; }
 }

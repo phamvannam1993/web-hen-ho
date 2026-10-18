@@ -15,6 +15,7 @@ function mask_contact($phone) { return '090***123'; }
 $m = array_fill_keys(array('birthday', 'last_active_at', 'created_at', 'avatar', 'gender', 'job', 'province_name', 'education', 'marital_status', 'height_cm', 'weight_kg', 'smoking', 'drinking', 'phone'), '');
 $m = array_merge($m, array('id' => 1, 'slug' => 'test-profile', 'display_name' => '<Test User>', 'is_vip' => false, 'kyc_status' => '', 'has_children' => 0, 'bio' => '<script>unsafe</script>'));
 $prefs = $photos = $posts = $comments = $interests = $quick_links = array();
+$achievements = array(array('name'=>'Mười ngày bền bỉ', 'icon'=>'🔥', 'description'=>'Đăng nhập 10 ngày liên tiếp'));
 $like_count = 1;
 $liked = $liked_me = $matched = false;
 set_error_handler(function ($severity, $message, $file, $line) { throw new ErrorException($message, 0, $severity, $file, $line); });
@@ -23,6 +24,7 @@ foreach (array(null, array('id' => 2, 'avatar' => '', 'gender' => 'male'), array
     ob_start();
     include FCPATH . 'application/views/members/profile.php';
     $html = ob_get_clean();
+    if (strpos($html, 'Mười ngày bền bỉ') === false || strpos($html, 'Đăng nhập 10 ngày liên tiếp') === false) throw new Exception('Public profile must display earned badge and description');
     $expected_cover = $user ? '/uploads/2026/10/custom-cover.jpg' : '/assets/site/images/profile-cover.jpg';
     if (substr_count($html, 'src="' . $expected_cover . '"') !== 2) throw new Exception('Both covers must use the uploaded image or default fallback');
     if ($user && strpos($html, '/assets/site/images/profile-cover.jpg') !== false) throw new Exception('Custom cover must replace default cover');

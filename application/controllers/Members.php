@@ -90,7 +90,9 @@ class Members extends MY_Controller
             $this->m_interaction->record_view($me['id'], $member['id']);
         }
 
+        require_once APPPATH . 'libraries/Achievements.php';
         $this->render('members/profile', array(
+            'achievements' => Achievements::badges($this->db, $member['id']),
             'title'      => $member['display_name'],
             'meta_desc'  => excerpt($member['bio'], 160),
             'm'          => $member,

@@ -39,6 +39,7 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
             </form>
             <div class="home-intro-actions">
                 <a class="home-intro-button" href="<?= site_url('swipe-match') ?>">Ghép đôi online <span aria-hidden="true">→</span></a>
+                <button type="button" class="home-intro-button home-intro-install" data-install-app>Tải app <span aria-hidden="true">↓</span></button>
                 <span class="home-intro-trust"><?= $ic($ic_shield) ?> Chân thành &amp; riêng tư</span>
             </div>
         </div>
@@ -53,7 +54,7 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
         <?php
         $features = array(
             array($ic_heart, 'Ghép đôi ẩn danh', 'Khám phá những người phù hợp với bạn.', 'swipe-match'),
-            array($ic_chat, 'Phòng Chat ẩn danh', 'Bắt đầu trò chuyện, làm quen người bạn thích.', 'nhom/phong-chat-an-danh'),
+            array($ic_chat, 'Phòng Chat ẩn danh', 'Bắt đầu trò chuyện, làm quen người bạn thích.', 'clubs/phong-chat-an-danh'),
             array($ic_users, 'Cộng đồng tâm sự', 'Chia sẻ câu chuyện, kết nối bạn mới.', 'tam-su'),
             array($ic_star, 'Hẹn hò Online', 'Những kết nối mới dành riêng cho bạn.', 'hen-ho'),
             array('<path d="M12 3c1 4-3 5-3 8 0 1.5 1 2 2 2-1-3 3-4 3-6 3 3 6 6 6 10a8 8 0 0 1-16 0c0-4 3-7 4-9 0 3 1 4 2 4-1-4 2-5 2-9z"/>', 'Chuỗi hoạt động', 'Duy trì hoạt động, nhận những phần thưởng thú vị.', 'tai-khoan/chuoi'),

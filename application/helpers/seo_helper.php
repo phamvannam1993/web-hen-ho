@@ -7,7 +7,7 @@ function seo_indexable($path)
     $path = trim($path, '/');
     return $path === '' || preg_match('~^(hen-ho|tam-su)(/(nam|nu|gay|les))?(/trang/[1-9][0-9]*)?$~D', $path)
         || preg_match('~^tin-tuc(?:/[a-z0-9-]+|/trang/[1-9][0-9]*)?$~D', $path)
-        || preg_match('~^nhom(?:/[a-z0-9-]+)?$~D', $path)
+        || preg_match('~^clubs(?:/[a-z0-9-]+)?$~D', $path)
         || in_array($path, array('gioi-thieu', 'contact-us', 'noi-quy', 'dieu-khoan', 'bao-mat', 'an-toan', 'swipe-match'), true);
 }
 
