@@ -86,6 +86,19 @@
             file.click();
         };
         if (file) file.onchange = function () { if (file.files[0]) self.send(file.files[0]); };
+        var groupMenuToggle = root.querySelector('[data-cg-group-menu-toggle]');
+        this.groupMenu = root.querySelector('[data-cg-group-menu]');
+        this.groupMenu.id = 'cg-group-menu-' + key();
+        groupMenuToggle.setAttribute('aria-controls', this.groupMenu.id);
+        this.groupMenu.addEventListener('toggle', function () { groupMenuToggle.setAttribute('aria-expanded', self.groupMenu.matches(':popover-open') ? 'true' : 'false'); });
+        groupMenuToggle.onclick = function () {
+            if (self.groupMenu.matches(':popover-open')) { self.groupMenu.hidePopover(); return; }
+            self.groupMenu.showPopover();
+            var bounds = groupMenuToggle.getBoundingClientRect();
+            self.groupMenu.style.left = Math.max(8, Math.min(bounds.right - self.groupMenu.offsetWidth, window.innerWidth - self.groupMenu.offsetWidth - 8)) + 'px';
+            self.groupMenu.style.top = Math.max(8, Math.min(bounds.bottom + 6, window.innerHeight - self.groupMenu.offsetHeight - 8)) + 'px';
+        };
+        this.groupMenu.addEventListener('click', function (event) { if (event.target.closest('button')) self.groupMenu.hidePopover(); }, true);
         root.querySelector('[data-cg-notifications]').onclick = function () { self.act('notifications', {enabled: self.group && self.group.notifications ? '0' : '1'}); };
         root.querySelector('[data-cg-share]').onclick = function () {
             var url = self.group ? self.group.url : location.href;
@@ -358,6 +371,7 @@
     };
     Chat.prototype.destroy = function () {
         if (this.destroyed) return;
+        if (this.groupMenu && this.groupMenu.matches(':popover-open')) this.groupMenu.hidePopover();
         if (this.emojiOutsideClick) document.removeEventListener('click', this.emojiOutsideClick);
         if (this.form && this.closeEmojiPicker) this.form.content.removeEventListener('focus', this.closeEmojiPicker);
         if (this.emojiPanel) this.emojiPanel.remove();
@@ -387,8 +401,10 @@
         close();
         widget.dispatchEvent(new CustomEvent('cw:open-group'));
         groupPanel = node('div', 'cg-widget-panel');
-        var back = node('button', 'cg-widget-back', '‹ Về danh sách');
+        var back = node('button', 'cg-widget-back');
         back.type = 'button';
+        back.setAttribute('aria-label', 'Về danh sách nhóm'); back.title = 'Về danh sách nhóm';
+        back.innerHTML = '<svg class="cg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>';
         back.onclick = function () { widget.dispatchEvent(new CustomEvent('cw:group-back')); };
         var content = node('div', 'cg-widget-content', 'Đang tải nhóm…');
         groupPanel.append(back, content); main.append(groupPanel);
@@ -398,7 +414,13 @@
             return r.text();
         }).then(function (html) {
             if (groupPanel !== current) return;
-            content.innerHTML = html; mount(content.querySelector('[data-group-chat]'));
+            content.innerHTML = html;
+            var header = content.querySelector('.cg-header-who');
+            if (header) {
+                var pageBack = header.querySelector('.cg-groups-back');
+                if (pageBack) pageBack.replaceWith(back); else header.prepend(back);
+            }
+            mount(content.querySelector('[data-group-chat]'));
         }).catch(function (e) { if (groupPanel === current) content.textContent = e.message; });
     }
     function refreshSaved() {
