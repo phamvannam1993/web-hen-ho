@@ -46,6 +46,7 @@
     var visualViewport = window.visualViewport;
     var savedScrollY = 0;
     var pageLocked = false;
+    var lockedHeader = null, headerSpacer = null;
     function fitAboveNav() {
         var height = bottomNav && bottomNav.getClientRects().length ? bottomNav.offsetHeight : 0;
         var top = visualViewport ? visualViewport.offsetTop : 0;
@@ -61,6 +62,19 @@
         var open = !panel.hidden;
         if (open && !pageLocked) {
             savedScrollY = window.scrollY;
+            var header = document.querySelector('.site-header');
+            if (header && getComputedStyle(header).position === 'sticky') {
+                var bounds = header.getBoundingClientRect();
+                if (bounds.top <= 0 && bounds.bottom > 0) {
+                    lockedHeader = header;
+                    headerSpacer = document.createElement('div');
+                    headerSpacer.style.height = header.offsetHeight + 'px';
+                    headerSpacer.setAttribute('aria-hidden', 'true');
+                    header.before(headerSpacer);
+                    header.style.setProperty('--cw-header-top', bounds.top + 'px');
+                    header.classList.add('cw-locked-header');
+                }
+            }
             document.body.style.setProperty('--cw-scroll-top', -savedScrollY + 'px');
             document.documentElement.classList.add('cw-page-locked');
             pageLocked = true;
@@ -68,6 +82,12 @@
             document.documentElement.classList.remove('cw-page-locked');
             document.documentElement.style.removeProperty('--cw-keyboard-inset');
             document.body.style.removeProperty('--cw-scroll-top');
+            if (lockedHeader) {
+                lockedHeader.classList.remove('cw-locked-header');
+                lockedHeader.style.removeProperty('--cw-header-top');
+                headerSpacer.remove();
+                lockedHeader = null; headerSpacer = null;
+            }
             pageLocked = false;
             window.scrollTo(0, savedScrollY);
         }

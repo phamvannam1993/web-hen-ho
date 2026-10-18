@@ -89,10 +89,7 @@ foreach ($groups as $items) {
         <button type="button" class="tk-btn tk-btn--ghost tk-btn--icon-sm tk-side__close" data-tk-drawer="close" aria-label="Đóng menu">
             <?= tk_icon('x') ?>
         </button>
-        <button type="button" class="tk-btn tk-btn--outline tk-btn--icon-sm tk-side__collapse" data-tk-collapse
-                aria-label="Thu gọn menu" title="Thu gọn menu">
-            <?= tk_icon('panel-close', 'tk-ic tk-ic--close') ?><?= tk_icon('panel-open', 'tk-ic tk-ic--open') ?>
-        </button>
+
 
         <div class="tk-side__in">
             <div class="tk-me">
@@ -125,7 +122,7 @@ foreach ($groups as $items) {
                                 $so     = isset($it[2]) ? $tk[$it[2]] : 0;
                                 ?>
                                 <li>
-                                    <a class="tk-nav__a<?= $active ? ' is-active' : '' ?>" title="<?= e($it[0]) ?>"
+                                    <a class="tk-nav__a<?= $active ? ' is-active' : '' ?>" aria-label="<?= e($it[0]) ?>" data-tk-tooltip="<?= e($it[0]) ?>"
                                        <?= $active ? 'aria-current="page"' : '' ?>
                                        href="<?= site_url($slug === 'tin-nhan' ? 'messenger' : 'tai-khoan' . ($slug !== '' ? '/' . $slug : '')) ?>">
                                         <?= tk_icon($it[1]) ?>
@@ -187,18 +184,36 @@ foreach ($groups as $items) {
     doCao();
     window.addEventListener('resize', doCao);
 
-    var KEY = 'tk-side-collapsed', btn = document.querySelector('[data-tk-collapse]');
-    function collapse(on) {
-        body.classList.toggle('tk-collapsed', on);
-        var nhan = on ? 'Mở rộng menu' : 'Thu gọn menu';
-        btn.setAttribute('aria-label', nhan); btn.title = nhan;
+    var tooltip = document.createElement('div');
+    tooltip.className = 'tk-nav-tooltip'; tooltip.id = 'tk-nav-tooltip';
+    tooltip.setAttribute('role', 'tooltip'); tooltip.hidden = true;
+    document.body.appendChild(tooltip);
+    var tooltipLink = null;
+    function hideTooltip() {
+        tooltip.hidden = true;
+        if (tooltipLink) { tooltipLink.removeAttribute('aria-describedby'); tooltipLink.classList.remove('is-tooltip-open'); }
+        tooltipLink = null;
     }
-    collapse(true);
-    try { collapse(localStorage.getItem(KEY) !== '0'); } catch (e) {}
-    btn.addEventListener('click', function () {
-        var on = !body.classList.contains('tk-collapsed');
-        collapse(on);
-        try { localStorage.setItem(KEY, on ? '1' : '0'); } catch (e) {}
+    function showTooltip(link) {
+        hideTooltip();
+        if (!window.matchMedia('(min-width: 1024px)').matches) return;
+        tooltipLink = link; tooltip.textContent = link.dataset.tkTooltip;
+        tooltip.hidden = false; link.setAttribute('aria-describedby', tooltip.id);
+        var bounds = link.getBoundingClientRect();
+        link.classList.add('is-tooltip-open');
+        tooltip.style.height = bounds.height + 'px';
+        tooltip.style.left = (bounds.right - 1) + 'px';
+        tooltip.style.top = bounds.top + 'px';
+    }
+    side.querySelectorAll('[data-tk-tooltip]').forEach(function (link) {
+        link.addEventListener('mouseenter', function () { showTooltip(link); });
+        link.addEventListener('mouseleave', hideTooltip);
+        link.addEventListener('focus', function () { showTooltip(link); });
+        link.addEventListener('blur', hideTooltip);
+        link.addEventListener('click', hideTooltip);
     });
+    document.addEventListener('keydown', function (event) { if (event.key === 'Escape') hideTooltip(); });
+    document.addEventListener('scroll', hideTooltip, true);
+    window.addEventListener('resize', hideTooltip);
 })();
 </script>

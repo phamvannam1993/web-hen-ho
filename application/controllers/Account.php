@@ -405,8 +405,15 @@ class Account extends Member_Controller
         }
 
         $conversations = $this->m_interaction->conversations($me['id']);
+        $chat_groups = array();
+        $this->load->helper('chat_group');
+        if (chat_groups_enabled()) {
+            $this->load->model('m_chat_group');
+            $chat_groups = $this->m_chat_group->sticky($this->m_chat_group->actor());
+        }
         $this->render('account/messages', array(
             'title'         => 'Tin nhắn',
+            'chat_groups'   => $chat_groups,
             'conversations' => $conversations,
             'messages'      => $messages,
             'partner'       => $partner,

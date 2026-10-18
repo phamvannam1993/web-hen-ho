@@ -3504,6 +3504,7 @@ body.is-bare .chat-widget {
 }
 .cw-panel[hidden] { display: none; }
 html.cw-page-locked { overflow: hidden; overscroll-behavior: none; }
+.site-header.cw-locked-header { position:fixed; top:var(--cw-header-top,0px); left:0; right:0; }
 html.cw-page-locked body {
     position: fixed; top: var(--cw-scroll-top, 0px); left: 0; right: 0;
     overflow: hidden; overscroll-behavior: none;
@@ -4252,6 +4253,12 @@ html.cw-page-locked .site-mobile-nav { bottom: var(--cw-keyboard-inset, 0px); }
 }
 
 @media (min-width: 901px) {
+    .site-header > .container.header-inner {
+        box-sizing: border-box;
+        width: 100%;
+        max-width: none;
+        padding-inline: 24px;
+    }
     .header-inner {
         flex-wrap: wrap; column-gap: 18px; row-gap: 0;
         min-height: 0; padding: 12px 0 0;

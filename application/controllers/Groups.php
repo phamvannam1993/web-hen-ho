@@ -58,7 +58,7 @@ class Groups extends MY_Controller
         $group = $this->db->where('slug', $slug)->get('chat_groups')->row_array();
         if (!$group) show_404();
         if (!$this->auth->user() && $group['identity_mode'] !== 'guest') {
-            show_error('Đăng nhập để truy cập nhóm này.', 401);
+            redirect('dang-nhap?next=' . urlencode('clubs/' . $group['slug']));
             return;
         }
         $this->render('groups/detail', array('title' => $group['name'], 'meta_desc' => mb_substr($group['description'], 0, 160),

@@ -2,11 +2,15 @@
     'use strict';
     var card = document.querySelector('.tk-ms');
     if (!card) return;
+    document.documentElement.classList.add('tk-inbox-page');
     var viewport = window.visualViewport;
     var isOpen = card.classList.contains('is-open');
     var mobile = window.matchMedia('(max-width: 1023.98px)');
     document.documentElement.classList.toggle('tk-inbox-open', isOpen);
     function fitInbox() {
+        isOpen = card.classList.contains('is-open');
+        document.documentElement.classList.toggle('tk-inbox-open', isOpen);
+        document.body.classList.toggle('is-inbox-open', isOpen);
         document.documentElement.classList.toggle('tk-inbox-list', !isOpen && mobile.matches);
         var bottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
         document.querySelectorAll('.tk-bnav, .site-mobile-nav').forEach(function (nav) {
@@ -23,6 +27,7 @@
     }
     window.addEventListener('resize', scheduleFit);
     window.addEventListener('load', scheduleFit);
+    card.addEventListener('inbox:change', scheduleFit);
     if (viewport) {
         viewport.addEventListener('resize', scheduleFit);
         viewport.addEventListener('scroll', scheduleFit);
@@ -39,9 +44,8 @@
         if (event.touches.length === 1) previousY = event.touches[0].clientY;
     }, { passive: true });
     document.addEventListener('touchmove', function (event) {
-        if (!isOpen && !mobile.matches) return;
         if (event.touches.length !== 1) return;
-        var area = event.target.closest('.tk-ms-body, .tk-ms-list, .tk-ms .emoji-list, .tk-side__in, .modal-body');
+        var area = event.target.closest('.tk-ms-body, .tk-ms-private-content, .tk-ms-groups__list, .tk-ms .emoji-list, .tk-side .tk-nav, .modal-body');
         var delta = event.touches[0].clientY - previousY;
         previousY = event.touches[0].clientY;
         if (!area || area.scrollHeight <= area.clientHeight ||

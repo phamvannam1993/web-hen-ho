@@ -108,8 +108,6 @@ body.tk-app {
   z-index: 20;
 }
 .tk-side__in { display: flex; flex-direction: column; height: 100%; padding-top: 20px; }
-.tk-side__collapse { position: absolute; right: -16px; top: 24px; z-index: 2; }
-.tk-side__collapse .tk-ic--open { display: none; }
 .tk-side .tk-side__close { display: none; }
 
 .tk-me { margin: 0 12px; padding: 12px; border-radius: var(--tk-r-xl); background: var(--tk-grad-blush); }
@@ -164,16 +162,14 @@ body.tk-app {
 
 /* Thu gọn cột trái (chỉ trên máy tính) */
 @media (min-width: 1024px) {
-  body.tk-collapsed .tk-side { width: 84px; }
-  body.tk-collapsed .tk-side__txt,
-  body.tk-collapsed .tk-nav__label,
-  body.tk-collapsed .tk-nav__txt,
-  body.tk-collapsed .tk-nav .tk-count { display: none; }
-  body.tk-collapsed .tk-me { margin: 0 8px; padding: 8px; }
-  body.tk-collapsed .tk-me__row { justify-content: center; }
-  body.tk-collapsed .tk-nav__a { justify-content: center; padding: 10px 8px; }
-  body.tk-collapsed .tk-side__collapse .tk-ic--close { display: none; }
-  body.tk-collapsed .tk-side__collapse .tk-ic--open { display: block; }
+  .tk-side { width: 84px; }
+  .tk-side__txt,
+  .tk-nav__label,
+  .tk-nav__txt,
+  .tk-nav .tk-count { display: none; }
+  .tk-me { margin: 0 8px; padding: 8px; }
+  .tk-me__row { justify-content: center; }
+  .tk-nav__a { justify-content: center; padding: 10px 8px; }
 }
 
 /* ── Điện thoại: thanh trên, ngăn kéo, thanh dưới ──────────────────────── */
@@ -256,7 +252,6 @@ body.tk-app {
   body.tk-drawer-open { overflow: hidden; }
   body.tk-drawer-open .tk-side { transform: none; visibility: visible; }
   body.tk-drawer-open .tk-overlay { display: block; }
-  .tk-side .tk-side__collapse { display: none; }
   .tk-side .tk-side__close { display: inline-flex; position: absolute; right: 12px; top: 12px; z-index: 2; }
   .tk-side__in { padding-top: 56px; }
 
@@ -764,3 +759,10 @@ a.tk-stat:hover { box-shadow: var(--tk-shadow-float); }
 
 /* Trang Tin nhắn đã có khung chat riêng — ẩn tab "Trò chuyện" nổi của site để nó không che nút Gửi */
 body.tk-app:has(.tk-ms) .chat-widget { display: none; }
+
+.tk-nav-tooltip { position:fixed; z-index:250; display:flex; align-items:center; box-sizing:border-box; max-width:240px; padding:8px 16px 8px 10px; border:0; border-radius:0 999px 999px 0; background:#ffedf2; color:#d1273f; box-shadow:none; font:600 13px/1.5 "Segoe UI",sans-serif; pointer-events:none; }
+@media(min-width:1024px) {
+  .tk-nav__a.is-tooltip-open { border-radius:999px 0 0 999px; background:#ffedf2; color:#d1273f; }
+}
+.tk-nav-tooltip[hidden] { display:none; }
+@media(max-width:1023.98px) { .tk-nav-tooltip { display:none; } }

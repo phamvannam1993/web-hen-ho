@@ -273,7 +273,6 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
             </div>
         </div>
 
-        <button type="button" class="install-app-trigger install-app-footer" data-install-app>Thêm Saigon Cupid vào màn hình chính</button>
         <nav class="site-footer__policy-nav" aria-label="Liên kết chính sách">
             <a href="<?= site_url('gioi-thieu') ?>">Về chúng tôi</a>
             <a href="<?= site_url('noi-quy') ?>">Nội quy cộng đồng</a>
