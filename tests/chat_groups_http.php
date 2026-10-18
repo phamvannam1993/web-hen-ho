@@ -37,7 +37,7 @@ function chat_http($path,$data=null,$token=null,$cookieFile=null) {
     curl_setopt_array($ch,array(CURLOPT_RETURNTRANSFER=>true,CURLOPT_COOKIEFILE=>$cookieFile ?: $cookies,CURLOPT_COOKIEJAR=>$cookieFile ?: $cookies,CURLOPT_TIMEOUT=>10));
     if ($data !== null) { curl_setopt($ch,CURLOPT_POST,true); curl_setopt($ch,CURLOPT_POSTFIELDS,array_filter($data,function($v){return $v instanceof CURLFile;}) ? $data : http_build_query($data)); }
     if ($token !== null) curl_setopt($ch,CURLOPT_HTTPHEADER,array('X-Chat-CSRF: '.$token));
-    $text = curl_exec($ch); $code = curl_getinfo($ch,CURLINFO_HTTP_CODE); curl_close($ch);
+    $text = curl_exec($ch); $code = curl_getinfo($ch,CURLINFO_HTTP_CODE);
     return array($code,$text,json_decode($text,true));
 }
 try {
@@ -56,6 +56,7 @@ try {
     $bad = chat_http('ajax/nhom/2/open',array());
     check_group($bad[0]===403,'POST without CSRF rejected');
     $open = chat_http('ajax/nhom/2/open',array(),$csrf[1]);
+    check_group(is_array($open[2]), 'Guest open returns clean JSON without PHP warning output');
     check_group($open[0]===200 && $open[2]['identity']['guest'],'Guest opens room without logging in');
     check_group(!empty($open[2]['ticket']),'Guest gets scoped realtime ticket');
     $send = array('content'=>'HTTP guest message','client_message_id'=>'http_guest_message_01');
@@ -68,7 +69,7 @@ try {
     $list = chat_http('ajax/nhom/2/messages');
     check_group($list[0]===200 && count($list[2]['messages'])>0,'Guest reads group history');
     $legacy = chat_http('ajax/phong-chat');
-    check_group($legacy[0]===200 && strpos($legacy[1],'HTTP guest message')===false,'Legacy room endpoint excludes new room');
+    check_group($legacy[0]===403 && strpos($legacy[1],'HTTP guest message')===false,'Legacy account-only room denies guests and excludes anonymous-room messages');
     $withoutConsent = $send; $withoutConsent['guest_consent']='0'; $withoutConsent['client_message_id']='http_guest_message_02';
     check_group(chat_http('ajax/nhom/2/send',$withoutConsent,$csrf[1])[0]===200,'Guest can send without acknowledgement');
     $public = chat_http('ajax/nhom/1/send',$send,$csrf[1]);
@@ -89,7 +90,7 @@ try {
     check_group(chat_http('ajax/nhom/2/nickname',array('nickname'=>'Mây HTTP'),$memberCsrf[1],$memberCookies)[0]===200, 'Member can choose anonymous nickname');
     $memberSend=chat_http('ajax/nhom/2/send',array('content'=>'Member real profile','client_message_id'=>'http_member_message_01'),$memberCsrf[1],$memberCookies);
     check_group($memberSend[0]===200 && $memberSend[2]['message']['sender']['url']===null && $memberSend[2]['message']['sender']['name']==='Mây HTTP','Member message hides actual profile');
-    $imagePath=tempnam(sys_get_temp_dir(),'cg-image-');$img=imagecreatetruecolor(30,30);imagepng($img,$imagePath);imagedestroy($img);
+    $imagePath=tempnam(sys_get_temp_dir(),'cg-image-');$img=imagecreatetruecolor(30,30);imagepng($img,$imagePath);unset($img);
     $upload=array('image'=>new CURLFile($imagePath,'image/png','test.png'),'client_message_id'=>'http_member_image_01');
     check_group(chat_http('ajax/nhom/2/image',$upload,$memberCsrf[1],$memberCookies)[0]===403,'Images disabled by default in guest-enabled rooms');
     $db->where('id',2)->update('chat_groups',array('allow_images'=>1));
