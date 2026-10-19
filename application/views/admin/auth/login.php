@@ -7,6 +7,7 @@
 <title>Đăng nhập quản trị</title>
 <meta name="robots" content="noindex, nofollow, noarchive">
 <link rel="stylesheet" href="<?= base_url('assets/admin/css/admin.css') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/admin/css/theme.css') ?>?v=<?= filemtime(FCPATH.'assets/admin/css/theme.css') ?>">
 </head>
 <body class="login-page">
     <form class="login-card" method="post">

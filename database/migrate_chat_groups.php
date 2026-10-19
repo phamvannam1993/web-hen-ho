@@ -56,7 +56,7 @@ try {
     $columns = array_column($pdo->query('SHOW COLUMNS FROM room_messages')->fetchAll(PDO::FETCH_ASSOC), 'Field');
     $add = array('room_id' => 'BIGINT UNSIGNED NOT NULL DEFAULT 1', 'sender_public_id' => 'CHAR(32) DEFAULT NULL',
         'actor_key' => 'VARCHAR(80) DEFAULT NULL', 'reply_to_id' => 'BIGINT UNSIGNED DEFAULT NULL',
-        'client_message_id' => 'VARCHAR(80) DEFAULT NULL', 'deleted_by' => 'BIGINT UNSIGNED DEFAULT NULL');
+        'client_message_id' => 'VARCHAR(80) DEFAULT NULL', 'deleted_by' => 'BIGINT UNSIGNED DEFAULT NULL', 'caption' => 'TEXT DEFAULT NULL');
     foreach ($add as $name => $definition) if (!in_array($name, $columns, true)) $pdo->exec("ALTER TABLE room_messages ADD `$name` $definition");
     $pdo->exec('ALTER TABLE room_messages MODIFY user_id BIGINT UNSIGNED NULL');
     $indexes = array_column($pdo->query('SHOW INDEX FROM room_messages')->fetchAll(PDO::FETCH_ASSOC), 'Key_name');
@@ -64,11 +64,15 @@ try {
         if (!in_array($name, $indexes, true)) $pdo->exec('ALTER TABLE room_messages ADD ' . ($name === 'uq_group_retry' ? 'UNIQUE ' : '') . "KEY $name $fields");
     }
     $pdo->beginTransaction();
+    // Seed only on first installation; names/slugs can be edited or groups deleted later.
+    $seeded = $pdo->query("SELECT 1 FROM chat_group_migrations WHERE version='chat-groups-v1'")->fetchColumn();
+    if (!$seeded) {
     $pdo->exec("INSERT IGNORE INTO chat_groups (id,slug,name,description,rules,identity_mode,allow_images,sort_order)
         VALUES (1,'hen-ho-4-phuong','Nhóm Hẹn Hò 4 Phương','Làm quen và kết nối bạn mới.','Tôn trọng nhau. Không spam hoặc chia sẻ thông tin riêng của người khác.','public',1,100)");
     $pdo->exec("INSERT IGNORE INTO chat_groups (slug,name,description,rules,identity_mode)
         VALUES ('phong-chat-an-danh','Phòng Chat Ẩn Danh','Khách trò chuyện bằng nickname ẩn danh. Thành viên đăng nhập dùng hồ sơ thật.','Tôn trọng nhau. Không spam, quấy rối hoặc tiết lộ thông tin cá nhân.','guest')");
     $pdo->exec("INSERT IGNORE INTO chat_group_migrations(version) VALUES ('chat-groups-v1')");
+    }
     $pdo->commit();
     $pdo->query("SELECT RELEASE_LOCK('saigoncupid.chat-groups-v1')");
     echo "chat-groups-v1 ready. Existing messages remain in group 1. Enable CHAT_GROUPS_ENABLED=1 after validation.\n";

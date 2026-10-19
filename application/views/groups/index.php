@@ -9,7 +9,7 @@
 <select name="province" aria-label="Khu vực"><option value="">Toàn quốc</option><?php foreach ($provinces as $p): ?><option value="<?= (int) $p['id'] ?>" <?= $province === (int) $p['id'] ? 'selected' : '' ?>><?= e($p['name']) ?></option><?php endforeach; ?></select><button><?= tk_icon('search', 'cg-icon') ?> Tìm nhóm</button>
 </form>
 <div class="cg-catalog"><?php foreach ($groups as $g): ?>
-<article class="cg-group-card"><div class="cg-card-head"><?php if ($g['avatar']): ?><img src="<?= base_url($g['avatar']) ?>" alt=""><?php else: ?><span class="cg-room-icon" aria-hidden="true"><?= tk_icon($g['identity_mode'] === 'guest' ? 'eye-off' : 'message', 'cg-icon') ?></span><?php endif; ?>
+<article class="cg-group-card"><div class="cg-card-head"><img src="<?= base_url($g['avatar'] ?: 'assets/images/' . ($g['identity_mode'] === 'guest' ? 'chat-guest.svg' : 'chat-community.svg')) ?>" alt="">
 <?php if ($g['identity_mode'] === 'guest'): ?><span class="cg-tag">Khách ẩn danh</span><?php endif; ?>
 </div><h2><?= e($g['name']) ?></h2><p><?= e($g['description']) ?></p>
 <div class="cg-card-meta"><span><i class="cg-online-dot" aria-hidden="true"></i><?= (int) $g['online'] ?> đang online<?= $g['status'] === 'readonly' ? ' · Chỉ đọc' : '' ?></span>

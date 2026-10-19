@@ -4253,7 +4253,7 @@ html.cw-page-locked .site-mobile-nav { bottom: var(--cw-keyboard-inset, 0px); }
 }
 
 @media (min-width: 901px) {
-    .site-header > .container.header-inner {
+    body:is(.is-messages-page, .is-group-chat-page) .site-header > .container.header-inner {
         box-sizing: border-box;
         width: 100%;
         max-width: none;

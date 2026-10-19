@@ -95,16 +95,40 @@
 .cg-feed:empty::before { content:'Chưa có tin nhắn. Hãy bắt đầu câu chuyện.'; display:block; margin:36px auto; padding:18px; color:var(--cg-muted); font-size:12px; text-align:center; }
 .cg-message { display:flex; align-items:flex-start; gap:9px; margin-bottom:18px; overflow-wrap:anywhere; }
 .cg-avatar { width:34px; height:34px; flex-shrink:0; border:2px solid #fff; border-radius:50%; object-fit:cover; }
+.cg-avatar-frame { position:relative; display:block; flex:0 0 auto; align-self:flex-start; }
+.cg-avatar-frame > .cg-avatar { display:block; }
+.cg-avatar-vip { display:none; }
+.is-vip .cg-avatar-vip { position:absolute; z-index:1; top:-10px; left:50%; transform:translateX(-50%); display:block; padding:1px 5px; border:1px solid #e0ad38; border-radius:6px; background:linear-gradient(135deg,#fff3b3,#f4ca59); color:#684306; font-size:8px; font-weight:800; line-height:13px; white-space:nowrap; pointer-events:none; box-shadow:0 2px 5px #91650c26; }
+.cg-message.is-vip { margin-top:12px; }
+.cg-message.is-vip .cg-avatar, .cg-chat .is-vip .cg-anonymous-avatar { border-color:#d8a62e; box-shadow:0 0 0 2px #ffdf8766; }
+.cg-chat .is-vip .cg-anonymous-avatar .cg-avatar { box-shadow:none; }
 .cg-bubble { flex:0 1 auto; min-width:0; max-width:calc(100% - 45px); padding:10px 13px; border:1px solid #f0e6eb; border-radius:4px 16px 16px; background:#fff; box-shadow:0 1px 2px #382d3805; }
 .cg-message.is-mine { flex-direction:row-reverse; }
 .cg-message.is-mine .cg-bubble { border-color:#f2cbd5; border-radius:16px 4px 16px 16px; background:#fce8ee; }
+.cg-message .cg-bubble, .cg-message.is-mine .cg-bubble { background:var(--cg-bubble-bg, #ff99bd); border-color:#00000024; color:#302d38; }
+.cg-message.is-vip .cg-bubble { border-color:#c49324; box-shadow:0 0 0 1px #f8d47880,0 3px 12px #bd8b2030; animation:cg-vip-glow 3s ease-in-out infinite; }
+@keyframes cg-vip-glow { 50% { box-shadow:0 0 0 2px #f8d47899,0 3px 18px #bd8b2050; } }
+@media(prefers-reduced-motion:reduce) { .cg-message.is-vip .cg-bubble { animation:none; } }
+.cg-bubble .cg-text, .cg-bubble .cg-meta > :first-child { color:#302d38; }
+.cg-bubble .cg-meta time, .cg-bubble .cg-quote { color:#403947; }
 .cg-meta { display:flex; align-items:baseline; gap:12px; font-size:11px; line-height:1.5; }
+/* Tạm ẩn tên người gửi và giờ chat trong nhóm ẩn danh. */
+.cg-chat[data-identity-mode="guest"] .cg-meta { display:none; }
 .cg-message.is-mine .cg-meta { justify-content:flex-end; text-align:right; }
 .cg-meta > :first-child { color:var(--cg-ink); font-weight:600; }
 .cg-meta time { flex-shrink:0; color:var(--cg-muted); font-size:10px; }
 .cg-message.is-mine .cg-meta time { order:-1; }
 .cg-text { margin:5px 0 0; font-size:13px; line-height:1.75; white-space:pre-wrap; overflow-wrap:anywhere; }
 .cg-image { display:block; width:240px; max-width:100%; height:180px; margin-top:8px; border-radius:10px; background:#f8f4f5; object-fit:contain; }
+.cg-chat .cg-image-open { display:block; max-width:100%; min-height:0; margin:8px 0 0; padding:0; border:0; border-radius:10px; background:transparent; cursor:zoom-in; }
+.cg-chat .cg-image-open:hover { background:transparent; border-color:transparent; }
+.cg-image-open .cg-image { margin:0; }
+.cg-image-open:focus-visible { outline:3px solid var(--cg-brand); outline-offset:3px; }
+.cg-image-viewer { box-sizing:border-box; width:fit-content; max-width:calc(100vw - 32px); max-height:calc(100dvh - 32px); margin:auto; padding:12px; overflow:auto; border:1px solid var(--cg-border); border-radius:18px; background:#fff; color:var(--cg-ink); box-shadow:0 20px 80px #0005; }
+.cg-image-viewer::backdrop { background:#211820cc; }
+.cg-image-viewer > img { display:block; max-width:100%; max-height:calc(100dvh - 120px); margin:auto; border-radius:10px; object-fit:contain; }
+.cg-chat .cg-image-viewer-close { position:absolute; top:18px; right:18px; width:36px; height:36px; min-height:36px; padding:0; border:1px solid #eadfe5; border-radius:50%; background:#fffffff2; color:#382d38; font-size:26px; box-shadow:0 2px 8px #0002; }
+.cg-image-caption { max-width:760px; margin:10px 4px 2px; font-size:13px; line-height:1.6; white-space:pre-wrap; overflow-wrap:anywhere; }
 .cg-message-actions { display:flex; flex-shrink:0; align-self:center; gap:3px; }
 .cg-message.is-mine .cg-text { text-align:right; }
 .cg-message.is-mine .cg-message-actions { justify-content:flex-end; }
@@ -123,6 +147,13 @@
 .cg-composer textarea { flex:1; width:100%; min-width:0; min-height:42px; max-height:100px; padding:10px 14px; resize:none; border:1px solid var(--cg-border); border-radius:16px; background:#fdfafb; color:var(--cg-ink); font:inherit; font-size:13px; line-height:20px; }
 .cg-composer textarea:focus { border-color:#df829b; background:#fff; }
 .cg-composer textarea::placeholder { color:var(--cg-muted); }
+.cg-composer { position:relative; flex-direction:column; align-items:stretch; }
+.cg-composer-controls { display:flex; align-items:flex-end; gap:8px; width:100%; min-width:0; }
+.cg-attachment-preview { position:relative; align-self:flex-start; margin:4px 0 4px; padding:6px; border:1px solid var(--cg-border); border-radius:14px; background:#fff; box-shadow:0 4px 18px #382d3820; }
+.cg-attachment-preview[hidden] { display:none; }
+.cg-composer:has(.cg-attach) .cg-attachment-preview { margin-left:50px; }
+.cg-attachment-preview img { display:block; width:104px; height:104px; object-fit:cover; border-radius:9px; }
+.cg-chat .cg-attachment-remove { position:absolute; top:-9px; right:-9px; width:26px; height:26px; min-width:26px; min-height:26px; padding:0; border:1px solid var(--cg-border); background:#fff; color:var(--cg-brand); font-size:20px; }
 .cg-composer button { min-width:42px; min-height:42px; padding:10px; border-color:transparent; }
 .cg-composer button[type=submit] { padding-inline:16px; background:var(--cg-brand); color:#fff; font-weight:600; }
 .cg-composer button[type=submit]:hover { background:var(--cg-hover); }
@@ -193,6 +224,8 @@
     .cg-avatar { width:30px; height:30px; }
     .cg-bubble { max-width:calc(100% - 39px); padding:8px 11px; }
     .cg-composer { gap:5px; padding:10px 10px max(10px,env(safe-area-inset-bottom)); }
+    .cg-composer-controls { gap:5px; }
+    .cg-composer:has(.cg-attach) .cg-attachment-preview { margin-left:47px; }
     /* Avoid Safari zoom when focusing the composer. */
     .cg-composer textarea { font-size:16px; }
     .cg-composer button[type=submit] { padding-inline:12px; font-size:12px; }
@@ -221,9 +254,32 @@
 @media(max-width:640px) {
     .cg-chat .cg-anonymous-avatar { flex-basis:30px; width:30px; height:30px; }
 }
-.cg-anonymous-profile { width:min(320px,90vw); border:0; border-radius:16px; padding:24px; box-shadow:0 12px 50px #0004; }
-.cg-anonymous-profile::backdrop { background:#0006; }
+.cg-anonymous-profile { box-sizing:border-box; width:min(360px,calc(100vw - 32px)); max-height:calc(100dvh - 48px); overflow-y:auto; margin:auto; border:1px solid var(--cg-border); border-radius:24px; padding:28px 24px 20px; background:linear-gradient(180deg,#fff0f5 0,#fff 155px); color:var(--cg-ink); font-family:inherit; text-align:center; box-shadow:0 20px 70px #59283b33; }
+.cg-anonymous-profile::backdrop { background:#382d3866; backdrop-filter:blur(4px); }
+.cg-profile-avatar { display:block; width:72px; height:72px; margin:0 auto 14px; border:4px solid #fff; border-radius:50%; object-fit:cover; background:var(--cg-soft); box-shadow:0 4px 16px #cf315920; }
+.cg-profile-label { color:var(--cg-brand); font-size:10px; font-weight:700; letter-spacing:.1em; }
+.cg-anonymous-profile h3 { margin:6px 0 18px; color:var(--cg-ink); font-size:22px; line-height:1.35; overflow-wrap:anywhere; }
+.cg-profile-stats { padding:12px 14px; border:1px solid var(--cg-border); border-radius:14px; background:#fdf8fa; text-align:left; }
+.cg-profile-stats p { margin:0; font-size:12px; line-height:1.8; }
+.cg-profile-stats p + p { margin-top:4px; }
+.cg-profile-note { display:block; margin:14px 0 0; color:var(--cg-muted); font-size:11px; line-height:1.7; }
+.cg-anonymous-profile .achievement-badges:empty { display:none; }
+.cg-anonymous-profile .achievement-badges { justify-content:center; margin-top:12px; }
 .cg-anonymous-profile button { display:block; margin-top:16px; }
+.cg-anonymous-profile .cg-view-real-profile { width:100%; min-height:46px; padding:12px 16px; border:1px solid var(--cg-brand); border-radius:999px; background:var(--cg-brand); color:#fff; font-size:14px; font-weight:700; box-shadow:0 4px 12px #b9234c30; }
+.cg-anonymous-profile .cg-view-real-profile:hover { border-color:var(--cg-hover); background:var(--cg-hover); color:#fff; }
+.cg-anonymous-profile button:focus-visible { outline:3px solid var(--cg-brand); outline-offset:3px; }
+.cg-anonymous-profile .cg-profile-close { width:100%; min-height:40px; margin-top:8px; border-color:transparent; background:transparent; color:var(--cg-muted); font-size:12px; }
+.cg-anonymous-profile .cg-profile-close:hover { border-color:transparent; background:var(--cg-soft); color:var(--cg-brand); }
+.cg-confirm-symbol { display:grid; place-items:center; width:68px; height:68px; margin:0 auto 18px; border:1px solid #f1c7d4; border-radius:50%; background:#ffe4ee; color:var(--cg-brand); font-size:18px; font-weight:800; }
+.cg-profile-confirm h3 { font-size:20px; margin-bottom:12px; }
+.cg-confirm-message { margin:0 0 22px; color:var(--cg-muted); font-size:13px; line-height:1.8; }
+.cg-profile-confirm .cg-view-real-profile[hidden] { display:none; }
+.cg-confirm-wallet { margin:0 0 18px; padding:12px 14px; border:1px solid var(--cg-border); border-radius:14px; background:#fdf8fa; color:var(--cg-muted); font-size:12px; }
+.cg-wallet-line { display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:5px 0; text-align:left; }
+.cg-wallet-line strong { color:var(--cg-ink); white-space:nowrap; }
+.cg-wallet-line:last-child { margin-top:6px; padding-top:10px; border-top:1px solid var(--cg-border); }
+.cg-wallet-line:last-child strong { color:var(--cg-brand); }
 .cg-nickname { display:flex; flex-direction:column; flex-shrink:0; gap:7px; margin:0; padding:14px 18px; border-top:1px solid var(--cg-border); background:var(--cg-soft); }
 .cg-nickname > label { margin:0; color:var(--cg-ink); font-size:12px; font-weight:600; }
 .cg-nickname-controls { display:flex; align-items:center; gap:8px; width:100%; max-width:360px; min-width:0; }

@@ -72,6 +72,10 @@ class Groups extends MY_Controller
             if ($action === 'saved') return array('groups' => $this->m_chat_group->saved($this->m_chat_group->actor(true)));
             $group = $this->m_chat_group->group($id);
             $actor = $this->m_chat_group->actor();
+            if ($action === 'profile-quote') {
+                if ($this->input->method() !== 'get') throw new RuntimeException('Yêu cầu GET.', 405);
+                return $this->m_chat_group->profile_quote($group, $actor, (string) $this->input->get('person'));
+            }
             if ($action === 'profile') return array('profile'=>$this->m_chat_group->anonymous_profile($group, $actor, (string) $this->input->get('person')));
             if ($action === 'messages' || $action === 'online') {
                 if ($this->input->method() !== 'get') throw new RuntimeException('Yêu cầu GET.', 405);
@@ -83,6 +87,7 @@ class Groups extends MY_Controller
                     'group' => $this->m_chat_group->summary($group, $actor)) + $changes;
             }
             $this->guard();
+            if ($action === 'profile-unlock') return $this->m_chat_group->unlock_profile($group, $actor, (string) $this->input->post('person'));
             if ($action === 'follow' || $action === 'unfollow') $actor = $this->m_chat_group->actor(true);
             // Create guest identity only on explicit open, not a background GET.
             if ($action === 'open') {
@@ -128,7 +133,7 @@ class Groups extends MY_Controller
         $name = substr(hash_hmac('sha256', $group['id'] . ':' . $actor['key'] . ':' . $key, $this->config->item('encryption_key')), 0, 48) . '.webp';
         if (!file_exists($dir . '/' . $name) && !imagewebp($img, $dir . '/' . $name, 85)) throw new RuntimeException('Chưa lưu được ảnh.', 503);
         unset($img);
-        return array('message' => $this->m_chat_group->send($group, $actor, $name, $key, (int) $this->input->post('reply_to_id'), 'image'));
+        return array('message' => $this->m_chat_group->send($group, $actor, $name, $key, (int) $this->input->post('reply_to_id'), 'image', (string) $this->input->post('content')));
     }
 
     public function media($id)

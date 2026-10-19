@@ -6,6 +6,26 @@ class M_chat_group extends CI_Model
 {
     public function group($id) { return $this->db->where('id', (int) $id)->get('chat_groups')->row_array(); }
 
+    public function delete_group($id)
+    {
+        $admin = $this->auth->user();
+        if (!$admin || $admin['role'] !== 'admin') throw new RuntimeException('Chỉ quản trị viên được xóa nhóm.', 403);
+        $id = (int) $id;
+        if ($id === 1) throw new RuntimeException('Không thể xóa nhóm mặc định. Bạn có thể đóng nhóm này.', 422);
+        $this->db->trans_begin();
+        try {
+            $group = $this->db->query('SELECT * FROM chat_groups WHERE id=? FOR UPDATE', array($id))->row_array();
+            if (!$group) throw new RuntimeException('Không tìm thấy nhóm.', 404);
+            $this->db->query('DELETE reactions FROM chat_group_reactions reactions JOIN room_messages messages ON messages.id=reactions.message_id WHERE messages.room_id=?', array($id));
+            foreach (array('chat_group_reports','chat_group_moderators','chat_group_people','chat_group_outbox') as $table) $this->db->where('group_id', $id)->delete($table);
+            $this->db->where('room_id', $id)->delete('room_messages');
+            $this->db->where('id', $id)->delete('chat_groups');
+            $this->db->insert('chat_group_logs', array('group_id'=>$id, 'actor_id'=>$admin['id'], 'action'=>'delete_group', 'target'=>$group['slug'], 'reason'=>'Xóa nhóm: ' . $group['name']));
+            if (!$this->db->trans_status()) throw new RuntimeException('Không xóa được nhóm. Vui lòng thử lại.', 503);
+            $this->db->trans_commit();
+        } catch (Throwable $e) { $this->db->trans_rollback(); throw $e; }
+    }
+
     public function actor($create = false)
     {
         $user = $this->auth->user();
@@ -101,7 +121,7 @@ class M_chat_group extends CI_Model
     private function rows($group_id, $actor)
     {
         $blocked = $this->blocked_keys($actor);
-        $this->db->select('r.*, p.nickname AS guest_name, p.public_id AS person_id, g.identity_mode, u.display_name, u.nickname, u.avatar, u.gender, u.slug')
+        $this->db->select('r.*, p.nickname AS guest_name, p.public_id AS person_id, g.identity_mode, u.display_name, u.nickname, u.avatar, u.gender, u.slug, u.is_vip, u.vip_expired_at, u.role AS sender_role')
             ->from('room_messages r')->join('chat_groups g', 'g.id = r.room_id')->join('chat_group_people p', 'p.public_id = r.sender_public_id', 'left')
             ->join('users u', 'u.id = r.user_id', 'left')->where('r.room_id', $group_id)->where('r.deleted_at', null);
         if ($blocked) {
@@ -119,10 +139,12 @@ class M_chat_group extends CI_Model
         return array('id' => (int) $r['id'], 'mine' => $actor && $key === $actor['key'],
             'sender' => array('id' => $r['person_id'] ?: null, 'name' => $member ? display_name($r) : ($r['guest_name'] ?: 'Khách ẩn danh'),
                 'avatar' => $member ? avatar_url($r['avatar'], $r['gender']) : chat_group_guest_avatar_url($r['person_id']),
-                'url' => $member && $r['slug'] ? site_url('profile/' . $r['slug']) : null, 'guest' => !$member),
+                'url' => $member && $r['slug'] ? site_url('profile/' . $r['slug']) : null, 'guest' => !$member,
+                'has_account' => !empty($r['user_id']),
+                'is_vip' => !empty($r['user_id']) && (($r['sender_role'] ?? '') === 'admin' || (!empty($r['is_vip']) && (empty($r['vip_expired_at']) || $r['vip_expired_at'] > date('Y-m-d H:i:s'))))),
             'type' => $r['type'], 'content' => $r['type'] === 'image' && preg_match('/^[a-f0-9]{48}\.webp$/D', $r['content'])
                 ? site_url('nhom-media/' . $r['id']) : ($r['type'] === 'image' ? base_url(ltrim($r['content'], '/')) : $r['content']),
-            'reactions' => $this->reactions($r['id'], $actor),
+            'caption' => $r['caption'] ?? '', 'reactions' => $this->reactions($r['id'], $actor),
             'reply_to_id' => $r['reply_to_id'] ? (int) $r['reply_to_id'] : null, 'created_at' => $r['created_at']);
     }
 
@@ -213,11 +235,53 @@ class M_chat_group extends CI_Model
         $this->access($group, $actor);
         if ($group['identity_mode'] !== 'guest') throw new RuntimeException('Không tìm thấy danh tính ẩn danh.', 404);
         $p = $this->db->where('group_id', $group['id'])->where('public_id', $public_id)->where('is_banned', 0)->get('chat_group_people')->row_array();
-        if (!$p || in_array($p['actor_key'], $this->blocked_keys($actor), true)) throw new RuntimeException('Không tìm thấy danh tính ẩn danh.', 404);
+        if (!$p || !$p['user_id'] || in_array($p['actor_key'], $this->blocked_keys($actor), true)) throw new RuntimeException('Không tìm thấy hồ sơ thành viên.', 404);
         $streak = $p['user_id'] ? $this->db->where('user_id', $p['user_id'])->get('user_streaks')->row_array() : null;
         require_once APPPATH . 'libraries/Achievements.php';
-        return array('badges'=>$p['user_id'] ? Achievements::badges($this->db, $p['user_id']) : array(), 'name'=>$p['nickname'], 'avatar'=>chat_group_guest_avatar_url($p['public_id']),
+        $member = $p['user_id'] ? $this->db->where('id', $p['user_id'])->where('status', 'active')->where('deleted_at', null)->get('users')->row_array() : null;
+        return array('can_view_profile'=>!empty($member['slug']), 'profile_cost'=>20, 'badges'=>$p['user_id'] ? Achievements::badges($this->db, $p['user_id']) : array(), 'name'=>$p['nickname'], 'avatar'=>chat_group_guest_avatar_url($p['public_id']),
             'joined_at'=>substr($p['joined_at'], 0, 10), 'streak'=>$streak && $streak['last_active_date'] >= date('Y-m-d', strtotime('-1 day')) ? (int) $streak['current_streak'] : 0);
+    }
+
+    public function profile_quote($group, $actor, $public_id)
+    {
+        $profile = $this->anonymous_profile($group, $actor, $public_id);
+        if (!$actor || !$actor['user']) throw new RuntimeException('Đăng nhập để xem hồ sơ thật.', 401);
+        if (!$profile['can_view_profile']) throw new RuntimeException('Hồ sơ không còn khả dụng.', 404);
+        $balance = (int) $this->db->select('coin_balance')->where('id', $actor['user']['id'])->get('users')->row('coin_balance');
+        return array('balance'=>$balance, 'cost'=>20, 'balance_after'=>$balance >= 20 ? $balance - 20 : null);
+    }
+
+    public function unlock_profile($group, $actor, $public_id)
+    {
+        $this->access($group, $actor);
+        if (!$actor || !$actor['user']) throw new RuntimeException('Đăng nhập để xem hồ sơ thật.', 401);
+        $profile = $this->anonymous_profile($group, $actor, $public_id);
+        if (!$profile['can_view_profile']) throw new RuntimeException('Khách ẩn danh không có hồ sơ thật để xem.', 404);
+        $person = $this->db->where('group_id', $group['id'])->where('public_id', $public_id)->get('chat_group_people')->row_array();
+        $target = $this->db->where('id', $person['user_id'])->where('status', 'active')->where('deleted_at', null)->get('users')->row_array();
+        if (!$target || !$target['slug']) throw new RuntimeException('Hồ sơ không còn khả dụng.', 404);
+        $viewer_id = (int) $actor['user']['id'];
+        if ($this->db->group_start()->where('user_id', $viewer_id)->where('blocked_id', $target['id'])->group_end()
+            ->or_group_start()->where('user_id', $target['id'])->where('blocked_id', $viewer_id)->group_end()->count_all_results('blocks')) {
+            throw new RuntimeException('Bạn không thể xem hồ sơ này.', 403);
+        }
+        $this->db->trans_begin();
+        $viewer = $this->db->query('SELECT coin_balance FROM users WHERE id=? FOR UPDATE', array($viewer_id))->row_array();
+        if (!$viewer || (int) $viewer['coin_balance'] < 20) {
+            $this->db->trans_rollback();
+            throw new RuntimeException('Bạn cần ít nhất 20 xu để xem hồ sơ thật.', 422);
+        }
+        $balance = (int) $viewer['coin_balance'] - 20;
+        $this->db->where('id', $viewer_id)->update('users', array('coin_balance'=>$balance));
+        $this->db->insert('coin_transactions', array('user_id'=>$viewer_id, 'amount'=>-20, 'balance_after'=>$balance,
+            'reason'=>'spend', 'ref_type'=>'chat_profile', 'ref_id'=>$target['id'], 'note'=>'Xem hồ sơ thật trong nhóm ẩn danh #' . $group['id']));
+        if (!$this->db->trans_status()) {
+            $this->db->trans_rollback();
+            throw new RuntimeException('Chưa mở được hồ sơ. Vui lòng thử lại.', 503);
+        }
+        $this->db->trans_commit();
+        return array('url'=>site_url('profile/' . $target['slug']), 'balance'=>$balance);
     }
 
     public function online($group, $actor)
@@ -252,12 +316,14 @@ class M_chat_group extends CI_Model
 
     public function changed($group_id, $message_id = null) { $this->db->insert('chat_group_outbox', array('group_id' => $group_id, 'message_id' => $message_id)); }
 
-    public function send($group, $actor, $content, $client_id, $reply_id = 0, $type = 'text')
+    public function send($group, $actor, $content, $client_id, $reply_id = 0, $type = 'text', $caption = '')
     {
         if (!preg_match('/^[a-zA-Z0-9_-]{16,80}$/D', $client_id)) throw new InvalidArgumentException('Mã gửi tin không hợp lệ.');
         $this->access($group, $actor, true);
         if ($type === 'text') $content = chat_group_content($content);
         elseif ($type !== 'image' || !$group['allow_images'] || !$actor['user']) throw new RuntimeException('Không được gửi ảnh trong nhóm này.', 403);
+        $caption = $type === 'image' && trim((string) $caption) !== '' ? chat_group_content($caption) : '';
+        if ($caption !== '' && !$this->db->field_exists('caption', 'room_messages')) throw new RuntimeException('Cần cập nhật dữ liệu chat trước khi gửi ảnh kèm nội dung.', 503);
         $p = $this->person($group['id'], $actor, true);
         $this->db->trans_begin();
         try {
@@ -267,7 +333,7 @@ class M_chat_group extends CI_Model
             $existing = $this->db->where('room_id', $group['id'])->where('actor_key', $actor['key'])
                 ->where('client_message_id', $client_id)->get('room_messages')->row_array();
             if ($existing) {
-                if ($existing['content'] !== $content || $existing['type'] !== $type || (int) $existing['reply_to_id'] !== (int) $reply_id) throw new RuntimeException('Mã gửi đã được dùng cho nội dung khác.', 409);
+                if ($existing['content'] !== $content || $existing['type'] !== $type || (string) ($existing['caption'] ?? '') !== $caption || (int) $existing['reply_to_id'] !== (int) $reply_id) throw new RuntimeException('Mã gửi đã được dùng cho nội dung khác.', 409);
                 $id = $existing['id'];
             } else {
                 if ($reply_id && !$this->visible_message($locked, $actor, $reply_id)) throw new RuntimeException('Tin được trả lời không còn hiển thị trong nhóm.', 422);
@@ -276,6 +342,7 @@ class M_chat_group extends CI_Model
                     'actor_key' => $actor['key'], 'sender_public_id' => $p['public_id'], 'type' => $type,
                     'content' => $content, 'client_message_id' => $client_id, 'reply_to_id' => $reply_id ?: null));
                 $id = $this->db->insert_id();
+                if ($caption !== '') $this->db->where('id', $id)->update('room_messages', array('caption'=>$caption));
                 $this->db->where('id', $group['id'])->update('chat_groups', array('last_activity_at' => date('Y-m-d H:i:s')));
                 $follow = array('is_following' => 1, 'is_hidden' => 0, 'has_posted' => 1);
                 if (!$p['is_following']) $this->db->query('UPDATE chat_group_people SET last_read_message_id=GREATEST(last_read_message_id,?) WHERE id=?', array($id, $p['id']));

@@ -47,6 +47,31 @@
         if (fallbackPopover && !fallbackPopover.contains(event.target)) closeFallbackPopover();
     }, true);
     function node(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; }
+    function outsideDialog(dialog, event) {
+        var bounds = dialog.getBoundingClientRect();
+        return event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom;
+    }
+    var backdropDialog = null;
+    document.addEventListener('pointerdown', function (event) {
+        var target = event.target;
+        backdropDialog = target instanceof HTMLDialogElement && target.open && target.closest('.cg-chat') && outsideDialog(target, event) ? target : null;
+    });
+    document.addEventListener('pointercancel', function () { backdropDialog = null; });
+    document.addEventListener('click', function (event) {
+        var dialog = backdropDialog; backdropDialog = null;
+        if (!dialog || event.target !== dialog || !dialog.open || !outsideDialog(dialog, event)) return;
+        // A modal backdrop targets its own dialog, so a click dismisses only that layer.
+        event.preventDefault(); event.stopPropagation();
+        if (dialog.dispatchEvent(new Event('cancel', {cancelable:true}))) dialog.close();
+    });
+    var bubbleColors = ['#ff99bd', '#6ee7a8', '#80c7ff', '#c4a0ff', '#ffb568', '#5cdddd', '#f4df59', '#ff9b86'];
+    function bubbleColor(id) {
+        // Mix the message ID so its random-looking color stays stable on reload.
+        var hash = Number(id) | 0;
+        hash = Math.imul(hash ^ (hash >>> 16), 0x45d9f3b);
+        hash = Math.imul(hash ^ (hash >>> 16), 0x45d9f3b);
+        return bubbleColors[((hash ^ (hash >>> 16)) >>> 0) % bubbleColors.length];
+    }
     function key() { var a = new Uint8Array(16); crypto.getRandomValues(a); return Array.from(a, function (x) { return x.toString(16).padStart(2, '0'); }).join(''); }
     var page = document.querySelector('.cg-page');
     if (page) {
@@ -131,7 +156,23 @@
             if (self.identity.needs_nickname) { self.editNickname(); return; }
             file.click();
         };
-        if (file) file.onchange = function () { if (file.files[0]) self.send(file.files[0]); };
+        this.attachmentPreview = node('div', 'cg-attachment-preview'); this.attachmentPreview.hidden = true;
+        if (this.form) {
+            var composerControls = node('div', 'cg-composer-controls');
+            while (this.form.firstChild) composerControls.append(this.form.firstChild);
+            this.form.append(this.attachmentPreview, composerControls);
+        }
+        if (file) file.onchange = function () {
+            if (!file.files[0] || self.busy) return;
+            var selected = file.files[0];
+            if (!/^image\/(jpeg|png|webp)$/.test(selected.type) || selected.size > 5242880) { self.status.textContent = 'Chọn ảnh JPEG, PNG hoặc WebP tối đa 5 MB.'; file.value = ''; return; }
+            self.clearAttachment(); self.selectedFile = selected; self.attachmentUrl = URL.createObjectURL(selected);
+            var previewImage = node('img'); previewImage.src = self.attachmentUrl; previewImage.alt = 'Ảnh đính kèm';
+            var remove = node('button', 'cg-attachment-remove', '×'); remove.type = 'button'; remove.setAttribute('aria-label', 'Bỏ ảnh đính kèm');
+            remove.onclick = function () { if (!self.busy) { self.clearAttachment(); self.form.content.focus(); } };
+            self.attachmentPreview.append(previewImage, remove); self.attachmentPreview.hidden = false;
+            self.form.content.required = false; self.form.content.focus(); self.status.textContent = '';
+        };
         var groupMenuToggle = root.querySelector('[data-cg-group-menu-toggle]');
         this.groupMenu = root.querySelector('[data-cg-group-menu]');
         this.groupMenu.id = 'cg-group-menu-' + key();
@@ -277,7 +318,7 @@
             (r.senders || []).forEach(function (sender) { self.messages.forEach(function (m) {
                 if (m.sender.id !== sender.id) return; m.sender = sender;
                 var row = self.feed.querySelector('[data-message="' + m.id + '"]');
-                if (row) { row.querySelector('.cg-meta > :first-child').textContent = sender.name; row.querySelector('.cg-avatar').src = sender.avatar; }
+                if (row) { row.querySelector('.cg-meta > :first-child').textContent = sender.name; row.querySelector('.cg-avatar').src = sender.avatar; row.classList.toggle('is-vip', !!sender.is_vip); }
             }); });
             var changed = false;
             r.messages.forEach(function (m) { if (self.messages.has(m.id)) return; self.messages.set(m.id, m); changed = true; var row = self.render(m); if (older) self.feed.insertBefore(row, self.feed.querySelector('[data-message="' + self.first + '"]')); else self.feed.append(row); });
@@ -315,11 +356,70 @@
         this.request('profile', null, {person: id}).then(function (r) {
             if (self.destroyed) return;
             var dialog = node('dialog', 'cg-anonymous-profile'), p = r.profile;
-            dialog.append(node('h3', '', p.name), node('p', '', 'Tham gia nhóm: ' + p.joined_at), node('p', '', '🔥 Chuỗi online: ' + p.streak + ' ngày'), node('small', '', 'Danh tính ẩn danh. Không hiển thị hồ sơ thật.'));
+            var profileAvatar = node('img', 'cg-profile-avatar'); profileAvatar.src = p.avatar; profileAvatar.alt = '';
+            var profileHeading = node('h3', '', p.name); profileHeading.id = 'cg-profile-heading-' + self.root.dataset.groupId;
+            dialog.setAttribute('aria-labelledby', profileHeading.id);
+            var profileStats = node('div', 'cg-profile-stats');
+            profileStats.append(node('p', '', 'Tham gia nhóm: ' + p.joined_at), node('p', '', '🔥 Chuỗi online: ' + p.streak + ' ngày'));
+            dialog.append(profileAvatar, node('span', 'cg-profile-label', 'THÀNH VIÊN NHÓM'), profileHeading, profileStats, node('small', 'cg-profile-note', 'Hồ sơ thật chỉ hiển thị sau khi xác nhận dùng 20 xu.'));
             var badges = node('div', 'achievement-badges');
             (p.badges || []).forEach(function (b) { var badge = node('span', 'achievement-badge', b.icon + ' ' + b.name); badge.title = b.description; badges.append(badge); });
             dialog.append(badges);
-            var close = node('button', '', 'Đóng'); close.type = 'button'; close.onclick = function () { dialog.close(); };
+            if (p.can_view_profile) {
+                var viewProfile = node('button', 'cg-view-real-profile', 'Xem hồ sơ thật · 20 xu'); viewProfile.type = 'button';
+                viewProfile.onclick = function () {
+                    var confirmation = node('dialog', 'cg-anonymous-profile cg-profile-confirm');
+                    var title = node('h3', '', 'Xác nhận xem hồ sơ thật');
+                    title.id = profileHeading.id + '-confirm'; confirmation.setAttribute('aria-labelledby', title.id);
+                    var symbol = node('span', 'cg-confirm-symbol', '20 xu'); symbol.setAttribute('aria-hidden', 'true');
+                    var message = node('p', 'cg-confirm-message', 'Bạn sẽ dùng 20 xu để xem hồ sơ thật của thành viên này. Mỗi lần mở từ chat sẽ tính 20 xu.');
+                    var wallet = node('div', 'cg-confirm-wallet'); wallet.setAttribute('aria-live', 'polite');
+                    function showBalance(quote) {
+                        wallet.replaceChildren();
+                        [['Số dư hiện tại', quote.balance], ['Phí xem hồ sơ', quote.cost], ['Số dư sau khi xem', quote.balance_after]].forEach(function (item) {
+                            var line = node('div', 'cg-wallet-line');
+                            line.append(node('span', '', item[0]), node('strong', '', item[1] === null ? 'Không đủ xu' : Number(item[1]).toLocaleString('vi-VN') + ' xu'));
+                            wallet.append(line);
+                        });
+                    }
+                    var accept = node('button', 'cg-view-real-profile', 'Xác nhận · 20 xu'); accept.type = 'button';
+                    accept.disabled = true;
+                    var cancel = node('button', 'cg-profile-close', 'Hủy'); cancel.type = 'button';
+                    var paying = false;
+                    cancel.onclick = function () { confirmation.close(); };
+                    confirmation.addEventListener('cancel', function (event) { if (paying) event.preventDefault(); });
+                    confirmation.addEventListener('close', function () { confirmation.remove(); viewProfile.disabled = false; if (dialog.open) viewProfile.focus(); });
+                    function showNotice(heading, detail) {
+                        title.textContent = heading; message.textContent = detail; symbol.textContent = '!';
+                        accept.hidden = true; cancel.textContent = 'Đã hiểu'; cancel.disabled = false; cancel.focus();
+                    }
+                    accept.onclick = function () {
+                        if (paying) return;
+                        paying = true; accept.disabled = true; cancel.disabled = true; accept.textContent = 'Đang mở hồ sơ…';
+                        self.request('profile-unlock', {person: id}).then(function (result) {
+                            window.location.assign(result.url);
+                        }).catch(function (e) {
+                            paying = false;
+                            showNotice(e.code === 422 ? 'Bạn chưa đủ xu' : 'Chưa thể xem hồ sơ', e.message);
+                            if (e.code === 422) self.request('profile-quote', null, {person:id}).then(function (quote) { if (confirmation.open) showBalance(quote); }).catch(function () {});
+                        });
+                    };
+                    confirmation.append(symbol, title, message, wallet, accept, cancel);
+                    viewProfile.disabled = true; self.root.append(confirmation); confirmation.showModal(); cancel.focus();
+                    if (self.root.dataset.guest === '1') showNotice('Bạn cần đăng nhập', 'Đăng nhập để dùng 20 xu xem hồ sơ thật của thành viên này.');
+                    else {
+                        wallet.textContent = 'Đang kiểm tra số dư…';
+                        self.request('profile-quote', null, {person:id}).then(function (quote) {
+                            if (!confirmation.open) return;
+                            showBalance(quote);
+                            if (quote.balance_after === null) showNotice('Bạn chưa đủ xu', 'Bạn cần thêm ' + (quote.cost - quote.balance).toLocaleString('vi-VN') + ' xu để xem hồ sơ thật.');
+                            else accept.disabled = false;
+                        }).catch(function (e) { if (confirmation.open) { wallet.replaceChildren(); showNotice('Chưa thể kiểm tra số dư', e.message); } });
+                    }
+                };
+                dialog.append(viewProfile);
+            }
+            var close = node('button', 'cg-profile-close', 'Đóng'); close.type = 'button'; close.onclick = function () { dialog.close(); };
             dialog.append(close); dialog.addEventListener('close', function () { dialog.remove(); });
             self.root.append(dialog); dialog.showModal(); close.focus();
         }).catch(function (e) { self.status.textContent = e.message; });
@@ -330,20 +430,39 @@
         if (this.reply && !this.messages.has(this.reply.id)) { this.reply = null; this.root.querySelector('[data-cg-reply]').hidden = true; }
     };
     Chat.prototype.render = function (m) {
-        var self = this, row = node('article', 'cg-message' + (m.mine ? ' is-mine' : '')); row.dataset.message = m.id;
+        var self = this, row = node('article', 'cg-message' + (m.mine ? ' is-mine' : '') + (m.sender.is_vip ? ' is-vip' : '')); row.dataset.message = m.id;
         var avatar = node('img', 'cg-avatar'); avatar.src = m.sender.avatar; avatar.alt = '';
-        if (m.sender.guest && m.sender.id) {
+        if (m.sender.guest && m.sender.has_account && m.sender.id) {
             var profileButton = node('button', 'cg-anonymous-avatar'); profileButton.type = 'button'; profileButton.setAttribute('aria-label', 'Xem thông tin ẩn danh của ' + m.sender.name);
             profileButton.append(avatar);
             profileButton.onclick = function () { self.showAnonymous(m.sender.id); };
             avatar = profileButton;
         }
+        var avatarFrame = node('span', 'cg-avatar-frame'), vipBadge = node('span', 'cg-avatar-vip', '♛ VIP');
+        vipBadge.setAttribute('aria-label', 'Thành viên VIP');
+        avatarFrame.append(avatar, vipBadge); avatar = avatarFrame;
         var bubble = node('div', 'cg-bubble'), meta = node('div', 'cg-meta'), name = node(m.sender.url ? 'a' : 'strong', '', m.sender.name);
+        bubble.style.setProperty('--cg-bubble-bg', bubbleColor(m.id));
         if (m.sender.url) name.href = m.sender.url;
         meta.append(name, node('time', '', m.created_at.slice(11, 16))); bubble.append(meta);
         if (m.reply_to_id) { var quote = node('span', 'cg-quote'); quote.dataset.quote = m.reply_to_id; bubble.append(quote); }
-        if (m.type === 'image') { var img = node('img', 'cg-image'); img.src = m.content; img.alt = 'Ảnh trong nhóm'; img.loading = 'lazy'; bubble.append(img); }
+        if (m.type === 'image') {
+            var img = node('img', 'cg-image'); img.src = m.content; img.alt = 'Ảnh trong nhóm'; img.loading = 'lazy';
+            var imageButton = node('button', 'cg-image-open'); imageButton.type = 'button'; imageButton.setAttribute('aria-label', 'Xem ảnh lớn'); imageButton.append(img);
+            imageButton.onclick = function () {
+                var viewer = node('dialog', 'cg-image-viewer'); viewer.setAttribute('aria-label', 'Xem ảnh lớn');
+                var fullImage = node('img'); fullImage.src = m.content; fullImage.alt = m.caption || 'Ảnh trong nhóm';
+                var closeImage = node('button', 'cg-image-viewer-close', '×'); closeImage.type = 'button'; closeImage.setAttribute('aria-label', 'Đóng ảnh');
+                closeImage.onclick = function () { viewer.close(); };
+                viewer.append(fullImage, closeImage);
+                if (m.caption) viewer.append(node('p', 'cg-image-caption', m.caption));
+                viewer.addEventListener('close', function () { viewer.remove(); if (imageButton.isConnected) imageButton.focus(); });
+                self.root.append(viewer); viewer.showModal(); closeImage.focus();
+            };
+            bubble.append(imageButton);
+        }
         else bubble.append(node('p', 'cg-text', m.content));
+        if (m.type === 'image' && m.caption) bubble.append(node('p', 'cg-text', m.caption));
         var actions = node('div', 'cg-message-actions');
         var menu = node('div', 'cg-message-menu'); menu.setAttribute('popover', 'auto'); menu.setAttribute('aria-label', 'Thao tác tin nhắn');
         var picker = node('div', 'cg-reaction-picker'); picker.setAttribute('popover', 'auto'); picker.setAttribute('aria-label', 'Chọn cảm xúc');
@@ -367,7 +486,12 @@
                 'Báo cáo': '<path d="M5 21V4m0 0c5-4 9 4 14 0v10c-5 4-9-4-14 0"/>',
                 'Ghim': '<path d="m9 3 6 0-1 6 4 4v2H6v-2l4-4-1-6ZM12 15v6"/>',
                 'Bỏ ghim': '<path d="m9 3 6 0-1 6 4 4v2H9M12 15v6M3 3l18 18"/>',
-                'Xóa': '<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>'
+                'Xóa': '<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>',
+                'Cấm gửi 1 giờ': '<path d="M3 3l18 18M7 4h12a2 2 0 0 1 2 2v9M5 5a2 2 0 0 0-2 1v11l4-3h7"/><circle cx="17" cy="17" r="5"/><path d="M17 14v3l2 1"/>',
+                'Gỡ cấm gửi': '<path d="M12 4H5a2 2 0 0 0-2 2v13l4-3h12a2 2 0 0 0 2-2v-3M14 5l3 3 5-6M7 9h5M7 12h9"/>',
+                'Cấm khỏi nhóm': '<circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 10-6"/><circle cx="18" cy="17" r="5"/><path d="m14.5 13.5 7 7"/>',
+                'Gỡ cấm nhóm': '<circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 10-6M15 17l3 3 5-7"/>',
+                'Đặt lại nickname': '<path d="M13 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M7 10h4M7 14h2M14 15l-3 1 1-3L20 5l2 2-8 8Z"/>'
             };
             var path = paths[label] || '<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>';
             var icon = node('span', 'cg-menu-icon');
@@ -406,24 +530,34 @@
         if (action === 'block') { self.messages.clear(); self.feed.replaceChildren(); self.last = 0; self.first = 0; self.reply = null; }
         self.load(); refreshSaved();
     }).catch(function (e) { self.status.textContent = e.message; }); };
-    Chat.prototype.send = function (file) {
+    Chat.prototype.clearAttachment = function () {
+        if (this.attachmentUrl) URL.revokeObjectURL(this.attachmentUrl);
+        this.attachmentUrl = null; this.selectedFile = null;
+        if (this.attachmentPreview) { this.attachmentPreview.replaceChildren(); this.attachmentPreview.hidden = true; }
+        var input = this.root.querySelector('[data-cg-file]'); if (input) input.value = '';
+        if (this.form) this.form.content.required = true;
+    };
+    Chat.prototype.send = function () {
         if (this.busy || !this.form || !this.identity) return;
-        var self = this, content = this.form.content.value.trim(), signature = file ? file.name + ':' + file.size + ':' + file.lastModified : content;
+        var file = this.selectedFile;
+        var self = this, content = this.form.content.value.trim(), signature = file ? file.name + ':' + file.size + ':' + file.lastModified + ':' + content : content;
         if (!file && !content) return;
         if (!this.pending || this.pending.signature !== signature || this.pending.reply !== (this.reply && this.reply.id)) this.pending = {id: key(), signature: signature, reply: this.reply && this.reply.id};
         var data = {content: content, client_message_id: this.pending.id, reply_to_id: this.pending.reply || ''};
         if (file) { var form = new FormData(); Object.keys(data).forEach(function (k) { form.append(k, data[k]); }); form.append('image', file); data = form; }
-        this.busy = true; this.form.querySelector('button[type=submit]').disabled = true;
+        this.busy = true; this.form.querySelector('button[type=submit]').disabled = true; this.form.content.disabled = true;
         this.request(file ? 'image' : 'send', data).then(function () {
-            if (!file) self.form.content.value = '';
-            var input = self.root.querySelector('[data-cg-file]'); if (input) input.value = '';
+            if (file) self.clearAttachment();
+        }).then(function () {
+            self.form.content.value = ''; self.clearAttachment();
             self.pending = null; self.reply = null; self.root.querySelector('[data-cg-reply]').hidden = true;
             self.status.textContent = ''; self.feed.scrollTop = self.feed.scrollHeight; self.load(); refreshSaved();
         }).catch(function (e) { self.status.textContent = e.message + ' Nội dung được giữ lại để bạn gửi lại.'; })
-            .finally(function () { self.busy = false; self.form.querySelector('button[type=submit]').disabled = false; });
+            .finally(function () { self.busy = false; self.form.content.disabled = false; self.form.querySelector('button[type=submit]').disabled = false; if (!self.destroyed) self.form.content.focus(); });
     };
     Chat.prototype.destroy = function () {
         if (this.destroyed) return;
+        this.clearAttachment();
         if (fallbackPopover && this.root.contains(fallbackPopover.cgAnchor)) closePopover(fallbackPopover);
         if (this.groupMenu) closePopover(this.groupMenu);
         if (this.emojiOutsideClick) document.removeEventListener('click', this.emojiOutsideClick);

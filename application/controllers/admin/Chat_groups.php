@@ -42,7 +42,7 @@ class Chat_groups extends Admin_Controller
         if ($this->input->method() === 'post') {
             if (!hash_equals($this->token(), (string) $this->input->post('chat_csrf'))) show_error('Phiên không hợp lệ.', 403);
             $name = trim((string) $this->input->post('name'));
-            $slug = $g ? $g['slug'] : trim((string) $this->input->post('slug'));
+            $slug = trim((string) $this->input->post('slug'));
             $mode = (string) $this->input->post('identity_mode');
             $status = (string) $this->input->post('status');
             $description = trim((string) $this->input->post('description'));
@@ -51,7 +51,7 @@ class Chat_groups extends Admin_Controller
             if (!$name || mb_strlen($name) > 120 || !preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/D', $slug) || strlen($slug) > 100) $error = 'Tên tối đa 120 ký tự, slug chỉ gồm chữ thường không dấu, số và gạch ngang.';
             elseif (!in_array($mode, array('public','guest'), true) || !in_array($status, array('active','readonly','closed'), true)) $error = 'Chế độ hoặc trạng thái không hợp lệ.';
             elseif (mb_strlen($description) > 2000 || mb_strlen($rules) > 4000) $error = 'Mô tả tối đa 2.000 ký tự; nội quy tối đa 4.000 ký tự.';
-            elseif (!$g && $this->db->where('slug', $slug)->count_all_results('chat_groups')) $error = 'Slug đã tồn tại.';
+            elseif ($this->db->where('slug', $slug)->where('id !=', (int) $id)->count_all_results('chat_groups')) $error = 'Slug đã tồn tại.';
             elseif ((int) $id === 1 && $mode !== 'public') $error = 'Phòng mặc định giữ chế độ công khai để tương thích chat cũ.';
             if (!$error && $moderators) {
                 $valid = $this->db->where_in('id', $moderators)->where_in('role', array('admin','moderator'))->where('status', 'active')->where('deleted_at', null)->count_all_results('users');
@@ -94,6 +94,17 @@ class Chat_groups extends Admin_Controller
         }
         $this->render('admin/chat_groups/edit', array('title' => $g ? 'Sửa nhóm chat' : 'Tạo nhóm chat', 'g' => $g, 'error' => $error,
             'chat_csrf' => $this->token(), 'moderator_ids' => $g ? implode(',', array_column($this->db->where('group_id', $id)->get('chat_group_moderators')->result_array(), 'user_id')) : ''));
+    }
+
+    public function delete($id)
+    {
+        $this->admin_only();
+        if ($this->input->method() !== 'post' || !hash_equals($this->token(), (string) $this->input->post('chat_csrf'))) show_error('Yêu cầu không hợp lệ.', 403);
+        try {
+            $this->m_chat_group->delete_group($id);
+            set_flash('success', 'Đã xóa nhóm chat và lịch sử tin nhắn của nhóm.');
+        } catch (RuntimeException $e) { set_flash('danger', $e->getMessage()); }
+        redirect('admin/chat_groups');
     }
 
     public function resolve($id)
