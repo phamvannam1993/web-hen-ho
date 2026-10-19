@@ -33,6 +33,7 @@ a.home-intro-feature:hover { transform: translateY(-5px); color: inherit; text-d
 .home-intro-feature h2 { margin: 0; font-size: 13px; font-weight: 700; line-height: 20px; }
 .home-intro-feature p { margin: 8px 0 0; font-size: 11px; line-height: 20px; color: var(--intro-muted); }
 @media (max-width: 1023px) {
+    .home-intro-search { display: none; }
     .home-intro-hero { grid-template-columns: 1fr; gap: 24px; padding: 36px 32px 56px; }
     .home-intro h1 { font-size: 42px; }
     .home-intro-photo > img { height: 290px; }
@@ -47,8 +48,7 @@ a.home-intro-feature:hover { transform: translateY(-5px); color: inherit; text-d
     .home-intro h1 { grid-row: 2; }
     .home-intro-description { grid-row: 3; margin: 0; }
     .home-intro-photo { grid-row: 4; }
-    .home-intro-search { grid-row: 5; margin-top: 0; }
-    .home-intro-actions { grid-row: 6; margin-top: 0; }
+    .home-intro-actions { grid-row: 5; margin-top: 0; }
     .home-intro h1 { font-size: 32px; letter-spacing: -.6px; }
     .home-intro-eyebrow { font-size: 10px; }
     .home-intro-description { font-size: 13px; }

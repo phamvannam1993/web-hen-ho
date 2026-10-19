@@ -342,7 +342,7 @@
         // trước vào trong đó thì ảnh tràn ra ngoài. Những ô đánh dấu
         // data-no-preview thì bỏ qua hẳn.
 
-        if (input.hasAttribute('data-no-preview')) { return; }
+        if (input.hasAttribute('data-no-preview') || input.hasAttribute('data-cg-file')) { return; }
 
         // ảnh đại diện có sẵn thẻ img cạnh bên thì cập nhật trực tiếp thẻ đó
         var target = input.getAttribute('data-preview')

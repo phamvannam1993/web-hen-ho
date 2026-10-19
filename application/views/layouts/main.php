@@ -204,7 +204,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
             array('url' => '',              'label' => 'Trang chủ',  'match' => array('')),
             array('url' => 'hen-ho',        'label' => 'Hẹn hò',     'match' => array('hen-ho')),
             array('url' => 'tam-su',        'label' => 'Tâm sự',     'match' => array('tam-su')),
-            array('url' => 'clubs',         'label' => 'Nhóm chat', 'match' => array('clubs')),
+            array('url' => 'clubs',         'label' => "Clubs Chat's", 'match' => array('clubs')),
             array('url' => 'swipe-match',      'label' => 'Ghép đôi ẩn',   'match' => array('swipe-match')),
             array('url' => 'khu-vuc',       'label' => 'Khu vực',    'match' => array('khu-vuc')),
             array('url' => 'tin-tuc',       'label' => 'Sforum',   'match' => array('tin-tuc')),

@@ -1,5 +1,83 @@
 /* Giao diện khu quản trị: sidebar tối, nội dung sáng, bảng dữ liệu gọn. */
 
+.admin-groups { width:100%; min-width:0; max-width:1440px; margin:auto; }
+.ag-toolbar { display:flex; justify-content:space-between; align-items:center; gap:20px; margin-bottom:22px; }
+.ag-toolbar h2 { margin:0; font-size:22px; }
+.ag-toolbar p { margin:6px 0 0; color:#6b7280; font-size:13px; }
+.ag-toolbar > .btn { flex-shrink:0; border-radius:10px; font-weight:600; }
+.ag-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin-bottom:20px; }
+.ag-summary > div { display:flex; flex-direction:column; padding:18px 22px; border:1px solid #eadfe5; border-radius:14px; background:linear-gradient(120deg,#fff,#fff6f9); }
+.ag-summary strong { color:var(--pink); font-size:28px; line-height:1.3; }
+.ag-summary span { margin-top:4px; color:#6b7280; font-size:12px; }
+.ag-note { padding:12px 16px; margin:0 0 22px; border-left:3px solid #d1273f; border-radius:0 8px 8px 0; background:#fff0f4; color:#79434f; font-size:12px; line-height:1.7; }
+.ag-panel { min-width:0; margin-bottom:24px; overflow:hidden; border:1px solid #e5e7eb; border-radius:16px; background:#fff; box-shadow:0 4px 18px #1f243005; }
+.ag-panel-head { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:18px 22px; border-bottom:1px solid #eee7eb; background:linear-gradient(110deg,#fff8fa,#fff); }
+.ag-panel-head h2 { margin:0; font-size:16px; }
+.ag-panel-head > span { color:#6b7280; font-size:12px; white-space:nowrap; }
+.admin-groups .table-responsive { max-width:100%; overflow-x:auto; }
+.admin-groups .table th { padding:13px 18px; background:#faf9fb; font-size:11px; letter-spacing:.03em; white-space:nowrap; }
+.admin-groups .table td { padding:16px 18px; font-size:13px; overflow-wrap:anywhere; }
+.admin-groups .table tbody tr:last-child td { border-bottom:0; }
+.ag-room { display:flex; align-items:center; gap:12px; min-width:180px; text-align:left; }
+.ag-room img { flex:0 0 44px; border:1px solid #eadfe5; border-radius:12px; object-fit:cover; background:#fff3f7; }
+.ag-room strong { display:block; font-size:14px; }
+.ag-room small { display:block; margin-top:4px; color:#88808a; font-size:11px; overflow-wrap:anywhere; }
+.ag-mode, .ag-status { display:inline-block; padding:5px 10px; border-radius:999px; background:#f2edf8; color:#75558e; font-size:11px; font-weight:600; white-space:nowrap; }
+.ag-status--active { background:#e7f7ed; color:#227343; }
+.ag-status--readonly { background:#fff3d9; color:#906113; }
+.ag-status--closed { background:#f0f1f4; color:#68707d; }
+.ag-actions { display:flex; align-items:center; flex-wrap:wrap; gap:7px; }
+.ag-actions form { margin:0; }
+.admin-groups .ag-actions .btn { min-height:32px; padding:6px 11px; border-radius:7px; font-size:12px; white-space:nowrap; }
+.admin-groups .ag-actions .btn-danger { background:#fff0f1; color:#c83043; }
+.admin-groups .ag-actions .btn-danger:hover { background:#ffe0e4; }
+.ag-empty { margin:0; padding:32px 20px; color:#8a8088; text-align:center; font-size:13px; }
+.ag-reports .card { margin:16px; padding:18px; border:1px solid #eee4e9; border-radius:12px; background:#fffbfc; }
+.ag-reports .card p { margin:0 0 12px; font-size:13px; overflow-wrap:anywhere; }
+.ag-reports .card .btn { background:#fce8ee; color:#ad2944; border-radius:8px; font-size:12px; }
+@media(max-width:700px) {
+    .ag-toolbar { align-items:flex-start; flex-direction:column; gap:14px; }
+    .ag-toolbar > .btn { width:100%; text-align:center; }
+    .ag-summary { gap:8px; }
+    .ag-summary > div { padding:14px 10px; }
+    .ag-summary strong { font-size:24px; }
+    .ag-summary span { font-size:11px; }
+    .ag-panel-head { padding:16px; }
+    .admin-groups .table-responsive { padding:10px; overflow:visible; }
+    .admin-groups .table td { padding:10px 12px; }
+    .ag-room { min-width:0; }
+    .ag-room img { flex-basis:36px; width:36px; height:36px; }
+    .ag-actions { width:100%; }
+}
+
+/* Group editor: scoped fields also cover inputs without an explicit type. */
+.admin-group-editor { width:100%; max-width:1080px; margin:0 auto; }
+.age-section { min-width:0; margin-bottom:20px; overflow:hidden; border:1px solid #e5e7eb; border-radius:16px; background:#fff; box-shadow:0 4px 18px #1f243005; }
+.age-heading { padding:20px 24px; border-bottom:1px solid #f0e9ed; background:linear-gradient(110deg,#fff8fa,#fff); }
+.age-heading h2 { margin:0; color:#1f2430; font-size:17px; font-weight:700; }
+.age-heading p { margin:5px 0 0; color:#6b7280; font-size:13px; line-height:1.6; }
+.age-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px 24px; padding:24px; }
+.age-fields > p { min-width:0; margin:0; }
+.age-fields label { display:flex; flex-direction:column; gap:8px; margin:0; color:#374151; font-size:13px; font-weight:600; }
+.age-fields input:not([type=checkbox]), .age-fields select, .age-fields textarea { display:block; width:100%; min-width:0; min-height:44px; margin:0; padding:11px 13px; border:1px solid #dce0e7; border-radius:9px; background:#fff; color:#1f2430; font:inherit; font-size:14px; font-weight:400; line-height:1.5; }
+.age-fields textarea { min-height:120px; resize:vertical; }
+.age-fields input:focus-visible, .age-fields textarea:focus-visible, .age-fields select:focus-visible { border-color:var(--pink); outline:3px solid #d1273f18; outline-offset:1px; }
+.age-fields small { display:block; margin-top:7px; color:#6b7280; font-size:12px; line-height:1.7; }
+.age-fields > :is(.age-full, p:has(textarea), p:has([name=slug]), p:has([type=checkbox])) { grid-column:1 / -1; }
+.age-fields p:has([type=checkbox]) { padding:14px 16px; border:1px solid #f1dce3; border-radius:10px; background:#fff8fa; }
+.age-fields label:has([type=checkbox]) { flex-direction:row; align-items:center; gap:10px; }
+.age-fields input[type=checkbox] { flex:0 0 auto; width:18px; height:18px; margin:0; accent-color:var(--pink); }
+.age-fields p > img { display:block; width:64px; height:64px; margin-top:12px; border:1px solid #eadfe5; border-radius:14px; object-fit:cover; }
+.age-fields input[type=file] { padding:8px; font-size:12px; }
+.age-fields input::file-selector-button { margin-right:10px; padding:6px 10px; border:0; border-radius:6px; background:#fce8ee; color:#a51f3a; font:inherit; cursor:pointer; }
+.age-actions { display:flex; justify-content:flex-end; align-items:center; gap:12px; padding:16px 0 24px; }
+.age-actions .btn { min-height:44px; padding:11px 24px; font-weight:600; text-align:center; }
+@media(max-width:700px) {
+    .age-heading { padding:16px; }
+    .age-fields { grid-template-columns:minmax(0,1fr); gap:18px; padding:16px; }
+    .age-actions .btn { flex:1; }
+}
+
 :root {
     --pink: #d1273f;   /* đỏ crimson, đồng bộ với trang ngoài */
     --blue: #2563eb;
