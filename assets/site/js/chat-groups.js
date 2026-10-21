@@ -133,7 +133,7 @@
                 self.nicknameDialog.showModal(); nickname.nickname.focus(); nickname.nickname.select();
             };
             editName.onclick = this.editNickname;
-            root.querySelector('[data-cg-cancel-name]').onclick = function () { self.nicknameDialog.close(); };
+            self.nicknameDialog.addEventListener('cancel', function (event) { event.preventDefault(); });
             nickname.onsubmit = function (e) {
                 e.preventDefault();
                 var submit = nickname.querySelector('button[type=submit]');
@@ -312,12 +312,18 @@
         query.events_cursor = this.eventsCursor || 0;
         return this.request('messages', null, query).then(function (r) {
             if (self.destroyed) return;
+            if (self.group && self.group.mode !== r.group.mode) { window.location.reload(); return; }
             self.group = r.group;
+            var groupAvatar = self.root.querySelector('[data-cg-group-avatar]');
+            if (groupAvatar && groupAvatar.getAttribute('src') !== r.group.avatar) groupAvatar.src = r.group.avatar;
             self.eventsCursor = r.events_cursor;
             (r.removed || []).forEach(function (id) { var old = self.feed.querySelector('[data-message="' + id + '"]'); if (old) old.remove(); self.messages.delete(Number(id)); });
             (r.senders || []).forEach(function (sender) { self.messages.forEach(function (m) {
-                if (m.sender.id !== sender.id) return; m.sender = sender;
+                if (m.sender.id !== sender.id) return;
+                var profileAccessChanged = m.sender.can_open_profile !== sender.can_open_profile;
+                m.sender = sender;
                 var row = self.feed.querySelector('[data-message="' + m.id + '"]');
+                if (row && profileAccessChanged) { row.replaceWith(self.render(m)); return; }
                 if (row) { row.querySelector('.cg-meta > :first-child').textContent = sender.name; row.querySelector('.cg-avatar').src = sender.avatar; row.classList.toggle('is-vip', !!sender.is_vip); }
             }); });
             var changed = false;
@@ -339,7 +345,7 @@
             if (self.onlineDialog.open) self.people();
         }).catch(function (e) {
             self.status.textContent = e.message;
-            if (e.code === 403 || e.code === 404) { self.feed.replaceChildren(); self.messages.clear(); var pin = self.root.querySelector('[data-cg-pin]'); pin.hidden = true; pin.textContent = ''; self.root.querySelector('[data-cg-people]').replaceChildren(); if (self.socket) self.socket.close(); }
+            if (e.code === 401 || e.code === 403 || e.code === 404) { self.feed.replaceChildren(); self.messages.clear(); var pin = self.root.querySelector('[data-cg-pin]'); pin.hidden = true; pin.textContent = ''; self.root.querySelector('[data-cg-people]').replaceChildren(); if (self.socket) self.socket.close(); }
         }).finally(function () {
             self.polling = false;
             self.loading.hidden = true;
@@ -351,7 +357,9 @@
             }
         });
     };
-    Chat.prototype.showAnonymous = function (id) {
+    Chat.prototype.showAnonymous = function (sender) {
+        if (!sender || sender.can_open_profile !== true || !sender.id) return;
+        var id = sender.id;
         var self = this;
         this.request('profile', null, {person: id}).then(function (r) {
             if (self.destroyed) return;
@@ -432,10 +440,10 @@
     Chat.prototype.render = function (m) {
         var self = this, row = node('article', 'cg-message' + (m.mine ? ' is-mine' : '') + (m.sender.is_vip ? ' is-vip' : '')); row.dataset.message = m.id;
         var avatar = node('img', 'cg-avatar'); avatar.src = m.sender.avatar; avatar.alt = '';
-        if (m.sender.guest && m.sender.has_account && m.sender.id) {
+        if (m.sender.guest && m.sender.can_open_profile === true && m.sender.id) {
             var profileButton = node('button', 'cg-anonymous-avatar'); profileButton.type = 'button'; profileButton.setAttribute('aria-label', 'Xem thông tin ẩn danh của ' + m.sender.name);
             profileButton.append(avatar);
-            profileButton.onclick = function () { self.showAnonymous(m.sender.id); };
+            profileButton.onclick = function () { self.showAnonymous(m.sender); };
             avatar = profileButton;
         }
         var avatarFrame = node('span', 'cg-avatar-frame'), vipBadge = node('span', 'cg-avatar-vip', '♛ VIP');
@@ -629,7 +637,7 @@
         var main = document.getElementById('cw-main');
         if (!saved || !widget || !main) return;
         close();
-        widget.dispatchEvent(new CustomEvent('cw:open-group'));
+        widget.dispatchEvent(new CustomEvent('cw:open-group', {detail: {id: id}}));
         groupPanel = node('div', 'cg-widget-panel');
         var back = node('button', 'cg-widget-back');
         back.type = 'button';
@@ -661,6 +669,8 @@
             if (widget) widget.dispatchEvent(new CustomEvent('cw:group-unread', {detail: groups.reduce(function (total, g) { return total + (Number(g.unread) || 0); }, 0)}));
             groups.forEach(function (g) {
                 var a = node('a', 'cw-row cg-sticky-row' + (g.unread ? ' is-unread' : ''));
+                a.dataset.cwGroup = g.id;
+                a.classList.toggle('is-on', !!widget && widget.dataset.activeGroup === String(g.id));
                 a.href = g.url;
                 var avatar = node('span', 'cw-row-avatar');
                 var image = node('img'); image.src = g.avatar; image.alt = ''; avatar.append(image);
@@ -677,22 +687,30 @@
                 a.onclick = function (e) { e.preventDefault(); openPanel(g.id); }; saved.append(a);
             });
             if (!groups.length) saved.append(node('p', 'cg-sticky-empty', 'Chưa có nhóm chat phù hợp.'));
-            var sidebar = document.querySelector('[data-cg-sidebar]');
-            if (sidebar) {
-                sidebar.replaceChildren();
-                r.groups.forEach(function (g) {
-                    if (g.id === 1) {
-                        var defaultAvatar = sidebar.previousElementSibling.querySelector('.cg-sidebar-avatar');
-                        if (defaultAvatar) defaultAvatar.src = g.avatar;
-                        return;
-                    }
-                    var a = node('a'), avatar = node('img', 'cg-sidebar-avatar');
-                    a.href = g.url; avatar.src = g.avatar; avatar.alt = ''; avatar.width = 32; avatar.height = 32;
-                    a.append(avatar, node('span', '', g.name + (g.unread ? ' (' + g.unread + ')' : '')));
-                    sidebar.append(a);
-                });
-            }
+
         }).catch(function () {});
+    }
+    var sidebar = document.querySelector('[data-cg-sidebar]');
+    function refreshSidebar() {
+        if (!sidebar || document.hidden) return;
+        fetch(sidebar.dataset.url, {credentials: 'same-origin'}).then(function (response) { return response.json(); }).then(function (result) {
+            if (!result.ok) return;
+            sidebar.replaceChildren();
+            result.groups.forEach(function (group) {
+                var link = node('a'), avatar = node('img', 'cg-sidebar-avatar');
+                link.href = group.url;
+                if (String(group.id) === sidebar.dataset.currentGroup) {
+                    link.classList.add('is-active'); link.setAttribute('aria-current', 'page');
+                }
+                avatar.src = group.avatar; avatar.alt = ''; avatar.width = 32; avatar.height = 32;
+                link.append(avatar, node('span', '', group.name + (group.unread ? ' (' + group.unread + ')' : '')));
+                sidebar.append(link);
+            });
+        }).catch(function () {});
+    }
+    if (sidebar) {
+        refreshSidebar(); setInterval(refreshSidebar, 5000);
+        document.addEventListener('visibilitychange', function () { if (!document.hidden) refreshSidebar(); });
     }
     if (saved) {
         refreshSaved(); setInterval(refreshSaved, 5000);

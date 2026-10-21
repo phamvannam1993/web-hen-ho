@@ -112,6 +112,18 @@ body.tk-app {
 
 .tk-me { margin: 0 12px; padding: 12px; border-radius: var(--tk-r-xl); background: var(--tk-grad-blush); }
 .tk-me__row { display: flex; align-items: center; gap: 12px; }
+.tk-me__avatar { position: relative; display: block; flex: 0 0 40px; }
+.tk-me__avatar.is-vip { margin-top: 8px; }
+.tk-me__avatar.is-vip .tk-me__av {
+  box-shadow: 0 0 0 2px #fff8dd, 0 0 0 4px #d8a62e, 0 2px 10px 4px #d8a62e33;
+}
+.tk-me__vip {
+  position: absolute; z-index: 1; top: -13px; left: 50%; transform: translateX(-50%);
+  padding: 0 5px; border: 1px solid #d8a62e; border-radius: 5px;
+  background: linear-gradient(135deg, #fff3b3, #f4ca59); color: #684306;
+  font-size: 10px; font-weight: 800; line-height: 15px; white-space: nowrap;
+  box-shadow: 0 2px 5px #91650c26;
+}
 .tk-me__av {
   width: 40px; height: 40px; flex: 0 0 40px;
   border-radius: 999px; object-fit: cover; display: block;
@@ -165,11 +177,18 @@ body.tk-app {
   .tk-side { width: 84px; }
   .tk-side__txt,
   .tk-nav__label,
-  .tk-nav__txt,
-  .tk-nav .tk-count { display: none; }
+  .tk-nav__txt { display: none; }
   .tk-me { margin: 0 8px; padding: 8px; }
   .tk-me__row { justify-content: center; }
-  .tk-nav__a { justify-content: center; padding: 10px 8px; }
+  .tk-nav__a { position: relative; justify-content: center; padding: 10px 8px; }
+  .tk-nav .tk-count:not([hidden]) {
+    position: absolute; top: 0; right: 0;
+    display: inline-flex; box-sizing: border-box;
+    min-width: 18px; height: 18px; margin: 0; padding: 0 4px;
+    border: 2px solid var(--tk-card);
+    font-size: 9px; line-height: 14px;
+    pointer-events: none;
+  }
 }
 
 /* ── Điện thoại: thanh trên, ngăn kéo, thanh dưới ──────────────────────── */
@@ -648,6 +667,34 @@ a.tk-stat:hover { box-shadow: var(--tk-shadow-float); }
 .tk-hero__name { font-size: 30px; line-height: 36px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tk-hero__pills { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
 .tk-hero__acts { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 12px; }
+.tk-hero__avatar { position: relative; flex: 0 0 auto; }
+.tk-card.tk-hero--vip { border: 1px solid #d9b65d; box-shadow: 0 4px 24px #ac7b181a; }
+.tk-hero--vip .tk-hero__in {
+  background: radial-gradient(ellipse at top right, #ffe5a0 0, transparent 65%), linear-gradient(120deg, #fffaf0, #fff0cb);
+  color: #513812;
+}
+.tk-hero--vip .tk-hero__av { box-shadow: 0 0 0 2px #fff9e9, 0 0 0 4px #d4a536; }
+.tk-hero__vip-badge {
+  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 1px 7px; border: 1px solid #c79429; border-radius: 7px;
+  background: linear-gradient(135deg, #fff2b4, #efc353); color: #60400c;
+  font-size: 10px; line-height: 16px; font-weight: 800; white-space: nowrap;
+}
+.tk-hero__vip-badge .tk-ic { width: 12px; height: 12px; }
+.tk-hero--vip .tk-hero__profile,
+.tk-hero--vip .tk-btn--onbrand { background: #ffffffa6; color: #684817; border-color: #c6a04b; box-shadow: inset 0 0 0 1px #c6a04b55; }
+.tk-hero--vip .tk-hero__profile:hover,
+.tk-hero--vip .tk-btn--onbrand:hover { background: #fff; color: #513812; }
+.tk-hero--vip .tk-hero__profile:focus-visible { outline-color: #805a16; }
+.tk-hero--vip .tk-pill--onbrand { background: #fff8e5; color: #79551b; }
+.tk-hero__vip-status {
+  display: flex; align-items: center; gap: 12px; margin-top: 22px; padding: 14px 16px;
+  border: 1px solid #d9b65d88; border-radius: 16px; background: #ffffff94;
+}
+.tk-hero__vip-status-icon { display: grid; place-items: center; flex: 0 0 36px; height: 36px; border-radius: 12px; background: #f9e3a6; color: #805a16; }
+.tk-hero__vip-remaining { margin: 0; font-size: 15px; line-height: 22px; font-weight: 700; }
+.tk-hero__vip-expiry { margin: 3px 0 0; font-size: 12px; line-height: 18px; color: #795f36; }
 
 .tk-stats { display: grid; gap: 12px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .tk-split { display: grid; gap: 24px; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); align-items: start; }

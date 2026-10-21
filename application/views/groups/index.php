@@ -4,7 +4,7 @@
 <header class="cg-heading"><p class="cg-eyebrow"><?= tk_icon('message', 'cg-icon') ?> TRÒ CHUYỆN &amp; KẾT NỐI</p><h1>Khám phá nhóm chat</h1><p>Tìm một nhóm hợp với bạn, chia sẻ câu chuyện và làm quen những người bạn mới.</p></header>
 <form class="cg-filters" method="get" action="<?= site_url('clubs') ?>">
 <input name="q" value="<?= e($q) ?>" placeholder="Tìm tên hoặc mô tả nhóm" aria-label="Tìm nhóm">
-<select name="mode" aria-label="Chế độ"><option value="">Mọi nhóm</option><option value="guest" <?= $mode === 'guest' ? 'selected' : '' ?>>Cho khách ẩn danh</option><?php if ($this->auth->check()): ?><option value="public" <?= $mode === 'public' ? 'selected' : '' ?>>Cần tài khoản</option><?php endif; ?></select>
+<select name="mode" aria-label="Chế độ"><option value="" <?= $mode === '' ? 'selected' : '' ?>>Mọi nhóm</option><option value="guest" <?= $mode === 'guest' ? 'selected' : '' ?>>Nhóm ẩn danh</option><?php if ($this->auth->check()): ?><option value="public" <?= $mode === 'public' ? 'selected' : '' ?>>Nhóm công khai</option><?php endif; ?></select>
 <input name="category" value="<?= e($category) ?>" placeholder="Chủ đề" aria-label="Chủ đề">
 <select name="province" aria-label="Khu vực"><option value="">Toàn quốc</option><?php foreach ($provinces as $p): ?><option value="<?= (int) $p['id'] ?>" <?= $province === (int) $p['id'] ? 'selected' : '' ?>><?= e($p['name']) ?></option><?php endforeach; ?></select><button><?= tk_icon('search', 'cg-icon') ?> Tìm nhóm</button>
 </form>

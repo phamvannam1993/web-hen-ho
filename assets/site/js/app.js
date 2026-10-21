@@ -2,6 +2,15 @@
 (function () {
     'use strict';
 
+    document.addEventListener('click', function (event) {
+        var trigger = event.target.closest('[data-vip-benefits]');
+        if (!trigger) return;
+        var dialog = document.getElementById('vip-benefits-dialog');
+        if (!dialog) return;
+        event.preventDefault();
+        if (!dialog.open) dialog.showModal();
+    });
+
     var scriptBase = document.currentScript && document.currentScript.getAttribute('data-base');
     var base = scriptBase || (document.querySelector('base') ? document.querySelector('base').href : '/');
 

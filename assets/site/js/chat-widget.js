@@ -403,6 +403,12 @@
         var rows = sideEl ? sideEl.querySelectorAll('.cw-row') : [];
         Array.prototype.forEach.call(rows, function (r) { r.classList.remove('is-on'); });
 
+        if (root.dataset.activeGroup) {
+            var groupRow = sideEl.querySelector('[data-cw-group="' + root.dataset.activeGroup + '"]');
+            if (groupRow) groupRow.classList.add('is-on');
+            return;
+        }
+
         if (!dang_mo) { return; }
         if (dang_mo.kind === 'room') {
             if (rowRoom) rowRoom.classList.add('is-on');
@@ -950,7 +956,12 @@
 
     if (rowRoom) { rowRoom.addEventListener('click', moPhong); }
 
-    root.addEventListener('cw:open-group', function () {
+    root.addEventListener('cw:close-group', function () {
+        delete root.dataset.activeGroup;
+        danhDauDangMo();
+    });
+    root.addEventListener('cw:open-group', function (event) {
+        root.dataset.activeGroup = String(event.detail.id);
         closeOnline(false);
         clearInterval(timer);
         dang_mo = null;

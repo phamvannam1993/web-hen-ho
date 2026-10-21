@@ -104,8 +104,9 @@ class M_chat_group extends CI_Model
         if (in_array($mode, array('public', 'guest'), true)) $this->db->where('identity_mode', $mode);
         if ($category !== '') $this->db->where('category', $category);
         if ($province) $this->db->where('province_id', $province);
-        return $this->db->order_by('sort_order', 'DESC')->order_by('last_activity_at', 'DESC')->order_by('id', 'DESC')
-            ->limit(21, (max(1, $page) - 1) * 20)->get('chat_groups')->result_array();
+        $this->db->order_by('sort_order', 'DESC')->order_by('last_activity_at', 'DESC')->order_by('id', 'DESC');
+        if ($mode !== 'guest') $this->db->limit(21, (max(1, $page) - 1) * 20);
+        return $this->db->get('chat_groups')->result_array();
     }
 
     private function blocked_keys($actor)
@@ -120,8 +121,17 @@ class M_chat_group extends CI_Model
 
     private function rows($group_id, $actor)
     {
+        // Legacy messages also need a group identity for anonymous avatar/profile actions.
+        $legacy = $this->db->distinct()->select('user_id')->where('room_id', $group_id)
+            ->where('sender_public_id', null)->where('user_id IS NOT NULL', null, false)
+            ->get('room_messages')->result_array();
+        foreach ($legacy as $sender) {
+            $person = $this->person($group_id, array('key'=>'u:' . $sender['user_id'], 'user'=>$sender), true);
+            $this->db->where('room_id', $group_id)->where('user_id', $sender['user_id'])
+                ->where('sender_public_id', null)->update('room_messages', array('sender_public_id'=>$person['public_id']));
+        }
         $blocked = $this->blocked_keys($actor);
-        $this->db->select('r.*, p.nickname AS guest_name, p.public_id AS person_id, g.identity_mode, u.display_name, u.nickname, u.avatar, u.gender, u.slug, u.is_vip, u.vip_expired_at, u.role AS sender_role')
+        $this->db->select('r.*, p.nickname AS guest_name, p.public_id AS person_id, p.user_id AS person_user_id, p.is_banned AS person_is_banned, g.identity_mode, u.display_name, u.nickname, u.avatar, u.gender, u.slug, u.is_vip, u.vip_expired_at, u.role AS sender_role')
             ->from('room_messages r')->join('chat_groups g', 'g.id = r.room_id')->join('chat_group_people p', 'p.public_id = r.sender_public_id', 'left')
             ->join('users u', 'u.id = r.user_id', 'left')->where('r.room_id', $group_id)->where('r.deleted_at', null);
         if ($blocked) {
@@ -141,6 +151,8 @@ class M_chat_group extends CI_Model
                 'avatar' => $member ? avatar_url($r['avatar'], $r['gender']) : chat_group_guest_avatar_url($r['person_id']),
                 'url' => $member && $r['slug'] ? site_url('profile/' . $r['slug']) : null, 'guest' => !$member,
                 'has_account' => !empty($r['user_id']),
+                'can_open_profile' => !$member && !empty($r['person_id']) && !empty($r['person_user_id'])
+                    && (int) $r['person_user_id'] === (int) $r['user_id'] && empty($r['person_is_banned']),
                 'is_vip' => !empty($r['user_id']) && (($r['sender_role'] ?? '') === 'admin' || (!empty($r['is_vip']) && (empty($r['vip_expired_at']) || $r['vip_expired_at'] > date('Y-m-d H:i:s'))))),
             'type' => $r['type'], 'content' => $r['type'] === 'image' && preg_match('/^[a-f0-9]{48}\.webp$/D', $r['content'])
                 ? site_url('nhom-media/' . $r['id']) : ($r['type'] === 'image' ? base_url(ltrim($r['content'], '/')) : $r['content']),
