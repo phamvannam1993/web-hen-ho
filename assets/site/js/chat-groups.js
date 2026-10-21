@@ -318,6 +318,13 @@
             if (groupAvatar && groupAvatar.getAttribute('src') !== r.group.avatar) groupAvatar.src = r.group.avatar;
             self.eventsCursor = r.events_cursor;
             (r.removed || []).forEach(function (id) { var old = self.feed.querySelector('[data-message="' + id + '"]'); if (old) old.remove(); self.messages.delete(Number(id)); });
+            (r.sender_updates || []).forEach(function (update) {
+                var message = self.messages.get(Number(update.message_id));
+                if (!message || JSON.stringify(message.sender) === JSON.stringify(update.sender)) return;
+                message.sender = update.sender;
+                var row = self.feed.querySelector('[data-message="' + message.id + '"]');
+                if (row) row.replaceWith(self.render(message));
+            });
             (r.senders || []).forEach(function (sender) { self.messages.forEach(function (m) {
                 if (m.sender.id !== sender.id) return;
                 var profileAccessChanged = m.sender.can_open_profile !== sender.can_open_profile;
