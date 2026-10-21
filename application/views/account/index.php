@@ -14,8 +14,11 @@ $con_thieu = $hs['thieu'];
 
 $co_tin_dang = !empty($settings['enable_posts']);
 $chuoi       = (int) ($streak['streak'] ?? 0);   // M_streak::cham_cong() trả khoá `streak`
-$vip_den     = !empty($me['is_vip']) && !empty($me['vip_expired_at']) && strtotime($me['vip_expired_at']) > time()
-    ? date('d/m/Y', strtotime($me['vip_expired_at'])) : null;
+$vip_admin   = ($me['role'] ?? '') === 'admin';
+$vip_het_han = !empty($me['vip_expired_at']) ? strtotime($me['vip_expired_at']) : null;
+$hero_vip    = $vip_admin || (!empty($me['is_vip']) && ($vip_het_han === null || $vip_het_han > time()));
+$vip_con_lai = $hero_vip && $vip_het_han ? $vip_het_han - time() : null;
+$vip_den     = $hero_vip && $vip_het_han ? date('H:i · d/m/Y', $vip_het_han) : null;
 
 // array(biểu tượng, giá trị, nhãn, đường dẫn, sắc thái)
 $stats = array(
@@ -30,21 +33,24 @@ $stats = array(
 );
 ?>
 <!-- Thẻ chào -->
-<section class="tk-card tk-hero">
+<section class="tk-card tk-hero<?= $hero_vip ? ' tk-hero--vip' : '' ?>">
     <div class="tk-hero__in">
         <a class="tk-hero__profile" href="<?= e(site_url('profile/' . $me['slug'])) ?>" aria-label="Xem trang cá nhân của tôi">
             <?= tk_icon('eye') ?><span>Xem trang cá nhân</span>
         </a>
         <div class="tk-hero__top">
+            <span class="tk-hero__avatar">
             <img class="tk-hero__av" src="<?= e(avatar_url($me['avatar'] ?? null, $me['gender'] ?? 'other')) ?>"
                  alt="<?= e(display_name($me)) ?>" width="80" height="80">
+            <?php if ($hero_vip): ?><button type="button" class="tk-hero__vip-badge" data-vip-benefits aria-haspopup="dialog" aria-controls="vip-benefits-dialog" aria-label="Xem quyền lợi VIP"><?= tk_icon('crown') ?>VIP</button><?php endif; ?>
+            </span>
             <div style="min-width:0">
                 <p class="tk-hero__hi"><?= tk_loi_chao() ?>,</p>
                 <h1 class="tk-hero__name"><?= e(display_name($me)) ?></h1>
-                <?php if ($vip_den || $chuoi > 0): ?>
+                <?php if ($hero_vip || $chuoi > 0): ?>
                     <div class="tk-hero__pills">
-                        <?php if ($vip_den): ?>
-                            <span class="tk-pill tk-pill--gold"><?= tk_icon('crown') ?>VIP đến <?= $vip_den ?></span>
+                        <?php if ($hero_vip): ?>
+                            <button type="button" class="tk-pill tk-pill--gold" data-vip-benefits aria-haspopup="dialog" aria-controls="vip-benefits-dialog"><?= tk_icon('crown') ?>Thành viên VIP · Đang hiệu lực</button>
                         <?php endif; ?>
                         <?php if ($chuoi > 0): ?>
                             <span class="tk-pill tk-pill--onbrand"><?= tk_icon('flame') ?>Chuỗi <?= $chuoi ?> ngày</span>
@@ -53,6 +59,15 @@ $stats = array(
                 <?php endif; ?>
             </div>
         </div>
+        <?php if ($hero_vip): ?>
+            <div class="tk-hero__vip-status">
+                <span class="tk-hero__vip-status-icon" aria-hidden="true"><?= tk_icon('crown') ?></span>
+                <div>
+                    <p class="tk-hero__vip-remaining"><?= $vip_con_lai === null ? 'Chưa có thông tin hết hạn VIP' : ($vip_con_lai <= 0 ? 'Gói VIP đã hết hạn' : ($vip_con_lai < 86400 ? 'VIP còn dưới 1 ngày' : 'VIP còn ' . (int) ceil($vip_con_lai / 86400) . ' ngày')) ?></p>
+                    <?php if ($vip_den): ?><p class="tk-hero__vip-expiry">Hết hạn lúc <?= $vip_den ?></p><?php endif; ?>
+                </div>
+            </div>
+        <?php endif; ?>
         <div class="tk-hero__acts">
             <a class="tk-btn tk-btn--gold" href="<?= site_url('swipe-match') ?>"><?= tk_icon('match') ?>Khám phá &amp; ghép đôi</a>
             <a class="tk-btn tk-btn--onbrand" href="<?= site_url('tai-khoan/nap-xu') ?>"><?= tk_icon('coins') ?>Nạp xu / VIP</a>

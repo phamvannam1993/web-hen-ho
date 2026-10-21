@@ -59,7 +59,8 @@ if (!empty($settings['enable_posts'])) {
 }
 
 $so_xu    = number_format((int) ($me['coin_balance'] ?? 0));
-$la_vip   = !empty($me['is_vip']) && (empty($me['vip_expired_at']) || strtotime($me['vip_expired_at']) > time());
+$la_vip   = ($me['role'] ?? '') === 'admin'
+    || (!empty($me['is_vip']) && (empty($me['vip_expired_at']) || strtotime($me['vip_expired_at']) > time()));
 $dem      = function ($n) { return $n > 99 ? '99+' : (int) $n; };
 
 // Tên trang đang xem, in trên dải menu của điện thoại
@@ -94,8 +95,11 @@ foreach ($groups as $items) {
         <div class="tk-side__in">
             <div class="tk-me">
                 <div class="tk-me__row">
+                    <span class="tk-me__avatar<?= $la_vip ? ' is-vip' : '' ?>">
                     <img class="tk-me__av" src="<?= e(avatar_url($me['avatar'] ?? null, $me['gender'] ?? 'other')) ?>"
                          alt="<?= e(display_name($me)) ?>" width="40" height="40" loading="lazy">
+                    <?php if ($la_vip): ?><button type="button" class="tk-me__vip" data-vip-benefits aria-haspopup="dialog" aria-controls="vip-benefits-dialog" aria-label="Xem quyền lợi VIP">VIP</button><?php endif; ?>
+                    </span>
                     <div class="tk-me__b tk-side__txt">
                         <p class="tk-me__name"><?= e(display_name($me)) ?></p>
                         <?php if ($la_vip): ?>
@@ -198,6 +202,8 @@ foreach ($groups as $items) {
         hideTooltip();
         if (!window.matchMedia('(min-width: 1024px)').matches) return;
         tooltipLink = link; tooltip.textContent = link.dataset.tkTooltip;
+        var badge = link.querySelector('.tk-count:not([hidden])');
+        if (badge) tooltip.textContent += ' · ' + badge.textContent.trim() + ' chưa xem';
         tooltip.hidden = false; link.setAttribute('aria-describedby', tooltip.id);
         var bounds = link.getBoundingClientRect();
         link.classList.add('is-tooltip-open');

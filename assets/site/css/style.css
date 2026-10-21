@@ -335,7 +335,38 @@ img { max-width: 100%; height: auto; display: block; }
     border-radius: 24px; background: #f6f6f8; color: #40404a; font-weight: 600; font-size: 14px;
 }
 .btn-account img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+.account-main { display: flex; align-items: center; gap: 8px; color: inherit; text-decoration: none; }
+.account-main:hover { color: inherit; text-decoration: none; }
+.btn-account .account-avatar { position: relative; display: block; flex: 0 0 30px; width: 30px; height: 30px; }
+.account-avatar > a, .account-avatar img { display: block; }
+[data-vip-benefits] { cursor: pointer; font-family: inherit; }
+[data-vip-benefits]:focus-visible { outline: 2px solid #805a16; outline-offset: 3px; }
+.vip-benefits { box-sizing: border-box; width: min(460px, calc(100% - 32px)); max-height: calc(100dvh - 48px); margin: auto; padding: 28px; overflow-y: auto; border: 1px solid #d9b65d; border-radius: 24px; background: linear-gradient(150deg, #fffaf0, #fff); color: #513812; box-shadow: 0 20px 70px #0003; }
+.vip-benefits::backdrop { background: #241b1366; backdrop-filter: blur(3px); }
+.vip-benefits__crown { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 14px; border-radius: 16px; background: #ffe9ad; color: #805a16; }
+.vip-benefits__crown svg { width: 26px; height: 26px; }
+.vip-benefits h2 { margin: 0; font-size: 22px; line-height: 1.4; }
+.vip-benefits__expiry { margin: 8px 0 0; font-size: 13px; color: #795f36; }
+.vip-benefits ul { margin: 20px 0; padding-left: 20px; list-style: disc; }
+.vip-benefits li { margin: 10px 0; font-size: 14px; line-height: 1.6; }
+.vip-benefits__note { padding: 12px; border-radius: 12px; background: #fff4d8; font-size: 12px; line-height: 1.6; }
+.vip-benefits form { margin-top: 20px; }
+.vip-benefits button { width: 100%; padding: 11px 16px; border: 1px solid #c79429; border-radius: 999px; background: #f5d27c; color: #513812; font-family: inherit; font-size: 14px; font-weight: 700; line-height: 1.5; cursor: pointer; }
 .btn-account:hover { background: #fdf0f7; color: var(--pink); text-decoration: none; }
+.btn-account.btn-account--vip {
+    background: linear-gradient(120deg, #fffaf0, #ffe9ad); color: #684817;
+    box-shadow: inset 0 0 0 1px #d9b65d;
+}
+.btn-account.btn-account--vip:hover { background: #ffe9ad; color: #513812; }
+.btn-account--vip img { box-shadow: 0 0 0 2px #d8a62e; }
+.btn-account .account-vip-badge {
+    pointer-events: none; cursor: default;
+    position: absolute; top: -7px; left: 50%; transform: translateX(-50%); z-index: 1;
+    display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+    padding: 0 3px; border: 1px solid #c79429; border-radius: 4px;
+    background: linear-gradient(135deg, #fff2b4, #efc353); color: #60400c;
+    font-size: 8px; line-height: 11px; font-weight: 800;
+}
 .account-total-badge {
     display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
     min-width: 20px; padding: 2px 6px; border-radius: 999px;

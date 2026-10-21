@@ -37,13 +37,15 @@ class Groups extends MY_Controller
     public function index()
     {
         $q = trim((string) $this->input->get('q'));
-        $mode = (string) $this->input->get('mode');
+        $mode = $this->input->get('mode');
+        $mode = $mode === null ? 'guest' : (string) $mode;
         $category = (string) $this->input->get('category');
         $province = (int) $this->input->get('province');
         $page = min(10000, max(1, (int) $this->input->get('page')));
         $groups = $this->m_chat_group->catalog($q, $mode, $category, $province, $page);
-        $more = count($groups) > 20;
-        $groups = array_slice($groups, 0, 20);
+        $more = $mode !== 'guest' && count($groups) > 20;
+        if ($mode === 'guest') $page = 1;
+        else $groups = array_slice($groups, 0, 20);
         // Public landing counts only; never include chat previews in discovery HTML.
         foreach ($groups as &$g) {
             $g['online'] = (int) $this->db->where('group_id', $g['id'])->where('is_banned', 0)
@@ -51,6 +53,24 @@ class Groups extends MY_Controller
         }
         unset($g);
         $this->render('groups/index', compact('q','mode','category','province','page','groups','more') + array('chat_csrf' => $this->csrf(), 'title' => 'Khám phá nhóm chat', 'meta_desc' => 'Tìm nhóm trò chuyện và làm quen trên Saigon Cupid.'));
+    }
+
+    public function random_anonymous()
+    {
+        header('Cache-Control: private, no-store');
+        header('X-Robots-Tag: noindex, nofollow');
+        $actor = $this->m_chat_group->actor();
+        $groups = $this->db->where('identity_mode', 'guest')->where('status', 'active')
+            ->get('chat_groups')->result_array();
+        shuffle($groups);
+        foreach ($groups as $group) {
+            try { $this->m_chat_group->access($group, $actor); }
+            catch (RuntimeException $e) { continue; }
+            redirect('clubs/' . $group['slug']);
+            return;
+        }
+        set_flash('info', 'Hiện chưa có nhóm ẩn danh đang hoạt động phù hợp. Bạn có thể khám phá các nhóm khác.');
+        redirect('clubs?mode=guest');
     }
 
     public function detail($slug)

@@ -228,11 +228,17 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 
         <div class="header-actions">
             <?php if ($user): ?>
-                <a class="btn-account" href="<?= site_url('tai-khoan/ho-so') ?>">
-                    <img src="<?= avatar_url($user['avatar'], $user['gender']) ?>" alt="">
+                <?php $header_vip = ($user['role'] ?? '') === 'admin' || (!empty($user['is_vip']) && (empty($user['vip_expired_at']) || strtotime($user['vip_expired_at']) > time())); ?>
+                <div class="btn-account<?= $header_vip ? ' btn-account--vip' : '' ?>">
+                    <span class="account-avatar">
+                        <a href="<?= site_url('tai-khoan/ho-so') ?>" aria-label="Xem hồ sơ của tôi"><img src="<?= avatar_url($user['avatar'], $user['gender']) ?>" alt=""></a>
+                        <?php if ($header_vip): ?><span class="account-vip-badge" aria-label="Thành viên VIP">VIP</span><?php endif; ?>
+                    </span>
+                    <a class="account-main" href="<?= site_url('tai-khoan/ho-so') ?>">
                     <span>Tài Khoản</span>
                     <span class="account-total-badge" data-account-total-count <?= empty($account_badge_total) ? 'hidden' : '' ?> aria-label="<?= (int) ($account_badge_total ?? 0) ?> thông báo trong tài khoản"><?= ($account_badge_total ?? 0) > 99 ? '99+' : (int) ($account_badge_total ?? 0) ?></span>
-                </a>
+                    </a>
+                </div>
                 <a class="btn-nav-ghost" href="<?= site_url('dang-xuat') ?>">Đăng xuất</a>
             <?php else: ?>
                 <a class="btn-nav-ghost" href="<?= site_url('dang-nhap') ?>">Đăng nhập</a>
@@ -245,6 +251,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
         <div class="nav-overlay" id="nav-overlay" hidden></div>
     </div>
 </header>
+<?php if ($user): $this->load->view('layouts/_vip_benefits'); endif; ?>
 <?php $this->load->view('layouts/_nudge'); ?>
 <?php endif; ?>
 

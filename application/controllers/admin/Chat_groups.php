@@ -52,7 +52,6 @@ class Chat_groups extends Admin_Controller
             elseif (!in_array($mode, array('public','guest'), true) || !in_array($status, array('active','readonly','closed'), true)) $error = 'Chế độ hoặc trạng thái không hợp lệ.';
             elseif (mb_strlen($description) > 2000 || mb_strlen($rules) > 4000) $error = 'Mô tả tối đa 2.000 ký tự; nội quy tối đa 4.000 ký tự.';
             elseif ($this->db->where('slug', $slug)->where('id !=', (int) $id)->count_all_results('chat_groups')) $error = 'Slug đã tồn tại.';
-            elseif ((int) $id === 1 && $mode !== 'public') $error = 'Phòng mặc định giữ chế độ công khai để tương thích chat cũ.';
             if (!$error && $moderators) {
                 $valid = $this->db->where_in('id', $moderators)->where_in('role', array('admin','moderator'))->where('status', 'active')->where('deleted_at', null)->count_all_results('users');
                 if ($valid !== count($moderators)) $error = 'Người điều hành phải là tài khoản admin/moderator đang hoạt động.';
@@ -74,22 +73,18 @@ class Chat_groups extends Admin_Controller
             if (!$error) {
                 $this->db->trans_begin();
                 if ($g) $this->db->query('SELECT id FROM chat_groups WHERE id=? FOR UPDATE', array($id));
-                if ($g && $mode !== $g['identity_mode'] && $this->db->where('room_id', $id)->count_all_results('room_messages')) {
-                    $this->db->trans_rollback(); $error = 'Không đổi chế độ danh tính sau khi nhóm đã có tin. Hãy tạo nhóm mới.';
-                } else {
-                    $data = array('name' => $name, 'slug' => $slug, 'description' => $description, 'rules' => $rules, 'avatar' => $avatar,
-                        'identity_mode' => $mode, 'status' => $status, 'allow_images' => $this->input->post('allow_images') ? 1 : 0,
-                        'category' => mb_substr(trim((string) $this->input->post('category')), 0, 80),
-                        'province_id' => (int) $this->input->post('province_id') ?: null, 'sort_order' => (int) $this->input->post('sort_order'));
-                    if ($g) $this->db->where('id', $id)->update('chat_groups', $data);
-                    else { $this->db->insert('chat_groups', $data); $id = $this->db->insert_id(); }
-                    $this->db->where('group_id', $id)->delete('chat_group_moderators');
-                    foreach ($moderators as $uid) $this->db->insert('chat_group_moderators', array('group_id' => $id, 'user_id' => $uid));
-                    $this->m_chat_group->changed($id);
-                    $this->db->insert('chat_group_logs', array('group_id' => $id, 'actor_id' => $this->auth->id(), 'action' => 'save_group', 'target' => $slug, 'reason' => 'Lưu cấu hình nhóm'));
-                    if ($this->db->trans_status()) { $this->db->trans_commit(); set_flash('success', 'Đã lưu nhóm chat.'); redirect('admin/chat_groups'); }
-                    $this->db->trans_rollback(); $error = 'Không lưu được nhóm. Hãy kiểm tra slug và thử lại.';
-                }
+                $data = array('name' => $name, 'slug' => $slug, 'description' => $description, 'rules' => $rules, 'avatar' => $avatar,
+                    'identity_mode' => $mode, 'status' => $status, 'allow_images' => $this->input->post('allow_images') ? 1 : 0,
+                    'category' => mb_substr(trim((string) $this->input->post('category')), 0, 80),
+                    'province_id' => (int) $this->input->post('province_id') ?: null, 'sort_order' => (int) $this->input->post('sort_order'));
+                if ($g) $this->db->where('id', $id)->update('chat_groups', $data);
+                else { $this->db->insert('chat_groups', $data); $id = $this->db->insert_id(); }
+                $this->db->where('group_id', $id)->delete('chat_group_moderators');
+                foreach ($moderators as $uid) $this->db->insert('chat_group_moderators', array('group_id' => $id, 'user_id' => $uid));
+                $this->m_chat_group->changed($id);
+                $this->db->insert('chat_group_logs', array('group_id' => $id, 'actor_id' => $this->auth->id(), 'action' => 'save_group', 'target' => $slug, 'reason' => 'Lưu cấu hình nhóm'));
+                if ($this->db->trans_status()) { $this->db->trans_commit(); set_flash('success', 'Đã lưu nhóm chat.'); redirect('admin/chat_groups'); }
+                $this->db->trans_rollback(); $error = 'Không lưu được nhóm. Hãy kiểm tra slug và thử lại.';
             }
         }
         $this->render('admin/chat_groups/edit', array('title' => $g ? 'Sửa nhóm chat' : 'Tạo nhóm chat', 'g' => $g, 'error' => $error,
