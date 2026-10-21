@@ -253,3 +253,31 @@ Gỡ khi không cần nữa:
 
 - Tệp `.env` không được để lộ ra ngoài. Kiểm tra bằng cách mở
   `https://tên-miền/.env` — phải trả về 403 hoặc 404, không được hiện nội dung.
+
+### Quà VIP 30 ngày cho thành viên
+
+Sau khi pull bản có quà VIP, chạy trước khi mở lại đăng ký:
+
+```bash
+php database/migrate_vip_gift.php
+```
+
+Lệnh tạo bảng `vip_gift_grants`, tặng VIP 30 ngày cho tài khoản hiện có chưa bị xóa và gửi notification. VIP đang còn hạn được cộng tiếp 30 ngày; VIP vĩnh viễn giữ nguyên. Chạy lại không cấp trùng. `database/update.php` cũng bao gồm bước này. Người đăng ký mới tự nhận VIP 30 ngày và popup chào mừng; không cần cron.
+
+### Xem nhanh hồ sơ, mở chi tiết 20 xu và liên hệ VIP
+
+Sau khi pull code, chạy migration trước khi mở lại website:
+
+```bash
+php database/migrate_profile_access.php
+```
+
+`database/update.php` cũng chạy bước này. Migration thêm hai công tắc mặc định bật (`charge_enabled`, `contact_vip_required`), ba trường liên hệ chủ động chia sẻ, số xu đủ điều kiện chuyển, bảng `profile_purchases` và dấu mốc migration. Không thay đổi tổng số dư, không xóa lịch sử giao dịch. Các khoản mở hồ sơ 20 xu cũ có `ref_type=chat_profile` được giữ dưới dạng quyền mở một lần cho cặp người dùng.
+
+Xu đủ điều kiện chuyển được khôi phục thận trọng từ lịch sử nạp có đơn/gói đối chiếu được, không bao gồm phần xu tặng. Các khoản thưởng hoặc khoản cũ không xác định được nguồn vẫn giữ trong tổng số dư nhưng không dùng để chuyển cho chủ hồ sơ. Các lần nạp mới ghi riêng phần xu đủ điều kiện chuyển; chi cho tiện ích khác ưu tiên dùng phần thưởng/khóa trước.
+
+Người dùng chỉnh hai công tắc độc lập tại **Tài khoản → Hồ sơ**. Liên hệ Zalo dùng trực tiếp ô **Số điện thoại Zalo** hiện có, không cần nhập thêm điện thoại/Zalo chia sẻ. Email chia sẻ vẫn nhập riêng, không tự dùng email đăng nhập. Mỗi cặp người xem → chủ hồ sơ thanh toán tối đa một lần; chủ hồ sơ nhận đủ 20 xu trong cùng transaction. VIP chỉ kiểm soát liên hệ, không miễn phí mở chi tiết nếu chủ hồ sơ bật thu xu.
+
+URL chuẩn mới `/user/{slug}`; `/profile/{slug}` vẫn hoạt động với cùng quyền truy cập. API thêm `GET /api/members/{slug}/preview` và `POST /api/members/{slug}/purchase` (token xác thực, gửi `version` từ báo giá). Khi điều kiện thay đổi, trả 409 để người dùng xem lại và xác nhận; không tự thanh toán sau đăng nhập/nạp xu.
+
+Kiểm thử độc lập: `php tests/profile_access_http.php`. Lệnh tạo database test riêng và kiểm tra chuyển xu, hai giao dịch đồng thời, bốn tổ hợp công tắc, VIP hết hạn, CSRF, link trực tiếp và dữ liệu liên hệ.

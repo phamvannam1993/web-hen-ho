@@ -376,64 +376,10 @@
             dialog.setAttribute('aria-labelledby', profileHeading.id);
             var profileStats = node('div', 'cg-profile-stats');
             profileStats.append(node('p', '', 'Tham gia nhóm: ' + p.joined_at), node('p', '', '🔥 Chuỗi online: ' + p.streak + ' ngày'));
-            dialog.append(profileAvatar, node('span', 'cg-profile-label', 'THÀNH VIÊN NHÓM'), profileHeading, profileStats, node('small', 'cg-profile-note', 'Hồ sơ thật chỉ hiển thị sau khi xác nhận dùng 20 xu.'));
+            dialog.append(profileAvatar, node('span', 'cg-profile-label', 'THÀNH VIÊN NHÓM'), profileHeading, profileStats);
             var badges = node('div', 'achievement-badges');
             (p.badges || []).forEach(function (b) { var badge = node('span', 'achievement-badge', b.icon + ' ' + b.name); badge.title = b.description; badges.append(badge); });
             dialog.append(badges);
-            if (p.can_view_profile) {
-                var viewProfile = node('button', 'cg-view-real-profile', 'Xem hồ sơ thật · 20 xu'); viewProfile.type = 'button';
-                viewProfile.onclick = function () {
-                    var confirmation = node('dialog', 'cg-anonymous-profile cg-profile-confirm');
-                    var title = node('h3', '', 'Xác nhận xem hồ sơ thật');
-                    title.id = profileHeading.id + '-confirm'; confirmation.setAttribute('aria-labelledby', title.id);
-                    var symbol = node('span', 'cg-confirm-symbol', '20 xu'); symbol.setAttribute('aria-hidden', 'true');
-                    var message = node('p', 'cg-confirm-message', 'Bạn sẽ dùng 20 xu để xem hồ sơ thật của thành viên này. Mỗi lần mở từ chat sẽ tính 20 xu.');
-                    var wallet = node('div', 'cg-confirm-wallet'); wallet.setAttribute('aria-live', 'polite');
-                    function showBalance(quote) {
-                        wallet.replaceChildren();
-                        [['Số dư hiện tại', quote.balance], ['Phí xem hồ sơ', quote.cost], ['Số dư sau khi xem', quote.balance_after]].forEach(function (item) {
-                            var line = node('div', 'cg-wallet-line');
-                            line.append(node('span', '', item[0]), node('strong', '', item[1] === null ? 'Không đủ xu' : Number(item[1]).toLocaleString('vi-VN') + ' xu'));
-                            wallet.append(line);
-                        });
-                    }
-                    var accept = node('button', 'cg-view-real-profile', 'Xác nhận · 20 xu'); accept.type = 'button';
-                    accept.disabled = true;
-                    var cancel = node('button', 'cg-profile-close', 'Hủy'); cancel.type = 'button';
-                    var paying = false;
-                    cancel.onclick = function () { confirmation.close(); };
-                    confirmation.addEventListener('cancel', function (event) { if (paying) event.preventDefault(); });
-                    confirmation.addEventListener('close', function () { confirmation.remove(); viewProfile.disabled = false; if (dialog.open) viewProfile.focus(); });
-                    function showNotice(heading, detail) {
-                        title.textContent = heading; message.textContent = detail; symbol.textContent = '!';
-                        accept.hidden = true; cancel.textContent = 'Đã hiểu'; cancel.disabled = false; cancel.focus();
-                    }
-                    accept.onclick = function () {
-                        if (paying) return;
-                        paying = true; accept.disabled = true; cancel.disabled = true; accept.textContent = 'Đang mở hồ sơ…';
-                        self.request('profile-unlock', {person: id}).then(function (result) {
-                            window.location.assign(result.url);
-                        }).catch(function (e) {
-                            paying = false;
-                            showNotice(e.code === 422 ? 'Bạn chưa đủ xu' : 'Chưa thể xem hồ sơ', e.message);
-                            if (e.code === 422) self.request('profile-quote', null, {person:id}).then(function (quote) { if (confirmation.open) showBalance(quote); }).catch(function () {});
-                        });
-                    };
-                    confirmation.append(symbol, title, message, wallet, accept, cancel);
-                    viewProfile.disabled = true; self.root.append(confirmation); confirmation.showModal(); cancel.focus();
-                    if (self.root.dataset.guest === '1') showNotice('Bạn cần đăng nhập', 'Đăng nhập để dùng 20 xu xem hồ sơ thật của thành viên này.');
-                    else {
-                        wallet.textContent = 'Đang kiểm tra số dư…';
-                        self.request('profile-quote', null, {person:id}).then(function (quote) {
-                            if (!confirmation.open) return;
-                            showBalance(quote);
-                            if (quote.balance_after === null) showNotice('Bạn chưa đủ xu', 'Bạn cần thêm ' + (quote.cost - quote.balance).toLocaleString('vi-VN') + ' xu để xem hồ sơ thật.');
-                            else accept.disabled = false;
-                        }).catch(function (e) { if (confirmation.open) { wallet.replaceChildren(); showNotice('Chưa thể kiểm tra số dư', e.message); } });
-                    }
-                };
-                dialog.append(viewProfile);
-            }
             var close = node('button', 'cg-profile-close', 'Đóng'); close.type = 'button'; close.onclick = function () { dialog.close(); };
             dialog.append(close); dialog.addEventListener('close', function () { dialog.remove(); });
             self.root.append(dialog); dialog.showModal(); close.focus();

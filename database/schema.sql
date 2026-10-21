@@ -265,6 +265,12 @@ CREATE TABLE `users` (
   `is_vip`          TINYINT(1) NOT NULL DEFAULT 0,
   `vip_expired_at`  DATETIME DEFAULT NULL,
   `coin_balance`    INT NOT NULL DEFAULT 0,
+  `transferable_coin_balance` INT NOT NULL DEFAULT 0,
+  `charge_enabled` TINYINT NOT NULL DEFAULT 1,
+  `contact_vip_required` TINYINT NOT NULL DEFAULT 1,
+  `shared_phone` VARCHAR(40) DEFAULT NULL,
+  `shared_zalo` VARCHAR(100) DEFAULT NULL,
+  `shared_email` VARCHAR(190) DEFAULT NULL,
   `profile_score`   TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '% hoàn thiện hồ sơ',
   `last_active_at`  DATETIME DEFAULT NULL,
   `last_login_ip`   VARCHAR(45) DEFAULT NULL,
@@ -774,6 +780,7 @@ CREATE TABLE `coin_transactions` (
   `user_id`     BIGINT UNSIGNED NOT NULL,
   `amount`      INT NOT NULL COMMENT 'dương = cộng, âm = trừ',
   `balance_after` INT NOT NULL,
+  `transferable_amount` INT NOT NULL DEFAULT 0,
   `reason`      VARCHAR(50) NOT NULL COMMENT 'nap|unlock_contact|boost_post|admin_adjust|bonus',
   `ref_type`    VARCHAR(30) DEFAULT NULL,
   `ref_id`      BIGINT UNSIGNED DEFAULT NULL,
@@ -858,3 +865,15 @@ CREATE TABLE `admin_logs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- One grant per member for the VIP welcome campaign.
+CREATE TABLE IF NOT EXISTS vip_gift_grants (
+  user_id BIGINT UNSIGNED NOT NULL,
+  campaign VARCHAR(60) NOT NULL,
+  source VARCHAR(20) NOT NULL,
+  granted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, campaign)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS profile_purchases (buyer_id BIGINT UNSIGNED NOT NULL,owner_id BIGINT UNSIGNED NOT NULL,amount INT NOT NULL DEFAULT 20,created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(buyer_id,owner_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS profile_access_migrations (version VARCHAR(80) PRIMARY KEY) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

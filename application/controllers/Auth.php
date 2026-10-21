@@ -70,6 +70,7 @@ class Auth extends MY_Controller
                     }
 
                     $this->auth->login($this->m_user->find($id));
+                    $this->session->set_userdata('signup_vip_gift_user', (int) $id);
                     redirect('tai-khoan/bat-dau');
                 }
             }

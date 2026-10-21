@@ -5,13 +5,15 @@ $online = is_online($m['last_active_at']);
 $topics = Confide::topics();
 $topic  = !empty($m['confide_topic']) ? ($topics[$m['confide_topic']] ?? '') : '';
 $me     = isset($user) ? $user : null;
+$access = profile_access_card($m,$me['id'] ?? 0);
 
 $ic_pin  = '<svg viewBox="0 0 24 24" class="ic"><path d="M12 21s7-6.1 7-11a7 7 0 1 0-14 0c0 4.9 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>';
 $ic_chat = '<svg viewBox="0 0 24 24" class="ic"><path d="M4 5h16v11H8l-4 3z"/><path d="M9 9.5h6M9 12.5h4"/></svg>';
 $ic_star = '<svg viewBox="0 0 24 24" class="ic"><path d="M12 4l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 9.7l5.4-.8z"/></svg>';
 $ic_verified = '<svg viewBox="0 0 24 24" class="ic"><path d="M12 3l7 3v6c0 4.4-3 8-7 9-4-1-7-4.6-7-9V6z"/><path d="M9.2 12.2l2 2 3.6-3.9"/></svg>';
 ?>
-<article class="ccard" data-user="<?= (int) $m['id'] ?>">
+<article class="ccard<?= $access['charge'] ? ' is-profile-paid' : '' ?>" data-user="<?= (int) $m['id'] ?>" tabindex="0" aria-label="Xem hồ sơ" data-profile-preview-card="<?= e($m['slug']) ?>">
+    <?php if ($access['label']): ?><a class="profile-price-label<?= $access['purchased'] ? ' is-open' : '' ?>" href="<?= site_url('user/'.$m['slug']) ?>"><?= e($access['label']) ?></a><?php endif; ?>
     <a class="ccard-photo" href="<?= site_url('profile/' . $m['slug']) ?>">
         <img src="<?= avatar_url($m['avatar'], $m['gender']) ?>" alt="<?= e(display_name($m)) ?>" loading="lazy">
         <span class="ccard-tags">

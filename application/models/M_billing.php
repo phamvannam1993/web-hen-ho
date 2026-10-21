@@ -72,7 +72,7 @@ class M_billing extends CI_Model
         if ($package && $package['type'] === 'coin') {
             $coins = (int) $package['coin_amount'] + (int) $package['bonus_coin'];
             $this->m_user->adjust_coin($order['user_id'], $coins, 'nap', 'order', $order_id,
-                'Nạp gói ' . $package['name']);
+                'Nạp gói ' . $package['name'], (int)$package['coin_amount']);
             $this->m_notification->push($order['user_id'], 'system', 'Nạp xu thành công',
                 'Bạn được cộng ' . $coins . ' xu.', site_url('tai-khoan/nap-xu'));
         } elseif ($package && $package['type'] === 'vip') {

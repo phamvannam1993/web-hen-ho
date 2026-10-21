@@ -46,6 +46,29 @@ class Users extends Admin_Controller
         ));
     }
 
+    public function grant_vip_all()
+    {
+        if (($this->auth->user()['role'] ?? '') !== 'admin') { show_error('Chỉ quản trị viên được cấp VIP hàng loạt.', 403); return; }
+        $token = $this->session->userdata('bulk_vip_token');
+        if ($this->input->method() === 'post') {
+            if (!$token || !hash_equals($token, (string) $this->input->post('token'))) { show_error('Phiên xác nhận không hợp lệ. Vui lòng mở lại trang cấp VIP.', 403); return; }
+            $rawDays = (string) $this->input->post('days');
+            $days = ctype_digit($rawDays) ? (int) $rawDays : 0;
+            if ($days < 1 || $days > 3650 || $this->input->post('confirmed') !== '1') {
+                set_flash('danger', 'Nhập số ngày từ 1 đến 3650 và xác nhận cấp VIP cho tất cả thành viên.');
+                redirect('admin/users/grant_vip_all'); return;
+            }
+            $result = $this->m_user->grant_vip_all($days, $token);
+            $this->session->unset_userdata('bulk_vip_token');
+            $this->log_action('grant_vip_all:' . $days . ':users=' . $result['granted'], 'users');
+            set_flash('success', 'Đã cấp thêm ' . $days . ' ngày VIP cho ' . $result['granted'] . ' thành viên và gửi thông báo. Giữ nguyên ' . $result['lifetime'] . ' tài khoản VIP vĩnh viễn.');
+            redirect('admin/users'); return;
+        }
+        if (!$token) { $token = bin2hex(random_bytes(16)); $this->session->set_userdata('bulk_vip_token', $token); }
+        $this->render('admin/users/grant_vip_all', array('title'=>'Cấp VIP cho tất cả thành viên', 'token'=>$token,
+            'member_count'=>$this->db->where('deleted_at',null)->count_all_results('users')));
+    }
+
     public function edit($id)
     {
         $user = $this->m_user->find($id);
