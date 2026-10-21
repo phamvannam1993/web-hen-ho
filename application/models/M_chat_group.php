@@ -47,6 +47,11 @@ class M_chat_group extends CI_Model
     {
         if (!$actor) return null;
         $p = $this->db->where('group_id', $group_id)->where('actor_key', $actor['key'])->get('chat_group_people')->row_array();
+        if ($p && !empty($actor['user']['id']) && $actor['key'] === 'u:' . $actor['user']['id']
+            && (int) $p['user_id'] !== (int) $actor['user']['id']) {
+            $this->db->where('id', $p['id'])->update('chat_group_people', array('user_id'=>$actor['user']['id']));
+            $p['user_id'] = $actor['user']['id'];
+        }
         if (!$p && $create) {
             $names = array('Mây Tím', 'Nắng Mai', 'Gió Nhẹ', 'Sao Nhỏ', 'Lá Xanh', 'Trăng Non');
             for ($attempt = 0; $attempt < 10 && !$p; $attempt++) {
@@ -122,13 +127,15 @@ class M_chat_group extends CI_Model
     private function rows($group_id, $actor)
     {
         // Legacy messages also need a group identity for anonymous avatar/profile actions.
-        $legacy = $this->db->distinct()->select('user_id')->where('room_id', $group_id)
-            ->where('sender_public_id', null)->where('user_id IS NOT NULL', null, false)
-            ->get('room_messages')->result_array();
+        $legacy = $this->db->distinct()->select('r.user_id')->from('room_messages r')
+            ->join('chat_group_people p', 'p.public_id = r.sender_public_id', 'left')
+            ->where('r.room_id', $group_id)->where('r.user_id IS NOT NULL', null, false)
+            ->group_start()->where('p.user_id', null)->or_where('p.user_id != r.user_id', null, false)
+                ->or_where('p.group_id != r.room_id', null, false)->group_end()->get()->result_array();
         foreach ($legacy as $sender) {
-            $person = $this->person($group_id, array('key'=>'u:' . $sender['user_id'], 'user'=>$sender), true);
+            $person = $this->person($group_id, array('key'=>'u:' . $sender['user_id'], 'user'=>array('id'=>$sender['user_id'])), true);
             $this->db->where('room_id', $group_id)->where('user_id', $sender['user_id'])
-                ->where('sender_public_id', null)->update('room_messages', array('sender_public_id'=>$person['public_id']));
+                ->update('room_messages', array('sender_public_id'=>$person['public_id']));
         }
         $blocked = $this->blocked_keys($actor);
         $this->db->select('r.*, p.nickname AS guest_name, p.public_id AS person_id, p.user_id AS person_user_id, p.is_banned AS person_is_banned, g.identity_mode, u.display_name, u.nickname, u.avatar, u.gender, u.slug, u.is_vip, u.vip_expired_at, u.role AS sender_role')
@@ -189,19 +196,24 @@ class M_chat_group extends CI_Model
         $this->access($group, $actor);
         $removed = array();
         $senders = array();
+        $sender_updates = array();
         $reactions = array();
         if ($known) {
             $this->rows($group['id'], $actor);
             $visibleRows = $this->db->where_in('r.id', $known)->get()->result_array();
             $visible = array_column($visibleRows, 'id');
-            foreach ($visibleRows as $r) if ($r['person_id']) $senders[$r['person_id']] = $this->serialize($r, $actor)['sender'];
+            foreach ($visibleRows as $r) {
+                $sender = $this->serialize($r, $actor)['sender'];
+                if ($r['person_id']) $senders[$r['person_id']] = $sender;
+                $sender_updates[] = array('message_id'=>(int) $r['id'], 'sender'=>$sender);
+            }
             foreach ($visibleRows as $r) $reactions[] = array('id'=>(int) $r['id'], 'items'=>$this->reactions($r['id'], $actor));
             $removed = array_values(array_diff($known, $visible));
         }
         $events = $this->db->where('group_id', $group['id'])->where('action', 'delete')->where('id >', $cursor)
             ->order_by('id')->limit(200)->get('chat_group_logs')->result_array();
         foreach ($events as $e) { $removed[] = (int) $e['target']; $cursor = (int) $e['id']; }
-        return array('removed' => array_values(array_unique(array_map('intval', $removed))), 'events_cursor' => $cursor, 'senders' => array_values($senders), 'reactions'=>$reactions);
+        return array('removed' => array_values(array_unique(array_map('intval', $removed))), 'events_cursor' => $cursor, 'senders' => array_values($senders), 'sender_updates'=>$sender_updates, 'reactions'=>$reactions);
     }
 
     public function summary($group, $actor)
