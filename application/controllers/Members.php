@@ -8,6 +8,7 @@ class Members extends MY_Controller
     public function __construct()
     {
         parent::__construct();
+        $this->output->set_header('Cache-Control: private, no-store');
         $this->load->model(array('m_user', 'm_post', 'm_interaction', 'm_user_comment'));
     }
 
@@ -83,6 +84,16 @@ class Members extends MY_Controller
             set_flash('warning', 'Bạn không thể xem trang cá nhân này.');
             redirect('thanh-vien');
         }
+        $this->load->model('m_profile_access');
+        try { $this->m_profile_access->allowed_target($member, $me['id'] ?? 0); }
+        catch (RuntimeException $e) { show_error($e->getMessage(), $e->getCode()); return; }
+        if (!$this->m_profile_access->can_detail($member, $me['id'] ?? 0)) {
+            $this->render('members/profile_locked', array('title'=>'Xem hồ sơ', 'preview'=>$this->m_profile_access->quote($member,$me['id'] ?? 0)));
+            return;
+        }
+        try { $contacts = $this->m_profile_access->contacts($member, $me['id'] ?? 0); }
+        catch (RuntimeException $e) { $contacts = null; }
+        $member['phone'] = $member['email'] = null;
         $this->auth->touch_active();
 
         // Ghi lượt xem để gom thành thông báo "N người đã xem hồ sơ bạn"
@@ -92,6 +103,7 @@ class Members extends MY_Controller
 
         require_once APPPATH . 'libraries/Achievements.php';
         $this->render('members/profile', array(
+            'profile_contacts' => $contacts,
             'achievements' => Achievements::badges($this->db, $member['id']),
             'title'      => $member['display_name'],
             'meta_desc'  => excerpt($member['bio'], 160),
@@ -115,40 +127,35 @@ class Members extends MY_Controller
         ));
     }
 
-    /** Bấm "Lấy pass" để mở số điện thoại của thành viên. */
-    public function get_pass($slug)
+    public function preview($slug)
     {
-        if (!$this->auth->check()) {
-            return $this->json(array('ok' => false, 'message' => 'Vui lòng đăng nhập để lấy pass.'), 401);
-        }
-        $member = $this->m_user->by_slug($slug);
-        if (!$member) {
-            return $this->json(array('ok' => false, 'message' => 'Không tìm thấy thành viên.'), 404);
-        }
-        $this->load->model('m_access_code');
-        $cost = $this->auth->is_vip() ? 0 : (int) setting('unlock_cost', 20);
-
-        return $this->json($this->m_access_code->issue('contact', $this->auth->id(), null, $cost, 60));
+        $this->load->model('m_profile_access');
+        try {
+            $member=$this->m_user->by_slug($slug);
+            $quote=$this->m_profile_access->quote($member,$this->auth->id());
+            $token=$this->session->userdata('profile_purchase_csrf');
+            if (!$token) { $token=bin2hex(random_bytes(32)); $this->session->set_userdata('profile_purchase_csrf',$token); }
+            return $this->json(array('ok'=>true,'preview'=>$quote,'csrf'=>$token));
+        } catch (RuntimeException $e) { return $this->json(array('ok'=>false,'message'=>$e->getMessage()),$e->getCode() ?: 400); }
     }
-
-    /** Nhập pass để hiện số điện thoại. */
+    public function purchase($slug)
+    {
+        if ($this->input->method()!=='post') return $this->json(array('ok'=>false,'message'=>'Yêu cầu POST.'),405);
+        $token=(string)$this->session->userdata('profile_purchase_csrf');
+        if (!$token || !hash_equals($token,(string)$this->input->post('csrf'))) return $this->json(array('ok'=>false,'message'=>'Phiên không hợp lệ. Mở lại popup.'),403);
+        $this->load->model('m_profile_access');
+        try {
+            $member=$this->m_user->by_slug($slug);
+            if (!$member) throw new RuntimeException('Không tìm thấy hồ sơ.',404);
+            return $this->json(array('ok'=>true)+$this->m_profile_access->purchase($member['id'],$this->auth->id(),$this->input->post('version')));
+        } catch (RuntimeException $e) { return $this->json(array('ok'=>false,'message'=>$e->getMessage()),$e->getCode() ?: 400); }
+    }
+    public function get_pass($slug) { return $this->reveal($slug); }
     public function reveal($slug)
     {
-        $member = $this->m_user->by_slug($slug);
-        if (!$member) {
-            return $this->json(array('ok' => false, 'message' => 'Không tìm thấy thành viên.'), 404);
-        }
-        $this->load->model('m_access_code');
-        $row = $this->m_access_code->verify($this->input->post('code'), 'contact');
-        if (!$row) {
-            return $this->json(array('ok' => false, 'message' => 'Mã không đúng hoặc đã hết hạn.'));
-        }
-        $this->m_access_code->consume($row['id']);
-
-        return $this->json(array(
-            'ok'      => true,
-            'contact' => $member['phone'] ?: 'Thành viên chưa cập nhật số điện thoại',
-        ));
+        $this->load->model('m_profile_access');
+        try { return $this->json(array('ok'=>true,'contacts'=>$this->m_profile_access->contacts($this->m_user->by_slug($slug),$this->auth->id()))); }
+        catch (RuntimeException $e) { return $this->json(array('ok'=>false,'message'=>$e->getMessage()),$e->getCode() ?: 400); }
     }
 
     /** Gửi bình luận lên trang cá nhân. */

@@ -267,45 +267,19 @@ class M_chat_group extends CI_Model
             'joined_at'=>substr($p['joined_at'], 0, 10), 'streak'=>$streak && $streak['last_active_date'] >= date('Y-m-d', strtotime('-1 day')) ? (int) $streak['current_streak'] : 0);
     }
 
-    public function profile_quote($group, $actor, $public_id)
+    public function profile_quote($group,$actor,$public_id)
     {
-        $profile = $this->anonymous_profile($group, $actor, $public_id);
-        if (!$actor || !$actor['user']) throw new RuntimeException('Đăng nhập để xem hồ sơ thật.', 401);
-        if (!$profile['can_view_profile']) throw new RuntimeException('Hồ sơ không còn khả dụng.', 404);
-        $balance = (int) $this->db->select('coin_balance')->where('id', $actor['user']['id'])->get('users')->row('coin_balance');
-        return array('balance'=>$balance, 'cost'=>20, 'balance_after'=>$balance >= 20 ? $balance - 20 : null);
+        $profile=$this->anonymous_profile($group,$actor,$public_id);
+        if (!$actor || !$actor['user']) throw new RuntimeException('Vui lòng đăng nhập.',401);
+        if (!$profile['can_view_profile']) throw new RuntimeException('Hồ sơ không còn khả dụng.',404);
+        $person=$this->db->where('group_id',$group['id'])->where('public_id',$public_id)->get('chat_group_people')->row_array();
+        $this->load->model('m_profile_access');
+        return $this->m_profile_access->quote($this->db->where('id',$person['user_id'])->get('users')->row_array(),$actor['user']['id']);
     }
-
-    public function unlock_profile($group, $actor, $public_id)
+    public function unlock_profile($group,$actor,$public_id,$version='')
     {
-        $this->access($group, $actor);
-        if (!$actor || !$actor['user']) throw new RuntimeException('Đăng nhập để xem hồ sơ thật.', 401);
-        $profile = $this->anonymous_profile($group, $actor, $public_id);
-        if (!$profile['can_view_profile']) throw new RuntimeException('Khách ẩn danh không có hồ sơ thật để xem.', 404);
-        $person = $this->db->where('group_id', $group['id'])->where('public_id', $public_id)->get('chat_group_people')->row_array();
-        $target = $this->db->where('id', $person['user_id'])->where('status', 'active')->where('deleted_at', null)->get('users')->row_array();
-        if (!$target || !$target['slug']) throw new RuntimeException('Hồ sơ không còn khả dụng.', 404);
-        $viewer_id = (int) $actor['user']['id'];
-        if ($this->db->group_start()->where('user_id', $viewer_id)->where('blocked_id', $target['id'])->group_end()
-            ->or_group_start()->where('user_id', $target['id'])->where('blocked_id', $viewer_id)->group_end()->count_all_results('blocks')) {
-            throw new RuntimeException('Bạn không thể xem hồ sơ này.', 403);
-        }
-        $this->db->trans_begin();
-        $viewer = $this->db->query('SELECT coin_balance FROM users WHERE id=? FOR UPDATE', array($viewer_id))->row_array();
-        if (!$viewer || (int) $viewer['coin_balance'] < 20) {
-            $this->db->trans_rollback();
-            throw new RuntimeException('Bạn cần ít nhất 20 xu để xem hồ sơ thật.', 422);
-        }
-        $balance = (int) $viewer['coin_balance'] - 20;
-        $this->db->where('id', $viewer_id)->update('users', array('coin_balance'=>$balance));
-        $this->db->insert('coin_transactions', array('user_id'=>$viewer_id, 'amount'=>-20, 'balance_after'=>$balance,
-            'reason'=>'spend', 'ref_type'=>'chat_profile', 'ref_id'=>$target['id'], 'note'=>'Xem hồ sơ thật trong nhóm ẩn danh #' . $group['id']));
-        if (!$this->db->trans_status()) {
-            $this->db->trans_rollback();
-            throw new RuntimeException('Chưa mở được hồ sơ. Vui lòng thử lại.', 503);
-        }
-        $this->db->trans_commit();
-        return array('url'=>site_url('profile/' . $target['slug']), 'balance'=>$balance);
+        $quote=$this->profile_quote($group,$actor,$public_id);
+        return $this->m_profile_access->purchase($quote['id'],$actor['user']['id'],$version);
     }
 
     public function online($group, $actor)

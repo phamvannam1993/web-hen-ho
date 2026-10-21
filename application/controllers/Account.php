@@ -116,6 +116,9 @@ class Account extends Member_Controller
                 $this->form_validation->set_rules('email', 'Email', 'trim|max_length[190]|valid_email|callback_email_hop_le');
             }
             $this->form_validation->set_rules('bio', 'Giới thiệu bản thân', 'max_length[500]');
+            if ($this->input->post('profile_access_settings') === '1') {
+                $this->form_validation->set_rules('shared_email','Email chia sẻ','trim|max_length[190]|valid_email');
+            }
 
             if ($this->form_validation->run()) {
                 $data = array(
@@ -136,6 +139,12 @@ class Account extends Member_Controller
                     'drinking'       => $this->input->post('drinking') ?: null,
                     'confide_topic'  => $this->input->post('confide_topic') ?: null,
                 );
+                if ($this->input->post('profile_access_settings')==='1') {
+                $data['charge_enabled'] = $this->input->post('charge_enabled') === '1' ? 1 : 0;
+                $data['contact_vip_required'] = $this->input->post('contact_vip_required') === '1' ? 1 : 0;
+                $sharedEmail=trim((string)$this->input->post('shared_email',true));
+                $data['shared_email'] = filter_var($sharedEmail,FILTER_VALIDATE_EMAIL) ? $sharedEmail : null;
+                }
                 $email_changed = false;
                 if ($this->input->post('email') !== null) {
                     $data['email'] = trim((string) $this->input->post('email')) ?: null;

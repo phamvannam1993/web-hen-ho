@@ -97,6 +97,10 @@ class Account extends Api_Controller
                 'has_avatar'     => !empty($u['avatar']),
                 'cover'          => base_url(!empty($u['cover_image']) ? ltrim($u['cover_image'], '/') : 'assets/site/images/profile-cover.jpg'),
                 'has_cover'      => !empty($u['cover_image']),
+                'charge_enabled' => (bool)$u['charge_enabled'],
+                'contact_vip_required' => (bool)$u['contact_vip_required'],
+                'shared_email'=>$u['shared_email'],
+                'transferable_coin_balance'=>(int)$u['transferable_coin_balance'],
                 'email_verified' => !empty($u['email_verified_at']),
                 'verify_required' => setting('otp_register', '1') === '1',
             ),
@@ -195,6 +199,13 @@ class Account extends Api_Controller
             // update_profile() tự gỡ trạng thái đã xác thực khi email đổi
             $data['email'] = trim((string) $b['email']) ?: null;
         }
+        foreach (array('charge_enabled','contact_vip_required') as $flag) {
+            if (array_key_exists($flag,$b)) $data[$flag]=in_array($v($flag),array(1,'1',true),true) ? 1 : 0;
+        }
+        foreach (array('shared_email'=>190) as $field=>$limit) {
+            if (array_key_exists($field,$b)) $data[$field]=mb_substr(trim((string)$v($field)),0,$limit) ?: null;
+        }
+        if (!empty($data['shared_email']) && !filter_var($data['shared_email'],FILTER_VALIDATE_EMAIL)) return $this->loi('Email chia sẻ không hợp lệ.',422);
         $this->m_user->update_profile($me['id'], $data);
 
         // Tiêu chí ghép đôi

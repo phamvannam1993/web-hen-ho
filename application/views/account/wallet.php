@@ -39,7 +39,7 @@ $ly_do = array(
 <header class="tk-ph">
     <div class="tk-ph__b">
         <h1>Nạp xu / VIP</h1>
-        <p>Xu dùng để mở thông tin liên hệ và các tiện ích khác.</p>
+        <p>Xu đủ điều kiện chuyển dùng để mở hồ sơ chi tiết; xu thưởng khóa dùng cho các tiện ích khác.</p>
     </div>
 </header>
 
@@ -49,6 +49,7 @@ $ly_do = array(
         <span class="tk-wl-bal__ic tk-wl-bal__ic--gold"><?= tk_icon('coins') ?></span>
         <div class="tk-wl-bal__b">
             <p class="tk-wl-bal__n"><?= number_format((int) $me['coin_balance']) ?> xu</p>
+            <p><?= number_format(min((int)$me['coin_balance'],(int)($me['transferable_coin_balance'] ?? 0))) ?> xu đủ điều kiện chuyển · <?= number_format(max(0,(int)$me['coin_balance']-(int)($me['transferable_coin_balance'] ?? 0))) ?> xu thưởng/khóa</p>
             <p class="tk-wl-bal__l">Số dư hiện tại</p>
         </div>
     </div>

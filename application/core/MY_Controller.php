@@ -434,8 +434,21 @@ class Api_Controller extends CI_Controller
     }
 
     /** Rút gọn một hồ sơ thành dạng trả về cho ứng dụng. */
+    private function profile_detail_allowed(array $u)
+    {
+        $this->load->model('m_profile_access');
+        $owner = $this->db->where('id',$u['id'])->get('users')->row_array();
+        if (!$owner) return false;
+        try { $this->m_profile_access->allowed_target($owner,$this->me['id'] ?? 0); }
+        catch (RuntimeException $e) { return false; }
+        return $this->m_profile_access->can_detail($owner,$this->me['id'] ?? 0);
+    }
+
     protected function ho_so(array $u, $day_du = false)
     {
+        if ($day_du && !$this->profile_detail_allowed($u)) {
+            return $this->ho_so($u,false) + array('job'=>$u['job'] ?? null,'bio'=>mb_substr(strip_tags((string)($u['bio'] ?? '')),0,180),'detail_locked'=>true);
+        }
         $ra = array(
             'id'       => (int) $u['id'],
             'name'     => display_name($u),
@@ -486,6 +499,7 @@ class Api_Controller extends CI_Controller
      */
     protected function ho_so_chi_tiet(array $u)
     {
+        if (!$this->profile_detail_allowed($u)) return $this->ho_so($u,true);
         $ra = $this->ho_so($u, true) + array(
             'weight_kg'      => !empty($u['weight_kg']) ? (int) $u['weight_kg'] : null,
             'education'      => $u['education'] ?? null,

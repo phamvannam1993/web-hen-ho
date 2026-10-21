@@ -1,4 +1,7 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+<?php if (($this->auth->user()['role'] ?? '') === 'admin'): ?>
+<p><a class="btn btn-primary" href="<?= site_url('admin/users/grant_vip_all') ?>">Cấp VIP cho tất cả thành viên</a></p>
+<?php endif; ?>
 <form class="filter-form" method="get">
     <div>
         <label>Từ khoá</label>

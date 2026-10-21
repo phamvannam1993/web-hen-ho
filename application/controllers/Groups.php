@@ -75,6 +75,10 @@ class Groups extends MY_Controller
 
     public function detail($slug)
     {
+        if ($slug === 'hen-ho') {
+            redirect('clubs/tu-cam-thanh');
+            return;
+        }
         $group = $this->db->where('slug', $slug)->get('chat_groups')->row_array();
         if (!$group) show_404();
         if (!$this->auth->user() && $group['identity_mode'] !== 'guest') {
@@ -107,7 +111,7 @@ class Groups extends MY_Controller
                     'group' => $this->m_chat_group->summary($group, $actor)) + $changes;
             }
             $this->guard();
-            if ($action === 'profile-unlock') return $this->m_chat_group->unlock_profile($group, $actor, (string) $this->input->post('person'));
+            if ($action === 'profile-unlock') return $this->m_chat_group->unlock_profile($group, $actor, (string) $this->input->post('person'), (string)$this->input->post('version'));
             if ($action === 'follow' || $action === 'unfollow') $actor = $this->m_chat_group->actor(true);
             // Create guest identity only on explicit open, not a background GET.
             if ($action === 'open') {

@@ -8,6 +8,7 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
 ?>
             <?php
                 $tuoi     = age_from($m['birthday']);
+                $access = function_exists('profile_access_card') ? profile_access_card($m,$user['id'] ?? 0) : array('charge'=>false,'detail'=>true,'label'=>'');
                 $da_match = in_array((int) $m['id'], $matched_ids ?? array(), true);
                 // match_score tối đa lý thuyết là 155 nhưng thực tế hiếm khi vượt
                 // 120, nên lấy 120 làm mốc 100% rồi kẹp trong khoảng 60–99 để
@@ -16,11 +17,12 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
                 $chips = array_filter(array(
                     !empty($m['province_name']) ? $m['province_name'] : null,
                     !empty($m['job'])           ? $m['job'] : null,
-                    !empty($m['height_cm'])     ? (int) $m['height_cm'] . 'cm' : null,
-                    !empty($m['marital_status']) && $m['marital_status'] === 'doc_than' ? 'Độc thân' : null,
+                    $access['detail'] && !empty($m['height_cm'])     ? (int) $m['height_cm'] . 'cm' : null,
+                    $access['detail'] && !empty($m['marital_status']) && $m['marital_status'] === 'doc_than' ? 'Độc thân' : null,
                 ));
             ?>
-                <article class="hm-sug" data-user="<?= (int) $m['id'] ?>">
+                <article class="hm-sug<?= $access['charge'] ? ' is-profile-paid' : '' ?>" data-user="<?= (int) $m['id'] ?>" tabindex="0" aria-label="Xem hồ sơ" data-profile-preview-card="<?= e($m['slug']) ?>">
+    <?php if ($access['label']): ?><a class="profile-price-label<?= !empty($access['purchased']) ? ' is-open' : '' ?>" href="<?= site_url('user/'.$m['slug']) ?>"><?= e($access['label']) ?></a><?php endif; ?>
                     <a class="hm-sug-photo" href="<?= site_url('profile/' . $m['slug']) ?>">
                         <img src="<?= avatar_url($m['avatar'], $m['gender']) ?>" alt="<?= e(display_name($m)) ?>" loading="lazy">
                     </a>
@@ -40,6 +42,7 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
                             </p>
                         <?php endif; ?>
                     </div>
+
 
                     <div class="hm-sug-actions">
                         <?php if ($da_match): ?>

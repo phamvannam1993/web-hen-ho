@@ -6,6 +6,7 @@ $online  = is_online($m['last_active_at']);
 $is_new  = !empty($m['created_at']) && strtotime($m['created_at']) > strtotime('-7 days');
 $tags    = !empty($m['interest_names']) ? array_slice(explode('|', $m['interest_names']), 0, 3) : array();
 $me      = isset($user) ? $user : null;
+$access = function_exists('profile_access_card') ? profile_access_card($m,$me['id'] ?? 0) : array('charge'=>false,'detail'=>true,'label'=>'');
 
 $ic_pin    = '<svg viewBox="0 0 24 24" class="ic"><path d="M12 21s7-6.1 7-11a7 7 0 1 0-14 0c0 4.9 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>';
 $ic_ruler  = '<svg viewBox="0 0 24 24" class="ic"><path d="M3.6 14.4 14.4 3.6l6 6L9.6 20.4z"/><path d="M7 11l2 2M10 8l2 2M13 5l2 2"/></svg>';
@@ -17,7 +18,8 @@ $ic_female = '<svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="9" r="5.2"
 $ic_gender = $m['gender'] === 'female' ? $ic_female : $ic_male;
 $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
 ?>
-<article class="pcard" data-user="<?= (int) $m['id'] ?>">
+<article class="pcard<?= $access['charge'] ? ' is-profile-paid' : '' ?>" data-user="<?= (int) $m['id'] ?>" tabindex="0" aria-label="Xem hồ sơ" data-profile-preview-card="<?= e($m['slug']) ?>">
+    <?php if ($access['label']): ?><a class="profile-price-label<?= !empty($access['purchased']) ? ' is-open' : '' ?>" href="<?= site_url('user/'.$m['slug']) ?>"><?= e($access['label']) ?></a><?php endif; ?>
     <a class="pcard-photo" href="<?= site_url('profile/' . $m['slug']) ?>">
         <img src="<?= avatar_url($m['avatar'], $m['gender']) ?>" alt="<?= e(display_name($m)) ?>" loading="lazy">
         <span class="pcard-tags">
@@ -35,6 +37,7 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
     </a>
 
     <div class="pcard-body">
+
         <h3 class="pcard-name">
             <a href="<?= site_url('profile/' . $m['slug']) ?>"><?= e(display_name($m)) ?><?= $age ? ', ' . $age : '' ?></a>
         </h3>
@@ -57,6 +60,7 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
             </p>
         <?php endif; ?>
 
+        <?php if ($access['detail']): ?>
         <?php if (!empty($dating_card)): ?>
             <p class="pcard-facts">
                 <?php if (!empty($marital[$m['marital_status'] ?? ''])): ?><span><?= e($marital[$m['marital_status']]) ?></span><?php endif; ?>
@@ -72,6 +76,7 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
             </p>
         <?php endif; ?>
 
+        <?php endif; ?>
         <?php /* Luôn giữ khối này kể cả khi trống để các thẻ cùng hàng cao bằng nhau */ ?>
         <p class="pcard-bio"><?= $user && !empty($m['bio']) ? e(excerpt($m['bio'], 110)) : '' ?></p>
 
@@ -93,6 +98,6 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
                 <a class="btn-swipe btn-swipe-pass" href="<?= site_url('profile/' . $m['slug']) ?>">Hồ sơ</a>
                 <a class="btn-swipe btn-swipe-like" href="<?= site_url($me ? 'profile/' . $m['slug'] : 'dang-nhap') ?>"><?= $ic_heart ?>Thích</a>
             <?php endif; ?>
-        </div>
+    </div>
     </div>
 </article>

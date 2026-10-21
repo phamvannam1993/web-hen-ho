@@ -95,7 +95,7 @@ class Auth extends Api_Controller
         }
 
         return $this->ok(array_merge($this->cap_token($this->m_user->find($id)),
-            array('message' => $message)), 201);
+            array('message' => $message, 'vip_gift'=>array('days'=>30, 'message'=>'Bạn đã nhận được 30 ngày VIP miễn phí!'))), 201);
     }
 
     /** Phát token mới cho người dùng và dựng phần trả về chung của login/register. */

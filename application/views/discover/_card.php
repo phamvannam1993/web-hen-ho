@@ -6,10 +6,11 @@ $edu     = array('thpt' => 'THPT', 'trung_cap' => 'Trung cấp', 'cao_dang' => '
 $freq    = array('khong' => 'Không', 'thinh_thoang' => 'Thỉnh thoảng', 'thuong_xuyen' => 'Thường xuyên');
 $purpose = array('ket_ban' => 'Tìm bạn', 'hen_ho' => 'Hẹn hò', 'nghiem_tuc' => 'Nghiêm túc', 'ket_hon' => 'Tiến tới hôn nhân');
 
+$access = function_exists('profile_access_card') ? profile_access_card($c,$user['id'] ?? 0) : array('charge'=>false,'detail'=>true,'label'=>'');
 $age    = age_from($c['birthday']);
 $online = is_online($c['last_active_at']);
 $cung   = zodiac($c['birthday']);
-$anh    = !empty($c['photo_paths']) ? array_slice(explode('|', $c['photo_paths']), 0, 4) : array();
+$anh    = $access['detail'] && !empty($c['photo_paths']) ? array_slice(explode('|', $c['photo_paths']), 0, 4) : array();
 $sothich= !empty($c['interest_names']) ? array_slice(explode('|', $c['interest_names']), 0, 6) : array();
 $muc    = !empty($c['purpose']) ? ($purpose[$c['purpose']] ?? '') : '';
 // Điểm tương hợp chỉ có khi người xem đã đăng nhập; khách thì không tính được
@@ -34,7 +35,8 @@ $ic_star  = $ic('<path d="M12 4l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.
 $ic_child = $ic('<circle cx="9" cy="7" r="3"/><circle cx="17" cy="9" r="2.2"/><path d="M3.5 20c.8-3 3-4.6 5.5-4.6S13.7 17 14.5 20"/><path d="M15 20c.5-1.9 1.8-3 3.2-3"/>');
 $ic_flag  = $ic('<path d="M5 21V4"/><path d="M5 5h11l-1.6 3.2L16 12H5z"/>');
 ?>
-<article class="sw-card" data-user="<?= (int) $c['id'] ?>">
+<article class="sw-card<?= $access['charge'] ? ' is-profile-paid' : '' ?>" data-user="<?= (int) $c['id'] ?>" tabindex="0" aria-label="Xem hồ sơ" data-profile-preview-card="<?= e($c['slug']) ?>">
+<?php if ($access['label']): ?><a class="profile-price-label<?= !empty($access['purchased']) ? ' is-open' : '' ?>" href="<?= site_url('user/'.$c['slug']) ?>"><?= e($access['label']) ?></a><?php endif; ?>
     <div class="sw-scroll">
         <div class="sw-photo">
             <img src="<?= avatar_url($c['avatar'], $c['gender']) ?>" alt="<?= e(display_name($c)) ?>" draggable="false">
@@ -69,7 +71,7 @@ $ic_flag  = $ic('<path d="M5 21V4"/><path d="M5 5h11l-1.6 3.2L16 12H5z"/>');
                 Thu gọn
             </button>
             <div class="sw-detail-body">
-            <?php if ($user && !empty($c['bio'])): ?>
+            <?php if ($access['detail'] && !empty($c['bio'])): ?>
                 <section>
                     <h4>Giới thiệu</h4>
                     <p class="sw-bio"><?= nl2br(e($c['bio'])) ?></p>
@@ -84,6 +86,7 @@ $ic_flag  = $ic('<path d="M5 21V4"/><path d="M5 5h11l-1.6 3.2L16 12H5z"/>');
                 </section>
             <?php endif; ?>
 
+            <?php if ($access['detail']): ?>
             <section>
                 <h4>Thông tin</h4>
                 <ul class="sw-facts">
@@ -130,6 +133,7 @@ $ic_flag  = $ic('<path d="M5 21V4"/><path d="M5 5h11l-1.6 3.2L16 12H5z"/>');
                 </section>
             <?php endif; ?>
 
+            <?php endif; ?>
                 <!--<a class="sw-more" href="<?= site_url('profile/' . $c['slug']) ?>">Xem trang cá nhân đầy đủ →</a>-->
             </div>
         </div>

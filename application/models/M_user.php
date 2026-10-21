@@ -52,8 +52,12 @@ class M_user extends CI_Model
             'province_id'   => $input['province_id'] ?: null,
             'status'        => setting('auto_approve_user', '1') === '1' ? 'active' : 'pending',
             'coin_balance'  => $bonus,
+            'is_vip'        => 1,
+            'vip_expired_at' => date('Y-m-d H:i:s', strtotime('+30 days')),
         ));
         $id = $this->db->insert_id();
+
+        $this->db->insert('vip_gift_grants', array('user_id'=>$id, 'campaign'=>'vip30_20261021', 'source'=>'signup'));
 
         $this->db->insert('user_preferences', array(
             'user_id'        => $id,
@@ -729,21 +733,24 @@ class M_user extends CI_Model
     }
 
     /** Cộng/trừ xu và ghi sổ giao dịch. */
-    public function adjust_coin($user_id, $amount, $reason, $ref_type = null, $ref_id = null, $note = null)
+    public function adjust_coin($user_id, $amount, $reason, $ref_type = null, $ref_id = null, $note = null, $eligible_credit = 0)
     {
         $this->db->trans_begin();
-        $balance = (int) $this->db->select('coin_balance')->where('id', $user_id)
-            ->get('users')->row('coin_balance');
+        $wallet = $this->db->query('SELECT coin_balance,transferable_coin_balance FROM users WHERE id=? FOR UPDATE', array($user_id))->row_array();
+        $balance = (int) ($wallet['coin_balance'] ?? 0);
+        $eligibleBefore = (int) ($wallet['transferable_coin_balance'] ?? 0);
         $after = $balance + $amount;
         if ($after < 0) {
             $this->db->trans_rollback();
             return false;
         }
-        $this->db->where('id', $user_id)->update('users', array('coin_balance' => $after));
+        $eligibleAfter = max(0, min($after, $eligibleBefore + ($amount > 0 ? min($amount, max(0, (int)$eligible_credit)) : 0)));
+        $this->db->where('id', $user_id)->update('users', array('coin_balance' => $after, 'transferable_coin_balance'=>$eligibleAfter));
         $this->db->insert('coin_transactions', array(
             'user_id'       => $user_id,
             'amount'        => $amount,
             'balance_after' => $after,
+            'transferable_amount' => $eligibleAfter-$eligibleBefore,
             'reason'        => $reason,
             'ref_type'      => $ref_type,
             'ref_id'        => $ref_id,
@@ -755,6 +762,29 @@ class M_user extends CI_Model
         }
         $this->db->trans_commit();
         return true;
+    }
+
+    /** One confirmed admin operation; request key prevents double-submit grants. */
+    public function grant_vip_all($days, $request_key)
+    {
+        if (!is_int($days) || $days < 1 || $days > 3650 || !preg_match('/^[a-f0-9]{32}$/D', $request_key)) throw new InvalidArgumentException('Số ngày hoặc mã yêu cầu không hợp lệ.');
+        $this->db->trans_begin();
+        $count = 0; $lifetime = 0;
+        try {
+            $users = $this->db->query('SELECT id,is_vip,vip_expired_at FROM users WHERE deleted_at IS NULL ORDER BY id FOR UPDATE')->result_array();
+            foreach ($users as $user) {
+                if ($user['is_vip'] && $user['vip_expired_at'] === null) { $lifetime++; continue; }
+                $this->db->query("INSERT IGNORE INTO vip_gift_grants(user_id,campaign,source) VALUES (?,?,'admin')", array($user['id'], 'admin_' . $request_key));
+                if ($this->db->affected_rows() !== 1) continue;
+                $this->db->query('UPDATE users SET is_vip=1,vip_expired_at=DATE_ADD(GREATEST(COALESCE(vip_expired_at,NOW()),NOW()),INTERVAL ? DAY) WHERE id=?', array($days,$user['id']));
+                $this->db->insert('notifications', array('user_id'=>$user['id'], 'type'=>'system', 'title'=>'Bạn được tặng ' . $days . ' ngày VIP!',
+                    'body'=>'Quản trị viên đã cấp thêm ' . $days . ' ngày VIP. Thời gian được cộng tiếp nếu VIP hiện tại còn hạn.', 'url'=>site_url('tai-khoan')));
+                $count++;
+            }
+            if (!$this->db->trans_status()) throw new RuntimeException('Không thể cấp VIP. Chưa áp dụng thay đổi.');
+            $this->db->trans_commit();
+            return array('granted'=>$count, 'lifetime'=>$lifetime);
+        } catch (Throwable $e) { $this->db->trans_rollback(); throw $e; }
     }
 
     /** Kích hoạt / gia hạn VIP. */

@@ -494,3 +494,18 @@ function tk_loi_chao()
     $h = (int) date('G');
     return $h < 11 ? 'Chào buổi sáng' : ($h < 18 ? 'Chào buổi chiều' : 'Chào buổi tối');
 }
+
+/** Request-local cache avoids one purchase lookup per member card. */
+function profile_access_card($member, $viewer_id)
+{
+    static $owned = array();
+    $viewer_id = (int)$viewer_id;
+    if (!isset($owned[$viewer_id])) {
+        $CI =& get_instance();
+        $owned[$viewer_id] = $viewer_id ? array_fill_keys(array_column($CI->db->where('buyer_id',$viewer_id)->get('profile_purchases')->result_array(),'owner_id'),true) : array();
+    }
+    $purchased = !empty($owned[$viewer_id][$member['id']]);
+    $charge = !empty($member['charge_enabled']) && (int)$member['id'] !== $viewer_id;
+    return array('charge'=>$charge,'purchased'=>$purchased,'detail'=>($viewer_id && (!$charge || $purchased)),
+        'label'=>$charge ? ($purchased ? 'Đã mở' : '🔒 Mở hồ sơ VIP') : '');
+}

@@ -12,6 +12,7 @@ class Members extends Api_Controller
     public function __construct()
     {
         parent::__construct();
+        $this->output->set_header('Cache-Control: private, no-store');
         $this->load->model(array('m_interaction', 'm_user_comment'));
     }
 
@@ -86,8 +87,13 @@ class Members extends Api_Controller
         $page  = $this->trang();
         $total = $this->m_user->count_search($filters);
 
+        $this->load->model('m_profile_access');
         $items = array();
         foreach ($this->m_user->search($filters, $this->per_page, ($page - 1) * $this->per_page) as $u) {
+            if (!$this->m_profile_access->can_detail($u,$this->me['id'] ?? 0)) {
+                try { $items[] = $this->m_profile_access->quote($u,$this->me['id'] ?? 0); } catch (RuntimeException $e) {}
+                continue;
+            }
             $items[] = $this->ho_so($u, true) + array(
                 'like_count'     => (int) ($u['like_count'] ?? 0),
                 'confide_topic'  => $u['confide_topic'] ?? null,
@@ -118,6 +124,25 @@ class Members extends Api_Controller
         return ($u && $u['status'] !== 'banned') ? $u : null;
     }
 
+    public function preview($key='')
+    {
+        if (!$this->thu_auth()) return;
+        $this->load->model('m_profile_access');
+        try { return $this->ok(array('preview'=>$this->m_profile_access->quote($this->tim($key),$this->me['id'] ?? 0))); }
+        catch (RuntimeException $e) { return $this->loi($e->getMessage(),$e->getCode() ?: 403); }
+    }
+    public function purchase($key='')
+    {
+        if (!$this->can_auth()) return;
+        if ($this->input->method()!=='post') return $this->loi('Yêu cầu POST.',405);
+        $this->load->model('m_profile_access');
+        try {
+            $owner=$this->tim($key);
+            if (!$owner) throw new RuntimeException('Không tìm thấy hồ sơ.',404);
+            return $this->ok($this->m_profile_access->purchase($owner['id'],$this->me['id'],($this->body()['version'] ?? '')));
+        } catch (RuntimeException $e) { return $this->loi($e->getMessage(),$e->getCode() ?: 403); }
+    }
+
     /** GET /api/members/{id|slug} — trang cá nhân. */
     public function show($key = '')
     {
@@ -132,6 +157,11 @@ class Members extends Api_Controller
         if ($me_id && $this->m_interaction->is_blocked($me_id, $m['id'])) {
             return $this->loi('Bạn không thể xem trang cá nhân này.', 403, array('blocked' => true));
         }
+        $this->load->model('m_profile_access');
+        try {
+            $this->m_profile_access->allowed_target($m,$me_id);
+            if (!$this->m_profile_access->can_detail($m,$me_id)) return $this->loi('Cần mở hồ sơ chi tiết.',403,array('preview'=>$this->m_profile_access->quote($m,$me_id)));
+        } catch (RuntimeException $e) { return $this->loi($e->getMessage(),$e->getCode() ?: 403); }
         // Ghi lượt xem để gom thành thông báo "N người đã xem hồ sơ bạn"
         if ($me_id) {
             $this->m_interaction->record_view($me_id, $m['id']);
@@ -241,20 +271,9 @@ class Members extends Api_Controller
         if (!$m) {
             return $this->loi('Không tìm thấy thành viên.', 404);
         }
-        $this->load->model('m_access_code');
-        $cost = $this->la_vip() ? 0 : (int) setting('unlock_cost', 20);
-        $kq   = $this->m_access_code->issue('contact', $this->me['id'], null, $cost, 60);
-        if (!$kq['ok']) {
-            return $this->loi($kq['message'], 409, array('need_coins' => true));
-        }
-        $row = $this->m_access_code->verify($kq['code'], 'contact');
-        if ($row) {
-            $this->m_access_code->consume($row['id']);
-        }
-        return $this->ok(array(
-            'contact' => $m['phone'] ?: 'Thành viên chưa cập nhật số điện thoại',
-            'cost'    => $cost,
-        ));
+        $this->load->model('m_profile_access');
+        try { return $this->ok(array('contacts'=>$this->m_profile_access->contacts($m,$this->me['id']))); }
+        catch (RuntimeException $e) { return $this->loi($e->getMessage(),$e->getCode() ?: 403); }
     }
 
     /** POST /api/members/{id}/comment {content, parent_id} + ảnh "image" (multipart) */

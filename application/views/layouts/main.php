@@ -252,6 +252,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
     </div>
 </header>
 <?php if ($user): $this->load->view('layouts/_vip_benefits'); endif; ?>
+<?php $this->load->view('layouts/_signup_vip_gift', array('user'=>$user)); ?>
 <?php $this->load->view('layouts/_nudge'); ?>
 <?php endif; ?>
 
@@ -376,6 +377,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 </footer>
 <?php endif; ?>
 
+<?php $this->load->view('layouts/_profile_preview'); ?>
 <?php $this->load->view('layouts/_install'); ?>
 <script defer src="<?= base_url('assets/site/js/install-app.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/install-app.js') ?>" data-worker="<?= base_url('service-worker.js') ?>"></script>
 

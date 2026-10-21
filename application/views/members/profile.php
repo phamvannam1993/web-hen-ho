@@ -159,22 +159,10 @@ $pp_icon = function ($name) {
                 <section class="pp-panel pp-about"><h2><span class="pp-heading-icon"><?= $pp_icon('sparkles') ?></span>Về mình</h2><h3>Đôi lời giới thiệu</h3><p><?= !empty($m['bio']) ? nl2br(e($m['bio'])) : 'Chưa có lời giới thiệu.' ?></p>
                     <div class="pp-about-facts"><div><h3>Bạn đang tìm kiếm ai?</h3><p><?= e($muc_tieu ?: 'Chưa cập nhật') ?></p></div><div><h3>Con cái</h3><p><?= (int) $m['has_children'] === 1 ? 'Đã có con' : 'Chưa có con' ?></p></div></div>
                 </section>
-                <?php if (!$is_me): ?><section class="pp-panel pp-contact"><h2><span class="pp-heading-icon"><?= $pp_icon('lock') ?></span>Thông tin liên hệ</h2>                <?php if (!$is_me): ?>
-                    <section class="fact-card">
-                        <dl class="fact-list">
-                            <div><dt>Số điện thoại</dt><dd>
-                                <?php if ($user): ?><?= e(mask_contact($m['phone'])) ?>
-                                <?php else: ?><a class="is-key" href="<?= site_url('dang-ky') ?>">Đăng ký để xem</a><?php endif; ?>
-                            </dd></div>
-                            <div><dt>Zalo</dt><dd>
-                                <?php if ($user): ?><?= e(mask_contact($m['phone'])) ?>
-                                <?php else: ?><a class="is-key" href="<?= site_url('dang-ky') ?>">Đăng ký để xem</a><?php endif; ?>
-                            </dd></div>
-                        </dl>
-                    </section>
-                <?php endif; ?>
-
-</section><?php endif; ?>
+                <section class="pp-panel pp-contact"><h2>Thông tin liên hệ</h2>
+                <?php if (!empty($profile_contacts)): ?><dl class="fact-list">
+                    <?php foreach (array('zalo'=>'Zalo','email'=>'Email') as $key=>$label): ?><div><dt><?= e($label) ?></dt><dd><?= e($profile_contacts[$key] ?: 'Chưa chia sẻ') ?></dd></div><?php endforeach; ?>
+                </dl><?php else: ?><p>Thông tin liên hệ chỉ dành cho VIP.</p><a href="<?= site_url('tai-khoan/nap-xu') ?>">Xem gói VIP</a><?php endif; ?></section>
                 <section class="pp-panel"><h2>Sở thích</h2><div class="pp-interests"><?php foreach ($interests as $interest): ?><span><?= e($interest['name']) ?></span><?php endforeach; ?><?php if (!$interests): ?><p>Chưa cập nhật sở thích.</p><?php endif; ?></div></section>
             </div>
             <div id="pp-photos" role="tabpanel" aria-labelledby="pp-tab-photos" hidden>

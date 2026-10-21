@@ -128,6 +128,10 @@ $hien_online = $da_gui ? $this->input->post('show_online')
                     <p class="tk-hint">Thư được gửi tới email đã lưu. Nếu đổi email, hãy lưu hồ sơ trước.</p>
                 <?php endif; ?>
             </div>
+            <input type="hidden" name="profile_access_settings" value="1">
+            <div class="tk-field"><label><input type="checkbox" name="charge_enabled" value="1" <?= !isset($me['charge_enabled']) || $me['charge_enabled'] ? 'checked' : '' ?>> Thu 20 xu khi mở hồ sơ chi tiết</label><p class="tk-hint">Bạn nhận đủ 20 xu; mỗi người chỉ thanh toán một lần.</p></div>
+            <div class="tk-field"><label><input type="checkbox" name="contact_vip_required" value="1" <?= !isset($me['contact_vip_required']) || $me['contact_vip_required'] ? 'checked' : '' ?>> Chỉ VIP được xem thông tin liên hệ</label></div>
+            <div class="tk-field"><label>Email muốn chia sẻ</label><input type="email" name="shared_email" maxlength="190" value="<?= e($me['shared_email'] ?? '') ?>"></div>
             <div class="tk-field">
                 <label for="phone">Số điện thoại Zalo</label>
                 <input type="tel" id="phone" name="phone" value="<?= $v('phone') ?>"
