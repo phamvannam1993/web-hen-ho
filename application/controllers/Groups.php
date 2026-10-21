@@ -38,7 +38,7 @@ class Groups extends MY_Controller
     {
         $q = trim((string) $this->input->get('q'));
         $mode = $this->input->get('mode');
-        $mode = $mode === null ? 'guest' : (string) $mode;
+        $mode = $mode === null ? ($this->auth->check() ? '' : 'guest') : (string) $mode;
         $category = (string) $this->input->get('category');
         $province = (int) $this->input->get('province');
         $page = min(10000, max(1, (int) $this->input->get('page')));
