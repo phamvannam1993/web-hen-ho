@@ -113,7 +113,8 @@ img { max-width: 100%; height: auto; display: block; }
 .hd-noti.is-open .hd-bell { background: #fdf0f2; border-color: #f3c8d0; color: var(--pink); }
 
 .noti-panel {
-    position: absolute; top: calc(100% + 12px); right: 0; z-index: 120;
+    /* Above the header menu toggle (130), below the navigation drawer (140). */
+    position: absolute; top: calc(100% + 12px); right: 0; z-index: 135;
     width: 380px; max-width: calc(100vw - 24px);
     background: #fff; border-radius: 14px; overflow: hidden;
     border: 1px solid #edeef2;
@@ -224,6 +225,10 @@ img { max-width: 100%; height: auto; display: block; }
        trừ đi 12px lề của khay = 75px. */
     .noti-panel::before { right: 75px; }
     .noti-list { max-height: none; }
+    .noti-close {
+        display: grid; place-items: center; flex: 0 0 44px;
+        width: 44px; height: 44px; padding: 0;
+    }
 }
 
 /* Thanh chính dính khi cuộn: logo - menu - nút hành động */
