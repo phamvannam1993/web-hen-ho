@@ -75,10 +75,6 @@ class Groups extends MY_Controller
 
     public function detail($slug)
     {
-        if ($slug === 'hen-ho') {
-            redirect('clubs/tu-cam-thanh');
-            return;
-        }
         $group = $this->db->where('slug', $slug)->get('chat_groups')->row_array();
         if (!$group) show_404();
         if (!$this->auth->user() && $group['identity_mode'] !== 'guest') {
@@ -141,7 +137,7 @@ class Groups extends MY_Controller
     private function image($group, $actor)
     {
         $this->m_chat_group->access($group, $actor, true);
-        if (!$group['allow_images'] || !$actor['user']) throw new RuntimeException('Nhóm này không cho phép bạn gửi ảnh.', 403);
+        if (!$this->m_chat_group->allows_images($group) || !$actor['user']) throw new RuntimeException('Nhóm này không cho phép bạn gửi ảnh.', 403);
         $f = $_FILES['image'] ?? null;
         if (!$f || $f['error'] !== UPLOAD_ERR_OK || $f['size'] > 5242880 || !is_uploaded_file($f['tmp_name'])) throw new InvalidArgumentException('Ảnh không hợp lệ hoặc vượt quá 5 MB.');
         $info = @getimagesize($f['tmp_name']);

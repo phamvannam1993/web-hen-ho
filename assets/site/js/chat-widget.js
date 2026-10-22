@@ -951,6 +951,9 @@
     });
 
     document.addEventListener('pointerdown', function (e) {
+        // A modal above the chat handles its own close button and backdrop.
+        // Keep the underlying conversation open until the modal is dismissed.
+        if (document.querySelector('dialog[open]')) return;
         if (!panel.hidden && !root.contains(e.target)) { dongChat(); }
     });
 

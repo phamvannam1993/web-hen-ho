@@ -5288,8 +5288,8 @@ button.cw-close {
 
 /* Every main-menu item occupies an equal column, including the install action. */
 @media(min-width:901px) {
-    .site-header .nav-list { width:100%; gap:0; justify-content:space-between; }
-    .site-header .nav-list > li { flex:1 1 0; min-width:0; }
+    .site-header .nav-list { width:100%; gap:4px; justify-content:flex-start; }
+    .site-header .nav-list > li { flex:0 1 120px; min-width:0; }
     .site-header .nav-list > li > :is(a,.install-menu-trigger) { box-sizing:border-box; display:flex; align-items:center; justify-content:center; width:100%; min-height:48px; margin:0; padding:14px 8px 13px; border-radius:8px 8px 0 0; font-size:13px; font-weight:600; line-height:20px; text-align:center; }
 }
 @media(max-width:900px) {

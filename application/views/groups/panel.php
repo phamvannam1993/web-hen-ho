@@ -27,20 +27,9 @@
 </form>
 </dialog>
 <?php endif; ?>
-<?php if (!$this->auth->check() && $group['allow_images']): ?>
-<dialog class="cg-upload-auth" data-cg-upload-auth aria-label="Đăng nhập để gửi ảnh">
-    <span class="cg-upload-auth-icon" aria-hidden="true"><?= tk_icon('image', 'cg-icon') ?></span>
-    <h3>Chia sẻ khoảnh khắc, kết nối gần hơn</h3>
-    <p>Đăng nhập hoặc tạo tài khoản để gửi ảnh trong nhóm. Bạn vẫn dùng tên giả và avatar ẩn danh khi trò chuyện tại đây.</p>
-    <div class="cg-upload-auth-actions">
-        <a class="cg-button" href="<?= e(site_url('dang-ky') . '?next=' . rawurlencode('clubs/' . $group['slug'])) ?>">Đăng ký tài khoản</a>
-        <a class="cg-upload-login" href="<?= e(site_url('dang-nhap') . '?next=' . rawurlencode('clubs/' . $group['slug'])) ?>">Đã có tài khoản? Đăng nhập</a>
-    </div>
-    <button type="button" data-cg-upload-auth-close>Để sau</button>
-</dialog>
-<?php endif; ?>
+
 <div class="cg-reply" data-cg-reply hidden><span></span><button type="button" data-cg-cancel-reply aria-label="Hủy trả lời">×</button></div>
-<form class="cg-composer" data-cg-form><?php if ($group['allow_images']): ?><button class="cg-attach" type="button" data-cg-attach aria-label="Gửi ảnh" title="Gửi ảnh"><?= tk_icon('image', 'cg-icon') ?></button><?php if ($this->auth->check()): ?><input type="file" accept="image/jpeg,image/png,image/webp" data-cg-file hidden><?php endif; ?><?php endif; ?><label class="cg-sr" for="cg-input-<?= (int) $group['id'] ?>">Tin nhắn</label><textarea id="cg-input-<?= (int) $group['id'] ?>" name="content" maxlength="2000" rows="1" placeholder="Nhập tin nhắn…" required></textarea><button type="button" data-cg-emoji aria-label="Thêm biểu tượng cảm xúc"><?= tk_icon('smile', 'cg-icon') ?></button><button type="submit">Gửi</button></form>
+<form class="cg-composer" data-cg-form><?php if ($this->m_chat_group->allows_images($group) && $this->auth->check()): ?><button class="cg-attach" type="button" data-cg-attach aria-label="Gửi ảnh" title="Gửi ảnh"><?= tk_icon('image', 'cg-icon') ?></button><?php if ($this->auth->check()): ?><input type="file" accept="image/jpeg,image/png,image/webp" data-cg-file hidden><?php endif; ?><?php endif; ?><label class="cg-sr" for="cg-input-<?= (int) $group['id'] ?>">Tin nhắn</label><textarea id="cg-input-<?= (int) $group['id'] ?>" name="content" maxlength="2000" rows="1" placeholder="Nhập tin nhắn…" required></textarea><button type="button" data-cg-emoji aria-label="Thêm biểu tượng cảm xúc"><?= tk_icon('smile', 'cg-icon') ?></button><button type="submit">Gửi</button></form>
 
 <?php endif; ?>
 </section>

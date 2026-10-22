@@ -119,6 +119,14 @@
         if (this.form) {
             this.form.onsubmit = function (e) { e.preventDefault(); self.send(); };
             this.form.content.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); self.send(); } });
+            this.resizeComposer = function () {
+                var input = self.form.content, atBottom = self.bottom();
+                input.style.height = 'auto';
+                input.style.height = Math.min(input.scrollHeight + 2, 122) + 'px';
+                input.style.overflowY = input.scrollHeight > 120 ? 'auto' : 'hidden';
+                if (atBottom) self.feed.scrollTop = self.feed.scrollHeight;
+            };
+            this.form.content.addEventListener('input', this.resizeComposer);
             this.setupEmojiPicker();
             root.querySelector('[data-cg-cancel-reply]').onclick = function () { self.reply = null; root.querySelector('[data-cg-reply]').hidden = true; };
         }
@@ -398,6 +406,12 @@
             profileButton.append(avatar);
             profileButton.onclick = function () { self.showAnonymous(m.sender); };
             avatar = profileButton;
+        } else if (!m.sender.guest && m.sender.url) {
+            var profileLink = node('a', 'cg-avatar-link');
+            profileLink.href = m.sender.url;
+            profileLink.setAttribute('aria-label', 'Xem hồ sơ của ' + m.sender.name);
+            profileLink.append(avatar);
+            avatar = profileLink;
         }
         var avatarFrame = node('span', 'cg-avatar-frame'), vipBadge = node('span', 'cg-avatar-vip', '♛ VIP');
         vipBadge.setAttribute('aria-label', 'Thành viên VIP');
@@ -405,7 +419,8 @@
         var bubble = node('div', 'cg-bubble'), meta = node('div', 'cg-meta'), name = node(m.sender.url ? 'a' : 'strong', '', m.sender.name);
         bubble.style.setProperty('--cg-bubble-bg', bubbleColor(m.id));
         if (m.sender.url) name.href = m.sender.url;
-        meta.append(name, node('time', '', m.created_at.slice(11, 16))); bubble.append(meta);
+        meta.append(name, node('time', '', m.created_at.slice(11, 16)));
+        var body = node('div', 'cg-message-body'); body.append(meta, bubble);
         if (m.reply_to_id) { var quote = node('span', 'cg-quote'); quote.dataset.quote = m.reply_to_id; bubble.append(quote); }
         if (m.type === 'image') {
             var img = node('img', 'cg-image'); img.src = m.content; img.alt = 'Ảnh trong nhóm'; img.loading = 'lazy';
@@ -471,7 +486,7 @@
         if (!menu.children.length) more.hidden = true;
         var reactions = node('div', 'cg-reactions'); reactions.dataset.cgReactions = '';
         this.renderReactions(reactions, m); bubble.append(reactions);
-        row.append(avatar, bubble, actions, menu, picker); return row;
+        row.append(avatar, body, actions, menu, picker); return row;
     };
     Chat.prototype.renderReactions = function (target, m) {
         var self = this; target.replaceChildren();
@@ -510,7 +525,7 @@
         this.request(file ? 'image' : 'send', data).then(function () {
             if (file) self.clearAttachment();
         }).then(function () {
-            self.form.content.value = ''; self.clearAttachment();
+            self.form.content.value = ''; self.resizeComposer(); self.clearAttachment();
             self.pending = null; self.reply = null; self.root.querySelector('[data-cg-reply]').hidden = true;
             self.status.textContent = ''; self.feed.scrollTop = self.feed.scrollHeight; self.load(); refreshSaved();
         }).catch(function (e) { self.status.textContent = e.message + ' Nội dung được giữ lại để bạn gửi lại.'; })
