@@ -4,6 +4,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 /** Multi-room state. actor_key and guest secrets never leave the server. */
 class M_chat_group extends CI_Model
 {
+    public function allows_images($group) { return $group['identity_mode'] === 'guest' || !empty($group['allow_images']); }
+
     public function group($id) { return $this->db->where('id', (int) $id)->get('chat_groups')->row_array(); }
 
     public function delete_group($id)
@@ -319,7 +321,7 @@ class M_chat_group extends CI_Model
         if (!preg_match('/^[a-zA-Z0-9_-]{16,80}$/D', $client_id)) throw new InvalidArgumentException('Mã gửi tin không hợp lệ.');
         $this->access($group, $actor, true);
         if ($type === 'text') $content = chat_group_content($content);
-        elseif ($type !== 'image' || !$group['allow_images'] || !$actor['user']) throw new RuntimeException('Không được gửi ảnh trong nhóm này.', 403);
+        elseif ($type !== 'image' || !$this->allows_images($group) || !$actor['user']) throw new RuntimeException('Không được gửi ảnh trong nhóm này.', 403);
         $caption = $type === 'image' && trim((string) $caption) !== '' ? chat_group_content($caption) : '';
         if ($caption !== '' && !$this->db->field_exists('caption', 'room_messages')) throw new RuntimeException('Cần cập nhật dữ liệu chat trước khi gửi ảnh kèm nội dung.', 503);
         $p = $this->person($group['id'], $actor, true);

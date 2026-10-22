@@ -223,7 +223,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
                 <li><a<?= $is_active ? ' class="active" aria-current="page"' : '' ?>
                        href="<?= site_url($item['url']) ?>"><?= $item['label'] ?></a></li>
             <?php endforeach; ?>
-            <li><button type="button" class="install-menu-trigger" data-install-app>Tải app</button></li>
+            <li><button type="button" class="install-menu-trigger" data-install-app>Download Apps</button></li>
         </ul>
 
         <div class="header-actions">
@@ -440,7 +440,9 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
                 <?php if (chat_groups_enabled()): ?>
                     <p class="cw-side-label cg-sticky-heading">Danh sách nhóm chat</p>
                     <div class="cg-saved-list" data-cg-saved="<?= site_url('ajax/nhom/0/sticky') ?>" data-panel-base="<?= site_url('ajax/nhom-panel') ?>"></div>
+                    <?php /* Tạm ẩn mục Khám phá nhóm trong chat sticky.
                     <a class="cg-sticky-discover" href="<?= site_url('clubs') ?>"><span class="cg-sticky-discover-icon" aria-hidden="true"><?= tk_icon('plus', 'cg-icon') ?></span><span><strong>Khám phá nhóm</strong><small>Tìm thêm những kết nối mới</small></span><?= tk_icon('chevron-right', 'cg-icon') ?></a>
+                    */ ?>
                 <?php endif; ?>
                 <?php if ($user): ?>
                     <p class="cw-side-label">Trò chuyện riêng</p>
