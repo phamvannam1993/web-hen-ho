@@ -37,11 +37,11 @@ $gio_ngan = function ($t) {
         <?php if (!empty($chat_groups)): ?>
             <details class="tk-ms-groups">
                 <summary class="tk-ms-groups__toggle">
-                    <?= tk_icon('message') ?><span>Nhóm chat</span>
+                    <?= tk_icon('message') ?><span>Clubs Chat's</span>
                     <span class="tk-ms-groups__count"><?= count($chat_groups) ?></span>
                     <svg class="tk-ic tk-ms-groups__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
                 </summary>
-                <ul class="tk-ms-groups__list" aria-label="Nhóm chat">
+                <ul class="tk-ms-groups__list" aria-label="Clubs Chat's">
                     <?php foreach ($chat_groups as $g): ?>
                         <li><a class="tk-ms-item" href="<?= e($g['url']) ?>" data-inbox-group="<?= (int) $g['id'] ?>" data-panel-url="<?= site_url('ajax/nhom-panel/' . (int) $g['id']) ?>">
                             <span class="tk-ms-av"><img src="<?= e($g['avatar']) ?>" alt="" width="40" height="40" loading="lazy"></span>

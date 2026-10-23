@@ -438,7 +438,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
                 <?php endif; ?>
 
                 <?php if (chat_groups_enabled()): ?>
-                    <p class="cw-side-label cg-sticky-heading">Danh sách nhóm chat</p>
+                    <p class="cw-side-label cg-sticky-heading">Clubs Chat's</p>
                     <div class="cg-saved-list" data-cg-saved="<?= site_url('ajax/nhom/0/sticky') ?>" data-panel-base="<?= site_url('ajax/nhom-panel') ?>"></div>
                     <?php /* Tạm ẩn mục Khám phá nhóm trong chat sticky.
                     <a class="cg-sticky-discover" href="<?= site_url('clubs') ?>"><span class="cg-sticky-discover-icon" aria-hidden="true"><?= tk_icon('plus', 'cg-icon') ?></span><span><strong>Khám phá nhóm</strong><small>Tìm thêm những kết nối mới</small></span><?= tk_icon('chevron-right', 'cg-icon') ?></a>
