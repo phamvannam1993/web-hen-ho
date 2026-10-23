@@ -9,6 +9,10 @@
 <p><label>Mô tả <textarea name="description" maxlength="2000"><?= e($g['description'] ?? '') ?></textarea></label></p>
 <p><label>Nội quy <textarea name="rules" maxlength="4000"><?= e($g['rules'] ?? '') ?></textarea></label></p>
 </div></section>
+<section class="age-section"><header class="age-heading"><h2>SEO nhóm chat</h2><p>Tùy chỉnh tiêu đề và mô tả dùng cho công cụ tìm kiếm và khi chia sẻ liên kết nhóm.</p></header><div class="age-fields">
+<p><label>SEO title <input name="seo_title" maxlength="255" value="<?= e($this->input->method() === 'post' ? $this->input->post('seo_title') : ($g['seo_title'] ?? '')) ?>"></label><small>Để trống để dùng tên nhóm. Gợi ý khoảng 50–60 ký tự.</small></p>
+<p><label>SEO description <textarea name="seo_description" maxlength="500"><?= e($this->input->method() === 'post' ? $this->input->post('seo_description') : ($g['seo_description'] ?? '')) ?></textarea></label><small>Để trống để dùng mô tả nhóm. Gợi ý khoảng 150–160 ký tự.</small></p>
+</div></section>
 <section class="age-section"><header class="age-heading"><h2>Cấu hình trò chuyện</h2><p>Quản lý quyền tham gia, trạng thái và cách khám phá nhóm.</p></header><div class="age-fields">
 <p><label>Chế độ <select name="identity_mode"><option value="public" <?= ($g['identity_mode'] ?? '') === 'public' ? 'selected' : '' ?>>Công khai – đăng nhập để gửi</option><option value="guest" <?= ($g['identity_mode'] ?? '') === 'guest' ? 'selected' : '' ?>>Ẩn danh – sử dụng tên giả</option></select></label><small>Có thể chuyển chế độ bất cứ lúc nào, kể cả nhóm gốc đã có tin nhắn. Lịch sử được giữ lại và hiển thị theo chế độ hiện tại; khi chuyển sang công khai, tin của thành viên sẽ hiện tên và hồ sơ thật.</small></p>
 <p><label>Trạng thái <select name="status"><?php foreach (array('active'=>'Hoạt động','readonly'=>'Chỉ đọc','closed'=>'Đóng') as $v=>$label): ?><option value="<?= $v ?>" <?= ($g['status'] ?? 'active') === $v ? 'selected' : '' ?>><?= $label ?></option><?php endforeach; ?></select></label></p>

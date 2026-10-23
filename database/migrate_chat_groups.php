@@ -10,7 +10,8 @@ $tables = array(
 'chat_group_reactions' => 'message_id BIGINT UNSIGNED NOT NULL, actor_key VARCHAR(80) NOT NULL, emoji VARCHAR(16) NOT NULL, PRIMARY KEY(message_id,actor_key)',
 'chat_group_migrations' => 'version VARCHAR(80) PRIMARY KEY, applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP',
 'chat_groups' => "id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, slug VARCHAR(100) NOT NULL UNIQUE, name VARCHAR(120) NOT NULL,
- description TEXT NOT NULL, rules TEXT NOT NULL, avatar VARCHAR(255) DEFAULT NULL, category VARCHAR(80) NOT NULL DEFAULT '',
+ description TEXT NOT NULL, seo_title VARCHAR(255) NOT NULL DEFAULT '', seo_description VARCHAR(500) NOT NULL DEFAULT '',
+ rules TEXT NOT NULL, avatar VARCHAR(255) DEFAULT NULL, category VARCHAR(80) NOT NULL DEFAULT '',
  province_id INT UNSIGNED DEFAULT NULL, status ENUM('active','readonly','closed') NOT NULL DEFAULT 'active',
  identity_mode ENUM('public','guest') NOT NULL DEFAULT 'public', allow_images TINYINT NOT NULL DEFAULT 0,
  sort_order INT NOT NULL DEFAULT 0, pinned_message_id BIGINT UNSIGNED DEFAULT NULL,
@@ -42,6 +43,7 @@ $tables = array(
 if (in_array('--dry-run', $argv, true)) {
     echo "Version: chat-groups-v1\nCreate if absent: " . implode(', ', array_keys($tables)) . "\n";
     echo "Extend room_messages; make user_id nullable; seed default/public and guest rooms. No SQL executed.\n";
+    echo "Add chat_groups.seo_title and chat_groups.seo_description if absent.\n";
     exit;
 }
 try {
@@ -49,6 +51,9 @@ try {
     $pdo->exec("SET time_zone = '+07:00'");
     if (!$pdo->query("SELECT GET_LOCK('saigoncupid.chat-groups-v1', 10)")->fetchColumn()) throw new RuntimeException('Another migration is running.');
     foreach ($tables as $name => $body) $pdo->exec("CREATE TABLE IF NOT EXISTS `$name` ($body) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    foreach (array('seo_title' => "VARCHAR(255) NOT NULL DEFAULT ''", 'seo_description' => "VARCHAR(500) NOT NULL DEFAULT ''") as $column => $definition) {
+        if (!$pdo->query("SHOW COLUMNS FROM chat_groups LIKE '$column'")->fetch()) $pdo->exec("ALTER TABLE chat_groups ADD `$column` $definition");
+    }
     if (!$pdo->query("SHOW COLUMNS FROM chat_group_outbox LIKE 'message_id'")->fetch()) $pdo->exec('ALTER TABLE chat_group_outbox ADD message_id BIGINT UNSIGNED DEFAULT NULL');
     foreach (array('nickname_chosen' => 'TINYINT NOT NULL DEFAULT 0', 'joined_at' => 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP') as $column => $definition) {
         if (!$pdo->query("SHOW COLUMNS FROM chat_group_people LIKE '$column'")->fetch()) $pdo->exec("ALTER TABLE chat_group_people ADD `$column` $definition");
