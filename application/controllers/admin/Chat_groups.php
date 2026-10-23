@@ -46,11 +46,15 @@ class Chat_groups extends Admin_Controller
             $mode = (string) $this->input->post('identity_mode');
             $status = (string) $this->input->post('status');
             $description = trim((string) $this->input->post('description'));
+            $seo_title = trim((string) $this->input->post('seo_title'));
+            $seo_description = trim((string) $this->input->post('seo_description'));
             $rules = trim((string) $this->input->post('rules'));
             $moderators = array_values(array_unique(array_filter(array_map('intval', preg_split('/[\s,]+/', trim((string) $this->input->post('moderators')))))));
             if (!$name || mb_strlen($name) > 120 || !preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/D', $slug) || strlen($slug) > 100) $error = 'Tên tối đa 120 ký tự, slug chỉ gồm chữ thường không dấu, số và gạch ngang.';
             elseif (!in_array($mode, array('public','guest'), true) || !in_array($status, array('active','readonly','closed'), true)) $error = 'Chế độ hoặc trạng thái không hợp lệ.';
             elseif (mb_strlen($description) > 2000 || mb_strlen($rules) > 4000) $error = 'Mô tả tối đa 2.000 ký tự; nội quy tối đa 4.000 ký tự.';
+            elseif (mb_strlen($seo_title) > 255 || mb_strlen($seo_description) > 500) $error = 'SEO title tối đa 255 ký tự; SEO description tối đa 500 ký tự.';
+            elseif (!$this->db->field_exists('seo_title', 'chat_groups') || !$this->db->field_exists('seo_description', 'chat_groups')) $error = 'Cần chạy php database/migrate_chat_groups.php để cập nhật dữ liệu SEO nhóm chat.';
             elseif ($this->db->where('slug', $slug)->where('id !=', (int) $id)->count_all_results('chat_groups')) $error = 'Slug đã tồn tại.';
             if (!$error && $moderators) {
                 $valid = $this->db->where_in('id', $moderators)->where_in('role', array('admin','moderator'))->where('status', 'active')->where('deleted_at', null)->count_all_results('users');
@@ -74,6 +78,7 @@ class Chat_groups extends Admin_Controller
                 $this->db->trans_begin();
                 if ($g) $this->db->query('SELECT id FROM chat_groups WHERE id=? FOR UPDATE', array($id));
                 $data = array('name' => $name, 'slug' => $slug, 'description' => $description, 'rules' => $rules, 'avatar' => $avatar,
+                    'seo_title' => $seo_title, 'seo_description' => $seo_description,
                     'identity_mode' => $mode, 'status' => $status, 'allow_images' => $this->input->post('allow_images') ? 1 : 0,
                     'category' => mb_substr(trim((string) $this->input->post('category')), 0, 80),
                     'province_id' => (int) $this->input->post('province_id') ?: null, 'sort_order' => (int) $this->input->post('sort_order'));

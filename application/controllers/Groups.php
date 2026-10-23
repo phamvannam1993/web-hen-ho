@@ -81,7 +81,9 @@ class Groups extends MY_Controller
             redirect('dang-nhap?next=' . urlencode('clubs/' . $group['slug']));
             return;
         }
-        $this->render('groups/detail', array('title' => $group['name'], 'meta_desc' => mb_substr($group['description'], 0, 160),
+        $this->render('groups/detail', array('title' => $group['name'],
+            'meta_title' => trim($group['seo_title'] ?? ''),
+            'meta_desc' => trim($group['seo_description'] ?? '') !== '' ? trim($group['seo_description']) : mb_substr($group['description'], 0, 160),
             'group' => $group, 'chat_csrf' => $this->csrf(), 'seo_noindex' => $group['status'] === 'closed'));
     }
 
