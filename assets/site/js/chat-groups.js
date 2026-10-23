@@ -441,7 +441,7 @@
         if (m.type === 'image' && m.caption) bubble.append(node('p', 'cg-text', m.caption));
         var actions = node('div', 'cg-message-actions');
         var menu = node('div', 'cg-message-menu'); menu.setAttribute('popover', 'auto'); menu.setAttribute('aria-label', 'Thao tác tin nhắn');
-        var picker = node('div', 'cg-reaction-picker'); picker.setAttribute('popover', 'auto'); picker.setAttribute('aria-label', 'Chọn cảm xúc');
+        var picker = node('div', 'cg-menu-reactions'); picker.setAttribute('role', 'group'); picker.setAttribute('aria-label', 'Chọn cảm xúc');
         function show(popover, trigger) {
             showPopover(popover, trigger);
         }
@@ -450,14 +450,18 @@
             b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + path + '</svg>';
             b.onclick = function () { fn(b); }; actions.append(b); return b;
         }
-        if (this.form) iconButton('Trả lời', '<path d="m9 5-7 7 7 7v-5c6 0 10 1 13 5-1-8-5-11-13-11z"/>', function () { self.reply = m; var r = self.root.querySelector('[data-cg-reply]'); r.hidden = false; r.querySelector('span').textContent = 'Trả lời ' + m.sender.name; self.form.content.focus(); });
         var more = iconButton('Thêm thao tác', '<circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>', function (b) { show(menu, b); });
         more.setAttribute('aria-haspopup', 'true');
-        if (this.form) iconButton('Thả cảm xúc', '<circle cx="12" cy="12" r="9"/><path d="M8 14s1 3 4 3 4-3 4-3M8 9h.01M16 9h.01"/>', function (b) { show(picker, b); });
-        ['❤️','👍','😂','😮','😢','😡'].forEach(function (emoji) { var b = node('button', '', emoji); b.type = 'button'; b.setAttribute('aria-label', 'Thả ' + emoji); b.onclick = function () { closePopover(picker); self.act('react', {message_id:m.id, emoji:emoji}); }; picker.append(b); });
+        more.setAttribute('aria-expanded', 'false');
+        if (this.form) {
+            ['❤️','👍','😂','😮','😢','😡'].forEach(function (emoji) { var b = node('button', '', emoji); b.type = 'button'; b.setAttribute('aria-label', 'Thả ' + emoji); b.onclick = function () { closePopover(menu); self.act('react', {message_id:m.id, emoji:emoji}); }; picker.append(b); });
+            menu.append(picker);
+            button('Trả lời', function () { self.reply = m; var r = self.root.querySelector('[data-cg-reply]'); r.hidden = false; r.querySelector('span').textContent = 'Trả lời ' + m.sender.name; self.form.content.focus(); });
+        }
         function button(label, fn) {
             var b = node('button', 'cg-menu-item'); b.type = 'button';
             var paths = {
+                'Trả lời': '<path d="m9 5-7 7 7 7v-5c6 0 10 1 13 5-1-8-5-11-13-11z"/>',
                 'Chặn': '<circle cx="12" cy="12" r="8"/><path d="m6 6 12 12"/>',
                 'Báo cáo': '<path d="M5 21V4m0 0c5-4 9 4 14 0v10c-5 4-9-4-14 0"/>',
                 'Ghim': '<path d="m9 3 6 0-1 6 4 4v2H6v-2l4-4-1-6ZM12 15v6"/>',
@@ -486,7 +490,7 @@
         if (!menu.children.length) more.hidden = true;
         var reactions = node('div', 'cg-reactions'); reactions.dataset.cgReactions = '';
         this.renderReactions(reactions, m); bubble.append(reactions);
-        row.append(avatar, body, actions, menu, picker); return row;
+        row.append(avatar, body, actions, menu); return row;
     };
     Chat.prototype.renderReactions = function (target, m) {
         var self = this; target.replaceChildren();

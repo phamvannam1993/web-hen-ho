@@ -31,7 +31,7 @@ body.is-messages-page .site-page-content { min-height:0; }
 .tk-ms-private { display:flex; flex-direction:column; flex:0 0 auto; min-height:48px; overflow:hidden; }
 .tk-ms-private.is-expanded { flex:1 1 auto; }
 .tk-ms-private-title { width:100%; border:0; border-bottom:1px solid var(--tk-border); font-family:inherit; text-align:left; cursor:pointer; }
-.tk-ms-private-content { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; }
+.tk-ms-private-content { flex:1; min-height:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y; -webkit-overflow-scrolling:touch; }
 .tk-ms-private-content[hidden] { display:none; }
 .tk-ms-private-title::-webkit-details-marker { display:none; }
 .tk-ms-private-title:focus-visible { outline:2px solid var(--tk-primary); outline-offset:-3px; }
@@ -197,7 +197,7 @@ body.is-messages-page .site-page-content { min-height:0; }
   }
   html.tk-inbox-list .tk-ms-side { height: 100%; overflow: hidden; }
   html.tk-inbox-list .tk-ms-side__h { flex-shrink: 0; background: #fff; }
-  html.tk-inbox-list .tk-ms-list { overflow-x: hidden; touch-action: pan-y; }
+  html.tk-inbox-list .tk-ms-private-content { overflow-x: hidden; touch-action: pan-y; }
   body.is-messages-page .site-footer { display: none; }
   .tk-ms.is-open .tk-ms-side { display: none; }
   .tk-ms:not(.is-open) .tk-ms-pane { display: none; }
@@ -208,11 +208,16 @@ html.tk-inbox-open { overflow: hidden; overscroll-behavior: none; }
 html.tk-inbox-open body { position: fixed; inset: 0; overflow: hidden; overscroll-behavior: none; }
 .tk-card.tk-ms.is-open { height: var(--inbox-height); min-height: 0; }
 .tk-ms.is-open .tk-ms-pane { height: 100%; min-height: 0; overflow: hidden; }
+.tk-ms .tk-ms-pane[hidden] { display: none; }
+.tk-ms-group-pane .cg-feed { min-height: 0; touch-action: pan-y; -webkit-overflow-scrolling: touch; }
+html.tk-inbox-open body :is(.topbar, .site-header, .tk-mhead, .tk-bnav, .site-mobile-nav, .bottom-nav) { display: none; }
+html.tk-inbox-open body { --tk-head: 0px !important; padding-bottom: 0; }
+html.tk-inbox-open .site-page-content { margin-top: 0; padding-top: 0; }
 .tk-ms-head, .tk-ms-form, .tk-ms-seen, .tk-ms-locked { flex-shrink: 0; }
 .tk-ms-body, .tk-ms-list, .tk-ms .emoji-list { overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; }
 .tk-ms-inwrap > .tk-input { font-size: 16px; }
 
-/* An open inbox fills the available content area up to the bottom nav. */
+/* An open conversation fills the content area with site navigation hidden. */
 html.tk-inbox-open .tk-main { padding: 0; }
 html.tk-inbox-open .tk-main__in { max-width: none; margin: 0; gap: 0; }
 html.tk-inbox-open .tk-card.tk-ms.is-open {
@@ -234,11 +239,11 @@ html.tk-inbox-open .tk-card.tk-ms.is-open {
     min-width: 0; max-width: 100%; overflow: hidden;
   }
   html.tk-inbox-open .tk-ms-head__who { overflow: hidden; }
-  html.tk-inbox-open :is(.tk-ms-body, .tk-ms-list, .emoji-list) {
+  html.tk-inbox-open :is(.tk-ms-body, .tk-ms-private-content, .emoji-list) {
     overflow-x: hidden; overscroll-behavior: contain;
     touch-action: pan-y; scrollbar-width: none;
   }
-  html.tk-inbox-open :is(.tk-ms-body, .tk-ms-list, .emoji-list)::-webkit-scrollbar {
+  html.tk-inbox-open :is(.tk-ms-body, .tk-ms-private-content, .emoji-list)::-webkit-scrollbar {
     display: none; width: 0; height: 0;
   }
 }
