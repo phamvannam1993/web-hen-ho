@@ -45,7 +45,7 @@
     }, { passive: true });
     document.addEventListener('touchmove', function (event) {
         if (event.touches.length !== 1) return;
-        var area = event.target.closest('.tk-ms-body, .tk-ms-private-content, .tk-ms-groups__list, .tk-ms .emoji-list, .tk-side .tk-nav, .modal-body');
+        var area = event.target.closest('.tk-ms-body, .tk-ms-private-content, .tk-ms-groups__list, .tk-ms .emoji-list, .tk-side .tk-nav, .modal-body, .tk-ms-group-pane .cg-feed, .tk-ms-group-pane .cg-info, .tk-ms-group-pane .cg-composer textarea, .tk-ms-group-pane .cg-composer-emoji-grid, .cg-info-dialog, .cg-image-viewer, .cg-message-menu, .cg-group-menu, .cg-reaction-picker');
         var delta = event.touches[0].clientY - previousY;
         previousY = event.touches[0].clientY;
         if (!area || area.scrollHeight <= area.clientHeight ||
