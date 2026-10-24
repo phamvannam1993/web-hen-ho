@@ -4,8 +4,9 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL) || substr($email, -6) === '.local
 $phone = $settings['hotline'] ?? '0899.015.709';
 if (!$phone || preg_replace('/\D/', '', $phone) === '0900000000') $phone = '0899.015.709';
 ?>
-<div class="container"><article class="content-box static-page">
-<h1><?= e($title) ?></h1>
+<div class="container static-layout static-layout--single"><article class="content-box static-page">
+<h1 class="detail-title"><?= e($title) ?></h1>
+<div class="static-content">
 <?php if ($policy_slug === 'contact-us'): ?>
 <p>Liên hệ để được hỗ trợ tài khoản, phản ánh hồ sơ hoặc gửi yêu cầu liên quan đến dữ liệu cá nhân.</p>
 <h2>Đơn vị vận hành</h2>
@@ -36,4 +37,5 @@ if (!$phone || preg_replace('/\D/', '', $phone) === '0900000000') $phone = '0899
 <h2>Liên hệ hỗ trợ</h2>
 <p>Email: <a href="mailto:<?= e($email) ?>"><?= e($email) ?></a><br>Điện thoại: <a href="tel:<?= e(preg_replace('/\D/', '', $phone)) ?>"><?= e($phone) ?></a></p>
 <p><a href="<?= site_url('bao-mat') ?>">Chính sách bảo mật</a> · <a href="<?= site_url('an-toan') ?>">Hẹn hò an toàn</a> · <a href="<?= site_url('noi-quy') ?>">Nội quy</a></p>
+</div>
 </article></div>

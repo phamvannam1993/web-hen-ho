@@ -8,7 +8,7 @@
  */
 $gioi_tinh = array('female' => 'Nữ', 'male' => 'Nam', 'other' => 'Khác');
 ?>
-<div class="container">
+<div class="container auth-page">
     <div class="auth-card auth-card--narrow">
         <h1 class="auth-title">Tạo tài khoản</h1>
         <p class="auth-sub">Chưa đến một phút. Ảnh và khu vực bạn thêm sau cũng được.</p>
@@ -47,7 +47,7 @@ $gioi_tinh = array('female' => 'Nữ', 'male' => 'Nam', 'other' => 'Khác');
 
             <label class="checkbox">
                 <input type="checkbox" name="agree" value="1" <?= set_checkbox('agree', '1') ?> required>
-                Tôi đồng ý với <a href="<?= site_url('noi-quy') ?>" target="_blank">nội quy</a> của website
+                <span>Tôi đồng ý với <a href="<?= site_url('noi-quy') ?>" target="_blank" rel="noopener">nội quy</a> của website</span>
             </label>
 
             <div class="auth-actions">

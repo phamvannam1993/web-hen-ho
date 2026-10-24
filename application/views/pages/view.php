@@ -1,5 +1,5 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
-<div class="container page-layout">
+<div class="container page-layout static-layout">
     <div>
         <article class="content-box static-page">
             <h1 class="detail-title"><?= e($page['title']) ?></h1>

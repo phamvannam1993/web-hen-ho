@@ -190,7 +190,9 @@
             showPopover(self.groupMenu, groupMenuToggle, true);
         };
         this.groupMenu.addEventListener('click', function (event) { if (event.target.closest('button')) closePopover(self.groupMenu); }, true);
-        root.querySelector('[data-cg-notifications]').onclick = function () { self.act('notifications', {enabled: self.group && self.group.notifications ? '0' : '1'}); };
+        // The fallback popover moves the menu outside root while it is open.
+        this.notificationsButton = this.groupMenu.querySelector('[data-cg-notifications]');
+        this.notificationsButton.onclick = function () { self.act('notifications', {enabled: self.group && self.group.notifications ? '0' : '1'}); };
         root.querySelector('[data-cg-share]').onclick = function () {
             var url = self.group ? self.group.url : location.href;
             if (navigator.share) navigator.share({title: self.group && self.group.name, url: url}).catch(function () {});
@@ -353,7 +355,7 @@
             else if (atBottom) self.feed.scrollTop = self.feed.scrollHeight;
             else if (changed) self.jump.hidden = false;
             self.root.querySelector('[data-cg-online]').textContent = r.group.online + ' người đang online';
-            self.root.querySelector('[data-cg-notifications]').textContent = r.group.notifications ? 'Tắt thông báo' : 'Bật thông báo';
+            self.notificationsButton.textContent = r.group.notifications ? 'Tắt thông báo' : 'Bật thông báo';
             var pin = self.root.querySelector('[data-cg-pin]'); pin.hidden = !r.group.pinned; pin.textContent = r.group.pinned ? '📌 ' + (r.group.pinned.type === 'image' ? 'Hình ảnh' : r.group.pinned.content) : '';
             if (self.form) { self.form.querySelector('button[type=submit]').disabled = self.busy || !!(self.identity && self.identity.needs_nickname) || r.group.status !== 'active'; self.form.content.disabled = !!(self.identity && self.identity.needs_nickname) || r.group.status !== 'active'; }
             self.read();
@@ -505,8 +507,27 @@
         target.hidden = !target.children.length;
     };
     Chat.prototype.moderate = function (action, target) { var reason = prompt('Lý do xử lý:'); if (reason) this.act('moderate', {action: action, target: target, reason: reason}); };
+    Chat.prototype.flash = function (message) {
+        if (!this.toast) {
+            this.toast = node('div', 'cg-toast');
+            this.toast.setAttribute('role', 'status');
+            document.body.append(this.toast);
+        }
+        clearTimeout(this.toastTimer);
+        this.toast.textContent = message;
+        this.toast.hidden = false;
+        var self = this;
+        this.toastTimer = setTimeout(function () { self.toast.hidden = true; }, 2500);
+    };
     Chat.prototype.act = function (action, data) { var self = this; return this.request(action, data || {}).then(function () {
-        self.status.textContent = action === 'react' ? '' : 'Đã cập nhật.';
+        self.status.textContent = action === 'react' || action === 'notifications' ? '' : 'Đã cập nhật.';
+        if (action === 'notifications') {
+            var enabled = data.enabled === '1';
+            if (self.group) self.group.notifications = enabled;
+            self.notificationsButton.textContent = enabled ? 'Tắt thông báo' : 'Bật thông báo';
+            self.flash(enabled ? 'Đã bật thông báo' : 'Đã tắt thông báo');
+            refreshSidebar();
+        }
         if (action === 'block') { self.messages.clear(); self.feed.replaceChildren(); self.last = 0; self.first = 0; self.reply = null; }
         self.load(); refreshSaved();
     }).catch(function (e) { self.status.textContent = e.message; }); };
@@ -537,6 +558,8 @@
     };
     Chat.prototype.destroy = function () {
         if (this.destroyed) return;
+        clearTimeout(this.toastTimer);
+        if (this.toast) this.toast.remove();
         this.clearAttachment();
         if (fallbackPopover && this.root.contains(fallbackPopover.cgAnchor)) closePopover(fallbackPopover);
         if (this.groupMenu) closePopover(this.groupMenu);
@@ -676,6 +699,13 @@
                 }
                 avatar.src = group.avatar; avatar.alt = ''; avatar.width = 32; avatar.height = 32;
                 link.append(avatar, node('span', '', group.name + (group.unread ? ' (' + group.unread + ')' : '')));
+                if (!group.notifications) {
+                    var muted = node('span', 'cg-sidebar-muted');
+                    muted.title = 'Đã tắt thông báo';
+                    muted.setAttribute('aria-label', 'Đã tắt thông báo');
+                    muted.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 4.2A6 6 0 0 1 18 10v4l2 3M6 6a6 6 0 0 0-1 4v4l-2 3h14M10 21h4"/></svg>';
+                    link.append(muted);
+                }
                 sidebar.append(link);
             });
         }).catch(function () {});

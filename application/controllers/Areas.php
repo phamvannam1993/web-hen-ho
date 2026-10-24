@@ -19,7 +19,7 @@ class Areas extends MY_Controller
     public function index()
     {
         $this->render('areas/index', array(
-            'title'     => 'Thành viên theo khu vực',
+            'title'     => 'Tìm bạn hẹn hò theo khu vực từ Bắc chí Nam',
             'meta_desc' => 'Tìm người hẹn hò, kết bạn theo từng tỉnh thành trên cả nước.',
             'list'      => $this->m_province->with_member_count(),
         ));
