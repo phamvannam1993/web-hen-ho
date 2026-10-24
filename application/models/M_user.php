@@ -241,15 +241,8 @@ class M_user extends CI_Model
         }
 
         if (!empty($f['keyword'])) {
-            // Ô tìm kiếm ngoài trang chủ ghi "tên, khu vực hoặc mô tả" nên phải
-            // tìm cả nghề nghiệp và tên tỉnh, không chỉ tên và giới thiệu.
-            $this->db->group_start()
-                ->like('u.display_name', $f['keyword'])
-                ->or_like('u.nickname', $f['keyword'])
-                ->or_like('u.bio', $f['keyword'])
-                ->or_like('u.job', $f['keyword'])
-                ->or_like('p.name', $f['keyword'])
-                ->group_end();
+            // Tìm thành viên chỉ theo số điện thoại.
+            $this->db->like('u.phone', trim($f['keyword']));
         }
     }
 

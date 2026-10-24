@@ -110,7 +110,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
         <button type="button" class="install-banner-main" data-install-app data-install-guide>
             <img src="<?= base_url('assets/site/img/android-chrome-192x192.png') ?>" width="42" height="42" alt="">
             <span class="install-banner-copy"><strong>Saigon Cupid</strong><small>Thêm vào màn hình chính, kết nối mỗi ngày</small></span>
-            <span class="install-banner-cta">Tải app</span>
+            <span class="install-banner-cta">Download apps</span>
         </button>
     </aside>
     <div class="container header-inner">
@@ -125,8 +125,8 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
             <svg viewBox="0 0 24 24" class="ic" aria-hidden="true">
                 <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/>
             </svg>
-            <input type="text" name="q" value="<?= e($this->input->get('q')) ?>"
-                   placeholder="Tìm theo tên, khu vực hoặc nghề nghiệp..." aria-label="Tìm thành viên">
+            <input type="search" name="q" value="<?= e($this->input->get('q')) ?>" inputmode="tel"
+                   placeholder="Nhập số điện thoại cần tìm..." aria-label="Tìm thành viên theo số điện thoại">
             <button class="header-search-submit" type="submit">Tìm</button>
         </form>
 
