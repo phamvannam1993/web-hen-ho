@@ -453,7 +453,18 @@
             b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + path + '</svg>';
             b.onclick = function () { fn(b); }; actions.append(b); return b;
         }
-        var more = iconButton('Thêm thao tác', '<circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>', function (b) { show(menu, b); });
+        var menuOpenOnPointerDown = false;
+        var more = iconButton('Thêm thao tác', '<circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>', function (b) {
+            // Native popovers can light-dismiss on pointerup before click runs.
+            var shouldClose = menuOpenOnPointerDown;
+            menuOpenOnPointerDown = false;
+            if (shouldClose) { closePopover(menu); return; }
+            show(menu, b);
+        });
+        more.addEventListener('pointerdown', function () { menuOpenOnPointerDown = popoverOpen(menu); });
+        more.addEventListener('pointercancel', function () { menuOpenOnPointerDown = false; });
+        more.addEventListener('keydown', function () { menuOpenOnPointerDown = false; });
+        menu.addEventListener('toggle', function () { more.setAttribute('aria-expanded', popoverOpen(menu) ? 'true' : 'false'); });
         more.setAttribute('aria-haspopup', 'true');
         more.setAttribute('aria-expanded', 'false');
         if (this.form) {

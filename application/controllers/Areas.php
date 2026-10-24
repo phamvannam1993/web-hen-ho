@@ -85,7 +85,7 @@ class Areas extends MY_Controller
         $total = $this->m_user->count_search($filters);
 
         $this->render_member_list('members/index', $page, array(
-            'title'      => 'Thành viên tại ' . $province['name'],
+            'title'      => 'Cộng đồng thành viên hẹn hò tại ' . $province['name'],
             'meta_desc'  => 'Danh sách thành viên đang tìm bạn hẹn hò tại ' . $province['name'] . '.',
             'keyword'    => $this->input->get('q', true),
             'filters'    => $filters,

@@ -137,7 +137,7 @@
 .cg-image-viewer > img { display:block; max-width:100%; max-height:calc(100dvh - 120px); margin:auto; border-radius:10px; object-fit:contain; }
 .cg-chat .cg-image-viewer-close { position:absolute; top:18px; right:18px; width:36px; height:36px; min-height:36px; padding:0; border:1px solid #eadfe5; border-radius:50%; background:#fffffff2; color:#382d38; font-size:26px; box-shadow:0 2px 8px #0002; }
 .cg-image-caption { max-width:760px; margin:10px 4px 2px; font-size:13px; line-height:1.6; white-space:pre-wrap; overflow-wrap:anywhere; }
-.cg-message-actions { display:flex; flex-shrink:0; align-self:center; gap:3px; }
+.cg-message-actions { display:flex; flex-shrink:0; align-self:flex-end; gap:3px; }
 .cg-message.is-mine .cg-text { text-align:left; }
 .cg-message.is-mine .cg-message-actions { justify-content:flex-end; }
 .cg-message.is-mine .cg-image { margin-left:auto; }
