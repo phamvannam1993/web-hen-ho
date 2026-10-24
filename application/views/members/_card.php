@@ -33,7 +33,7 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
                 </span>
             <?php endif; ?>
         </span>
-        <span class="pcard-gender <?= $gclass ?>"><?= $ic_gender ?></span>
+        <?php if (empty($dating_card)): ?><span class="pcard-gender <?= $gclass ?>"><?= $ic_gender ?></span><?php endif; ?>
     </a>
 
     <div class="pcard-body">
