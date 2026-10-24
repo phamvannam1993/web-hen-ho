@@ -52,7 +52,7 @@ class Groups extends MY_Controller
                 ->where('last_active_at >', date('Y-m-d H:i:s', time() - 45))->count_all_results('chat_group_people');
         }
         unset($g);
-        $this->render('groups/index', compact('q','mode','category','province','page','groups','more') + array('chat_csrf' => $this->csrf(), 'title' => 'Khám phá nhóm chat', 'meta_desc' => 'Tìm nhóm trò chuyện và làm quen trên Saigon Cupid.'));
+        $this->render('groups/index', compact('q','mode','category','province','page','groups','more') + array('chat_csrf' => $this->csrf(), 'title' => "Cộng đồng nhóm Chat's ẩn danh với người lạ", 'meta_title' => "Cộng đồng nhóm Chat's ẩn danh với người lạ - Saigon Cupid", 'meta_desc' => 'Tìm nhóm trò chuyện và làm quen trên Saigon Cupid.'));
     }
 
     public function random_anonymous()

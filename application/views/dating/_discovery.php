@@ -24,7 +24,7 @@ $chosen = function ($key, $option) use ($value) { return (string) $value($key) =
         <label class="dating-query">
             <span class="dating-sr-only">Tìm theo tên, khu vực hoặc nghề nghiệp</span>
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg>
-            <input type="search" name="q" value="<?= e($value('keyword')) ?>" placeholder="Tìm theo tên, khu vực..." maxlength="100">
+            <input type="search" name="q" value="<?= e($value('keyword')) ?>" placeholder="Nhập số điện thoại cần tìm..." inputmode="tel" aria-label="Tìm thành viên theo số điện thoại" maxlength="100">
         </label>
         <label><span class="dating-sr-only">Giới tính</span>
             <select name="gender"><option value="">Tất cả giới tính</option><option value="male" <?= $chosen('gender', 'male') ?>>Nam</option><option value="female" <?= $chosen('gender', 'female') ?>>Nữ</option></select>

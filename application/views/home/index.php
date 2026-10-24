@@ -33,13 +33,12 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
             <form class="home-intro-search" method="get" action="<?= site_url('tim-kiem') ?>" role="search">
                 <span aria-hidden="true"><?= $ic($ic_search) ?></span>
                 <input type="search" name="q" value="<?= e($this->input->get('q')) ?>"
-                       aria-label="Tìm kiếm bạn đời theo sở thích, nghề nghiệp, địa điểm"
-                       placeholder="Sở thích, nghề nghiệp, địa điểm...">
+                       placeholder="Nhập số điện thoại cần tìm..." inputmode="tel" aria-label="Tìm thành viên theo số điện thoại">
                 <button type="submit">Tìm kiếm</button>
             </form>
             <div class="home-intro-actions">
                 <a class="home-intro-button" href="<?= site_url('swipe-match') ?>">Ghép đôi online <span aria-hidden="true">→</span></a>
-                <button type="button" class="home-intro-button home-intro-install" data-install-app>Tải app <span aria-hidden="true">↓</span></button>
+                <button type="button" class="home-intro-button home-intro-install" data-install-app>Download Apps <span aria-hidden="true">↓</span></button>
                 <span class="home-intro-trust"><?= $ic($ic_shield) ?> Chân thành &amp; riêng tư</span>
             </div>
         </div>

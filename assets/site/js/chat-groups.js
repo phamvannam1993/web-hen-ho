@@ -183,6 +183,7 @@
         };
         var groupMenuToggle = root.querySelector('[data-cg-group-menu-toggle]');
         this.groupMenu = root.querySelector('[data-cg-group-menu]');
+        this.identityRow = this.groupMenu.querySelector('[data-cg-identity]');
         this.groupMenu.id = 'cg-group-menu-' + key();
         groupMenuToggle.setAttribute('aria-controls', this.groupMenu.id);
         this.groupMenu.addEventListener('toggle', function () { groupMenuToggle.setAttribute('aria-expanded', popoverOpen(self.groupMenu) ? 'true' : 'false'); });
@@ -281,7 +282,7 @@
             if (self.form) { self.form.content.disabled = !!r.identity.needs_nickname; self.form.querySelector('button[type=submit]').disabled = !!r.identity.needs_nickname; }
             self.connect(r.ws_url, r.ticket);
             if (!self.root.dataset.canSend || self.root.dataset.canSend === '0') return;
-            var identityRow = self.root.querySelector('[data-cg-identity]');
+            var identityRow = self.identityRow;
             identityRow.hidden = false;
             var identityText = identityRow.querySelector('[data-cg-identity-name]');
             identityText.replaceChildren(document.createTextNode('Bạn đang chat với tên '), node('strong', 'cg-current-nickname', r.identity.name), document.createTextNode('.'));
@@ -673,7 +674,13 @@
                 var text = node('span', 'cw-row-text');
                 var meta = node('span', 'cg-sticky-meta');
                 meta.append(node('span', 'cg-sticky-tag', g.mode === 'guest' ? 'Khách ẩn danh' : 'Nhóm cộng đồng'));
-                if (!g.notifications) { var muted = node('span', 'cg-sticky-muted', 'Đã tắt thông báo'); muted.title = 'Đã tắt thông báo'; meta.append(muted); }
+                if (!g.notifications) {
+                    var muted = node('span', 'cg-sticky-muted');
+                    muted.title = 'Đã tắt thông báo';
+                    muted.setAttribute('aria-label', 'Đã tắt thông báo');
+                    muted.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 4.2A6 6 0 0 1 18 10v4l2 3M6 6a6 6 0 0 0-1 4v4l-2 3h14M10 21h4"/></svg>';
+                    meta.append(muted);
+                }
                 var top = node('span', 'cw-row-top'), name = node('b'); name.append(node('span', 'cw-row-name', g.name)); top.append(name);
                 var preview = g.last ? (g.last_sender ? g.last_sender + ': ' : '') + g.last : 'Chưa có tin nhắn. Bắt đầu trò chuyện!';
                 text.append(meta, top, node('span', 'cw-row-last', preview));
