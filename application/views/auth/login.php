@@ -1,16 +1,17 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
-<div class="container">
+<div class="container auth-page">
     <div class="auth-card">
         <h1 class="auth-title">Đăng nhập</h1>
+        <p class="auth-sub">Chào mừng bạn trở lại. Tiếp tục trò chuyện và kết nối nhé.</p>
 
         <?= validation_errors('<div class="alert alert-danger">', '</div>') ?>
 
         <form method="post" class="auth-form">
             <label for="identity">Email hoặc số điện thoại</label>
-            <input type="text" id="identity" name="identity" value="<?= set_value('identity') ?>" required>
+            <input type="text" id="identity" name="identity" value="<?= set_value('identity') ?>" autocomplete="username" placeholder="Nhập email hoặc số điện thoại" required>
 
             <label for="password">Mật khẩu</label>
-            <input type="password" id="password" name="password" required>
+            <input type="password" id="password" name="password" autocomplete="current-password" placeholder="Nhập mật khẩu của bạn" required>
 
 
             <label class="checkbox">

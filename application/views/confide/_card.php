@@ -2,8 +2,6 @@
 /** @var array $m một hồ sơ; thẻ dành riêng cho trang Tâm sự */
 $age    = age_from($m['birthday']);
 $online = is_online($m['last_active_at']);
-$topics = Confide::topics();
-$topic  = !empty($m['confide_topic']) ? ($topics[$m['confide_topic']] ?? '') : '';
 $me     = isset($user) ? $user : null;
 $access = profile_access_card($m,$me['id'] ?? 0);
 
@@ -32,9 +30,6 @@ $ic_verified = '<svg viewBox="0 0 24 24" class="ic"><path d="M12 3l7 3v6c0 4.4-3
         <p class="ccard-place">
             <span class="mi"><?= $ic_pin ?><?= !empty($m['province_name']) ? e($m['province_name']) : 'Chưa rõ khu vực' ?></span>
         </p>
-
-        <?php /* Luôn giữ chỗ để các thẻ cùng hàng cao bằng nhau */ ?>
-        <p class="ccard-topic"><?php if ($topic): ?><span><?= e($topic) ?></span><?php endif; ?></p>
 
         <p class="ccard-note"><?= $user && !empty($m['bio']) ? e(excerpt($m['bio'], 90)) : '' ?></p>
 
