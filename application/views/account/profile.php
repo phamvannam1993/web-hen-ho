@@ -75,9 +75,10 @@ if (!array_key_exists($current_frame, profile_frame_catalog())) $current_frame =
             <?php if ((profile_frame_prices()[$frame_id] > 0) !== ($frame_tier === 'super')) continue; ?>
             <?php $frame_price = profile_frame_prices()[$frame_id]; $frame_owned = !$frame_price || in_array($frame_id, $owned_frames, true); ?>
             <div class="profile-frame-product<?= $frame_price ? ' is-premium' : '' ?>">
+            <button type="button" class="profile-frame-inspect" data-frame-preview="<?= e($frame_id) ?>" data-frame-name="<?= e($frame_name) ?>" aria-label="Xem trước khung <?= e($frame_name) ?>" title="Xem trước khung" aria-haspopup="dialog" aria-controls="frame-preview-dialog"><?= tk_icon('search') ?></button>
             <label class="profile-frame-option">
                 <input type="radio" name="profile_frame" value="<?= e($frame_id) ?>" <?= ($me['profile_frame'] ?? 'none') === $frame_id ? 'checked' : '' ?> <?= !$frame_owned ? 'disabled' : '' ?>>
-                <span class="profile-frame-preview profile-frame-preview--<?= e($frame_id) ?>" aria-hidden="true"><span>✦</span></span>
+                <span class="profile-frame-thumbnail"><span class="profile-frame-preview profile-frame-preview--<?= e($frame_id) ?>" aria-hidden="true"><span>✦</span></span></span>
                 <strong><?= e($frame_name) ?></strong>
                 <?php if ($frame_owned): ?><small><?= !$frame_price ? 'Miễn phí' : 'Đã sở hữu' ?></small><?php endif; ?>
             </label>
@@ -88,6 +89,20 @@ if (!array_key_exists($current_frame, profile_frame_catalog())) $current_frame =
         <?php endforeach; ?>
         <button type="submit" class="tk-btn tk-btn--primary">Lưu khung đang dùng</button>
     </form>
+</dialog>
+<?php if (!chat_groups_enabled()): ?>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/chat-groups.css') ?>?v=<?= filemtime(FCPATH.'assets/site/css/chat-groups.css') ?>">
+<?php endif; ?>
+<dialog class="cg-anonymous-profile frame-demo-dialog" id="frame-preview-dialog" aria-labelledby="frame-demo-name" aria-describedby="frame-demo-note">
+    <div class="cg-profile-banner" aria-hidden="true"></div>
+    <div class="cg-profile-content">
+        <div class="cg-profile-avatar-frame"><img class="cg-profile-avatar" src="<?= e(avatar_url(null, 'female')) ?>" alt="Ảnh đại diện demo"></div>
+        <span class="cg-profile-label">HỒ SƠ DEMO</span>
+        <h3 id="frame-demo-name">Mây Nhỏ</h3>
+        <div class="cg-profile-stats"><p>Tham gia nhóm: 20/10/2026</p><p>🔥 Chuỗi online: 7 ngày</p></div>
+        <p id="frame-demo-note">Xem trước khung: <strong data-frame-demo-title></strong></p>
+        <button type="button" class="tk-btn tk-btn--outline cg-profile-close" data-frame-preview-close>Đóng xem trước</button>
+    </div>
 </dialog>
 <dialog class="frame-purchase-dialog" id="frame-purchase-dialog" aria-labelledby="frame-purchase-title">
     <h2 id="frame-purchase-title">Xác nhận mua khung</h2>

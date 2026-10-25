@@ -5,9 +5,10 @@
     if (!form || !dialog) return;
     var library = document.getElementById('profile-frame-library');
     var opener = document.querySelector('[data-frame-shop-open]');
+    var preview = document.getElementById('frame-preview-dialog');
     var scrollLock = null;
     function syncScrollLock() {
-        if (library.open || dialog.open) {
+        if (library.open || dialog.open || preview.open) {
             if (scrollLock) return;
             scrollLock = {x: window.scrollX, y: window.scrollY, styles: {}};
             ['position', 'top', 'left', 'width', 'overflow'].forEach(function (property) {
@@ -27,6 +28,24 @@
     function openLibrary() { if (!library.open) library.showModal(); syncScrollLock(); }
     library.addEventListener('close', syncScrollLock);
     dialog.addEventListener('close', syncScrollLock);
+    preview.addEventListener('close', syncScrollLock);
+    preview.querySelector('[data-frame-preview-close]').onclick = function () { preview.close(); };
+    form.addEventListener('click', function (event) {
+        var button = event.target.closest('[data-frame-preview]');
+        if (!button) return;
+        var frame = button.dataset.framePreview;
+        preview.className = 'cg-anonymous-profile frame-demo-dialog' + (frame === 'none' ? ' cg-profile-unframed' : ' cg-profile-theme-aurora' + (frame === 'aurora' ? '' : ' cg-profile-theme-' + frame));
+        preview.querySelector('[data-frame-demo-title]').textContent = button.dataset.frameName;
+        preview.showModal();
+        preview.scrollTop = 0;
+        syncScrollLock();
+        preview.querySelector('[data-frame-preview-close]').focus();
+    });
+    preview.addEventListener('click', function (event) {
+        if (event.target !== preview) return;
+        var rect = preview.getBoundingClientRect();
+        if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) preview.close();
+    });
     opener.onclick = openLibrary;
     library.querySelector('[data-frame-shop-close]').onclick = function () { library.close(); };
     library.addEventListener('click', function (event) {
