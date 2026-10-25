@@ -99,7 +99,7 @@ if (!array_key_exists($current_frame, profile_frame_catalog())) $current_frame =
         <div class="cg-profile-avatar-frame"><img class="cg-profile-avatar" src="<?= e(avatar_url(null, 'female')) ?>" alt="Ảnh đại diện demo"></div>
         <span class="cg-profile-label">HỒ SƠ DEMO</span>
         <h3 id="frame-demo-name">Mây Nhỏ</h3>
-        <div class="cg-profile-stats"><p>Tham gia nhóm: 20/10/2026</p><p>🔥 Chuỗi online: 7 ngày</p></div>
+        <div class="cg-profile-stats"><p>Gia nhập: 20/10/2026</p><p>🔥 Chuỗi online: 7 ngày</p></div>
         <p id="frame-demo-note">Xem trước khung: <strong data-frame-demo-title></strong></p>
         <button type="button" class="tk-btn tk-btn--outline cg-profile-close" data-frame-preview-close>Đóng xem trước</button>
     </div>

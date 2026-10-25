@@ -242,3 +242,13 @@
 .pp-frame-ngu_long .profile-actions .btn-primary { background:linear-gradient(135deg,#e8cd88,#c8a65b); color:#0c1b18; }
 .public-profile .pp-frame-ngu_long .profile-photo { margin-bottom:18px; }
 .pp-frame-ngu_long .profile-photo::after { inset:auto; left:-24%; top:-38%; width:155%; height:155%; }
+
+.pp-frame-halloween { --pf-accent:#c4adca; --pf-glow:#f3ae56; --pf-dark:#181223; --pf-bg:#181223; }
+.public-profile .pp-identity.pp-frame-halloween { position:relative; min-height:460px; }
+.pp-frame-halloween::after { content:''; position:absolute; inset:0; z-index:2; border:36px solid transparent; border-image:url('../images/profile-frames/halloween/card-border.png') 180 / 36px / 0 stretch; pointer-events:none; }
+.pp-frame-halloween .pp-mini-cover { height:120px; background:#251a32 url('../images/profile-frames/halloween/banner.png') center/cover no-repeat; }
+.pp-frame-halloween .pp-mini-cover::after { display:none; }
+.public-profile .pp-frame-halloween .profile-photo { padding:0; border:0; margin-top:-44px; margin-bottom:22px; background:#181223; box-shadow:none; }
+.pp-frame-halloween .profile-photo::after { content:''; position:absolute; inset:-22.73%; background:url('../images/profile-frames/halloween/avatar-frame.png') center/contain no-repeat; pointer-events:none; }
+.public-profile .pp-frame-halloween .profile-photo img { border:0; }
+.pp-frame-halloween .profile-actions .btn-primary { background:#f3ae56; color:#211523; }
