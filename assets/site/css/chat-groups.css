@@ -577,3 +577,18 @@ body.is-group-chat-page { height:100dvh; overflow:hidden; overscroll-behavior:no
 .cg-chat .cg-profile-theme-ngu_long .cg-profile-close:hover { background:#e8cd88; color:#0c1b18; }
 .cg-profile-theme-ngu_long .cg-profile-avatar-frame { margin-bottom:34px; }
 .cg-profile-theme-ngu_long .cg-profile-avatar-frame::after { inset:auto; left:-24%; top:-38%; width:155%; height:155%; }
+
+/* Halloween — bộ tài nguyên thiết kế riêng. */
+.cg-anonymous-profile.cg-profile-theme-halloween { min-height:460px; border-color:#c4adca; background:#181223; color:#f5eff6; text-align:center; box-shadow:0 0 28px #c4adca35,0 24px 80px #100d2466; }
+.cg-profile-theme-halloween::after { content:''; position:absolute; inset:0; z-index:2; border:36px solid transparent; border-image:url('../images/profile-frames/halloween/card-border.png') 180 / 36px / 0 stretch; pointer-events:none; }
+.cg-profile-theme-halloween .cg-profile-banner { height:120px; background:#251a32 url('../images/profile-frames/halloween/banner.png') center/cover no-repeat; }
+.cg-profile-theme-halloween .cg-profile-banner::after { display:none; }
+.cg-profile-theme-halloween .cg-profile-content { padding:0 24px 28px; }
+.cg-profile-theme-halloween .cg-profile-avatar-frame { width:88px; height:88px; margin:-44px auto 34px; padding:0; border:0; background:#181223; box-shadow:none; }
+.cg-profile-theme-halloween .cg-profile-avatar-frame::after { content:''; position:absolute; inset:-22.73%; width:145.46%; height:145.46%; border:0; border-radius:0; background:url('../images/profile-frames/halloween/avatar-frame.png') center/contain no-repeat; pointer-events:none; }
+.cg-profile-theme-halloween .cg-profile-avatar { border:0; }
+.cg-profile-theme-halloween .cg-profile-label { color:#beb0cc; }
+.cg-profile-theme-halloween .cg-profile-stats { background:#251a32; border-color:#c4adca40; color:#f5eff6; }
+.cg-profile-theme-halloween .achievement-badges { justify-content:center; }
+.cg-chat .cg-profile-theme-halloween .cg-profile-close { background:#f3ae56; color:#211523; border-color:#c4adca; font-weight:700; }
+.cg-chat .cg-profile-theme-halloween .cg-profile-close:hover { background:#ffc77e; color:#211523; }

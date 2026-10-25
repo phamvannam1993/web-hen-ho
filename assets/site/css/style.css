@@ -5478,3 +5478,6 @@ body :is(.pcard,.ccard,.hm-sug,.sw-card).is-profile-paid { position:relative; ov
 .profile-frame-preview--ngu_long::after { content:''; position:absolute; inset:-12.5%; background:url('../images/profile-frames/ngu-long/avatar-frame.png') center/contain no-repeat; pointer-events:none; }
 .profile-frame-preview--ngu_long { margin-top:14px; }
 .profile-frame-preview--ngu_long::after { inset:auto; left:-24%; top:-38%; width:155%; height:155%; }
+
+.profile-frame-preview--halloween { position:relative; border:0; background:#181223 url('../images/profile-frames/halloween/banner.png') center/cover; color:#f3ae56; box-shadow:0 0 20px #c4adca45; }
+.profile-frame-preview--halloween::after { content:''; position:absolute; inset:-22.73%; background:url('../images/profile-frames/halloween/avatar-frame.png') center/contain no-repeat; pointer-events:none; }

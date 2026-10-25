@@ -6,7 +6,7 @@
 <p style="margin:0 0 22px; color:#6d6d6d;">
     <?= $so > 0
         ? 'Bạn có <b>' . (int) $so . ' lượt thích</b>. Ghé xem và chọn người bạn muốn kết nối.'
-        : 'Ghé xem cộng đồng, cập nhật tiêu chí tìm bạn hoặc tham gia Nhóm Hẹn Hò 4 Phương để bắt đầu trò chuyện.' ?>
+        : 'Ghé xem cộng đồng, cập nhật tiêu chí tìm bạn hoặc  Hẹn Hò 4 Phương để bắt đầu trò chuyện.' ?>
 </p>
 
 <?php if (!empty($avatars)): ?>

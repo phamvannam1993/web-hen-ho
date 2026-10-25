@@ -4,12 +4,12 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 function profile_frame_catalog()
 {
     return array('none' => 'Không dùng khung', 'aurora' => 'Hoàng hôn', 'ocean' => 'Đại dương', 'rose' => 'Hoa hồng',
-        'celestial' => 'Tinh vân', 'imperial' => 'Hoàng kim', 'phoenix' => 'Phượng hoàng', 'ngan_ha' => 'Ngân Hà', 'ngu_long' => 'Ngự Long');
+        'celestial' => 'Tinh vân', 'imperial' => 'Hoàng kim', 'phoenix' => 'Phượng hoàng', 'ngan_ha' => 'Ngân Hà', 'ngu_long' => 'Ngự Long', 'halloween' => 'Halloween');
 }
 
 function profile_frame_prices()
 {
-    return array('none'=>0, 'aurora'=>0, 'ocean'=>0, 'rose'=>0, 'celestial'=>0, 'imperial'=>0, 'phoenix'=>0, 'ngan_ha'=>1500, 'ngu_long'=>2000);
+    return array('none'=>0, 'aurora'=>0, 'ocean'=>0, 'rose'=>0, 'celestial'=>0, 'imperial'=>0, 'phoenix'=>0, 'ngan_ha'=>1500, 'ngu_long'=>2000, 'halloween'=>2000);
 }
 
 function super_admin_unlimited($user, $benefit)
