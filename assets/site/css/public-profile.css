@@ -192,3 +192,53 @@
     .public-profile .comment-children { margin-left: 12px; padding-left: 8px; }
     .public-profile .card-grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Thẻ hồ sơ dùng cùng bộ khung mà thành viên chọn trong kho. */
+.pp-framed { --pf-accent:#edc58b; --pf-glow:#b8647f; --pf-dark:#271d34; --pf-bg:linear-gradient(155deg,#471d35,#25213c 55%,#10394a); --pf-banner:linear-gradient(125deg,#421426,#882d4b 52%,#251d40); }
+.pp-frame-ocean { --pf-accent:#a5f4e6; --pf-glow:#70d9d4; --pf-dark:#132844; --pf-bg:linear-gradient(155deg,#103e50,#132844 60%,#164b4c); --pf-banner:linear-gradient(125deg,#153b70,#176d7b); }
+.pp-frame-rose { --pf-accent:#ffd1e3; --pf-glow:#ed9ebf; --pf-dark:#382340; --pf-bg:linear-gradient(155deg,#51253d,#382340 60%,#512844); --pf-banner:linear-gradient(125deg,#662c59,#ab4f73); }
+.pp-frame-celestial { --pf-accent:#c6b0ff; --pf-glow:#ab75ff; --pf-dark:#17102f; --pf-bg:linear-gradient(150deg,#17102f,#13192c); --pf-banner:linear-gradient(135deg,#160e38,#4e2880 55%,#1c4870); }
+.pp-frame-imperial { --pf-accent:#ffe3a0; --pf-glow:#e9b64d; --pf-dark:#251c14; --pf-bg:linear-gradient(150deg,#251c14,#13192c); --pf-banner:linear-gradient(135deg,#292018,#785529 55%,#33201c); }
+.pp-frame-phoenix { --pf-accent:#ffca95; --pf-glow:#ff784c; --pf-dark:#301320; --pf-bg:linear-gradient(150deg,#301320,#13192c); --pf-banner:linear-gradient(135deg,#381224,#a33135 55%,#713c27); }
+.public-profile .pp-identity.pp-framed { border:2px solid var(--pf-glow); background:var(--pf-bg); color:#f9f0f5; box-shadow:0 8px 28px #100d2426; }
+.pp-framed .pp-mini-cover { position:relative; height:112px; background:var(--pf-banner); border-bottom:1px solid #ffffff20; }
+.pp-framed .pp-mini-cover img { display:none; }
+.pp-framed .pp-mini-cover::after { content:''; position:absolute; width:170px; height:170px; right:20px; top:-110px; border:1px solid var(--pf-accent); border-radius:50%; box-shadow:0 0 0 18px #ffffff08,0 0 0 42px #ffffff06; }
+.public-profile .pp-framed .profile-photo { margin-top:-44px; padding:5px; border:2px solid var(--pf-accent); border-radius:50%; background:conic-gradient(from 30deg,var(--pf-accent),var(--pf-glow),var(--pf-dark),var(--pf-accent)); box-shadow:0 0 0 4px var(--pf-dark),0 0 18px #ffffff18; }
+.public-profile .pp-framed .profile-photo img { border:2px solid var(--pf-dark); border-radius:50%; background:var(--pf-dark); }
+.public-profile .pp-framed .profile-photo .dot-online { border-color:var(--pf-dark); z-index:2; }
+.public-profile .pp-framed .profile-headline h1 { color:#fff5fa; margin-top:20px; }
+.public-profile .pp-framed .profile-tags span, .public-profile .pp-framed .profile-active { color:#d8cedd; }
+.public-profile .pp-framed .profile-tags .tag-vip { color:var(--pf-accent); background:#ffffff15; }
+.public-profile .pp-framed .profile-tags .tag-verified { color:#a5f4cf; background:#ffffff15; }
+.pp-framed .achievement-badge { background:#ffffff0c; border:1px solid #ffffff24; color:var(--pf-accent); }
+.public-profile .pp-framed .matched-note { color:#d8cedd; }
+.public-profile .pp-framed .profile-actions .btn-ghost { background:#ffffff12; color:#f9f0f5; }
+.public-profile .pp-framed .profile-actions .btn-blue-outline { background:transparent; border-color:var(--pf-accent); color:var(--pf-accent); }
+.public-profile :is(.pp-frame-celestial,.pp-frame-imperial,.pp-frame-phoenix) { box-shadow:0 0 0 3px color-mix(in srgb,var(--pf-glow) 15%,transparent),0 0 24px color-mix(in srgb,var(--pf-glow) 20%,transparent); }
+.public-profile :is(.pp-frame-celestial,.pp-frame-imperial,.pp-frame-phoenix) .profile-photo { border:3px double var(--pf-accent); box-shadow:0 0 0 4px var(--pf-dark),0 0 0 6px var(--pf-accent),0 0 22px var(--pf-glow); }
+.pp-frame-celestial .pp-mini-cover { background:radial-gradient(circle at 20% 25%,#fff9 0 1px,transparent 2px),radial-gradient(circle at 65% 50%,#fff8 0 1px,transparent 2px),var(--pf-banner); background-size:67px 61px,103px 89px,100% 100%; }
+.pp-frame-imperial .pp-mini-cover { background:repeating-linear-gradient(45deg,transparent 0 24px,#ffe3a012 25px 26px,transparent 27px 48px),var(--pf-banner); }
+.pp-frame-phoenix .pp-mini-cover { background:repeating-conic-gradient(from 210deg at 50% 130%,#ffb47118 0deg 8deg,transparent 8deg 20deg),var(--pf-banner); }
+
+.pp-frame-ngan_ha { --pf-accent:#c8c3df; --pf-glow:#b7a4ef; --pf-dark:#11162a; --pf-bg:#11162a; }
+.public-profile .pp-identity.pp-frame-ngan_ha { position:relative; min-height:460px; }
+.pp-frame-ngan_ha::after { content:''; position:absolute; inset:0; z-index:2; border:36px solid transparent; border-image:url('../images/profile-frames/ngan-ha/card-border.png') 180 / 36px / 0 stretch; pointer-events:none; }
+.pp-frame-ngan_ha .pp-mini-cover { height:120px; background:#24204a url('../images/profile-frames/ngan-ha/banner.png') center/cover no-repeat; }
+.pp-frame-ngan_ha .pp-mini-cover::after { display:none; }
+.public-profile .pp-frame-ngan_ha .profile-photo { padding:0; border:0; margin-top:-44px; margin-bottom:12px; background:#11162a; box-shadow:none; }
+.pp-frame-ngan_ha .profile-photo::after { content:''; position:absolute; inset:-12.5%; background:url('../images/profile-frames/ngan-ha/avatar-frame.png') center/contain no-repeat; pointer-events:none; }
+.public-profile .pp-frame-ngan_ha .profile-photo img { border:0; }
+.pp-frame-ngan_ha .profile-actions .btn-primary { background:linear-gradient(135deg,#d9ceff,#a48ae6); color:#171b33; }
+
+.pp-frame-ngu_long { --pf-accent:#c8a65b; --pf-glow:#e8cd88; --pf-dark:#0c1b18; --pf-bg:#0c1b18; }
+.public-profile .pp-identity.pp-frame-ngu_long { position:relative; min-height:460px; }
+.pp-frame-ngu_long::after { content:''; position:absolute; inset:0; z-index:2; border:36px solid transparent; border-image:url('../images/profile-frames/ngu-long/card-border.png') 180 / 36px / 0 stretch; pointer-events:none; }
+.pp-frame-ngu_long .pp-mini-cover { height:120px; background:#142a23 url('../images/profile-frames/ngu-long/banner.png') center/cover no-repeat; }
+.pp-frame-ngu_long .pp-mini-cover::after { display:none; }
+.public-profile .pp-frame-ngu_long .profile-photo { padding:0; border:0; margin-top:-44px; margin-bottom:12px; background:#0c1b18; box-shadow:none; }
+.pp-frame-ngu_long .profile-photo::after { content:''; position:absolute; inset:-12.5%; background:url('../images/profile-frames/ngu-long/avatar-frame.png') center/contain no-repeat; pointer-events:none; }
+.public-profile .pp-frame-ngu_long .profile-photo img { border:0; }
+.pp-frame-ngu_long .profile-actions .btn-primary { background:linear-gradient(135deg,#e8cd88,#c8a65b); color:#0c1b18; }
+.public-profile .pp-frame-ngu_long .profile-photo { margin-bottom:18px; }
+.pp-frame-ngu_long .profile-photo::after { inset:auto; left:-24%; top:-38%; width:155%; height:155%; }

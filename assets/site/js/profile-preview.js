@@ -12,6 +12,10 @@
     dialog.addEventListener('click', function (event) { if (event.target === dialog) { var b = dialog.getBoundingClientRect(); if (event.clientX < b.left || event.clientX > b.right || event.clientY < b.top || event.clientY > b.bottom) close(); } });
     async function json(response) { var data = await response.json(); if (!response.ok || !data.ok) { var error = new Error(data.message || 'Chưa tải được hồ sơ.'); error.code = response.status; throw error; } return data; }
     async function load(slug, message) {
+        if (dialog.dataset.selfId !== '0' && (String(slug) === dialog.dataset.selfId || (dialog.dataset.selfSlug && String(slug) === dialog.dataset.selfSlug))) {
+            location.assign(base + 'user/' + encodeURIComponent(dialog.dataset.selfSlug || dialog.dataset.selfId));
+            return;
+        }
         var turn = ++sequence; current = null; buy.disabled = true; body.replaceChildren(); status.textContent = 'Đang tải…';
         if (!dialog.open) dialog.showModal();
         try {
@@ -29,12 +33,12 @@
             if (p.logged_in) {
                 var wallet = node('section',undefined,'profile-preview-wallet'); wallet.setAttribute('aria-label','Số dư và phí mở hồ sơ');
                 var summary = node('div',undefined,'profile-preview-wallet-summary');
-                summary.append(node('span','Số dư hiện tại'),node('strong',Number(p.balance).toLocaleString('vi-VN') + ' xu'));
+                summary.append(node('span','Số dư hiện tại'),node('strong',(p.unlimited_coins ? '∞' : Number(p.balance).toLocaleString('vi-VN')) + ' xu'));
                 wallet.append(summary);
                 var rows = node('dl',undefined,'profile-preview-wallet-rows');
                 [['Xu đủ điều kiện thanh toán',p.transferable_balance],['Phí mở hồ sơ',p.cost],['Số dư sau khi mở',p.balance - p.cost]].forEach(function (item) {
                     var row = node('div');
-                    row.append(node('dt',item[0]),node('dd',item[1] < 0 ? 'Chưa đủ xu' : Number(item[1]).toLocaleString('vi-VN') + ' xu'));
+                    row.append(node('dt',item[0]),node('dd',p.unlimited_coins && item[0] !== 'Phí mở hồ sơ' ? '∞ xu' : item[1] < 0 ? 'Chưa đủ xu' : Number(item[1]).toLocaleString('vi-VN') + ' xu'));
                     rows.append(row);
                 });
                 wallet.append(rows); body.append(wallet);

@@ -2,7 +2,9 @@
 <dialog class="vip-benefits" id="vip-benefits-dialog" aria-labelledby="vip-benefits-title">
     <span class="vip-benefits__crown" aria-hidden="true"><?= tk_icon('crown') ?></span>
     <h2 id="vip-benefits-title">Quyền lợi thành viên VIP</h2>
-    <?php if (!empty($user['vip_expired_at'])): ?>
+    <?php if (super_admin_unlimited($user, 'vip')): ?>
+        <p class="vip-benefits__expiry">VIP vĩnh viễn · Không hết hạn</p>
+    <?php elseif (!empty($user['vip_expired_at'])): ?>
         <p class="vip-benefits__expiry">Hết hạn lúc <?= e(date('H:i · d/m/Y', strtotime($user['vip_expired_at']))) ?></p>
     <?php endif; ?>
     <ul>

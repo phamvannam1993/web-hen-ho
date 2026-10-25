@@ -729,7 +729,11 @@ class M_user extends CI_Model
     public function adjust_coin($user_id, $amount, $reason, $ref_type = null, $ref_id = null, $note = null, $eligible_credit = 0)
     {
         $this->db->trans_begin();
-        $wallet = $this->db->query('SELECT coin_balance,transferable_coin_balance FROM users WHERE id=? FOR UPDATE', array($user_id))->row_array();
+        $wallet = $this->db->query('SELECT * FROM users WHERE id=? FOR UPDATE', array($user_id))->row_array();
+        if ($amount < 0 && $reason !== 'admin_adjust' && super_admin_unlimited($wallet, 'coins')) {
+            $this->db->trans_commit();
+            return true;
+        }
         $balance = (int) ($wallet['coin_balance'] ?? 0);
         $eligibleBefore = (int) ($wallet['transferable_coin_balance'] ?? 0);
         $after = $balance + $amount;

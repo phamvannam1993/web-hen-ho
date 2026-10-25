@@ -393,4 +393,7 @@ if ($demo > 0) {
 require __DIR__ . '/migrate_notification_actors.php';
 require __DIR__ . '/migrate_vip_gift.php';
 require __DIR__ . '/migrate_profile_access.php';
+require __DIR__ . '/migrate_profile_frames.php';
+require __DIR__ . '/migrate_super_admin.php';
+require __DIR__ . '/migrate_super_benefits.php';
 echo "\nHoàn tất. Nhớ xoá cache trình duyệt (Ctrl+Shift+R) để nạp lại CSS mới.\n";

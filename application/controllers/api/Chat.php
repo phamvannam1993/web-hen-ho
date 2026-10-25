@@ -283,7 +283,7 @@ class Chat extends Api_Controller
             ->from('users')->where('status', 'active')->where('deleted_at', null)
             ->where('last_active_at >', date('Y-m-d H:i:s', time() - 300))
             ->where('birthday <=', date('Y-m-d', strtotime('-18 years')))
-            ->where_in('role', array('member', 'admin', 'moderator'))
+            ->where_in('role', array('member', 'super_admin', 'admin', 'moderator'))
             ->where('id >', $after);
         if ($me) {
             $this->db->where("id NOT IN (SELECT blocked_id FROM blocks WHERE user_id = $me)", null, false)

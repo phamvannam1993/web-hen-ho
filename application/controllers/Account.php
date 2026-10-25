@@ -95,8 +95,40 @@ class Account extends Member_Controller
     public function profile()
     {
         $me = $this->auth->user();
+        $frame_token = $this->session->userdata('profile_frame_token');
+        if (!$frame_token) { $frame_token = bin2hex(random_bytes(32)); $this->session->set_userdata('profile_frame_token', $frame_token); }
+        $this->data['frame_token'] = $frame_token;
+        $this->load->model('m_profile_frame');
+        $this->data['owned_frames'] = $this->m_profile_frame->owned($me['id']);
+        if ($this->input->method() === 'post' && $this->input->post('save_profile_frame') === '1') {
+            $frame = (string) $this->input->post('profile_frame');
+            $buy_frame = (string) $this->input->post('buy_profile_frame');
+            if ($buy_frame !== '') $frame = $buy_frame;
+            if (!hash_equals($frame_token, (string) $this->input->post('frame_token'))) show_error('Phiên đã thay đổi. Hãy tải lại trang.', 403);
+            if (!array_key_exists($frame, profile_frame_catalog())) show_error('Khung không hợp lệ.', 422);
+            if ($buy_frame !== '' && $this->input->post('frame_purchase_confirmed') !== '1') {
+                set_flash('warning', 'Vui lòng xác nhận trước khi mua khung.');
+                redirect('tai-khoan/ho-so#kho-khung'); return;
+            }
+            try {
+                $purchased = $this->m_profile_frame->equip($me['id'], $frame, $buy_frame !== '');
+                set_flash('success', $purchased ? 'Đã mua và sử dụng khung ' . profile_frame_catalog()[$frame] . '.' : 'Đã thay khung hồ sơ chat.');
+                redirect('tai-khoan/ho-so#khung-dang-dung');
+                return;
+            } catch (RuntimeException $e) { set_flash('warning', $e->getMessage()); }
+            redirect('tai-khoan/ho-so#kho-khung');
+            return;
+        }
 
         if ($this->input->method() === 'post') {
+            if ($this->input->post('super_benefits_settings') === '1') {
+                if (!$this->auth->is_super_admin()) { show_error('Bạn không có quyền thay đổi chế độ này.', 403); return; }
+                if (!hash_equals($frame_token, (string) $this->input->post('frame_token'))) { show_error('Phiên đã thay đổi. Hãy tải lại trang.', 403); return; }
+                if (!$this->db->field_exists('super_unlimited_coins', 'users') || !$this->db->field_exists('super_unlimited_vip', 'users')) {
+                    set_flash('warning', 'Chế độ đặc quyền chưa sẵn sàng. Vui lòng thử lại sau.');
+                    redirect('tai-khoan/ho-so#dac-quyen'); return;
+                }
+            }
             // Hoàn thiện hồ sơ dần dần: chỉ bắt những mục mà đăng ký đã có sẵn
             // (để không ai xoá trắng được) và tiêu chí ghép đôi. Ảnh, khu vực,
             // giới thiệu, số điện thoại… khai lúc nào cũng được — thiếu ảnh hoặc
@@ -139,6 +171,10 @@ class Account extends Member_Controller
                     'drinking'       => $this->input->post('drinking') ?: null,
                     'confide_topic'  => $this->input->post('confide_topic') ?: null,
                 );
+                if ($this->auth->is_super_admin() && $this->input->post('super_benefits_settings') === '1') {
+                    $data['super_unlimited_coins'] = $this->input->post('super_unlimited_coins') === '1' ? 1 : 0;
+                    $data['super_unlimited_vip'] = $this->input->post('super_unlimited_vip') === '1' ? 1 : 0;
+                }
                 if ($this->input->post('profile_access_settings')==='1') {
                 $data['charge_enabled'] = $this->input->post('charge_enabled') === '1' ? 1 : 0;
                 $data['contact_vip_required'] = $this->input->post('contact_vip_required') === '1' ? 1 : 0;

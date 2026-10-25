@@ -48,6 +48,61 @@ $hien_online = $da_gui ? $this->input->post('show_online')
     <a class="tk-btn tk-btn--outline tk-ph__act" href="<?= site_url('profile/' . $me['slug']) ?>"><?= tk_icon('eye') ?>Xem trước trang cá nhân</a>
 </div>
 
+<?php
+$current_frame = $me['profile_frame'] ?? 'none';
+if (!array_key_exists($current_frame, profile_frame_catalog())) $current_frame = 'none';
+?>
+<section class="tk-card profile-frame-current" id="khung-dang-dung">
+    <button type="button" class="profile-frame-open" data-frame-shop-open aria-haspopup="dialog" aria-controls="profile-frame-library">
+        <span class="profile-frame-preview profile-frame-preview--<?= e($current_frame) ?>" aria-hidden="true"><span>✦</span></span>
+        <span class="profile-frame-current-copy"><strong>Khung hồ sơ: <?= e(profile_frame_catalog()[$current_frame]) ?></strong><small><?= profile_frame_prices()[$current_frame] ? 'Siêu VIP' : 'Mặc định · Miễn phí' ?> · Bấm để đổi khung</small></span>
+        <span class="profile-frame-open-arrow" aria-hidden="true">›</span>
+    </button>
+</section>
+<dialog class="profile-frame-library profile-frame-store" id="profile-frame-library" aria-labelledby="frame-library-title">
+    <div class="profile-frame-library-head"><h2 id="frame-library-title">Kho khung hồ sơ</h2><button type="button" class="tk-btn tk-btn--outline" data-frame-shop-close aria-label="Đóng kho khung">×</button></div>
+    <p>Chọn khung để trang trí popup của bạn trong nhóm chat ẩn danh. Khung mua một lần, sử dụng lâu dài.</p>
+    <p>Số dư: <strong><?= super_admin_unlimited($me, 'coins') ? '∞' : number_format($me['coin_balance']) ?> xu</strong> · <a href="<?= site_url('tai-khoan/nap-xu') ?>">Nạp xu</a></p>
+    <form method="post" action="<?= site_url('tai-khoan/ho-so#kho-khung') ?>" data-frame-shop data-balance="<?= (int) $me['coin_balance'] ?>" data-unlimited="<?= super_admin_unlimited($me, 'coins') ? '1' : '0' ?>">
+        <input type="hidden" name="save_profile_frame" value="1">
+        <input type="hidden" name="frame_purchase_confirmed" value="0">
+        <input type="hidden" name="frame_token" value="<?= e($frame_token) ?>">
+        <?php foreach (array('default' => 'Khung mặc định · Miễn phí', 'super' => 'Khung Siêu VIP') as $frame_tier => $tier_label): ?>
+        <h3 class="profile-frame-tier-title"><?= e($tier_label) ?></h3>
+        <?php if ($frame_tier === 'super'): ?><p class="tk-hint">Bộ thiết kế độc quyền với banner, khung avatar và viền trang trí riêng. Mua một lần, dùng lâu dài.</p><?php endif; ?>
+        <div class="profile-frame-options">
+            <?php foreach (profile_frame_catalog() as $frame_id => $frame_name): ?>
+            <?php if ((profile_frame_prices()[$frame_id] > 0) !== ($frame_tier === 'super')) continue; ?>
+            <?php $frame_price = profile_frame_prices()[$frame_id]; $frame_owned = !$frame_price || in_array($frame_id, $owned_frames, true); ?>
+            <div class="profile-frame-product<?= $frame_price ? ' is-premium' : '' ?>">
+            <label class="profile-frame-option">
+                <input type="radio" name="profile_frame" value="<?= e($frame_id) ?>" <?= ($me['profile_frame'] ?? 'none') === $frame_id ? 'checked' : '' ?> <?= !$frame_owned ? 'disabled' : '' ?>>
+                <span class="profile-frame-preview profile-frame-preview--<?= e($frame_id) ?>" aria-hidden="true"><span>✦</span></span>
+                <strong><?= e($frame_name) ?></strong>
+                <?php if ($frame_owned): ?><small><?= !$frame_price ? 'Miễn phí' : 'Đã sở hữu' ?></small><?php endif; ?>
+            </label>
+            <?php if (!$frame_owned): ?><button class="tk-btn tk-btn--outline profile-frame-buy" type="submit" name="buy_profile_frame" value="<?= e($frame_id) ?>" data-frame-name="<?= e($frame_name) ?>" data-frame-price="<?= (int) $frame_price ?>">Mua &amp; dùng · <?= number_format($frame_price) ?> xu</button><?php endif; ?>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <?php endforeach; ?>
+        <button type="submit" class="tk-btn tk-btn--primary">Lưu khung đang dùng</button>
+    </form>
+</dialog>
+<dialog class="frame-purchase-dialog" id="frame-purchase-dialog" aria-labelledby="frame-purchase-title">
+    <h2 id="frame-purchase-title">Xác nhận mua khung</h2>
+    <p>Bạn muốn mua và sử dụng khung <strong data-frame-confirm-name></strong>?</p>
+    <dl class="frame-purchase-summary">
+        <div><dt>Số dư hiện tại</dt><dd data-frame-confirm-balance></dd></div>
+        <div><dt>Giá khung</dt><dd data-frame-confirm-price></dd></div>
+        <div><dt>Số dư sau khi mua</dt><dd data-frame-confirm-after></dd></div>
+    </dl>
+    <p class="tk-hint" data-frame-confirm-note>Mua một lần, sử dụng lâu dài.</p>
+    <a href="<?= site_url('tai-khoan/nap-xu') ?>" data-frame-confirm-topup hidden>Nạp thêm xu</a>
+    <div class="frame-purchase-actions"><button type="button" class="tk-btn tk-btn--outline" data-frame-confirm-cancel>Hủy</button><button type="button" class="tk-btn tk-btn--brand" data-frame-confirm-buy>Xác nhận mua</button></div>
+</dialog>
+<script defer src="<?= base_url('assets/site/js/profile-frame-shop.js') ?>?v=<?= filemtime(FCPATH.'assets/site/js/profile-frame-shop.js') ?>"></script>
+
 <form class="tk-pf auth-form" method="post" enctype="multipart/form-data">
     <?php if (validation_errors()): ?>
         <div class="tk-alert tk-alert--danger"><?= validation_errors() ?></div>
@@ -129,8 +184,6 @@ $hien_online = $da_gui ? $this->input->post('show_online')
                 <?php endif; ?>
             </div>
             <input type="hidden" name="profile_access_settings" value="1">
-            <div class="tk-field"><label><input type="checkbox" name="charge_enabled" value="1" <?= !isset($me['charge_enabled']) || $me['charge_enabled'] ? 'checked' : '' ?>> Thu 20 xu khi mở hồ sơ chi tiết</label><p class="tk-hint">Bạn nhận đủ 20 xu; mỗi người chỉ thanh toán một lần.</p></div>
-            <div class="tk-field"><label><input type="checkbox" name="contact_vip_required" value="1" <?= !isset($me['contact_vip_required']) || $me['contact_vip_required'] ? 'checked' : '' ?>> Chỉ VIP được xem thông tin liên hệ</label></div>
             <div class="tk-field"><label>Email muốn chia sẻ</label><input type="email" name="shared_email" maxlength="190" value="<?= e($me['shared_email'] ?? '') ?>"></div>
             <div class="tk-field">
                 <label for="phone">Số điện thoại Zalo</label>
@@ -340,8 +393,34 @@ $hien_online = $da_gui ? $this->input->post('show_online')
                     <span class="tk-switch__track"></span><span class="tk-switch__knob"></span>
                 </span>
             </label>
+            <label class="tk-toggle">
+                <span class="tk-toggle__b"><span class="tk-toggle__t">Thu 20 xu khi mở hồ sơ chi tiết</span><span class="tk-toggle__d">Bạn nhận đủ 20 xu; mỗi người chỉ thanh toán một lần.</span></span>
+                <span class="tk-switch"><input type="checkbox" role="switch" name="charge_enabled" value="1"  <?= ($da_gui ? $this->input->post('charge_enabled') === '1' : (!isset($me['charge_enabled']) || $me['charge_enabled'])) ? 'checked' : '' ?>><span class="tk-switch__track"></span><span class="tk-switch__knob"></span></span>
+            </label>
+            <label class="tk-toggle">
+                <span class="tk-toggle__b"><span class="tk-toggle__t">Chỉ VIP được xem thông tin liên hệ</span><span class="tk-toggle__d">Giới hạn quyền xem thông tin liên hệ cho thành viên VIP.</span></span>
+                <span class="tk-switch"><input type="checkbox" role="switch" name="contact_vip_required" value="1"  <?= ($da_gui ? $this->input->post('contact_vip_required') === '1' : (!isset($me['contact_vip_required']) || $me['contact_vip_required'])) ? 'checked' : '' ?>><span class="tk-switch__track"></span><span class="tk-switch__knob"></span></span>
+            </label>
         </div>
     </section>
+
+    <?php if (($me['role'] ?? '') === 'super_admin'): ?>
+    <section class="tk-card" id="dac-quyen">
+        <div class="tk-card__h"><div><h2 class="tk-card__t">Đặc quyền Super admin</h2><p class="tk-hint">Tắt đặc quyền để dùng số xu và gói VIP thực hiện có.</p></div></div>
+        <div class="tk-toggles">
+            <input type="hidden" name="super_benefits_settings" value="1">
+            <input type="hidden" name="frame_token" value="<?= e($frame_token) ?>">
+            <label class="tk-toggle">
+                <span class="tk-toggle__b"><span class="tk-toggle__t">Xu vô hạn</span><span class="tk-toggle__d">Dùng dịch vụ không trừ số dư.</span></span>
+                <span class="tk-switch"><input type="checkbox" role="switch" name="super_unlimited_coins" value="1" <?= ($da_gui ? $this->input->post('super_unlimited_coins') === '1' : super_admin_unlimited($me, 'coins')) ? 'checked' : '' ?>><span class="tk-switch__track"></span><span class="tk-switch__knob"></span></span>
+            </label>
+            <label class="tk-toggle">
+                <span class="tk-toggle__b"><span class="tk-toggle__t">VIP vĩnh viễn</span><span class="tk-toggle__d">Sử dụng quyền lợi VIP không giới hạn ngày.</span></span>
+                <span class="tk-switch"><input type="checkbox" role="switch" name="super_unlimited_vip" value="1" <?= ($da_gui ? $this->input->post('super_unlimited_vip') === '1' : super_admin_unlimited($me, 'vip')) ? 'checked' : '' ?>><span class="tk-switch__track"></span><span class="tk-switch__knob"></span></span>
+            </label>
+        </div>
+    </section>
+    <?php endif; ?>
 
     <div class="tk-pf-save">
         <div class="tk-pf-save__text">

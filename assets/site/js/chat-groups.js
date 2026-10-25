@@ -381,18 +381,31 @@
         var self = this;
         this.request('profile', null, {person: id}).then(function (r) {
             if (self.destroyed) return;
-            var dialog = node('dialog', 'cg-anonymous-profile'), p = r.profile;
+            var p = r.profile;
+            var hasFrame = ['aurora', 'ocean', 'rose', 'celestial', 'imperial', 'phoenix', 'ngan_ha', 'ngu_long'].indexOf(p.frame) !== -1;
+            var dialog = node('dialog', 'cg-anonymous-profile' + (hasFrame ? ' cg-profile-theme-aurora' : ' cg-profile-unframed'));
+            if (['ocean', 'rose', 'celestial', 'imperial', 'phoenix', 'ngan_ha', 'ngu_long'].indexOf(p.frame) !== -1) dialog.classList.add('cg-profile-theme-' + p.frame);
+            var banner = node('div', 'cg-profile-banner'); banner.setAttribute('aria-hidden', 'true');
+            var content = node('div', 'cg-profile-content');
+            if (p.edit_frame_url) {
+                var editFrame = node('a', 'cg-profile-edit-frame'); editFrame.href = p.edit_frame_url;
+                editFrame.title = 'Thay khung hồ sơ'; editFrame.setAttribute('aria-label', 'Thay khung hồ sơ');
+                editFrame.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15z"/></svg>';
+                banner.removeAttribute('aria-hidden');
+                banner.append(editFrame);
+            }
             var profileAvatar = node('img', 'cg-profile-avatar'); profileAvatar.src = p.avatar; profileAvatar.alt = '';
+            var avatarFrame = node('div', 'cg-profile-avatar-frame'); avatarFrame.append(profileAvatar);
             var profileHeading = node('h3', '', p.name); profileHeading.id = 'cg-profile-heading-' + self.root.dataset.groupId;
             dialog.setAttribute('aria-labelledby', profileHeading.id);
             var profileStats = node('div', 'cg-profile-stats');
             profileStats.append(node('p', '', 'Tham gia nhóm: ' + p.joined_at), node('p', '', '🔥 Chuỗi online: ' + p.streak + ' ngày'));
-            dialog.append(profileAvatar, node('span', 'cg-profile-label', 'THÀNH VIÊN NHÓM'), profileHeading, profileStats);
+            content.append(avatarFrame, node('span', 'cg-profile-label', 'THÀNH VIÊN NHÓM'), profileHeading, profileStats);
             var badges = node('div', 'achievement-badges');
             (p.badges || []).forEach(function (b) { var badge = node('span', 'achievement-badge', b.icon + ' ' + b.name); badge.title = b.description; badges.append(badge); });
-            dialog.append(badges);
+            content.append(badges);
             var close = node('button', 'cg-profile-close', 'Đóng'); close.type = 'button'; close.onclick = function () { dialog.close(); };
-            dialog.append(close); dialog.addEventListener('close', function () { dialog.remove(); });
+            content.append(close); dialog.append(banner, content); dialog.addEventListener('close', function () { dialog.remove(); });
             self.root.append(dialog); dialog.showModal(); close.focus();
         }).catch(function (e) { self.status.textContent = e.message; });
     };

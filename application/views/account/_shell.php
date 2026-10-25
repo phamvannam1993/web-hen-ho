@@ -58,9 +58,8 @@ if (!empty($settings['enable_posts'])) {
     $groups['Hồ sơ cá nhân']['tin-dang'] = array('Tin đăng của tôi', 'file');
 }
 
-$so_xu    = number_format((int) ($me['coin_balance'] ?? 0));
-$la_vip   = ($me['role'] ?? '') === 'admin'
-    || (!empty($me['is_vip']) && (empty($me['vip_expired_at']) || strtotime($me['vip_expired_at']) > time()));
+$so_xu    = super_admin_unlimited($me, 'coins') ? '∞' : number_format((int) ($me['coin_balance'] ?? 0));
+$la_vip = member_has_vip($me);
 $dem      = function ($n) { return $n > 99 ? '99+' : (int) $n; };
 
 // Tên trang đang xem, in trên dải menu của điện thoại

@@ -228,7 +228,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 
         <div class="header-actions">
             <?php if ($user): ?>
-                <?php $header_vip = ($user['role'] ?? '') === 'admin' || (!empty($user['is_vip']) && (empty($user['vip_expired_at']) || strtotime($user['vip_expired_at']) > time())); ?>
+                <?php $header_vip = member_has_vip($user); ?>
                 <div class="btn-account<?= $header_vip ? ' btn-account--vip' : '' ?>">
                     <span class="account-avatar">
                         <a href="<?= site_url('tai-khoan/ho-so') ?>" aria-label="Xem hồ sơ của tôi"><img src="<?= avatar_url($user['avatar'], $user['gender']) ?>" alt=""></a>

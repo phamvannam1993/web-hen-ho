@@ -48,7 +48,7 @@ class Users extends Admin_Controller
 
     public function grant_vip_all()
     {
-        if (($this->auth->user()['role'] ?? '') !== 'admin') { show_error('Chỉ quản trị viên được cấp VIP hàng loạt.', 403); return; }
+        if (($this->auth->user()['role'] ?? '') !== 'super_admin') { show_error('Chỉ quản trị viên được cấp VIP hàng loạt.', 403); return; }
         $token = $this->session->userdata('bulk_vip_token');
         if ($this->input->method() === 'post') {
             if (!$token || !hash_equals($token, (string) $this->input->post('token'))) { show_error('Phiên xác nhận không hợp lệ. Vui lòng mở lại trang cấp VIP.', 403); return; }
@@ -77,6 +77,9 @@ class Users extends Admin_Controller
         }
 
         if ($this->input->method() === 'post') {
+            if (!in_array($this->input->post('role'), array('member','moderator','admin','super_admin'), true)) {
+                show_error('Vai trò không hợp lệ.', 422); return;
+            }
             $this->m_user->update_profile($id, array(
                 'display_name'   => $this->input->post('display_name', true),
                 'nickname'       => $this->input->post('nickname', true) ?: null,

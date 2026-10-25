@@ -147,8 +147,13 @@ class Userauth
 
     public function is_admin()
     {
+        return $this->is_super_admin();
+    }
+
+    public function is_super_admin()
+    {
         $user = $this->user();
-        return $user && in_array($user['role'], array('admin', 'moderator'), true);
+        return $user && $user['role'] === 'super_admin' && $user['status'] === 'active' && empty($user['deleted_at']);
     }
 
     /**
@@ -165,13 +170,13 @@ class Userauth
         return setting('otp_register', '1') !== '1'
             || !empty($user['email_verified_at'])
             || empty($user['email'])
-            || in_array($user['role'], array('admin', 'moderator'), true);
+            || in_array($user['role'], array('super_admin', 'admin', 'moderator'), true);
     }
 
     public function is_vip()
     {
         $user = $this->user();
-        return $user && $user['is_vip'] && (!$user['vip_expired_at'] || $user['vip_expired_at'] > date('Y-m-d H:i:s'));
+        return member_has_vip($user);
     }
 
     /** Cập nhật thời điểm hoạt động cuối, tối đa 1 lần / 5 phút. */

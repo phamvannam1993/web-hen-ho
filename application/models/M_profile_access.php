@@ -17,6 +17,7 @@ class M_profile_access extends CI_Model
     }
     public function can_detail($owner,$viewer)
     {
+        if ($viewer && super_admin_unlimited($this->db->where('id',$viewer)->get('users')->row_array(), 'coins')) return true;
         return $viewer && ((int)$owner['id']===(int)$viewer || !$owner['charge_enabled'] || $this->purchased($viewer,$owner['id']));
     }
     public function contacts($owner,$viewer)
@@ -24,7 +25,7 @@ class M_profile_access extends CI_Model
         $this->allowed_target($owner,$viewer);
         if (!$this->can_detail($owner,$viewer)) throw new RuntimeException('Mở hồ sơ chi tiết trước khi xem liên hệ.',403);
         $user=$this->db->where('id',$viewer)->get('users')->row_array();
-        $vip=$user && $user['is_vip'] && (!$user['vip_expired_at'] || $user['vip_expired_at']>date('Y-m-d H:i:s'));
+        $vip=member_has_vip($user);
         if ((int)$viewer!==(int)$owner['id'] && $owner['contact_vip_required'] && !$vip) throw new RuntimeException('Thông tin liên hệ chỉ dành cho VIP.',403);
         return array('phone'=>$owner['phone'],'zalo'=>$owner['phone'],'email'=>$owner['shared_email']);
     }
@@ -35,10 +36,12 @@ class M_profile_access extends CI_Model
         $self=(int)$viewer===(int)$owner['id'];
         $cost=$owner['charge_enabled'] && !$paid && !$self ? 20 : 0;
         $user=$viewer ? $this->db->where('id',$viewer)->get('users')->row_array() : null;
+        $unlimited = super_admin_unlimited($user, 'coins');
+        if ($unlimited) $cost = 0;
         return array('id'=>(int)$owner['id'],'slug'=>$owner['slug'],'name'=>display_name($owner),'avatar'=>avatar_url($owner['avatar'],$owner['gender']),
             'age'=>age_from($owner['birthday']),'province'=>$owner['province_name'] ?? '', 'job'=>$owner['job'],'bio'=>mb_substr(strip_tags((string)$owner['bio']),0,180),
             'charge_enabled'=>(bool)$owner['charge_enabled'],'contact_vip_required'=>(bool)$owner['contact_vip_required'],'purchased'=>(bool)$paid,'cost'=>$cost,
-            'logged_in'=>(bool)$viewer,'balance'=>$user ? (int)$user['coin_balance'] : 0,'transferable_balance'=>$user ? min((int)$user['coin_balance'],(int)$user['transferable_coin_balance']) : 0,
+            'logged_in'=>(bool)$viewer,'unlimited_coins'=>$unlimited,'balance'=>$user ? (int)$user['coin_balance'] : 0,'transferable_balance'=>$user ? min((int)$user['coin_balance'],(int)$user['transferable_coin_balance']) : 0,
             'version'=>hash('sha256',$owner['id'].':'.$owner['charge_enabled'].':'.$owner['contact_vip_required']), 'url'=>site_url('user/'.$owner['slug']));
     }
     public function purchase($owner_id,$viewer,$version)

@@ -14,15 +14,15 @@ $con_thieu = $hs['thieu'];
 
 $co_tin_dang = !empty($settings['enable_posts']);
 $chuoi       = (int) ($streak['streak'] ?? 0);   // M_streak::cham_cong() trả khoá `streak`
-$vip_admin   = ($me['role'] ?? '') === 'admin';
-$vip_het_han = !empty($me['vip_expired_at']) ? strtotime($me['vip_expired_at']) : null;
+$vip_admin = super_admin_unlimited($me, 'vip');
+$vip_het_han = !$vip_admin && !empty($me['vip_expired_at']) ? strtotime($me['vip_expired_at']) : null;
 $hero_vip    = $vip_admin || (!empty($me['is_vip']) && ($vip_het_han === null || $vip_het_han > time()));
 $vip_con_lai = $hero_vip && $vip_het_han ? $vip_het_han - time() : null;
 $vip_den     = $hero_vip && $vip_het_han ? date('H:i · d/m/Y', $vip_het_han) : null;
 
 // array(biểu tượng, giá trị, nhãn, đường dẫn, sắc thái)
 $stats = array(
-    array('coins',   number_format((int) $me['coin_balance']), 'Số dư xu',        site_url('tai-khoan/nap-xu'),       'gold'),
+    array('coins',   (super_admin_unlimited($me, 'coins') ? '∞' : number_format((int) $me['coin_balance'])), 'Số dư xu',        site_url('tai-khoan/nap-xu'),       'gold'),
     array('heart',   number_format($liked_count),              'Người thích bạn', site_url('tai-khoan/ai-thich-ban'), 'brand'),
     array('match',   number_format(count($matches)),           'Đã ghép đôi',     site_url('tai-khoan/quan-tam'),     ''),
     array('message', number_format($unread_msg),               'Tin nhắn mới',    site_url('messenger'),     ''),

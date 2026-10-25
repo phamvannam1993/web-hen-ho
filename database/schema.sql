@@ -257,7 +257,7 @@ CREATE TABLE `users` (
   `has_children`    TINYINT(1) NOT NULL DEFAULT 0,
   `smoking`         ENUM('khong','thinh_thoang','thuong_xuyen') DEFAULT NULL,
   `drinking`        ENUM('khong','thinh_thoang','thuong_xuyen') DEFAULT NULL,
-  `role`            ENUM('member','moderator','admin') NOT NULL DEFAULT 'member',
+  `role`            ENUM('member','moderator','admin','super_admin') NOT NULL DEFAULT 'member',
   `status`          ENUM('pending','active','locked','banned') NOT NULL DEFAULT 'pending',
   `email_verified_at` DATETIME DEFAULT NULL,
   `phone_verified_at` DATETIME DEFAULT NULL,
