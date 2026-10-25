@@ -7,8 +7,8 @@
  * nên bỏ nhãn, còn đơn được tạo thẳng như trước.
  */
 
-$la_vip  = !empty($me['is_vip']) && (empty($me['vip_expired_at']) || strtotime($me['vip_expired_at']) > time());
-$vip_den = $la_vip && !empty($me['vip_expired_at']) ? date('d/m/Y', strtotime($me['vip_expired_at'])) : null;
+$la_vip = member_has_vip($me);
+$vip_den = $la_vip && !super_admin_unlimited($me, 'vip') && !empty($me['vip_expired_at']) ? date('d/m/Y', strtotime($me['vip_expired_at'])) : null;
 $gia_mo  = (int) setting('unlock_cost', 20);
 
 // value => (nhãn, biểu tượng) — đúng ba lựa chọn trang cũ có
@@ -48,8 +48,10 @@ $ly_do = array(
     <div class="tk-wl-bal__i">
         <span class="tk-wl-bal__ic tk-wl-bal__ic--gold"><?= tk_icon('coins') ?></span>
         <div class="tk-wl-bal__b">
-            <p class="tk-wl-bal__n"><?= number_format((int) $me['coin_balance']) ?> xu</p>
+            <p class="tk-wl-bal__n"><?= super_admin_unlimited($me, 'coins') ? '∞' : number_format((int) $me['coin_balance']) ?> xu</p>
+            <?php if (super_admin_unlimited($me, 'coins')): ?><p>Chế độ xu vô hạn đang bật</p><?php else: ?>
             <p><?= number_format(min((int)$me['coin_balance'],(int)($me['transferable_coin_balance'] ?? 0))) ?> xu đủ điều kiện chuyển · <?= number_format(max(0,(int)$me['coin_balance']-(int)($me['transferable_coin_balance'] ?? 0))) ?> xu thưởng/khóa</p>
+            <?php endif; ?>
             <p class="tk-wl-bal__l">Số dư hiện tại</p>
         </div>
     </div>

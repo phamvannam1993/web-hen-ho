@@ -107,7 +107,7 @@ INSERT INTO `users`
 (`uuid`,`email`,`password_hash`,`display_name`,`slug`,`gender`,`role`,`status`,`coin_balance`,`email_verified_at`)
 VALUES
 (UUID(),'admin@henho24.local','$2y$10$0fuAGbWNrjFNEISFcSkG2OgEnguS6MLJSidTD1pBc57lykV.2eY.i',
- 'Quản trị viên','quan-tri-vien','other','admin','active',0,NOW());
+ 'Quản trị viên','quan-tri-vien','other','super_admin','active',0,NOW());
 
 /* ------------------------- Gói dịch vụ ------------------------- */
 INSERT INTO `packages` (`type`,`name`,`price`,`duration_days`,`coin_amount`,`bonus_coin`,`description`,`sort`) VALUES

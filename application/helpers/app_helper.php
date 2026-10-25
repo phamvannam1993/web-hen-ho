@@ -1,6 +1,31 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
+function profile_frame_catalog()
+{
+    return array('none' => 'Không dùng khung', 'aurora' => 'Hoàng hôn', 'ocean' => 'Đại dương', 'rose' => 'Hoa hồng',
+        'celestial' => 'Tinh vân', 'imperial' => 'Hoàng kim', 'phoenix' => 'Phượng hoàng', 'ngan_ha' => 'Ngân Hà', 'ngu_long' => 'Ngự Long');
+}
+
+function profile_frame_prices()
+{
+    return array('none'=>0, 'aurora'=>0, 'ocean'=>0, 'rose'=>0, 'celestial'=>0, 'imperial'=>0, 'phoenix'=>0, 'ngan_ha'=>1500, 'ngu_long'=>2000);
+}
+
+function super_admin_unlimited($user, $benefit)
+{
+    return $user && ($user['role'] ?? '') === 'super_admin'
+        && ($user['status'] ?? '') === 'active' && empty($user['deleted_at'])
+        && in_array($benefit, array('coins','vip'), true)
+        && (!isset($user['super_unlimited_' . $benefit]) || (bool) $user['super_unlimited_' . $benefit]);
+}
+
+function member_has_vip($user)
+{
+    return $user && (super_admin_unlimited($user, 'vip') || (!empty($user['is_vip'])
+        && (empty($user['vip_expired_at']) || $user['vip_expired_at'] > date('Y-m-d H:i:s'))));
+}
+
 if (!function_exists('e')) {
     /** Escape HTML. */
     function e($value)

@@ -1,5 +1,5 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
-<?php if (($this->auth->user()['role'] ?? '') === 'admin'): ?>
+<?php if (($this->auth->user()['role'] ?? '') === 'super_admin'): ?>
 <p><a class="btn btn-primary" href="<?= site_url('admin/users/grant_vip_all') ?>">Cấp VIP cho tất cả thành viên</a></p>
 <?php endif; ?>
 <form class="filter-form" method="get">
@@ -20,7 +20,7 @@
         <label>Vai trò</label>
         <select name="role">
             <option value="">Tất cả</option>
-            <?php foreach (array('member' => 'Thành viên', 'moderator' => 'Kiểm duyệt', 'admin' => 'Quản trị') as $k => $t): ?>
+            <?php foreach (array('member' => 'Thành viên', 'moderator' => 'Kiểm duyệt', 'admin' => 'Admin nhóm chat', 'super_admin' => 'Super admin') as $k => $t): ?>
                 <option value="<?= $k ?>" <?= $this->input->get('role') === $k ? 'selected' : '' ?>><?= $t ?></option>
             <?php endforeach; ?>
         </select>

@@ -11,7 +11,7 @@ class M_chat_group extends CI_Model
     public function delete_group($id)
     {
         $admin = $this->auth->user();
-        if (!$admin || $admin['role'] !== 'admin') throw new RuntimeException('Chỉ quản trị viên được xóa nhóm.', 403);
+        if (!$admin || $admin['role'] !== 'super_admin') throw new RuntimeException('Chỉ quản trị viên được xóa nhóm.', 403);
         $id = (int) $id;
         if ($id === 1) throw new RuntimeException('Không thể xóa nhóm mặc định. Bạn có thể đóng nhóm này.', 422);
         $this->db->trans_begin();
@@ -75,8 +75,9 @@ class M_chat_group extends CI_Model
 
     private function moderator_as($group_id, $user)
     {
-        if (!$user || $user['status'] !== 'active') return false;
-        if ($user['role'] === 'admin') return true;
+        if (!$user || $user['status'] !== 'active' || !empty($user['deleted_at'])) return false;
+        if ($user['role'] === 'super_admin') return true;
+        if (!in_array($user['role'], array('admin', 'moderator'), true) || !empty($user['deleted_at'])) return false;
         return (bool) $this->db->where('group_id', $group_id)->where('user_id', $user['id'])->count_all_results('chat_group_moderators');
     }
 
@@ -95,7 +96,7 @@ class M_chat_group extends CI_Model
         if (!$actor || (!$actor['user'] && $group['identity_mode'] !== 'guest')) throw new RuntimeException('Đăng nhập để gửi tin trong nhóm này.', 401);
         if ($actor['user'] && $group['identity_mode'] === 'guest' && (!$p || !$p['nickname_chosen'])) throw new RuntimeException('Hãy chọn tên giả trước khi trò chuyện.', 422);
         if ($actor['user'] && !$this->auth->da_xac_thuc()) throw new RuntimeException('Bạn cần xác thực tài khoản trước khi nhắn tin.', 403);
-        if ($actor['user'] && !in_array($actor['user']['role'], array('admin', 'moderator'), true)) {
+        if ($actor['user'] && !in_array($actor['user']['role'], array('super_admin', 'admin', 'moderator'), true)) {
             $birthday = $actor['user']['birthday'] ?? '';
             if (!$birthday || $birthday > date('Y-m-d', strtotime('-18 years'))) throw new RuntimeException('Bạn cần đủ 18 tuổi để trò chuyện.', 403);
         }
@@ -140,6 +141,8 @@ class M_chat_group extends CI_Model
                 ->update('room_messages', array('sender_public_id'=>$person['public_id']));
         }
         $blocked = $this->blocked_keys($actor);
+        $unlimitedVipColumn = $this->db->field_exists('super_unlimited_vip', 'users') ? 'u.super_unlimited_vip' : '1 AS super_unlimited_vip';
+        $this->db->select($unlimitedVipColumn, false);
         $this->db->select('r.*, p.nickname AS guest_name, p.public_id AS person_id, p.user_id AS person_user_id, p.is_banned AS person_is_banned, g.identity_mode, u.display_name, u.nickname, u.avatar, u.gender, u.slug, u.is_vip, u.vip_expired_at, u.role AS sender_role')
             ->from('room_messages r')->join('chat_groups g', 'g.id = r.room_id')->join('chat_group_people p', 'p.public_id = r.sender_public_id', 'left')
             ->join('users u', 'u.id = r.user_id', 'left')->where('r.room_id', $group_id)->where('r.deleted_at', null);
@@ -162,7 +165,7 @@ class M_chat_group extends CI_Model
                 'has_account' => !empty($r['user_id']),
                 'can_open_profile' => !$member && !empty($r['person_id']) && !empty($r['person_user_id'])
                     && (int) $r['person_user_id'] === (int) $r['user_id'] && empty($r['person_is_banned']),
-                'is_vip' => !empty($r['user_id']) && (($r['sender_role'] ?? '') === 'admin' || (!empty($r['is_vip']) && (empty($r['vip_expired_at']) || $r['vip_expired_at'] > date('Y-m-d H:i:s'))))),
+                'is_vip' => !empty($r['user_id']) && ((($r['sender_role'] ?? '') === 'super_admin' && !empty($r['super_unlimited_vip'])) || (!empty($r['is_vip']) && (empty($r['vip_expired_at']) || $r['vip_expired_at'] > date('Y-m-d H:i:s'))))),
             'type' => $r['type'], 'content' => $r['type'] === 'image' && preg_match('/^[a-f0-9]{48}\.webp$/D', $r['content'])
                 ? site_url('nhom-media/' . $r['id']) : ($r['type'] === 'image' ? base_url(ltrim($r['content'], '/')) : $r['content']),
             'caption' => $r['caption'] ?? '', 'reactions' => $this->reactions($r['id'], $actor),
@@ -265,7 +268,9 @@ class M_chat_group extends CI_Model
         $streak = $p['user_id'] ? $this->db->where('user_id', $p['user_id'])->get('user_streaks')->row_array() : null;
         require_once APPPATH . 'libraries/Achievements.php';
         $member = $p['user_id'] ? $this->db->where('id', $p['user_id'])->where('status', 'active')->where('deleted_at', null)->get('users')->row_array() : null;
-        return array('can_view_profile'=>!empty($member['slug']), 'profile_cost'=>20, 'badges'=>$p['user_id'] ? Achievements::badges($this->db, $p['user_id']) : array(), 'name'=>$p['nickname'], 'avatar'=>chat_group_guest_avatar_url($p['public_id']),
+        $frame = $member['profile_frame'] ?? 'none';
+        if (!array_key_exists($frame, profile_frame_catalog())) $frame = 'none';
+        return array('frame'=>$frame, 'edit_frame_url'=>!empty($actor['user']) && (int) $actor['user']['id'] === (int) $p['user_id'] ? site_url('tai-khoan/ho-so#kho-khung') : null, 'can_view_profile'=>!empty($member['slug']), 'profile_cost'=>20, 'badges'=>$p['user_id'] ? Achievements::badges($this->db, $p['user_id']) : array(), 'name'=>$p['nickname'], 'avatar'=>chat_group_guest_avatar_url($p['public_id']),
             'joined_at'=>substr($p['joined_at'], 0, 10), 'streak'=>$streak && $streak['last_active_date'] >= date('Y-m-d', strtotime('-1 day')) ? (int) $streak['current_streak'] : 0);
     }
 

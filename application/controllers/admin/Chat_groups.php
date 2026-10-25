@@ -20,7 +20,7 @@ class Chat_groups extends Admin_Controller
 
     private function admin_only()
     {
-        if ($this->auth->user()['role'] !== 'admin') show_error('Chỉ quản trị viên được thay đổi cấu hình nhóm.', 403);
+        if ($this->auth->user()['role'] !== 'super_admin') show_error('Chỉ quản trị viên được thay đổi cấu hình nhóm.', 403);
     }
 
     public function index()
@@ -57,7 +57,7 @@ class Chat_groups extends Admin_Controller
             elseif (!$this->db->field_exists('seo_title', 'chat_groups') || !$this->db->field_exists('seo_description', 'chat_groups')) $error = 'Cần chạy php database/migrate_chat_groups.php để cập nhật dữ liệu SEO nhóm chat.';
             elseif ($this->db->where('slug', $slug)->where('id !=', (int) $id)->count_all_results('chat_groups')) $error = 'Slug đã tồn tại.';
             if (!$error && $moderators) {
-                $valid = $this->db->where_in('id', $moderators)->where_in('role', array('admin','moderator'))->where('status', 'active')->where('deleted_at', null)->count_all_results('users');
+                $valid = $this->db->where_in('id', $moderators)->where_in('role', array('super_admin','admin','moderator'))->where('status', 'active')->where('deleted_at', null)->count_all_results('users');
                 if ($valid !== count($moderators)) $error = 'Người điều hành phải là tài khoản admin/moderator đang hoạt động.';
             }
             $avatar = $g['avatar'] ?? null;

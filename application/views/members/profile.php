@@ -4,6 +4,8 @@ $marital = array('doc_than' => 'Độc thân', 'ly_hon' => 'Ly hôn', 'goa' => '
 $edu = array('thpt' => 'THPT', 'trung_cap' => 'Trung cấp', 'cao_dang' => 'Cao đẳng',
              'dai_hoc' => 'Đại học', 'sau_dai_hoc' => 'Sau đại học');
 $is_me = $user && (int) $user['id'] === (int) $m['id'];
+$profile_frame = $m['profile_frame'] ?? 'none';
+if (!array_key_exists($profile_frame, profile_frame_catalog())) $profile_frame = 'none';
 $profile_cover = base_url(!empty($m['cover_image']) ? ltrim($m['cover_image'], '/') : 'assets/site/images/profile-cover.jpg');
 $pp_icon = function ($name) {
     $paths = array(
@@ -69,7 +71,7 @@ $pp_icon = function ($name) {
 
     <div class="pp-layout">
         <aside class="pp-left">
-            <section class="pp-identity"><div class="pp-mini-cover"><img src="<?= e($profile_cover) ?>" alt=""></div><header class="profile-head">
+            <section class="pp-identity<?= $profile_frame !== 'none' ? ' pp-framed pp-frame-' . e($profile_frame) : '' ?>"><div class="pp-mini-cover"><img src="<?= e($profile_cover) ?>" alt=""></div><header class="profile-head">
                 <?php
                 $p_online = is_online($m['last_active_at']);
                 $p_new    = !empty($m['created_at']) && strtotime($m['created_at']) > strtotime('-7 days');
@@ -91,7 +93,7 @@ $pp_icon = function ($name) {
                         <?php if ($age): ?><span><?= $age ?> tuổi</span><?php endif; ?>
                         <?php if (!empty($m['province_name'])): ?><span><?= e($m['province_name']) ?></span><?php endif; ?>
                         <!--<?php if ($m['province_name']): ?><span><?= e($m['province_name']) ?></span><?php endif; ?>-->
-                        <?php if ($m['is_vip']): ?><span class="tag-vip">VIP</span><?php endif; ?>
+                        <?php if (member_has_vip($m)): ?><span class="tag-vip">VIP</span><?php endif; ?>
                         <?php if ($m['kyc_status'] === 'verified'): ?><span class="tag-verified">Đã xác minh</span><?php endif; ?>
                     </p>
                     <div class="achievement-badges" aria-label="Huy hiệu thành tựu">

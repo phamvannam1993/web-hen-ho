@@ -56,7 +56,7 @@ class MY_Controller extends CI_Controller
             $this->data['streak'] = $this->m_streak->cham_cong($this->auth->id());
 
             $me = $this->auth->user();
-            if (!in_array($me['role'], array('admin', 'moderator'), true)) {
+            if (!in_array($me['role'], array('super_admin', 'admin', 'moderator'), true)) {
                 $this->load->model('m_user');
                 $this->data['chua_xac_thuc'] = !$this->auth->da_xac_thuc();
                 $this->data['ho_so_an']      = $this->m_user->thieu_thong_tin($me['id']);
@@ -459,7 +459,7 @@ class Api_Controller extends CI_Controller
             'province' => $u['province_name'] ?? $this->ten_tinh($u['province_id'] ?? null),
             'online'   => (bool) is_online($u['last_active_at'] ?? null),
             'verified' => ($u['kyc_status'] ?? '') === 'verified',
-            'is_vip'   => !empty($u['is_vip']) && (empty($u['vip_expired_at']) || $u['vip_expired_at'] > date('Y-m-d H:i:s')),
+            'is_vip'   => member_has_vip($u),
         );
         if (isset($u['liked'])) {
             $ra['liked'] = (bool) $u['liked'];

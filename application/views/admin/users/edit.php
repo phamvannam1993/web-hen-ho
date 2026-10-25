@@ -53,7 +53,7 @@ $v = function ($k) use ($u) { return e($u[$k] ?? ''); };
             <div>
                 <label>Vai trò</label>
                 <select name="role">
-                    <?php foreach (array('member' => 'Thành viên', 'moderator' => 'Kiểm duyệt', 'admin' => 'Quản trị') as $k => $t): ?>
+                    <?php foreach (array('member' => 'Thành viên', 'moderator' => 'Kiểm duyệt', 'admin' => 'Admin nhóm chat', 'super_admin' => 'Super admin') as $k => $t): ?>
                         <option value="<?= $k ?>" <?= $u['role'] === $k ? 'selected' : '' ?>><?= $t ?></option>
                     <?php endforeach; ?>
                 </select>

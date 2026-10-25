@@ -1,5 +1,5 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
-<dialog class="profile-preview" id="profile-preview" data-base="<?= e(site_url()) ?>" aria-labelledby="profile-preview-title">
+<dialog class="profile-preview" id="profile-preview" data-base="<?= e(site_url()) ?>" data-self-id="<?= (int) $this->auth->id() ?>" data-self-slug="<?= e($this->auth->user()['slug'] ?? '') ?>" aria-labelledby="profile-preview-title">
     <button type="button" class="profile-preview-close" data-preview-close aria-label="Đóng">×</button>
     <p class="profile-preview-eyebrow">KẾT NỐI CHÂN THÀNH</p>
     <div data-preview-body></div>
