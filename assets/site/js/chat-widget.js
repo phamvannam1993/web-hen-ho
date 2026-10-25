@@ -493,19 +493,21 @@
         if (noiTiep) {
             var previous = bodyEl.lastElementChild;
             var previousMeta = previous && previous.querySelector('.cw-msg-time');
-            if (previousMeta) previousMeta.hidden = true;
+            if (previousMeta && !previousMeta.querySelector('.cw-seen')) previousMeta.hidden = true;
         }
         nguoiCuoi = khoa;
 
         var wrap = document.createElement('div');
+        wrap.dataset.messageId = m.id;
         wrap.className = 'cw-msg' + (m.mine ? ' mine' : '') + (noiTiep ? ' is-cont' : '');
 
         // Avatar chỉ vẽ ở tin đầu nhóm, và chỉ với tin của người khác
         if (!m.mine) {
-            if (!noiTiep && m.avatar) {
+            var peerAvatar = m.avatar || (dang_mo && dang_mo.kind === 'chat' ? dang_mo.avatar : '');
+            if ((!noiTiep || (dang_mo && dang_mo.kind === 'chat')) && peerAvatar) {
                 var av = document.createElement('img');
                 av.className = 'cw-msg-avatar';
-                av.src = m.avatar; av.alt = '';
+                av.src = peerAvatar; av.alt = '';
                 wrap.appendChild(av);
             } else {
                 var chen = document.createElement('span');
@@ -558,6 +560,7 @@
         meta.className = 'cw-msg-time';
         meta.textContent = m.time || '';
         if (m.mine && m.seen) {
+            bodyEl.querySelectorAll('.cw-seen').forEach(function (label) { label.parentNode.classList.remove('has-seen'); label.remove(); });
             meta.classList.add('has-seen');
             var seen = document.createElement('i');
             seen.className = 'cw-seen';
@@ -593,6 +596,16 @@
             bodyEl.appendChild(renderMessage(m));
         });
         scrollDown();
+    }
+
+    function updateSeen(id) {
+        bodyEl.querySelectorAll('.cw-seen').forEach(function (label) { label.parentNode.classList.remove('has-seen'); label.remove(); });
+        var message = bodyEl.querySelector('.cw-msg.mine[data-message-id="' + Number(id) + '"]');
+        if (!message) return;
+        var meta = message.querySelector('.cw-msg-time');
+        meta.hidden = false;
+        meta.classList.add('has-seen');
+        var label = document.createElement('i'); label.className = 'cw-seen'; label.textContent = 'Đã xem'; meta.appendChild(label);
     }
 
     function themTin(m) {
@@ -714,7 +727,7 @@
         if (!dang_mo) { return; }
 
         if (dang_mo.kind === 'room') {
-            if (rtLive() && lastId > 0) { return; }
+            if (rtLive() && lastId > 0 && arguments[0] !== true) { return; }
             return api('ajax/phong-chat?after=' + lastId).then(function (res) {
                 // Đổi hội thoại rất nhanh thì câu trả lời của hội thoại cũ có
                 // thể về sau — bỏ qua, không thì tin của người này lọt sang
@@ -733,7 +746,7 @@
             }).catch(function () {});
         }
 
-        if (rtLive() && lastId > 0) { return; }
+        if (rtLive() && lastId > 0 && arguments[0] !== true) { return; }
         var hoi_thoai = dang_mo.id;   // ghim lại để đối chiếu khi câu trả lời về
         return api('ajax/tin-nhan/' + hoi_thoai + '?after=' + lastId).then(function (res) {
             if (!res.ok || !dang_mo || dang_mo.kind !== 'chat') { return; }
@@ -750,16 +763,8 @@
             });
 
             if (res.messages && res.messages.length) { loadList(); }
-            if (res.seen) {
-                bodyEl.querySelectorAll('.cw-msg.mine .cw-msg-time:not([hidden])').forEach(function (meta) {
-                    if (meta.querySelector('.cw-seen')) return;
-                    meta.classList.add('has-seen');
-                    var label = document.createElement('i');
-                    label.className = 'cw-seen';
-                    label.textContent = 'Đã xem';
-                    meta.appendChild(label);
-                });
-            }
+            updateSeen(res.latest_seen_id);
+
         }).catch(function () {});
     }
 
@@ -1029,6 +1034,10 @@
         });
 
         RT.on('room.presence', function (msg) { setOnline(msg.online); });
+
+        RT.on('chat.seen', function (msg) {
+            if (dang_mo && dang_mo.kind === 'chat' && Number(dang_mo.id) === Number(msg.conversationId)) tai(true);
+        });
 
         RT.on('chat.message', function (msg) {
             if (dang_mo && dang_mo.kind === 'chat' && Number(dang_mo.id) === Number(msg.conversationId)) {
