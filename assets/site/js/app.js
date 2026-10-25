@@ -1405,12 +1405,17 @@
     function renderMessage(m) {
         var div = document.createElement('div');
         div.className = 'chat-msg' + (m.mine ? ' mine' : '') + (m.type === 'image' ? ' is-image' : '');
+        div.dataset.messageId = m.id;
+        if (!m.mine) {
+            var avatar = document.createElement('img'); avatar.className = 'chat-peer-avatar';
+            avatar.src = m.avatar || body.dataset.peerAvatar; avatar.alt = ''; div.appendChild(avatar);
+        }
         div.dataset.day = m.day_key || m.day || '';
         var previous = body.lastElementChild;
         if (previous && previous.classList.contains('chat-msg')
             && previous.classList.contains('mine') === !!m.mine && previous.dataset.day === div.dataset.day) {
             var previousMeta = previous.querySelector('small');
-            if (previousMeta) previousMeta.hidden = true;
+            if (previousMeta && !previousMeta.querySelector('.chat-message-seen')) previousMeta.hidden = true;
         }
 
         if (m.type === 'image') {
@@ -1433,6 +1438,7 @@
         var t = document.createElement('small');
         t.textContent = m.time;
         if (m.mine && m.seen) {
+            body.querySelectorAll('.chat-message-seen').forEach(function (label) { label.remove(); });
             var seen = document.createElement('span');
             seen.className = 'chat-message-seen';
             seen.textContent = ' · Đã xem';
@@ -1461,14 +1467,11 @@
             });
 
             if (seenEl) seenEl.textContent = '';
-            if (res.seen) {
-                body.querySelectorAll('.chat-msg.mine small:not([hidden])').forEach(function (meta) {
-                    if (meta.querySelector('.chat-message-seen')) return;
-                    var label = document.createElement('span');
-                    label.className = 'chat-message-seen';
-                    label.textContent = ' · Đã xem';
-                    meta.appendChild(label);
-                });
+            body.querySelectorAll('.chat-message-seen').forEach(function (label) { label.remove(); });
+            var latestSeen = body.querySelector('.chat-msg.mine[data-message-id="' + Number(res.latest_seen_id) + '"] small');
+            if (latestSeen) {
+                latestSeen.hidden = false;
+                var label = document.createElement('span'); label.className = 'chat-message-seen'; label.textContent = ' · Đã xem'; latestSeen.appendChild(label);
             }
             if (res.messages.length && stick) { scrollDown(); }
         })

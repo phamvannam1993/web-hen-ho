@@ -125,6 +125,7 @@ $gio_ngan = function ($t) {
             </div>
 
             <div class="tk-ms-body" id="chat-body"
+                 data-peer-avatar="<?= e(avatar_url($partner['avatar'] ?? null, $partner['gender'] ?? 'other')) ?>"
                  data-conversation="<?= (int) $conversation_id ?>"
                  data-last-id="<?= $messages ? (int) end($messages)['id'] : 0 ?>">
                 <div class="tk-ms-safe">
@@ -138,12 +139,16 @@ $gio_ngan = function ($t) {
                         <button class="tk-btn tk-btn--brand" type="button" id="chat-hello-send" aria-describedby="chat-hello-hint">Gửi lời chào 👋</button>
                     </div>
                 <?php endif; ?>
+                <?php $latest_seen_id = 0; foreach ($messages as $message) {
+                    if ((int) $message['sender_id'] === (int) $user['id'] && !empty($message['read_at'])) $latest_seen_id = max($latest_seen_id, (int) $message['id']);
+                } ?>
                 <?php foreach ($messages as $index => $m): ?>
                     <?php $mine = (int) $m['sender_id'] === (int) $user['id']; ?>
                     <?php $next = $messages[$index + 1] ?? null;
                     $continues = $next && (int) $next['sender_id'] === (int) $m['sender_id']
                         && substr($next['created_at'], 0, 10) === substr($m['created_at'], 0, 10); ?>
-                    <div class="chat-msg <?= $mine ? 'mine' : '' ?> <?= $m['type'] === 'image' ? 'is-image' : '' ?>" data-day="<?= e(substr($m['created_at'], 0, 10)) ?>">
+                    <div class="chat-msg <?= $mine ? 'mine' : '' ?> <?= $m['type'] === 'image' ? 'is-image' : '' ?>" data-message-id="<?= (int) $m['id'] ?>" data-day="<?= e(substr($m['created_at'], 0, 10)) ?>">
+                        <?php if (!$mine): ?><img class="chat-peer-avatar" src="<?= e(avatar_url($partner['avatar'] ?? null, $partner['gender'] ?? 'other')) ?>" alt=""><?php endif; ?>
                         <?php if ($m['type'] === 'image'): ?>
                             <a href="<?= base_url(ltrim($m['content'], '/')) ?>" target="_blank">
                                 <img src="<?= base_url(ltrim($m['content'], '/')) ?>" alt="Ảnh" loading="lazy">
@@ -156,7 +161,7 @@ $gio_ngan = function ($t) {
                             ?>
                             <p class="<?= $only_emoji ? 'emoji-only' : '' ?>"><?= nl2br(e($m['content'])) ?></p>
                         <?php endif; ?>
-                        <small <?= $continues ? 'hidden' : '' ?>><?= date('H:i d/m', strtotime($m['created_at'])) ?><?php if ($mine && !empty($m['read_at'])): ?><span class="chat-message-seen"> · Đã xem</span><?php endif; ?></small>
+                        <small <?= $continues && (int) $m['id'] !== $latest_seen_id ? 'hidden' : '' ?>><?= date('H:i d/m', strtotime($m['created_at'])) ?><?php if ($mine && (int) $m['id'] === $latest_seen_id): ?><span class="chat-message-seen"> · Đã xem</span><?php endif; ?></small>
                     </div>
                 <?php endforeach; ?>
             </div>

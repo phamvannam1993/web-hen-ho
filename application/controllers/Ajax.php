@@ -557,8 +557,14 @@ class Ajax extends MY_Controller
             ->count_all_results() === 0;
 
         $other_id = (int) $conv['user_low_id'] === (int) $me ? $conv['user_high_id'] : $conv['user_low_id'];
-        $other = $this->db->select('last_active_at')->where('id', $other_id)->get('users')->row_array();
-        return $this->json(array('ok' => true, 'messages' => $messages, 'seen' => $seen,
+        $latest_seen = $this->db->select_max('id')->where('conversation_id', $conversation_id)
+            ->where('sender_id', $me)->where('read_at IS NOT NULL', null, false)->where('deleted_at', null)->get('messages')->row_array();
+        $other = $this->db->select('last_active_at, avatar, gender')->where('id', $other_id)->get('users')->row_array();
+        foreach ($messages as &$message) {
+            if (!$message['mine']) $message['avatar'] = avatar_url($other['avatar'] ?? null, $other['gender'] ?? 'other');
+        }
+        unset($message);
+        return $this->json(array('ok' => true, 'messages' => $messages, 'seen' => $seen, 'latest_seen_id' => (int) ($latest_seen['id'] ?? 0),
             'online' => (bool) is_online($other['last_active_at'] ?? null),
             'activity' => !empty($other['last_active_at']) ? 'Hoạt động ' . time_ago($other['last_active_at']) : 'Chưa có thông tin hoạt động'));
     }

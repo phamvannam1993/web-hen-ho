@@ -880,3 +880,6 @@ body.tk-app:has(.tk-ms) .chat-widget { display: none; }
 #frame-preview-dialog .cg-profile-close { background:linear-gradient(135deg,var(--demo-button),var(--demo-button-end)); color:var(--demo-button-ink); border:1px solid var(--demo-button); box-shadow:none; font-weight:700; }
 #frame-preview-dialog .cg-profile-close:hover { background:var(--demo-button); color:var(--demo-button-ink); }
 #frame-preview-dialog .cg-profile-close:focus-visible { outline:2px solid var(--demo-button); outline-offset:3px; }
+
+#chat-body .chat-msg:not(.mine) { position:relative; margin-left:42px; }
+#chat-body .chat-msg > .chat-peer-avatar { position:absolute; left:-42px; top:0; width:32px; height:32px; border-radius:50%; object-fit:cover; }
