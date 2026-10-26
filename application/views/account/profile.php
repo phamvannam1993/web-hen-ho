@@ -99,7 +99,7 @@ if (!array_key_exists($current_frame, profile_frame_catalog())) $current_frame =
         <div class="cg-profile-avatar-frame"><img class="cg-profile-avatar" src="<?= e(avatar_url(null, 'female')) ?>" alt="Ảnh đại diện demo"></div>
         <span class="cg-profile-label">HỒ SƠ DEMO</span>
         <h3 id="frame-demo-name">Mây Nhỏ</h3>
-        <div class="cg-profile-stats"><p>Gia nhập: 20/10/2026</p><p>🔥 Chuỗi online: 7 ngày</p></div>
+        <div class="cg-profile-stats"><p>Gia nhập: 20/10/2026</p></div>
         <p id="frame-demo-note">Xem trước khung: <strong data-frame-demo-title></strong></p>
         <button type="button" class="tk-btn tk-btn--outline cg-profile-close" data-frame-preview-close>Đóng xem trước</button>
     </div>
@@ -409,7 +409,7 @@ if (!array_key_exists($current_frame, profile_frame_catalog())) $current_frame =
                 </span>
             </label>
             <label class="tk-toggle">
-                <span class="tk-toggle__b"><span class="tk-toggle__t">Thu 20 xu khi mở hồ sơ chi tiết</span><span class="tk-toggle__d">Bạn nhận đủ 20 xu; mỗi người chỉ thanh toán một lần.</span></span>
+                <span class="tk-toggle__b"><span class="tk-toggle__t">Thu <?= profile_unlock_cost() ?> xu khi mở hồ sơ chi tiết</span><span class="tk-toggle__d">Bạn nhận đủ <?= profile_unlock_cost() ?> xu; mỗi người chỉ thanh toán một lần.</span></span>
                 <span class="tk-switch"><input type="checkbox" role="switch" name="charge_enabled" value="1"  <?= ($da_gui ? $this->input->post('charge_enabled') === '1' : (!isset($me['charge_enabled']) || $me['charge_enabled'])) ? 'checked' : '' ?>><span class="tk-switch__track"></span><span class="tk-switch__knob"></span></span>
             </label>
             <label class="tk-toggle">
