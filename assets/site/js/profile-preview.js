@@ -28,7 +28,7 @@
             if (p.job) identity.append(node('p',p.job,'profile-preview-job'));
             header.append(image,identity); body.append(header);
             if (p.bio) body.append(node('p',p.bio,'profile-preview-bio'));
-            var entitlement = p.purchased ? '✓ Đã mở · Xem lại miễn phí' : p.cost ? 'Mở hồ sơ chi tiết · ' + p.cost + ' xu' : 'Hồ sơ chi tiết miễn phí';
+            var entitlement = p.purchased ? '✓ Đã mở · Xem lại miễn phí' : p.cost ? 'Mở hồ sơ chi tiết · ' + p.cost + ' Xu' : 'Hồ sơ chi tiết miễn phí';
             body.append(node('span',entitlement,'profile-preview-entitlement'));
             if (p.logged_in) {
                 var wallet = node('section',undefined,'profile-preview-wallet'); wallet.setAttribute('aria-label','Số dư và phí mở hồ sơ');
