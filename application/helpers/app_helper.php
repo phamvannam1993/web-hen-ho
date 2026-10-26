@@ -521,6 +521,11 @@ function tk_loi_chao()
 }
 
 /** Request-local cache avoids one purchase lookup per member card. */
+function profile_unlock_cost()
+{
+    return max(0, (int) setting('profile_unlock_cost', 20));
+}
+
 function profile_access_card($member, $viewer_id)
 {
     static $owned = array();
@@ -532,5 +537,5 @@ function profile_access_card($member, $viewer_id)
     $purchased = !empty($owned[$viewer_id][$member['id']]);
     $charge = !empty($member['charge_enabled']) && (int)$member['id'] !== $viewer_id;
     return array('charge'=>$charge,'purchased'=>$purchased,'detail'=>($viewer_id && (!$charge || $purchased)),
-        'label'=>$charge ? ($purchased ? 'Đã mở' : '🔒 Mở hồ sơ VIP') : '');
+        'label'=>$charge ? ($purchased ? 'Đã mở' : '🔒 ' . profile_unlock_cost() . ' xu') : '');
 }

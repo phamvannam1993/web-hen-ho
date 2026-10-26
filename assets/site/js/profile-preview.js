@@ -28,7 +28,7 @@
             if (p.job) identity.append(node('p',p.job,'profile-preview-job'));
             header.append(image,identity); body.append(header);
             if (p.bio) body.append(node('p',p.bio,'profile-preview-bio'));
-            var entitlement = p.purchased ? '✓ Đã mở · Xem lại miễn phí' : p.cost ? 'Mở hồ sơ chi tiết · 20 xu' : 'Hồ sơ chi tiết miễn phí';
+            var entitlement = p.purchased ? '✓ Đã mở · Xem lại miễn phí' : p.cost ? 'Mở hồ sơ chi tiết · ' + p.cost + ' xu' : 'Hồ sơ chi tiết miễn phí';
             body.append(node('span',entitlement,'profile-preview-entitlement'));
             if (p.logged_in) {
                 var wallet = node('section',undefined,'profile-preview-wallet'); wallet.setAttribute('aria-label','Số dư và phí mở hồ sơ');
@@ -43,13 +43,13 @@
                 });
                 wallet.append(rows); body.append(wallet);
             }
-            if (p.cost) body.append(node('p','Chỉ thanh toán một lần. Chủ hồ sơ nhận đủ 20 xu, bạn xem lại miễn phí.','profile-preview-note'));
+            if (p.cost) body.append(node('p','Chỉ thanh toán một lần. Chủ hồ sơ nhận đủ ' + p.cost + ' xu, bạn xem lại miễn phí.','profile-preview-note'));
             if (p.contact_vip_required) body.append(node('p','Thông tin liên hệ chỉ dành cho VIP, độc lập với phí mở hồ sơ.','profile-preview-vip-note'));
             status.textContent = message || '';
-            buy.textContent = !p.logged_in ? 'Đăng nhập để xem' : p.cost ? 'Xem hồ sơ chi tiết · 20 xu' : 'Xem hồ sơ chi tiết';
+            buy.textContent = !p.logged_in ? 'Đăng nhập để xem' : p.cost ? 'Xem hồ sơ chi tiết · ' + p.cost + ' xu' : 'Xem hồ sơ chi tiết';
             buy.disabled = false;
             if (p.logged_in && p.cost && p.transferable_balance < p.cost) {
-                buy.disabled = true; status.textContent = 'Bạn cần 20 xu đủ điều kiện chuyển. Xu thưởng khóa không được dùng. ';
+                buy.disabled = true; status.textContent = 'Bạn cần ' + p.cost + ' xu đủ điều kiện chuyển. Xu thưởng khóa không được dùng. ';
                 var topup = node('a','Nạp xu'); topup.href = base + 'tai-khoan/nap-xu'; status.append(topup);
             }
         } catch (error) { if (turn === sequence) status.textContent = error.message; }
