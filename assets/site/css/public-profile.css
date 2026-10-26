@@ -223,21 +223,21 @@
 
 .pp-frame-ngan_ha { --pf-accent:#c8c3df; --pf-glow:#b7a4ef; --pf-dark:#11162a; --pf-bg:#11162a; }
 .public-profile .pp-identity.pp-frame-ngan_ha { position:relative; min-height:460px; }
-.pp-frame-ngan_ha::after { content:''; position:absolute; inset:0; z-index:2; border:36px solid transparent; border-image:url('../images/profile-frames/ngan-ha/card-border.png') 180 / 36px / 0 stretch; pointer-events:none; }
-.pp-frame-ngan_ha .pp-mini-cover { height:120px; background:#24204a url('../images/profile-frames/ngan-ha/banner.png') center/cover no-repeat; }
+.pp-frame-ngan_ha::after { content:''; position:absolute; inset:0; z-index:2; border:36px solid transparent; border-image:url('../images/profile-frames/ngan-ha/card-border.webp') 180 / 36px / 0 stretch; pointer-events:none; }
+.pp-frame-ngan_ha .pp-mini-cover { height:120px; background:#24204a url('../images/profile-frames/ngan-ha/banner.webp') center/cover no-repeat; }
 .pp-frame-ngan_ha .pp-mini-cover::after { display:none; }
 .public-profile .pp-frame-ngan_ha .profile-photo { padding:0; border:0; margin-top:-44px; margin-bottom:12px; background:#11162a; box-shadow:none; }
-.pp-frame-ngan_ha .profile-photo::after { content:''; position:absolute; inset:-12.5%; background:url('../images/profile-frames/ngan-ha/avatar-frame.png') center/contain no-repeat; pointer-events:none; }
+.pp-frame-ngan_ha .profile-photo::after { content:''; position:absolute; inset:-12.5%; background:url('../images/profile-frames/ngan-ha/avatar-frame.webp') center/contain no-repeat; pointer-events:none; }
 .public-profile .pp-frame-ngan_ha .profile-photo img { border:0; }
 .pp-frame-ngan_ha .profile-actions .btn-primary { background:linear-gradient(135deg,#d9ceff,#a48ae6); color:#171b33; }
 
 .pp-frame-ngu_long { --pf-accent:#c8a65b; --pf-glow:#e8cd88; --pf-dark:#0c1b18; --pf-bg:#0c1b18; }
 .public-profile .pp-identity.pp-frame-ngu_long { position:relative; min-height:460px; }
-.pp-frame-ngu_long::after { content:''; position:absolute; inset:0; z-index:2; border:36px solid transparent; border-image:url('../images/profile-frames/ngu-long/card-border.png') 180 / 36px / 0 stretch; pointer-events:none; }
-.pp-frame-ngu_long .pp-mini-cover { height:120px; background:#142a23 url('../images/profile-frames/ngu-long/banner.png') center/cover no-repeat; }
+.pp-frame-ngu_long::after { content:''; position:absolute; inset:0; z-index:2; border:36px solid transparent; border-image:url('../images/profile-frames/ngu-long/card-border.webp') 180 / 36px / 0 stretch; pointer-events:none; }
+.pp-frame-ngu_long .pp-mini-cover { height:120px; background:#142a23 url('../images/profile-frames/ngu-long/banner.webp') center/cover no-repeat; }
 .pp-frame-ngu_long .pp-mini-cover::after { display:none; }
 .public-profile .pp-frame-ngu_long .profile-photo { padding:0; border:0; margin-top:-44px; margin-bottom:12px; background:#0c1b18; box-shadow:none; }
-.pp-frame-ngu_long .profile-photo::after { content:''; position:absolute; inset:-12.5%; background:url('../images/profile-frames/ngu-long/avatar-frame.png') center/contain no-repeat; pointer-events:none; }
+.pp-frame-ngu_long .profile-photo::after { content:''; position:absolute; inset:-12.5%; background:url('../images/profile-frames/ngu-long/avatar-frame.webp') center/contain no-repeat; pointer-events:none; }
 .public-profile .pp-frame-ngu_long .profile-photo img { border:0; }
 .pp-frame-ngu_long .profile-actions .btn-primary { background:linear-gradient(135deg,#e8cd88,#c8a65b); color:#0c1b18; }
 .public-profile .pp-frame-ngu_long .profile-photo { margin-bottom:18px; }
@@ -245,10 +245,10 @@
 
 .pp-frame-halloween { --pf-accent:#c4adca; --pf-glow:#f3ae56; --pf-dark:#181223; --pf-bg:#181223; }
 .public-profile .pp-identity.pp-frame-halloween { position:relative; min-height:460px; }
-.pp-frame-halloween::after { content:''; position:absolute; inset:0; z-index:2; border:36px solid transparent; border-image:url('../images/profile-frames/halloween/card-border.png') 180 / 36px / 0 stretch; pointer-events:none; }
-.pp-frame-halloween .pp-mini-cover { height:120px; background:#251a32 url('../images/profile-frames/halloween/banner.png') center/cover no-repeat; }
+.pp-frame-halloween::after { content:''; position:absolute; inset:0; z-index:2; border:36px solid transparent; border-image:url('../images/profile-frames/halloween/card-border.webp') 180 / 36px / 0 stretch; pointer-events:none; }
+.pp-frame-halloween .pp-mini-cover { height:120px; background:#251a32 url('../images/profile-frames/halloween/banner.webp') center/cover no-repeat; }
 .pp-frame-halloween .pp-mini-cover::after { display:none; }
 .public-profile .pp-frame-halloween .profile-photo { padding:0; border:0; margin-top:-44px; margin-bottom:22px; background:#181223; box-shadow:none; }
-.pp-frame-halloween .profile-photo::after { content:''; position:absolute; inset:-22.73%; background:url('../images/profile-frames/halloween/avatar-frame.png') center/contain no-repeat; pointer-events:none; }
+.pp-frame-halloween .profile-photo::after { content:''; position:absolute; inset:-22.73%; background:url('../images/profile-frames/halloween/avatar-frame.webp') center/contain no-repeat; pointer-events:none; }
 .public-profile .pp-frame-halloween .profile-photo img { border:0; }
 .pp-frame-halloween .profile-actions .btn-primary { background:#f3ae56; color:#211523; }
