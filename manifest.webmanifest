@@ -10,7 +10,7 @@
   "background_color": "#ffffff",
   "theme_color": "#d1273f",
   "icons": [
-    {"src": "assets/site/img/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
-    {"src": "assets/site/img/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}
+    {"src": "assets/site/img/android-chrome-192x192.png?v=a4b4b98de9dca4e41e0d757d0f222e53", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "assets/site/img/android-chrome-512x512.png?v=a472ab064472c37c28cd2d0e2276a0df", "sizes": "512x512", "type": "image/png", "purpose": "any"}
   ]
 }
