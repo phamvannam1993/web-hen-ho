@@ -39,13 +39,13 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
     <div class="pcard-body">
 
         <h3 class="pcard-name">
-            <a href="<?= site_url('profile/' . $m['slug']) ?>"><?= e(display_name($m)) ?><?= $age ? ', ' . $age : '' ?></a>
+            <a href="<?= site_url('profile/' . $m['slug']) ?>"><?= e(display_name($m)) ?><?= empty($dating_card) && $age ? ', ' . $age : '' ?></a>
         </h3>
 
         <p class="pcard-meta">
             <?php /* Mỗi cặp biểu tượng + chữ bọc chung một khối để khi xuống dòng
                      chúng không bị tách rời nhau */ ?>
-            <span class="mi"><?= $ic_pin ?><?= !empty($m['province_name']) ? e($m['province_name']) : 'Chưa rõ khu vực' ?></span>
+            <span class="mi"><?= $ic_pin ?><?= !empty($m['province_name']) ? e($m['province_name']) : 'Chưa rõ khu vực' ?><?php if (!empty($dating_card) && $age): ?> · <?= (int) $age ?> Tuổi · Sinh năm <?= (int) substr($m['birthday'], 0, 4) ?><?php endif; ?></span>
         </p>
 
         <?php if (array_key_exists('distance_km', $m)): ?>

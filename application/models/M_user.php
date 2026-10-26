@@ -294,18 +294,23 @@ class M_user extends CI_Model
 
     /**
      * Điều kiện SQL: chỉ những hồ sơ đã khai đủ mới được hiện ra ngoài.
-     * Danh sách cột khớp đúng với M_user::thieu_thong_tin() để hai bên không lệch nhau.
+     * Khớp M_user::thieu_thong_tin(), trừ avatar được bỏ qua khi truy cập localhost.
      *
      * @param string $a bí danh bảng users trong câu truy vấn
      */
     public function dieu_kien_ho_so_du($a = 'u')
     {
+        $host = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+        $local = preg_match('/^(localhost|127\.0\.0\.1|\[::1\])(:[0-9]+)?$/D', $host)
+            && in_array($_SERVER['REMOTE_ADDR'] ?? '', array('127.0.0.1', '::1'), true);
         $dk = array("$a.birthday <= '" . date('Y-m-d', strtotime('-18 years')) . "'");
-        foreach (array('display_name', 'gender', 'birthday', 'province_id', 'avatar') as $c) {
+        foreach (array('display_name', 'gender', 'birthday', 'province_id') as $c) {
             $dk[] = "$a.$c IS NOT NULL";
         }
-        foreach (array('display_name', 'avatar') as $c) {
-            $dk[] = "$a.$c <> ''";
+        $dk[] = "$a.display_name <> ''";
+        if (!$local) {
+            $dk[] = "$a.avatar IS NOT NULL";
+            $dk[] = "$a.avatar <> ''";
         }
         $dk[] = "EXISTS (SELECT 1 FROM user_preferences up WHERE up.user_id = $a.id
                           AND up.seeking_gender IS NOT NULL AND up.purpose IS NOT NULL)";
