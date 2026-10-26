@@ -399,7 +399,7 @@
             var profileHeading = node('h3', '', p.name); profileHeading.id = 'cg-profile-heading-' + self.root.dataset.groupId;
             dialog.setAttribute('aria-labelledby', profileHeading.id);
             var profileStats = node('div', 'cg-profile-stats');
-            profileStats.append(node('p', '', 'Gia nhập: ' + p.joined_at));
+            profileStats.append(node('p', '', 'Gia nhập: ' + p.joined_at.replace(/-/g, '.')));
             content.append(avatarFrame, node('span', 'cg-profile-label', 'THÀNH VIÊN NHÓM'), profileHeading, profileStats);
             var badges = node('div', 'achievement-badges');
             (p.badges || []).forEach(function (b) { var badge = node('span', 'achievement-badge', b.icon + ' ' + b.name); badge.title = b.description; badges.append(badge); });

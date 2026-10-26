@@ -14,6 +14,6 @@
         <li>Nhắn tin cho người chỉ nhận tin từ thành viên VIP.</li>
         <li>Viền avatar và nhãn VIP nổi bật trong tài khoản và nhóm chat.</li>
     </ul>
-    <p class="vip-benefits__note">Xem hồ sơ thật trong nhóm ẩn danh vẫn cần 20 xu mỗi lần.</p>
+    <p class="vip-benefits__note">Xem hồ sơ thật trong nhóm ẩn danh vẫn cần Xu mỗi lần.</p>
     <form method="dialog"><button type="submit" autofocus>Đã hiểu</button></form>
 </dialog>

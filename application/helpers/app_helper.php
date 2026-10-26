@@ -537,5 +537,5 @@ function profile_access_card($member, $viewer_id)
     $purchased = !empty($owned[$viewer_id][$member['id']]);
     $charge = !empty($member['charge_enabled']) && (int)$member['id'] !== $viewer_id;
     return array('charge'=>$charge,'purchased'=>$purchased,'detail'=>($viewer_id && (!$charge || $purchased)),
-        'label'=>$charge ? ($purchased ? 'Đã mở' : '🔒 ' . profile_unlock_cost() . ' xu') : '');
+        'label'=>$charge ? ($purchased ? 'Đã mở' : '🔒 ' . profile_unlock_cost() . ' Xu') : '');
 }

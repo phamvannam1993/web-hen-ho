@@ -592,3 +592,8 @@ body.is-group-chat-page { height:100dvh; overflow:hidden; overscroll-behavior:no
 .cg-profile-theme-halloween .achievement-badges { justify-content:center; }
 .cg-chat .cg-profile-theme-halloween .cg-profile-close { background:#f3ae56; color:#211523; border-color:#c4adca; font-weight:700; }
 .cg-chat .cg-profile-theme-halloween .cg-profile-close:hover { background:#ffc77e; color:#211523; }
+.cg-anonymous-profile .cg-profile-avatar-frame,
+.cg-anonymous-profile .cg-profile-avatar {
+    margin-left:0;
+    margin-right:0;
+}

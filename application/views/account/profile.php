@@ -409,7 +409,7 @@ if (!array_key_exists($current_frame, profile_frame_catalog())) $current_frame =
                 </span>
             </label>
             <label class="tk-toggle">
-                <span class="tk-toggle__b"><span class="tk-toggle__t">Thu <?= profile_unlock_cost() ?> xu khi mở hồ sơ chi tiết</span><span class="tk-toggle__d">Bạn nhận đủ <?= profile_unlock_cost() ?> xu; mỗi người chỉ thanh toán một lần.</span></span>
+                <span class="tk-toggle__b"><span class="tk-toggle__t">Thu <?= profile_unlock_cost() ?> Xu khi mở hồ sơ chi tiết</span><span class="tk-toggle__d">Bạn nhận đủ <?= profile_unlock_cost() ?> Xu; mỗi người chỉ thanh toán một lần.</span></span>
                 <span class="tk-switch"><input type="checkbox" role="switch" name="charge_enabled" value="1"  <?= ($da_gui ? $this->input->post('charge_enabled') === '1' : (!isset($me['charge_enabled']) || $me['charge_enabled'])) ? 'checked' : '' ?>><span class="tk-switch__track"></span><span class="tk-switch__knob"></span></span>
             </label>
             <label class="tk-toggle">
