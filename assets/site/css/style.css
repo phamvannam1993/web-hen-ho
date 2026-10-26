@@ -5471,13 +5471,13 @@ body :is(.pcard,.ccard,.hm-sug,.sw-card).is-profile-paid { position:relative; ov
 .profile-frame-preview--none { border:1px solid #e5dce0; background:#f7f7f8; color:#9a9096; box-shadow:none; }
 .profile-frame-preview--none > span { font-size:0; }
 .profile-frame-preview--none > span::after { content:'⊘'; font-size:32px; }
-.profile-frame-preview--ngan_ha { position:relative; border:0; background:#11162a url('../images/profile-frames/ngan-ha/banner.png') center/cover; color:#d9ceff; box-shadow:0 0 20px #b7a4ef45; }
-.profile-frame-preview--ngan_ha::after { content:''; position:absolute; inset:-12.5%; background:url('../images/profile-frames/ngan-ha/avatar-frame.png') center/contain no-repeat; pointer-events:none; }
+.profile-frame-preview--ngan_ha { position:relative; border:0; background:#11162a url('../images/profile-frames/ngan-ha/banner.webp') center/cover; color:#d9ceff; box-shadow:0 0 20px #b7a4ef45; }
+.profile-frame-preview--ngan_ha::after { content:''; position:absolute; inset:-12.5%; background:url('../images/profile-frames/ngan-ha/avatar-frame.webp') center/contain no-repeat; pointer-events:none; }
 
-.profile-frame-preview--ngu_long { position:relative; border:0; background:#0c1b18 url('../images/profile-frames/ngu-long/banner.png') center/cover; color:#e8cd88; box-shadow:0 0 20px #e8cd8845; }
-.profile-frame-preview--ngu_long::after { content:''; position:absolute; inset:-12.5%; background:url('../images/profile-frames/ngu-long/avatar-frame.png') center/contain no-repeat; pointer-events:none; }
+.profile-frame-preview--ngu_long { position:relative; border:0; background:#0c1b18 url('../images/profile-frames/ngu-long/banner.webp') center/cover; color:#e8cd88; box-shadow:0 0 20px #e8cd8845; }
+.profile-frame-preview--ngu_long::after { content:''; position:absolute; inset:-12.5%; background:url('../images/profile-frames/ngu-long/avatar-frame.webp') center/contain no-repeat; pointer-events:none; }
 .profile-frame-preview--ngu_long { margin-top:14px; }
 .profile-frame-preview--ngu_long::after { inset:auto; left:-24%; top:-38%; width:155%; height:155%; }
 
-.profile-frame-preview--halloween { position:relative; border:0; background:#181223 url('../images/profile-frames/halloween/banner.png') center/cover; color:#f3ae56; box-shadow:0 0 20px #c4adca45; }
-.profile-frame-preview--halloween::after { content:''; position:absolute; inset:-22.73%; background:url('../images/profile-frames/halloween/avatar-frame.png') center/contain no-repeat; pointer-events:none; }
+.profile-frame-preview--halloween { position:relative; border:0; background:#181223 url('../images/profile-frames/halloween/banner.webp') center/cover; color:#f3ae56; box-shadow:0 0 20px #c4adca45; }
+.profile-frame-preview--halloween::after { content:''; position:absolute; inset:-22.73%; background:url('../images/profile-frames/halloween/avatar-frame.webp') center/contain no-repeat; pointer-events:none; }

@@ -548,12 +548,12 @@ body.is-group-chat-page { height:100dvh; overflow:hidden; overscroll-behavior:no
 
 /* Ngân Hà — bộ tài nguyên thiết kế riêng. */
 .cg-anonymous-profile.cg-profile-theme-ngan_ha { min-height:460px; border-color:#c8c3df; background:#11162a; color:#f3f1fa; text-align:center; box-shadow:0 0 28px #b7a4ef35,0 24px 80px #100d2466; }
-.cg-profile-theme-ngan_ha::after { content:''; position:absolute; inset:0; z-index:2; border:36px solid transparent; border-image:url('../images/profile-frames/ngan-ha/card-border.png') 180 / 36px / 0 stretch; pointer-events:none; }
-.cg-profile-theme-ngan_ha .cg-profile-banner { height:120px; background:#24204a url('../images/profile-frames/ngan-ha/banner.png') center/cover no-repeat; }
+.cg-profile-theme-ngan_ha::after { content:''; position:absolute; inset:0; z-index:2; border:36px solid transparent; border-image:url('../images/profile-frames/ngan-ha/card-border.webp') 180 / 36px / 0 stretch; pointer-events:none; }
+.cg-profile-theme-ngan_ha .cg-profile-banner { height:120px; background:#24204a url('../images/profile-frames/ngan-ha/banner.webp') center/cover no-repeat; }
 .cg-profile-theme-ngan_ha .cg-profile-banner::after { display:none; }
 .cg-profile-theme-ngan_ha .cg-profile-content { padding:0 24px 28px; }
 .cg-profile-theme-ngan_ha .cg-profile-avatar-frame { width:88px; height:88px; margin:-44px auto 30px; padding:0; border:0; background:#11162a; box-shadow:none; }
-.cg-profile-theme-ngan_ha .cg-profile-avatar-frame::after { content:''; position:absolute; inset:-12.5%; width:125%; height:125%; border:0; border-radius:0; background:url('../images/profile-frames/ngan-ha/avatar-frame.png') center/contain no-repeat; pointer-events:none; }
+.cg-profile-theme-ngan_ha .cg-profile-avatar-frame::after { content:''; position:absolute; inset:-12.5%; width:125%; height:125%; border:0; border-radius:0; background:url('../images/profile-frames/ngan-ha/avatar-frame.webp') center/contain no-repeat; pointer-events:none; }
 .cg-profile-theme-ngan_ha .cg-profile-avatar { border:0; }
 .cg-profile-theme-ngan_ha .cg-profile-label { color:#b9c2d8; }
 .cg-profile-theme-ngan_ha .cg-profile-stats { background:#1d253d; border-color:#c8c3df40; color:#f3f1fa; }
@@ -563,12 +563,12 @@ body.is-group-chat-page { height:100dvh; overflow:hidden; overscroll-behavior:no
 
 /* Ngự Long — bộ tài nguyên thiết kế riêng. */
 .cg-anonymous-profile.cg-profile-theme-ngu_long { min-height:460px; border-color:#c8a65b; background:#0c1b18; color:#f3ebdd; text-align:center; box-shadow:0 0 28px #e8cd8835,0 24px 80px #100d2466; }
-.cg-profile-theme-ngu_long::after { content:''; position:absolute; inset:0; z-index:2; border:36px solid transparent; border-image:url('../images/profile-frames/ngu-long/card-border.png') 180 / 36px / 0 stretch; pointer-events:none; }
-.cg-profile-theme-ngu_long .cg-profile-banner { height:120px; background:#142a23 url('../images/profile-frames/ngu-long/banner.png') center/cover no-repeat; }
+.cg-profile-theme-ngu_long::after { content:''; position:absolute; inset:0; z-index:2; border:36px solid transparent; border-image:url('../images/profile-frames/ngu-long/card-border.webp') 180 / 36px / 0 stretch; pointer-events:none; }
+.cg-profile-theme-ngu_long .cg-profile-banner { height:120px; background:#142a23 url('../images/profile-frames/ngu-long/banner.webp') center/cover no-repeat; }
 .cg-profile-theme-ngu_long .cg-profile-banner::after { display:none; }
 .cg-profile-theme-ngu_long .cg-profile-content { padding:0 24px 28px; }
 .cg-profile-theme-ngu_long .cg-profile-avatar-frame { width:88px; height:88px; margin:-44px auto 30px; padding:0; border:0; background:#0c1b18; box-shadow:none; }
-.cg-profile-theme-ngu_long .cg-profile-avatar-frame::after { content:''; position:absolute; inset:-12.5%; width:125%; height:125%; border:0; border-radius:0; background:url('../images/profile-frames/ngu-long/avatar-frame.png') center/contain no-repeat; pointer-events:none; }
+.cg-profile-theme-ngu_long .cg-profile-avatar-frame::after { content:''; position:absolute; inset:-12.5%; width:125%; height:125%; border:0; border-radius:0; background:url('../images/profile-frames/ngu-long/avatar-frame.webp') center/contain no-repeat; pointer-events:none; }
 .cg-profile-theme-ngu_long .cg-profile-avatar { border:0; }
 .cg-profile-theme-ngu_long .cg-profile-label { color:#b9c7be; }
 .cg-profile-theme-ngu_long .cg-profile-stats { background:#142a23; border-color:#c8a65b40; color:#f3ebdd; }
@@ -580,12 +580,12 @@ body.is-group-chat-page { height:100dvh; overflow:hidden; overscroll-behavior:no
 
 /* Halloween — bộ tài nguyên thiết kế riêng. */
 .cg-anonymous-profile.cg-profile-theme-halloween { min-height:460px; border-color:#c4adca; background:#181223; color:#f5eff6; text-align:center; box-shadow:0 0 28px #c4adca35,0 24px 80px #100d2466; }
-.cg-profile-theme-halloween::after { content:''; position:absolute; inset:0; z-index:2; border:36px solid transparent; border-image:url('../images/profile-frames/halloween/card-border.png') 180 / 36px / 0 stretch; pointer-events:none; }
-.cg-profile-theme-halloween .cg-profile-banner { height:120px; background:#251a32 url('../images/profile-frames/halloween/banner.png') center/cover no-repeat; }
+.cg-profile-theme-halloween::after { content:''; position:absolute; inset:0; z-index:2; border:36px solid transparent; border-image:url('../images/profile-frames/halloween/card-border.webp') 180 / 36px / 0 stretch; pointer-events:none; }
+.cg-profile-theme-halloween .cg-profile-banner { height:120px; background:#251a32 url('../images/profile-frames/halloween/banner.webp') center/cover no-repeat; }
 .cg-profile-theme-halloween .cg-profile-banner::after { display:none; }
 .cg-profile-theme-halloween .cg-profile-content { padding:0 24px 28px; }
 .cg-profile-theme-halloween .cg-profile-avatar-frame { width:88px; height:88px; margin:-44px auto 34px; padding:0; border:0; background:#181223; box-shadow:none; }
-.cg-profile-theme-halloween .cg-profile-avatar-frame::after { content:''; position:absolute; inset:-22.73%; width:145.46%; height:145.46%; border:0; border-radius:0; background:url('../images/profile-frames/halloween/avatar-frame.png') center/contain no-repeat; pointer-events:none; }
+.cg-profile-theme-halloween .cg-profile-avatar-frame::after { content:''; position:absolute; inset:-22.73%; width:145.46%; height:145.46%; border:0; border-radius:0; background:url('../images/profile-frames/halloween/avatar-frame.webp') center/contain no-repeat; pointer-events:none; }
 .cg-profile-theme-halloween .cg-profile-avatar { border:0; }
 .cg-profile-theme-halloween .cg-profile-label { color:#beb0cc; }
 .cg-profile-theme-halloween .cg-profile-stats { background:#251a32; border-color:#c4adca40; color:#f5eff6; }
