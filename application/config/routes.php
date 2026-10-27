@@ -93,6 +93,14 @@ $route['api/room']                        = 'api/chat/room';
 $route['api/room/send']                   = 'api/chat/room_send';
 $route['api/realtime']                    = 'api/chat/realtime';
 $route['api/realtime/read']               = 'api/chat/realtime_read';
+
+/* Clubs Chat's (nhóm chat) cho ứng dụng — api/Groups.php */
+$route['api/groups']                      = 'api/groups/index';
+$route['api/groups/saved']                = 'api/groups/saved';
+$route['api/groups/random']               = 'api/groups/random';
+$route['api/groups/media/(:num)']         = 'api/groups/media/$1';
+$route['api/groups/(:num)']               = 'api/groups/show/$1';
+$route['api/groups/(:num)/([a-z-]+)']     = 'api/groups/act/$1/$2';
 $route['xac-thuc']                = 'auth/verify';
 $route['xac-thuc/gui-lai']        = 'auth/resend';
 $route['xac-thuc-email/(:any)']  = 'auth/verify_link/$1';
