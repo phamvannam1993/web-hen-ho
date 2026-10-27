@@ -9,6 +9,7 @@ $me      = isset($user) ? $user : null;
 $access = function_exists('profile_access_card') ? profile_access_card($m,$me['id'] ?? 0) : array('charge'=>false,'detail'=>true,'label'=>'');
 
 $ic_pin    = '<svg viewBox="0 0 24 24" class="ic"><path d="M12 21s7-6.1 7-11a7 7 0 1 0-14 0c0 4.9 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>';
+$ic_calendar = '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg>';
 $ic_ruler  = '<svg viewBox="0 0 24 24" class="ic"><path d="M3.6 14.4 14.4 3.6l6 6L9.6 20.4z"/><path d="M7 11l2 2M10 8l2 2M13 5l2 2"/></svg>';
 $ic_case   = '<svg viewBox="0 0 24 24" class="ic"><rect x="3" y="7.5" width="18" height="12" rx="2"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5"/></svg>';
 $ic_heart  = '<svg viewBox="0 0 24 24" class="ic"><path d="M12 20.5s-7-4.3-7-9.1A4.4 4.4 0 0 1 12 8a4.4 4.4 0 0 1 7 3.4c0 4.8-7 9.1-7 9.1z"/></svg>';
@@ -45,8 +46,14 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
         <p class="pcard-meta">
             <?php /* Mỗi cặp biểu tượng + chữ bọc chung một khối để khi xuống dòng
                      chúng không bị tách rời nhau */ ?>
-            <span class="mi"><?= $ic_pin ?><?= !empty($m['province_name']) ? e($m['province_name']) : 'Chưa rõ khu vực' ?><?php if (!empty($dating_card) && $age): ?> · <?= (int) $age ?> Tuổi · Sinh năm <?= (int) substr($m['birthday'], 0, 4) ?><?php endif; ?></span>
+            <span class="mi"><?= $ic_pin ?><?= !empty($m['province_name']) ? e($m['province_name']) : 'Chưa rõ khu vực' ?></span>
         </p>
+
+        <?php if (!empty($dating_card) && $age): ?>
+            <p class="pcard-meta">
+                <span class="mi"><?= $ic_calendar ?><?= (int) $age ?> Tuổi · Sinh năm <?= (int) substr($m['birthday'], 0, 4) ?></span>
+            </p>
+        <?php endif; ?>
 
         <?php if (array_key_exists('distance_km', $m)): ?>
             <p class="pcard-meta pcard-distance">
