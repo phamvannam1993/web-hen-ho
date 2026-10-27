@@ -157,7 +157,7 @@ Mỗi lần gọi API có token hợp lệ đều **tự chấm công chuỗi**,
 | POST | `/api/conversations/open/{user_id}` | Mở / tạo hội thoại — chỉ khi đã ghép đôi (**403** + `need_match`) |
 | GET  | `/api/conversations/{id}?after=` | Lần đầu: 50 tin gần nhất + `partner`, `can_send`. Sau đó chỉ tin mới hơn `after` |
 | POST | `/api/messages` | `{receiver_id, content}` + ảnh `image` |
-| GET  | `/api/room?after=` | Phòng chat chung (khách xem được) |
+| GET  | `/api/room?after=` | Phòng chat chung = nhóm 1 của Clubs Chat's. Sau `migrate_chat_groups.php` phải đăng nhập (**403** "Đăng nhập để truy cập nhóm này.") |
 | POST | `/api/room/send` | `{content}` + ảnh `image`. Tối đa 15 tin/phút (**429**) |
 | GET  | `/api/realtime` | Địa chỉ + mã WebSocket nếu máy chủ realtime đang bật |
 
@@ -168,6 +168,36 @@ thoại là đánh dấu đã đọc phần của đối phương, như web — 
 `chat.seen` ngay.
 
 `POST /api/realtime/read` chỉ dành cho máy chủ Node (header `X-Realtime-Secret`).
+
+## Clubs Chat's (nhóm chat)
+
+Cùng luật với `/clubs` của web (`M_chat_group`), xác thực bằng token thay cho session + CSRF
+(`application/controllers/api/Groups.php`). Cần `CHAT_GROUPS_ENABLED=1` (tắt → **404**). Mọi đường dẫn bắt buộc
+token: ứng dụng không có cookie khách `sc_chat_guest`, nên trong nhóm ẩn danh thành viên trò chuyện bằng tên giả.
+
+| Phương thức | Đường dẫn | Việc |
+|---|---|---|
+| GET  | `/api/groups` | `{groups: [Summary]}` — mọi nhóm xem được, kèm `unread`, `last`, `online` |
+| GET  | `/api/groups/saved` | Nhóm đang theo dõi |
+| GET  | `/api/groups/random` | `{group}` — một nhóm ẩn danh vào được (không có → **404**) |
+| GET  | `/api/groups/{id}` | `{group: Summary}` |
+| POST | `/api/groups/{id}/open` | `{identity: {id, needs_nickname, name, avatar, guest}, ticket, ws_url, group}` |
+| GET  | `/api/groups/{id}/messages` | `?before_id` \| `after_id`, `known_ids`, `events_cursor` → `{messages, group, removed, events_cursor, senders, sender_updates, reactions}` |
+| GET  | `/api/groups/{id}/online` | `{people: [{id, name, avatar, url}]}` |
+| POST | `/api/groups/{id}/nickname` | `{nickname}` — chọn tên giả (bắt buộc trước khi gửi trong nhóm ẩn danh, **422**) |
+| POST | `/api/groups/{id}/send` | `{content, client_message_id, reply_to_id?}` → `{message}` |
+| POST | `/api/groups/{id}/image` | multipart `image` + `client_message_id`, `content` (chú thích), `reply_to_id` |
+| POST | `/api/groups/{id}/follow` · `unfollow` · `hide` · `notifications {enabled}` · `read {message_id}` · `presence {active}` | |
+| POST | `/api/groups/{id}/react` · `block` · `report` · `moderate` | như `ajax/nhom` của web |
+| GET  | `/api/groups/{id}/profile?person=` · `profile-quote?person=` | Thẻ thành viên ẩn danh / báo giá mở hồ sơ thật |
+| POST | `/api/groups/{id}/profile-unlock` | `{person, version}` → `{url, charged}` |
+| GET  | `/api/groups/media/{message_id}` | Ảnh nhóm (`image/webp`) cho người xem được tin đó |
+
+Ảnh nhóm trong `content` trả về dạng `/api/groups/media/{id}` (thay `/nhom-media/{id}` chỉ đọc session) —
+ứng dụng gửi kèm header `Authorization` khi tải ảnh. `client_message_id`: 16–80 ký tự `[a-zA-Z0-9_-]`, gửi lại
+cùng mã không tạo tin trùng. Tin mới: WebSocket `ws_url` đổi đuôi `/ws` thành `/ws/groups?ticket=<ticket>`
+(vé hết hạn sau 10 phút — gọi lại `open`), sự kiện `{"t":"group.changed","groupId":N}` rồi tải `messages?after_id=`;
+không có WebSocket thì hỏi mỗi 4 giây.
 
 ---
 
