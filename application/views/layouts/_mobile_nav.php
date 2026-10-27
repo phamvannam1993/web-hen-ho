@@ -3,7 +3,7 @@ $nav_path = trim($this->uri->uri_string(), '/');
 $mobile_items = array(
     array('', 'Trang chủ', 'home'),
     array('hen-ho', 'Hẹn hò', 'match'),
-    array('swipe-match', 'Ghép đôi', 'sparkles'),
+    array('explore', 'Khám phá', ''),
     array('messenger', 'Tin nhắn', 'message'),
     array('tai-khoan/ho-so', 'Hồ sơ', 'user'),
 );
@@ -11,6 +11,23 @@ $mobile_items = array(
 <nav class="tk-bnav site-mobile-nav<?= $nav_path === 'swipe-match' ? ' site-mobile-nav--swipe' : '' ?>" aria-label="Điều hướng nhanh">
     <ul>
         <?php foreach ($mobile_items as $item): ?>
+            <?php if ($item[0] === 'explore'): ?>
+                <li>
+                    <button type="button" class="site-explore-trigger"
+                            aria-haspopup="dialog" aria-controls="site-explore">
+                        <svg class="tk-ic" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="1.7"
+                             stroke-linejoin="round" aria-hidden="true">
+                            <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+                            <path d="m17.5 2 4.5 4.5-4.5 4.5L13 6.5Z"/>
+                            <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+                            <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+                        </svg>
+                        <span>Khám phá</span>
+                    </button>
+                </li>
+                <?php continue; ?>
+            <?php endif; ?>
             <?php $active = $nav_path === $item[0]; ?>
             <li>
                 <a href="<?= site_url($item[0]) ?>"<?= $active ? ' class="is-active" aria-current="page"' : '' ?>>
@@ -29,3 +46,21 @@ $mobile_items = array(
         <?php endforeach; ?>
     </ul>
 </nav>
+<dialog id="site-explore" class="site-explore" aria-labelledby="site-explore-title">
+    <header class="site-explore-header">
+        <h2 id="site-explore-title">Khám phá</h2>
+        <form method="dialog">
+            <button type="submit" autofocus>Đóng <span aria-hidden="true">×</span></button>
+        </form>
+    </header>
+    <ul class="site-explore-list">
+        <li><a href="<?= site_url('clubs') ?>">
+            <?= tk_icon('message') ?><span>Chat's ẩn danh</span>
+            <?= tk_icon('chevron-right') ?>
+        </a></li>
+        <li><a href="<?= site_url('swipe-match') ?>">
+            <?= tk_icon('sparkles') ?><span>Ghép đôi ẩn</span>
+            <?= tk_icon('chevron-right') ?>
+        </a></li>
+    </ul>
+</dialog>
