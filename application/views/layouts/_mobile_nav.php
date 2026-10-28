@@ -50,7 +50,7 @@ $mobile_items = array(
     <header class="mobile-explore__header">
         <h2 id="mobile-explore-title">Khám phá</h2>
         <form method="dialog">
-            <button type="submit" aria-label="Đóng khám phá" autofocus>×</button>
+            <button type="submit" aria-label="Đóng khám phá" autofocus>Đóng</button>
         </form>
     </header>
     <a class="mobile-explore__item" href="<?= site_url('swipe-match') ?>">
@@ -63,5 +63,17 @@ $mobile_items = array(
         <span><strong>Chat's ẩn danh</strong><small>Trò chuyện, làm quen những người bạn mới</small></span>
         <span aria-hidden="true">›</span>
     </a>
+    <?php if ($user): ?>
+    <a class="mobile-explore__item" href="<?= site_url('tai-khoan/quan-tam?tab=thich-ban') ?>">
+        <span class="mobile-explore__icon" aria-hidden="true"><?= tk_icon('heart') ?></span>
+        <span><strong>Người thích tôi</strong><small>Xem những người đã thích bạn</small></span>
+        <span aria-hidden="true">›</span>
+    </a>
+    <a class="mobile-explore__item" href="<?= site_url('tai-khoan/quan-tam?tab=ban-thich') ?>">
+        <span class="mobile-explore__icon" aria-hidden="true"><?= tk_icon('heart') ?></span>
+        <span><strong>Người tôi thích</strong><small>Xem những người bạn đã thích</small></span>
+        <span aria-hidden="true">›</span>
+    </a>
+    <?php endif; ?>
 </dialog>
 <script defer src="<?= base_url('assets/site/js/mobile-nav.js') ?>?v=<?= filemtime(FCPATH.'assets/site/js/mobile-nav.js') ?>"></script>
