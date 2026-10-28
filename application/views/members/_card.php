@@ -51,7 +51,7 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
 
         <?php if (!empty($dating_card) && $age): ?>
             <p class="pcard-meta">
-                <span class="mi"><?= $ic_calendar ?><?= (int) $age ?> Tuổi · Sinh năm <?= (int) substr($m['birthday'], 0, 4) ?></span>
+                <span class="mi"><?= $ic_calendar ?><?= (int) $age ?> Tuổi</span>
             </p>
         <?php endif; ?>
 

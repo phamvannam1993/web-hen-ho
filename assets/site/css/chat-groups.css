@@ -597,3 +597,6 @@ body.is-group-chat-page { height:100dvh; overflow:hidden; overscroll-behavior:no
     margin-left:0;
     margin-right:0;
 }
+.cg-anonymous-profile .cg-profile-name {
+    text-align:left;
+}
