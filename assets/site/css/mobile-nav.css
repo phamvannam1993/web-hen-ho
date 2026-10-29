@@ -130,9 +130,9 @@ html.mobile-explore-open .site-mobile-nav a.is-active {
 .mobile-explore__header h2 { margin: 0; font-size: 20px; }
 .mobile-explore__header form { margin: 0; }
 .mobile-explore__header button {
-    display: inline-flex; align-items: center; justify-content: center; min-height: 36px;
-    padding: 6px 14px; border: 1px solid rgb(255 255 255 / 65%); border-radius: 8px;
-    background: rgb(255 255 255 / 18%); color: inherit; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; min-height: 28px;
+    padding: 4px 10px; border: .5px solid rgb(255 255 255 / 65%); border-radius: 6px;
+    background: rgb(255 255 255 / 18%); color: inherit; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
 }
 .mobile-explore__header button:hover { background: rgb(255 255 255 / 28%); }
 .mobile-explore__item {

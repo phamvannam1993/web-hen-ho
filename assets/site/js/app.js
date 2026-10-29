@@ -222,6 +222,29 @@
         });
     })();
 
+    /* Hai nút dưới banner trang chủ mobile. */
+    (function () {
+        var actions = document.querySelector('.home-intro-banner-actions');
+        if (!actions) { return; }
+        actions.addEventListener('click', function (event) {
+            if (!window.matchMedia('(max-width: 639px)').matches) { return; }
+            if (event.target.closest('[data-home-open-chat]')) {
+                var panel = document.getElementById('cw-panel');
+                var bubble = document.getElementById('cw-bubble');
+                if (panel && bubble && panel.hidden) { bubble.click(); }
+            }
+            if (event.target.closest('[data-home-open-search]')) {
+                var form = document.getElementById('header-search');
+                var toggle = document.getElementById('header-search-toggle');
+                if (!form || !toggle) { return; }
+                if (!form.classList.contains('is-open')) { toggle.click(); }
+                form.scrollIntoView({ block: 'nearest' });
+                var input = form.querySelector('input[type="search"]');
+                if (input) { input.focus({ preventScroll: true }); }
+            }
+        });
+    })();
+
     /* Nút có data-confirm: hỏi bằng modal thay cho hộp thoại của trình duyệt */
     document.addEventListener('click', function (e) {
         var trigger = e.target.closest('[data-confirm]');
