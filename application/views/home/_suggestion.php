@@ -16,7 +16,6 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
                 $hop = max(60, min(99, (int) round(($m['match_score'] ?? 0) * 100 / 120)));
                 $chips = array_filter(array(
                     !empty($m['province_name']) ? $m['province_name'] : null,
-                    !empty($m['job'])           ? $m['job'] : null,
                     $access['detail'] && !empty($m['height_cm'])     ? (int) $m['height_cm'] . 'cm' : null,
                     $access['detail'] && !empty($m['marital_status']) && $m['marital_status'] === 'doc_than' ? 'Độc thân' : null,
                 ));
