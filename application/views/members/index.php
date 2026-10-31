@@ -7,6 +7,7 @@ $compact_members = $base_url === 'thanh-vien';
 if ($compact_members) $view_mode = 'list';
 // Trang một tỉnh (/ha-noi) dùng chung giao diện này, khác ở chỗ khu vực đã cố định
 $province = $province ?? null;
+if ($province) $view_mode = 'grid';
 
 // Nhóm nào đang có điều kiện lọc thì mở sẵn, còn lại đóng cho gọn
 $open_shape     = $g('height_min') || $g('height_max') || $g('marital');
@@ -50,7 +51,7 @@ $with = function ($key, $value) use ($base_url) {
 <?php if ($base_url === 'thanh-vien'): ?>
 <link rel="stylesheet" href="<?= base_url('assets/site/css/members-discovery.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/members-discovery.css') ?>">
 <?php endif; ?>
-<div class="container members-page <?= $base_url === 'thanh-vien' ? 'members-discovery' : '' ?>">
+<div class="container members-page <?= $base_url === 'thanh-vien' ? 'members-discovery' : '' ?><?= $province ? ' dating-page' : '' ?>">
     <?php if ($province): ?>
         <nav class="breadcrumb">
             <a href="<?= site_url() ?>">Trang chủ</a> ›
@@ -237,7 +238,7 @@ $with = function ($key, $value) use ($base_url) {
                         <?php endforeach; ?>
                     </select>
 
-                    <?php if (!$compact_members): ?>
+                    <?php if (!$compact_members && !$province): ?>
                     <div class="view-switch">
                         <a class="<?= $view_mode === 'grid' ? 'on' : '' ?>" href="<?= $with('view', 'grid') ?>" title="Dạng lưới" aria-label="Dạng lưới">
                             <svg viewBox="0 0 24 24" class="ic"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></svg>
@@ -276,7 +277,7 @@ $with = function ($key, $value) use ($base_url) {
                         var grid = document.currentScript.parentElement;
                         var page = grid.closest('.members-page');
                         var requested = new URLSearchParams(window.location.search).get('view');
-                        var mode = page.classList.contains('members-discovery') ? 'list' : requested === 'grid' || requested === 'list' ? requested
+                        var mode = page.classList.contains('dating-page') ? 'grid' : page.classList.contains('members-discovery') ? 'list' : requested === 'grid' || requested === 'list' ? requested
                             : (window.matchMedia('(max-width: 720px)').matches ? 'list' : 'grid');
                         grid.classList.toggle('is-list', mode === 'list');
                         page.querySelector('input[name="view"]').value = mode;
@@ -288,7 +289,7 @@ $with = function ($key, $value) use ($base_url) {
                     }());
                     </script>
                     <?php foreach ($members as $m): ?>
-                        <?php $this->load->view('members/_card', array('m' => $m)); ?>
+                        <?php $this->load->view('members/_card', array('m' => $m, 'dating_card' => !empty($province))); ?>
                     <?php endforeach; ?>
                 </div>
                 <?= $pagination ?>

@@ -16,3 +16,54 @@
 .tk-lk-req__act { display: flex; gap: 8px; padding: 4px 12px 12px; }
 .tk-lk-req__act > .tk-btn:first-child { flex: 1; min-width: 0; }
 .tk-lk-req--compact .tk-lk-req__act { padding: 0 10px 10px 86px; gap: 6px; }
+.tk-lk-panel .tk-people {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+.tk-lk-panel .tk-person:not(.tk-person--compact) .tk-person__ph {
+  aspect-ratio: 1 / 1;
+  max-height: 230px;
+}
+.tk-lk-panel .tk-person__b { padding: 10px 12px; }
+.tk-lk-panel .tk-person--compact .tk-person__b { padding: 0; }
+.tk-lk-panel .tk-person__n { font-size: 15px; line-height: 21px; }
+.tk-lk-panel .tk-person__act { margin-top: 8px; gap: 6px; }
+.tk-lk-panel .tk-person__act .tk-btn,
+.tk-lk-panel .tk-lk-req__act .tk-btn {
+  min-height: 30px;
+  padding: 6px 8px;
+  font-size: 12px;
+}
+.tk-lk-panel .tk-person__tags { top: 8px; left: 8px; gap: 4px; }
+.tk-lk-panel .tk-person__tags .tk-pill {
+  padding: 3px 6px;
+  font-size: 10px;
+}
+.tk-lk-panel .tk-person__act { flex-wrap: wrap; }
+.tk-lk-panel .tk-person__act > .tk-btn:first-child {
+  flex: 0 0 auto;
+}
+.tk-lk-panel {
+  max-width: 740px;
+  margin-inline: auto;
+}
+@media (min-width: 721px) {
+  .tk-lk-panel {
+    width: 100%;
+    max-width: 900px;
+  }
+  .tk-lk-panel .tk-person--compact .tk-person__b {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 12px;
+    align-items: center;
+  }
+  .tk-lk-panel .tk-person__b > .tk-row,
+  .tk-lk-panel .tk-person__m { grid-column: 1; }
+  .tk-lk-panel .tk-person__act {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    margin-top: 0;
+    justify-content: flex-end;
+  }
+}
