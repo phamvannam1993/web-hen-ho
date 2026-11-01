@@ -1,3 +1,24 @@
+document.addEventListener('DOMContentLoaded', function () {
+    var trigger = document.querySelector('.site-explore-trigger');
+    var dialog = document.getElementById('site-explore');
+    if (!trigger || !dialog) return;
+    var nav = trigger.closest('.site-mobile-nav');
+
+    trigger.addEventListener('click', function () {
+        if (dialog.open) return;
+        dialog.showModal();
+        dialog.appendChild(nav);
+        document.documentElement.classList.add('site-explore-open');
+    });
+    dialog.addEventListener('close', function () {
+        dialog.parentNode.insertBefore(nav, dialog);
+        document.documentElement.classList.remove('site-explore-open');
+        trigger.focus();
+    });
+    window.addEventListener('pagehide', function () {
+        if (dialog.open) dialog.close();
+    });
+});
 /* Tương tác frontend: modal thông báo, lấy mã pass, hiện số điện thoại. */console.log('🔴 DEBUG: app.js đã được load - Phiên bản mới nhất!');
 (function () {
     'use strict';
