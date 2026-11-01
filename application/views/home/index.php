@@ -47,8 +47,31 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
                  alt="Saigon Cupid – Kết nối trái tim Việt"
                  fetchpriority="high">
             <span class="home-intro-caption"><?= $ic($ic_heart) ?> Một kết nối. Một khởi đầu mới.</span>
+            <div class="home-intro-banner-actions">
+                <button type="button" data-home-open-chat aria-controls="cw-panel">
+                    <span aria-hidden="true"><?= $ic($ic_chat) ?></span>
+                    Nhắn tin
+                </button>
+                <button type="button" data-home-open-search aria-controls="header-search">
+                    <span aria-hidden="true"><?= $ic($ic_search) ?></span>
+                    Tìm kiếm
+                </button>
+            </div>
         </div>
     </section>
+    <?php if (!empty($suggestions)): ?>
+    <section class="hm-mobile-discovery" aria-labelledby="home-mobile-suggestions-heading">
+        <div class="hm-mobile-discovery-head">
+            <h2 id="home-mobile-suggestions-heading">Gợi ý ghép đôi cho bạn</h2>
+            <a href="<?= site_url('thanh-vien') ?>">Tất cả →</a>
+        </div>
+        <div class="hm-sugs hm-home-carousel" data-account-suggestions="home">
+            <?php foreach ($suggestions as $m): ?>
+                <?php $this->load->view('home/_suggestion', array('m' => $m, 'matched_ids' => $matched_ids)); ?>
+            <?php endforeach; ?>
+        </div>
+    </section>
+    <?php endif; ?>
     <nav class="home-intro-features" aria-label="Khám phá tính năng">
         <?php
         $features = array(
@@ -165,9 +188,12 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
 
 <?php /* ===================== Gợi ý ghép đôi ===================== */ ?>
 <?php if (!empty($suggestions)): ?>
-<section class="hm-sec hm-sec-grey">
+<section class="hm-sec hm-sec-grey hm-home-suggestions">
     <div class="container">
-        <h2 class="hm-title is-left">Gợi ý ghép đôi cho bạn</h2>
+        <h2 class="hm-title is-left">
+            <span class="hm-home-desktop-title">Gợi ý ghép đôi cho bạn</span>
+            <span class="hm-home-mobile-title">Thêm thành viên phù hợp</span>
+        </h2>
         <p class="hm-sub">Sắp xếp theo mức độ tương hợp với tiêu chí của bạn</p>
 
         <div class="hm-sugs" data-account-suggestions="home">

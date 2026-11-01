@@ -16,13 +16,11 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
                 $hop = max(60, min(99, (int) round(($m['match_score'] ?? 0) * 100 / 120)));
                 $chips = array_filter(array(
                     !empty($m['province_name']) ? $m['province_name'] : null,
-                    !empty($m['job'])           ? $m['job'] : null,
                     $access['detail'] && !empty($m['height_cm'])     ? (int) $m['height_cm'] . 'cm' : null,
                     $access['detail'] && !empty($m['marital_status']) && $m['marital_status'] === 'doc_than' ? 'Độc thân' : null,
                 ));
             ?>
                 <article class="hm-sug<?= $access['charge'] ? ' is-profile-paid' : '' ?>" data-user="<?= (int) $m['id'] ?>" tabindex="0" aria-label="Xem hồ sơ" data-profile-preview-card="<?= e($m['slug']) ?>">
-    <?php if ($access['label']): ?><a class="profile-price-label<?= !empty($access['purchased']) ? ' is-open' : '' ?>" href="<?= site_url('user/'.$m['slug']) ?>"><?= e($access['label']) ?></a><?php endif; ?>
                     <a class="hm-sug-photo" href="<?= site_url('profile/' . $m['slug']) ?>">
                         <img src="<?= avatar_url($m['avatar'], $m['gender']) ?>" alt="<?= e(display_name($m)) ?>" loading="lazy">
                     </a>

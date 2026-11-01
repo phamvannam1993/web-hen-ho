@@ -396,11 +396,11 @@
             }
             var profileAvatar = node('img', 'cg-profile-avatar'); profileAvatar.src = p.avatar; profileAvatar.alt = '';
             var avatarFrame = node('div', 'cg-profile-avatar-frame'); avatarFrame.append(profileAvatar);
-            var profileHeading = node('h3', '', p.name); profileHeading.id = 'cg-profile-heading-' + self.root.dataset.groupId;
+            var profileHeading = node('h3', 'cg-profile-name', p.name); profileHeading.id = 'cg-profile-heading-' + self.root.dataset.groupId;
             dialog.setAttribute('aria-labelledby', profileHeading.id);
             var profileStats = node('div', 'cg-profile-stats');
             profileStats.append(node('p', '', 'Gia nhập: ' + p.joined_at.replace(/-/g, '.')));
-            content.append(avatarFrame, node('span', 'cg-profile-label', 'THÀNH VIÊN NHÓM'), profileHeading, profileStats);
+            content.append(avatarFrame, profileHeading, profileStats);
             var badges = node('div', 'achievement-badges');
             (p.badges || []).forEach(function (b) { var badge = node('span', 'achievement-badge', b.icon + ' ' + b.name); badge.title = b.description; badges.append(badge); });
             content.append(badges);

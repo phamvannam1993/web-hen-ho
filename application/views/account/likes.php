@@ -19,13 +19,11 @@ $tabs = array(
 $tab = (string) $this->input->get('tab');
 if (!isset($tabs[$tab])) { $tab = 'ban-thich'; }
 
-// In một danh sách người hai lần: thẻ ngang trên điện thoại, thẻ lớn từ sm
+// Dùng danh sách thẻ ngang trên cả PC và điện thoại
 $luoi = function ($list, $o, $ve = null) {
     $ve = $ve ?: function ($m, $o) { $this->load->view('account/_person', array('p' => $m, 'o' => $o)); };
-    echo '<div class="tk-stack tk-stack--sm tk-only-mobile">';
+    echo '<div class="tk-stack tk-stack--sm">';
     foreach ($list as $m) { $ve($m, $o + array('compact' => true)); }
-    echo '</div><div class="tk-people tk-people--3 tk-only-desktop">';
-    foreach ($list as $m) { $ve($m, $o); }
     echo '</div>';
 };
 

@@ -123,7 +123,7 @@ class MY_Controller extends CI_Controller
             $card = $view === 'confide/index' ? 'confide/_card' : 'members/_card';
             foreach ($data['members'] as $member) {
                 $html .= $this->load->view($card, array_merge($this->data, array(
-                    'm' => $member, 'dating_card' => $view === 'dating/index',
+                    'm' => $member, 'dating_card' => in_array($view, array('dating/index', 'areas/members'), true),
                 )), true);
             }
             $this->output->set_header('Cache-Control: private, no-store');
