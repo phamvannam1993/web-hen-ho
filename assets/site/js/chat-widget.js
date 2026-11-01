@@ -633,6 +633,11 @@
 
     /** Mở phòng chat chung. */
     function moPhong() {
+        var voiceButton = document.getElementById('cw-voice');
+        if (voiceButton) {
+            voiceButton.hidden = true;
+            delete voiceButton.dataset.voiceCall;
+        }
         document.getElementById('cw-avatar-link').hidden = true;
         document.getElementById('cw-avatar-link').removeAttribute('href');
         document.getElementById('cw-profile-link').removeAttribute('href');
@@ -661,6 +666,11 @@
 
     /** Mở một hội thoại riêng. */
     function moChat(info) {
+        var voiceButton = document.getElementById('cw-voice');
+        if (voiceButton) {
+            voiceButton.dataset.voiceCall = String(info.id);
+            voiceButton.hidden = false;
+        }
         var profileUrl = info.profile_url || '';
         var avatarLink = document.getElementById('cw-avatar-link');
         var profileLink = document.getElementById('cw-profile-link');

@@ -478,6 +478,10 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
                     <div class="cw-peer">
                         <a id="cw-profile-link"><b id="cw-name"></b></a>
                         <small id="cw-status"></small>
+                        <?php if ($user && getenv('VOICE_ENABLED') === '1'): ?>
+                        <button type="button" id="cw-voice" data-voice-call
+                                hidden disabled>Gọi thoại</button>
+                        <?php endif; ?>
                         <button type="button" class="cw-online-toggle" id="cw-online-toggle" hidden
                                 aria-expanded="false" aria-controls="cw-online-panel" aria-haspopup="dialog">
                             <span id="cw-online-toggle-count">Người đang online</span> <span aria-hidden="true">▾</span>
@@ -551,6 +555,10 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 <!-- Chat nạp cho cả khách: xem được phòng chung, muốn gửi thì phải đăng nhập -->
 <script defer src="<?= base_url('assets/site/js/realtime.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/realtime.js') ?>"></script>
 <script defer src="<?= base_url('assets/site/js/chat-widget.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/chat-widget.js') ?>"></script>
+<?php if ($user && getenv('VOICE_ENABLED') === '1'): ?>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/voice-calls.css') ?>?v=<?= filemtime(FCPATH.'assets/site/css/voice-calls.css') ?>">
+<script defer src="<?= base_url('assets/site/js/voice-calls.js') ?>?v=<?= filemtime(FCPATH.'assets/site/js/voice-calls.js') ?>"></script>
+<?php endif; ?>
 <?php if (chat_groups_enabled()): ?>
 <link rel="stylesheet" href="<?= base_url('assets/site/css/chat-groups.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/chat-groups.css') ?>">
 <script defer src="<?= base_url('assets/site/js/chat-groups.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/chat-groups.js') ?>"></script>

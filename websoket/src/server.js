@@ -30,6 +30,7 @@ const { WebSocketServer } = require('ws');
 const config = require('./config');
 const { verify, sameSecret } = require('./auth');
 const { createGroups } = require('./groups');
+const { createVoice } = require('./voice');
 
 if (!config.secret) {
   console.error('[realtime] Thiếu REALTIME_SECRET (đặt trong websoket/.env hoặc .env của web).');
@@ -127,6 +128,7 @@ const server = http.createServer((req, res) => {
 
 /* ───────────── WebSocket ───────────── */
 
+const voice = createVoice({ config, clients, send: gui });
 const wss = new WebSocketServer({ noServer: true, maxPayload: 16 * 1024 });
 
 server.on('upgrade', (req, socket, head) => {
@@ -134,13 +136,18 @@ server.on('upgrade', (req, socket, head) => {
   if (url.pathname === '/ws/groups') return groups.upgrade(req, socket, head, url.searchParams.get('ticket'));
   if (url.pathname !== '/ws') return socket.destroy();
 
-  const uid = verify(url.searchParams.get('token'), config.secret);
+  const token = url.searchParams.get('token');
+  const uid = verify(token, config.secret);
   if (!uid) {
     socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
     return socket.destroy();
   }
   wss.handleUpgrade(req, socket, head, (ws) => {
     ws.uid = uid;
+    // Token đã được verify; thời hạn này chỉ áp dụng cho gọi thoại.
+    ws.authExpiresAt = Number(JSON.parse(
+      Buffer.from(token.split('.')[0], 'base64url').toString()
+    ).exp) * 1000;
     ws.alive = true;
     wss.emit('connection', ws);
   });
@@ -183,6 +190,10 @@ wss.on('connection', (ws) => {
       return;
     }
     if (!m || typeof m.t !== 'string') return;
+    if (m.t.startsWith('voice.')) {
+      voice.message(ws, m).catch(() => voice.close(ws));
+      return;
+    }
 
     if (m.t === 'ping') return gui(ws, { t: 'pong' });
 
@@ -204,6 +215,7 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('close', () => {
+    voice.close(ws);
     bot(ws.uid, ws);
     baoOnline();
   });
