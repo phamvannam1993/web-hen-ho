@@ -121,9 +121,10 @@ $gio_ngan = function ($t) {
                     </span>
                 </a>
                 <?php if ($can_send && getenv('VOICE_ENABLED') === '1'): ?>
-                <button type="button" class="tk-btn tk-btn--ghost tk-btn--sm"
+                <button type="button" class="tk-btn tk-btn--ghost tk-btn--icon-sm"
                         data-voice-call="<?= (int) $conversation_id ?>"
-                        disabled>Gọi thoại</button>
+                        aria-label="Gọi thoại" title="Gọi thoại"
+                        disabled><?= tk_icon('phone') ?></button>
                 <?php endif; ?>
                 <a class="tk-btn tk-btn--ghost tk-btn--icon-sm" href="<?= site_url('profile/' . ($partner['slug'] ?: $partner['id'])) ?>"
                    aria-label="Xem hồ sơ" title="Xem hồ sơ"><?= tk_icon('user') ?></a>

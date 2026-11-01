@@ -42,7 +42,8 @@
     function refresh() {
         document.querySelectorAll('[data-voice-call]').forEach(function (b) {
             b.disabled = !supported || !rt.connected;
-            b.title = supported ? 'Gọi thoại' : 'Cần HTTPS và trình duyệt hỗ trợ gọi thoại';
+            b.title = !supported ? 'Cần HTTPS hoặc localhost và trình duyệt hỗ trợ gọi thoại'
+                : (!rt.connected ? 'Chưa kết nối máy chủ gọi thoại' : 'Gọi thoại');
         });
     }
     function send(s, type, extra) {

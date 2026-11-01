@@ -30,5 +30,6 @@
     outline-offset: 3px;
 }
 .voice-dialog [hidden], #cw-voice[hidden] { display: none; }
-#cw-voice { padding: 4px 10px; margin-top: 4px; font-size: 12px; }
+#cw-voice { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 8px; margin-top: 4px; }
+#cw-voice svg { width: 20px; height: 20px; }
 [data-voice-call]:disabled { opacity: .5; cursor: not-allowed; }

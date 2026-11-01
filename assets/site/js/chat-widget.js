@@ -969,6 +969,10 @@
         // A modal above the chat handles its own close button and backdrop.
         // Keep the underlying conversation open until the modal is dismissed.
         if (document.querySelector('dialog[open]')) return;
+        // Fallback chat menus are moved to document.body.
+        var menu = e.target.closest('.cg-popover-open');
+        if (menu && menu.cgTrigger && root.contains(menu.cgTrigger)) return;
+
         if (!panel.hidden && !root.contains(e.target)) { dongChat(); }
     });
 
