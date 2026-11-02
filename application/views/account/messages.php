@@ -120,6 +120,12 @@ $gio_ngan = function ($t) {
                         <span class="tk-ms-head__s<?= is_online($partner['last_active_at']) ? ' is-online' : '' ?>"><?= is_online($partner['last_active_at']) ? 'Đang online' : (!empty($partner['last_active_at']) ? 'Hoạt động ' . time_ago($partner['last_active_at']) : 'Chưa có thông tin hoạt động') ?></span>
                     </span>
                 </a>
+                <?php if ($can_send && getenv('VOICE_ENABLED') === '1'): ?>
+                <button type="button" class="tk-btn tk-btn--ghost tk-btn--icon-sm"
+                        data-voice-call="<?= (int) $conversation_id ?>"
+                        aria-label="Gọi thoại" title="Gọi thoại"
+                        disabled><?= tk_icon('phone') ?></button>
+                <?php endif; ?>
                 <a class="tk-btn tk-btn--ghost tk-btn--icon-sm" href="<?= site_url('profile/' . ($partner['slug'] ?: $partner['id'])) ?>"
                    aria-label="Xem hồ sơ" title="Xem hồ sơ"><?= tk_icon('user') ?></a>
             </div>

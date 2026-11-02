@@ -633,6 +633,11 @@
 
     /** Mở phòng chat chung. */
     function moPhong() {
+        var voiceButton = document.getElementById('cw-voice');
+        if (voiceButton) {
+            voiceButton.hidden = true;
+            delete voiceButton.dataset.voiceCall;
+        }
         document.getElementById('cw-avatar-link').hidden = true;
         document.getElementById('cw-avatar-link').removeAttribute('href');
         document.getElementById('cw-profile-link').removeAttribute('href');
@@ -661,6 +666,11 @@
 
     /** Mở một hội thoại riêng. */
     function moChat(info) {
+        var voiceButton = document.getElementById('cw-voice');
+        if (voiceButton) {
+            voiceButton.dataset.voiceCall = String(info.id);
+            voiceButton.hidden = false;
+        }
         var profileUrl = info.profile_url || '';
         var avatarLink = document.getElementById('cw-avatar-link');
         var profileLink = document.getElementById('cw-profile-link');
@@ -959,6 +969,10 @@
         // A modal above the chat handles its own close button and backdrop.
         // Keep the underlying conversation open until the modal is dismissed.
         if (document.querySelector('dialog[open]')) return;
+        // Fallback chat menus are moved to document.body.
+        var menu = e.target.closest('.cg-popover-open');
+        if (menu && menu.cgTrigger && root.contains(menu.cgTrigger)) return;
+
         if (!panel.hidden && !root.contains(e.target)) { dongChat(); }
     });
 
