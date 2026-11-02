@@ -37,6 +37,17 @@
             });
         },
 
+        sendDirect: function (payload) {
+            if (!this.connected || !this.socket
+                || this.socket.readyState !== 1) return false;
+            try {
+                this.socket.send(JSON.stringify(payload));
+                return true;
+            } catch (e) {
+                return false;
+            }
+        },
+
         send: function (payload) {
             if (this.connected && this.socket && this.socket.readyState === 1) {
                 this.socket.send(JSON.stringify(payload));
