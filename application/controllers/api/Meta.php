@@ -31,8 +31,8 @@ class Meta extends Api_Controller
                 'unlock_cost'   => (int) ($s['unlock_cost'] ?? 20),
                 'bank_info'     => $s['bank_info'] ?? null,
                 'enable_posts'  => !empty($s['enable_posts']),
-                // Ảnh nền khối mở đầu trang chủ — cùng cấu hình với web
-                'hero_image'    => base_url(ltrim(($s['home_hero_image'] ?? '') ?: 'assets/images/banner.png', '/')),
+                // Ảnh thẻ mở đầu trang chủ — đúng file web hiển thị (views/home/index.php)
+                'hero_image'    => base_url('assets/images/banner.webp'),
             ),
             'provinces' => $tinh,
             'interests' => $so_thich,
