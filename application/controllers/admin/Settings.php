@@ -52,10 +52,39 @@ class Settings extends Admin_Controller
     public function index()
     {
         if ($this->input->method() === 'post') {
+            if ($this->input->post('site_name') === null) {
+                set_flash('danger', 'Dữ liệu không hợp lệ hoặc tệp tải lên quá lớn. Cấu hình chưa được lưu.');
+                return redirect('admin/settings');
+            }
+
+            $banner_image = null;
+            if (isset($_FILES['home_banner']['error']) && $_FILES['home_banner']['error'] !== UPLOAD_ERR_NO_FILE) {
+                $dir = FCPATH . 'uploads/banners';
+                if (!is_dir($dir) && !mkdir($dir, 0775, true)) {
+                    set_flash('danger', 'Không tạo được thư mục lưu banner.');
+                    return redirect('admin/settings');
+                }
+                $this->load->library('upload', array(
+                    'upload_path' => $dir,
+                    'allowed_types' => 'jpg|jpeg|png|webp|gif',
+                    'max_size' => 5120,
+                    'encrypt_name' => true,
+                ));
+                if (!$this->upload->do_upload('home_banner')) {
+                    set_flash('danger', 'Không tải được banner: ' . strip_tags($this->upload->display_errors('', '')));
+                    return redirect('admin/settings');
+                }
+                $upload = $this->upload->data();
+                $banner_image = 'uploads/banners/' . $upload['file_name'];
+            }
+
             foreach ($this->fields as $group => $keys) {
                 foreach ($keys as $key => $label) {
                     $this->m_setting->set($key, $this->input->post($key, true), $group);
                 }
+            }
+            if ($banner_image !== null) {
+                $this->m_setting->set('home_banner_image', $banner_image, 'home_banner');
             }
             $this->write_robots();
             $this->log_action('update_settings', 'settings', null);
