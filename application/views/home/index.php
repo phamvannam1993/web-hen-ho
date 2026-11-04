@@ -62,7 +62,7 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
     <?php if (!empty($suggestions)): ?>
     <section class="hm-mobile-discovery" aria-labelledby="home-mobile-suggestions-heading">
         <div class="hm-mobile-discovery-head">
-            <h2 id="home-mobile-suggestions-heading">Cùng phong cách của bạn:</h2>
+            <h2 id="home-mobile-suggestions-heading">Cùng phong cách của bạn</h2>
             <a href="<?= site_url('thanh-vien') ?>">Tất cả →</a>
         </div>
         <div class="hm-sugs hm-home-carousel" data-account-suggestions="home">
