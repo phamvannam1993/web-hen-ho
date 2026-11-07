@@ -100,7 +100,7 @@
     }, { passive: true });
     document.addEventListener('touchmove', function (event) {
         if (!pageLocked || event.touches.length !== 1) return;
-        var area = event.target.closest('.cw-body, .cw-side-list, .cw-online-panel, .cw-emoji-list, .cg-feed, .cg-info, .cg-composer-emoji-grid, .cg-composer textarea');
+        var area = event.target.closest('.message-history-results, .cw-body, .cw-side-list, .cw-online-panel, .cw-emoji-list, .cg-feed, .cg-info, .cg-composer-emoji-grid, .cg-composer textarea');
         var delta = event.touches[0].clientY - previousTouchY;
         previousTouchY = event.touches[0].clientY;
         if (!area || !panel.contains(area) || area.scrollHeight <= area.clientHeight ||
@@ -110,6 +110,15 @@
         }
     }, { passive: false });
     fitAboveNav();
+    var focusFitTimer;
+    function fitAfterFocus() {
+        fitAboveNav();
+        clearTimeout(focusFitTimer);
+        focusFitTimer = setTimeout(fitAboveNav, 350);
+    }
+    panel.addEventListener('focusin', fitAfterFocus);
+    panel.addEventListener('focusout', fitAfterFocus);
+    window.addEventListener('orientationchange', fitAfterFocus);
     window.addEventListener('resize', fitAboveNav);
     window.addEventListener('load', fitAboveNav);
     if (visualViewport) {
@@ -129,6 +138,7 @@
     var bodyEl   = document.getElementById('cw-body');
     var formEl   = document.getElementById('cw-form');
     var inputEl  = document.getElementById('cw-input');
+    var historySearch = document.getElementById('cw-history-search');
     var fileEl   = document.getElementById('cw-file');
     var receiver = document.getElementById('cw-receiver');
 
@@ -633,6 +643,7 @@
 
     /** Mở phòng chat chung. */
     function moPhong() {
+        if (historySearch) { historySearch.hidden = true; delete historySearch.dataset.messageHistory; }
         var voiceButton = document.getElementById('cw-voice');
         if (voiceButton) {
             voiceButton.hidden = true;
@@ -666,6 +677,10 @@
 
     /** Mở một hội thoại riêng. */
     function moChat(info) {
+        if (historySearch) {
+            historySearch.dataset.messageHistory = base + 'ajax/tin-nhan/' + Number(info.id) + '/tim-kiem';
+            historySearch.hidden = false;
+        }
         var voiceButton = document.getElementById('cw-voice');
         if (voiceButton) {
             voiceButton.dataset.voiceCall = String(info.id);

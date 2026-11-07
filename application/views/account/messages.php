@@ -126,6 +126,9 @@ $gio_ngan = function ($t) {
                         aria-label="Gọi thoại" title="Gọi thoại"
                         disabled><?= tk_icon('phone') ?></button>
                 <?php endif; ?>
+                <button type="button" class="message-history-trigger message-history-trigger--icon"
+                        data-message-history="<?= e(site_url('ajax/tin-nhan/' . (int) $conversation_id . '/tim-kiem')) ?>"
+                        aria-label="Tìm tin nhắn cũ" title="Tìm tin nhắn cũ"><?= tk_icon('search') ?></button>
                 <a class="tk-btn tk-btn--ghost tk-btn--icon-sm" href="<?= site_url('profile/' . ($partner['slug'] ?: $partner['id'])) ?>"
                    aria-label="Xem hồ sơ" title="Xem hồ sơ"><?= tk_icon('user') ?></a>
             </div>

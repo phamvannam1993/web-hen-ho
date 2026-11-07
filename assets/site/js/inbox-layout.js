@@ -12,6 +12,12 @@
         document.documentElement.classList.toggle('tk-inbox-open', isOpen);
         document.body.classList.toggle('is-inbox-open', isOpen);
         document.documentElement.classList.toggle('tk-inbox-list', !isOpen && mobile.matches);
+        if (mobile.matches && isOpen) {
+            card.style.setProperty('--inbox-top', (viewport ? viewport.offsetTop : 0) + 'px');
+            card.style.setProperty('--inbox-height', Math.max(0, viewport ? viewport.height : window.innerHeight) + 'px');
+            return;
+        }
+        card.style.removeProperty('--inbox-top');
         var bottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
         document.querySelectorAll('.tk-bnav, .site-mobile-nav').forEach(function (nav) {
             if (nav.getClientRects().length && getComputedStyle(nav).visibility !== 'hidden') {
@@ -25,6 +31,15 @@
         cancelAnimationFrame(frame);
         frame = requestAnimationFrame(fitInbox);
     }
+    var focusFitTimer;
+    function fitAfterFocus() {
+        scheduleFit();
+        clearTimeout(focusFitTimer);
+        focusFitTimer = setTimeout(scheduleFit, 350);
+    }
+    card.addEventListener('focusin', fitAfterFocus);
+    card.addEventListener('focusout', fitAfterFocus);
+    window.addEventListener('orientationchange', fitAfterFocus);
     window.addEventListener('resize', scheduleFit);
     window.addEventListener('load', scheduleFit);
     card.addEventListener('inbox:change', scheduleFit);
@@ -45,7 +60,7 @@
     }, { passive: true });
     document.addEventListener('touchmove', function (event) {
         if (event.touches.length !== 1) return;
-        var area = event.target.closest('.tk-ms-body, .tk-ms-private-content, .tk-ms-groups__list, .tk-ms .emoji-list, .tk-side .tk-nav, .modal-body, .tk-ms-group-pane .cg-feed, .tk-ms-group-pane .cg-info, .tk-ms-group-pane .cg-composer textarea, .tk-ms-group-pane .cg-composer-emoji-grid, .cg-info-dialog, .cg-image-viewer, .cg-message-menu, .cg-group-menu, .cg-reaction-picker');
+        var area = event.target.closest('.message-history-results, .tk-ms-body, .tk-ms-private-content, .tk-ms-groups__list, .tk-ms .emoji-list, .tk-side .tk-nav, .modal-body, .tk-ms-group-pane .cg-feed, .tk-ms-group-pane .cg-info, .tk-ms-group-pane .cg-composer textarea, .tk-ms-group-pane .cg-composer-emoji-grid, .cg-info-dialog, .cg-image-viewer, .cg-message-menu, .cg-group-menu, .cg-reaction-picker');
         var delta = event.touches[0].clientY - previousY;
         previousY = event.touches[0].clientY;
         if (!area || area.scrollHeight <= area.clientHeight ||

@@ -94,6 +94,11 @@ class Groups extends MY_Controller
             if ($action === 'saved') return array('groups' => $this->m_chat_group->saved($this->m_chat_group->actor(true)));
             $group = $this->m_chat_group->group($id);
             $actor = $this->m_chat_group->actor();
+            if ($action === 'search') {
+                if ($this->input->method() !== 'get') throw new RuntimeException('Yêu cầu GET.', 405);
+                return $this->m_chat_group->search_messages($group, $actor,
+                    $this->input->get('q'), $this->input->get('before_id'));
+            }
             if ($action === 'profile-quote') {
                 if ($this->input->method() !== 'get') throw new RuntimeException('Yêu cầu GET.', 405);
                 return $this->m_chat_group->profile_quote($group, $actor, (string) $this->input->get('person'));

@@ -511,6 +511,47 @@ class Ajax extends MY_Controller
      * Lấy tin nhắn mới hơn $after_id trong một hội thoại.
      * Giao diện gọi định kỳ để hiện tin đối phương gửi mà không phải tải lại trang.
      */
+    public function search_messages($conversation_id)
+    {
+        $this->output->set_header('Cache-Control: private, no-store');
+        if (!$this->require_login()) return;
+        if ($this->input->method() !== 'get') {
+            return $this->json(array('ok' => false, 'message' => 'Yêu cầu GET.'), 405);
+        }
+        $me = (int) $this->auth->id();
+        $conv = $this->db->where('id', (int) $conversation_id)->get('conversations')->row_array();
+        if (!$conv || !in_array($me, array((int) $conv['user_low_id'], (int) $conv['user_high_id']), true)) {
+            return $this->json(array('ok' => false, 'message' => 'Không có quyền xem hội thoại này.'), 403);
+        }
+        $q = $this->input->get('q');
+        $q = is_string($q) ? trim($q) : '';
+        $cursor = $this->input->get('before');
+        $before = $cursor === null ? 0 : (is_string($cursor)
+            ? filter_var($cursor, FILTER_VALIDATE_INT, array('options' => array('min_range' => 0))) : false);
+        if (mb_strlen($q) < 2 || mb_strlen($q) > 100 || $before === false) {
+            return $this->json(array('ok' => false, 'message' => 'Nhập từ 2 đến 100 ký tự và mốc tìm kiếm hợp lệ.'), 422);
+        }
+        $this->db->select('id, sender_id, type, content, created_at')
+            ->from('messages')->where('conversation_id', (int) $conversation_id)
+            ->where('deleted_at', null)->where('type', 'text')->like('content', $q);
+        if ($before) $this->db->where('id <', $before);
+        $rows = $this->db->order_by('id', 'DESC')->limit(21)->get()->result_array();
+        $has_more = count($rows) > 20;
+        if ($has_more) array_pop($rows);
+        $next_before = $rows ? (int) $rows[count($rows) - 1]['id'] : 0;
+        $messages = array_map(function ($r) use ($me) {
+            return array(
+                'id' => (int) $r['id'],
+                'mine' => (int) $r['sender_id'] === $me,
+                'type' => $r['type'],
+                'content' => $r['content'],
+                'created_at' => $r['created_at'],
+            );
+        }, $rows);
+        return $this->json(array('ok' => true, 'messages' => $messages,
+            'has_more' => $has_more, 'next_before' => $next_before));
+    }
+
     public function poll_messages($conversation_id)
     {
         if (!$this->require_login()) {

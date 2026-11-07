@@ -189,6 +189,38 @@ class M_chat_group extends CI_Model
         return array_map(function ($r) use ($actor) { return $this->serialize($r, $actor); }, $rows);
     }
 
+    public function search_messages($group, $actor, $q, $cursor = null)
+    {
+        $this->access($group, $actor);
+        $q = is_string($q) ? trim($q) : '';
+        $before = $cursor === null ? 0 : (is_string($cursor)
+            ? filter_var($cursor, FILTER_VALIDATE_INT, array('options' => array('min_range' => 0))) : false);
+        if (mb_strlen($q) < 2 || mb_strlen($q) > 100 || $before === false) {
+            throw new InvalidArgumentException('Nhập từ 2 đến 100 ký tự và mốc tìm kiếm hợp lệ.');
+        }
+        $has_caption = $this->db->field_exists('caption', 'room_messages');
+        $this->rows($group['id'], $actor);
+        $this->db->group_start()
+            ->group_start()->where('r.type', 'text')->like('r.content', $q)->group_end();
+        if ($has_caption) {
+            $this->db->or_group_start()->where('r.type', 'image')
+                ->like('r.caption', $q)->group_end();
+        }
+        $this->db->group_end();
+        if ($before) $this->db->where('r.id <', $before);
+        $rows = $this->db->order_by('r.id', 'DESC')->limit(21)->get()->result_array();
+        $has_more = count($rows) > 20;
+        if ($has_more) array_pop($rows);
+        $next_before = $rows ? (int) $rows[count($rows) - 1]['id'] : 0;
+        return array(
+            'messages' => array_map(function ($r) use ($actor) {
+                return $this->serialize($r, $actor);
+            }, $rows),
+            'has_more' => $has_more,
+            'next_before' => $next_before,
+        );
+    }
+
     public function visible_message($group, $actor, $id)
     {
         $this->access($group, $actor);

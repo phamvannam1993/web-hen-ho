@@ -488,6 +488,8 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
                             <span id="cw-online-toggle-count">Người đang online</span> <span aria-hidden="true">▾</span>
                         </button>
                     </div>
+                    <button type="button" id="cw-history-search" class="message-history-trigger message-history-trigger--icon"
+                            aria-label="Tìm tin nhắn cũ" title="Tìm tin nhắn cũ" hidden><?= tk_icon('search') ?></button>
                     <button type="button" class="cw-close" data-close aria-label="Đóng">&times;</button>
                 </header>
 
@@ -565,6 +567,8 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 <script defer src="<?= base_url('assets/site/js/chat-groups.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/chat-groups.js') ?>"></script>
 <?php endif; ?>
 
+<link rel="stylesheet" href="<?= base_url('assets/site/css/message-history.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/message-history.css') ?>">
+<script defer src="<?= base_url('assets/site/js/message-history.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/message-history.js') ?>"></script>
 <?php $this->load->view('layouts/_mobile_nav'); ?>
 <?php if ($guest_banner): ?>
 <aside class="guest-banner" aria-label="Tham gia Saigon Cupid">
