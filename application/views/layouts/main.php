@@ -490,7 +490,6 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
                     </div>
                     <button type="button" id="cw-history-search" class="message-history-trigger message-history-trigger--icon"
                             aria-label="Tìm tin nhắn cũ" title="Tìm tin nhắn cũ" hidden><?= tk_icon('search') ?></button>
-                    <button type="button" class="cw-close" data-close aria-label="Đóng">&times;</button>
                 </header>
 
                 <div class="cw-body-wrap">

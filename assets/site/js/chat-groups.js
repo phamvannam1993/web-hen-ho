@@ -187,9 +187,22 @@
         this.groupMenu.id = 'cg-group-menu-' + key();
         groupMenuToggle.setAttribute('aria-controls', this.groupMenu.id);
         this.groupMenu.addEventListener('toggle', function () { groupMenuToggle.setAttribute('aria-expanded', popoverOpen(self.groupMenu) ? 'true' : 'false'); });
+        var groupMenuOpenOnPointerDown = false;
         groupMenuToggle.onclick = function () {
+            var shouldClose = groupMenuOpenOnPointerDown;
+            groupMenuOpenOnPointerDown = false;
+            if (shouldClose) { closePopover(self.groupMenu); return; }
             showPopover(self.groupMenu, groupMenuToggle, true);
         };
+        groupMenuToggle.addEventListener('pointerdown', function () {
+            groupMenuOpenOnPointerDown = popoverOpen(self.groupMenu);
+        });
+        groupMenuToggle.addEventListener('pointercancel', function () {
+            groupMenuOpenOnPointerDown = false;
+        });
+        groupMenuToggle.addEventListener('keydown', function () {
+            groupMenuOpenOnPointerDown = false;
+        });
         this.groupMenu.addEventListener('click', function (event) { if (event.target.closest('button')) closePopover(self.groupMenu); }, true);
         // The fallback popover moves the menu outside root while it is open.
         this.notificationsButton = this.groupMenu.querySelector('[data-cg-notifications]');
@@ -356,7 +369,7 @@
             else if (atBottom) self.feed.scrollTop = self.feed.scrollHeight;
             else if (changed) self.jump.hidden = false;
             self.root.querySelector('[data-cg-online]').textContent = r.group.online + ' người đang online';
-            self.notificationsButton.textContent = r.group.notifications ? 'Tắt thông báo' : 'Bật thông báo';
+            self.notificationsButton.querySelector('[data-cg-notifications-label]').textContent = r.group.notifications ? 'Tắt thông báo' : 'Bật thông báo';
             var pin = self.root.querySelector('[data-cg-pin]'); pin.hidden = !r.group.pinned; pin.textContent = r.group.pinned ? '📌 ' + (r.group.pinned.type === 'image' ? 'Hình ảnh' : r.group.pinned.content) : '';
             if (self.form) { self.form.querySelector('button[type=submit]').disabled = self.busy || !!(self.identity && self.identity.needs_nickname) || r.group.status !== 'active'; self.form.content.disabled = !!(self.identity && self.identity.needs_nickname) || r.group.status !== 'active'; }
             self.read();
@@ -549,7 +562,7 @@
         if (action === 'notifications') {
             var enabled = data.enabled === '1';
             if (self.group) self.group.notifications = enabled;
-            self.notificationsButton.textContent = enabled ? 'Tắt thông báo' : 'Bật thông báo';
+            self.notificationsButton.querySelector('[data-cg-notifications-label]').textContent = enabled ? 'Tắt thông báo' : 'Bật thông báo';
             self.flash(enabled ? 'Đã bật thông báo' : 'Đã tắt thông báo');
             refreshSidebar();
         }

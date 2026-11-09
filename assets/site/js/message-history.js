@@ -33,7 +33,10 @@
         input.minLength = 2; input.maxLength = 100; input.autofocus = true;
         input.placeholder = 'Nhập từ khóa trong tin nhắn…';
         input.setAttribute('aria-label', 'Từ khóa tìm tin nhắn');
-        var submit = node('button', '', 'Tìm'); submit.type = 'submit';
+        var submit = node('button'); submit.type = 'submit';
+        submit.setAttribute('aria-label', 'Tìm tin nhắn');
+        submit.title = 'Tìm tin nhắn';
+        submit.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="display:block"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.34-4.34"/></svg>';
         form.append(input, submit);
         var status = node('p', 'message-history-status', 'Nhập từ 2 ký tự để tìm trong hội thoại này.');
         status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
