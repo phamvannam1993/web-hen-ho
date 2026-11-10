@@ -126,14 +126,29 @@ $gio_ngan = function ($t) {
                         aria-label="Gọi thoại" title="Gọi thoại"
                         disabled><?= tk_icon('phone') ?></button>
                 <?php endif; ?>
-                <button type="button" class="message-history-trigger message-history-trigger--icon"
-                        data-message-history="<?= e(site_url('ajax/tin-nhan/' . (int) $conversation_id . '/tim-kiem')) ?>"
-                        aria-label="Tìm tin nhắn cũ" title="Tìm tin nhắn cũ"><?= tk_icon('search') ?></button>
-                <a class="tk-btn tk-btn--ghost tk-btn--icon-sm" href="<?= site_url('profile/' . ($partner['slug'] ?: $partner['id'])) ?>"
-                   aria-label="Xem hồ sơ" title="Xem hồ sơ"><?= tk_icon('user') ?></a>
+                <details class="tk-ms-more">
+                    <summary aria-label="Tùy chọn hội thoại" title="Tùy chọn hội thoại"><span aria-hidden="true">⋯</span></summary>
+                    <div class="tk-ms-more-menu">
+                        <a href="<?= e(site_url('profile/' . ($partner['slug'] ?: $partner['id']))) ?>">
+                            <?= tk_icon('user') ?><span>Xem hồ sơ</span>
+                        </a>
+                        <button type="button"
+                                data-message-history="<?= e(site_url('ajax/tin-nhan/' . (int) $conversation_id . '/tim-kiem')) ?>">
+                            <?= tk_icon('search') ?><span>Tìm tin nhắn cũ</span>
+                        </button>
+                        <form method="post" action="<?= e(site_url('ajax/tin-nhan/' . (int) $conversation_id . '/chan')) ?>">
+                            <input type="hidden" name="action_token" value="<?= e($message_action_token) ?>">
+                            <input type="hidden" name="action" value="<?= $blocked_by_me ? 'unblock' : 'block' ?>">
+                            <button type="submit" data-confirm="<?= $blocked_by_me ? 'Bỏ chặn người này ở phía bạn?' : 'Chặn người này? Hai bạn sẽ không thể nhắn tin và xem hồ sơ của nhau.' ?>">
+                                <?= tk_icon('shield-alert') ?><span><?= $blocked_by_me ? 'Bỏ chặn người này' : 'Chặn người này' ?></span>
+                            </button>
+                        </form>
+                    </div>
+                </details>
             </div>
 
             <div class="tk-ms-body" id="chat-body"
+                 data-pin-url="<?= e(site_url('ajax/tin-nhan/' . (int) $conversation_id . '/ghim')) ?>"
                  data-peer-avatar="<?= e(avatar_url($partner['avatar'] ?? null, $partner['gender'] ?? 'other')) ?>"
                  data-conversation="<?= (int) $conversation_id ?>"
                  data-last-id="<?= $messages ? (int) end($messages)['id'] : 0 ?>">

@@ -568,6 +568,10 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 
 <link rel="stylesheet" href="<?= base_url('assets/site/css/message-history.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/message-history.css') ?>">
 <script defer src="<?= base_url('assets/site/js/message-history.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/message-history.js') ?>"></script>
+<?php if ($content_view === 'account/messages'): ?>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/private-message-menu.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/private-message-menu.css') ?>">
+<script defer src="<?= base_url('assets/site/js/private-message-menu.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/private-message-menu.js') ?>"></script>
+<?php endif; ?>
 <?php $this->load->view('layouts/_mobile_nav'); ?>
 <?php if ($guest_banner): ?>
 <aside class="guest-banner" aria-label="Tham gia Saigon Cupid">

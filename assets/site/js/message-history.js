@@ -7,7 +7,15 @@
         if (text !== undefined) item.textContent = text;
         return item;
     }
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape') return;
+        var menu = document.querySelector('.tk-ms-more[open]');
+        if (menu) { menu.open = false; menu.querySelector('summary').focus(); }
+    });
     document.addEventListener('click', function (event) {
+        document.querySelectorAll('.tk-ms-more[open]').forEach(function (menu) {
+            if (!menu.contains(event.target)) menu.open = false;
+        });
         var trigger = event.target.closest('[data-message-history]');
         if (!trigger || !trigger.dataset.messageHistory) return;
         event.preventDefault();
@@ -19,6 +27,9 @@
         }
         var host = trigger.closest('.cg-chat, .cw-convo, .tk-ms-pane');
         if (!host) return;
+        var menu = trigger.closest('.tk-ms-more');
+        var returnFocus = menu ? menu.querySelector('summary') : trigger;
+        if (menu) menu.open = false;
         var endpoint = trigger.dataset.messageHistory;
         var cursorName = trigger.dataset.messageHistoryCursor || 'before';
         var heading = node('h2', '', 'Tìm tin nhắn cũ');
@@ -60,7 +71,7 @@
             }
             if (observer) observer.disconnect();
             dialog.remove();
-            if (trigger.isConnected && host.isConnected) trigger.focus({preventScroll: true});
+            if (returnFocus.isConnected && host.isConnected) returnFocus.focus({preventScroll: true});
         }
         function fit() {
             if (!dialog.isConnected) { cleanup(); return; }

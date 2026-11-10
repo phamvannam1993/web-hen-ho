@@ -82,10 +82,18 @@ body.is-messages-page .site-page-content { min-height:0; }
 .tk-ms-idle { background: var(--tk-grad-blush); }
 
 .tk-ms-head {
-  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center;
+  display: flex; align-items: center;
   gap: 12px; padding: 12px; border-bottom: 1px solid var(--tk-border);
 }
-.tk-ms-head__who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.tk-ms-head__who { display: flex; flex: 1; align-items: center; gap: 12px; min-width: 0; }
+.tk-ms-more { position: relative; flex-shrink: 0; }
+.tk-ms-more summary { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 36px; height: 36px; border: 1px solid var(--tk-border); border-radius: 9px; background: #fff; color: var(--pink, #d1273f); font-size: 24px; line-height: 1; list-style: none; cursor: pointer; }
+.tk-ms-more summary::-webkit-details-marker { display: none; }
+.tk-ms-more summary:focus-visible { outline: 2px solid var(--pink, #d1273f); outline-offset: 2px; }
+.tk-ms-more-menu { position: absolute; z-index: 65; top: calc(100% + 6px); right: 0; width: 200px; max-width: calc(100vw - 32px); padding: 4px; border: 1px solid var(--tk-border); border-radius: 10px; background: #fff; box-shadow: 0 8px 24px #7c283b26; }
+.tk-ms-more-menu button, .tk-ms-more-menu a { box-sizing: border-box; display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px; border: 0; border-radius: 6px; background: transparent; color: var(--tk-fg); font: inherit; font-size: 13px; text-align: left; text-decoration: none; cursor: pointer; }
+.tk-ms-more-menu button:hover, .tk-ms-more-menu a:hover { background: var(--tk-secondary); color: var(--pink, #d1273f); }
+.tk-ms-more-menu svg { width: 18px; height: 18px; flex-shrink: 0; }
 .tk-ms-head__n { font-size: 14px; line-height: 20px; font-weight: 700; }
 .tk-ms-head__s { display: block; font-size: 12px; line-height: 16px; color: var(--tk-muted-fg); }
 

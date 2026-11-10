@@ -353,12 +353,12 @@ class M_interaction extends CI_Model
 
     public function block($user_id, $blocked_id)
     {
-        $this->db->replace('blocks', array('user_id' => $user_id, 'blocked_id' => $blocked_id));
+        return $this->db->replace('blocks', array('user_id' => $user_id, 'blocked_id' => $blocked_id));
     }
 
     public function unblock($user_id, $blocked_id)
     {
-        $this->db->where('user_id', $user_id)->where('blocked_id', $blocked_id)->delete('blocks');
+        return $this->db->where('user_id', $user_id)->where('blocked_id', $blocked_id)->delete('blocks');
     }
 
     public function is_blocked($a, $b)
