@@ -51,7 +51,7 @@ $this->load->view('layouts/seo', array('seo_path' => $seo_path, 'can_index' => $
 /* Khu Tài khoản bọc nội dung trong khung riêng (cột trái + thanh dưới trên điện
    thoại) theo bản thiết kế SaigonCupid, nằm giữa đầu trang và chân trang của site. */
 $tk_app = !empty($tk) && !empty($content_view) && strpos($content_view, 'account/') === 0;
-$tk_inbox_open = $tk_app && $content_view === 'account/messages' && !empty($partner);
+$tk_inbox_open = $tk_app && $content_view === 'account/messages' && (!empty($partner) || !empty($private_group_id));
 $guest_banner = !$user && empty($bare) && strpos($content_view, 'auth/') !== 0 && $content_view !== 'groups/detail';
 ?>
 <?php if ($tk_app || $content_view === 'members/profile'): ?>
@@ -579,6 +579,8 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 <script defer src="<?= base_url('assets/site/js/conversation-delete.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/conversation-delete.js') ?>"></script>
 <link rel="stylesheet" href="<?= base_url('assets/site/css/private-message-menu.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/private-message-menu.css') ?>">
 <script defer src="<?= base_url('assets/site/js/private-message-menu.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/private-message-menu.js') ?>"></script>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/inbox-private-groups.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/inbox-private-groups.css') ?>">
+<script defer src="<?= base_url('assets/site/js/inbox-private-groups.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/inbox-private-groups.js') ?>"></script>
 <?php endif; ?>
 <?php $this->load->view('layouts/_mobile_nav'); ?>
 <?php if ($guest_banner): ?>

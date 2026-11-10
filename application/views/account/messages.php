@@ -10,12 +10,15 @@
  * data-last-id), .chat-form, .chat-attach, #chat-input, #emoji-btn,
  * #emoji-panel, .emoji-tabs, #emoji-list, #chat-seen, .chat-msg/.mine/.is-image/.emoji-only.
  */
-$dang_mo = (bool) $partner;
+$private_group_id = !$partner ? (int) ($private_group_id ?? 0) : 0;
+$dang_mo = (bool) $partner || $private_group_id > 0;
 $chat_groups = array_values(array_filter($chat_groups ?? array(), function ($group) {
     return ($group['mode'] ?? '') === 'guest';
 }));
 ?>
 <div class="tk-card tk-ms<?= $dang_mo ? ' is-open' : '' ?>"
+     data-private-groups-api="<?= e(site_url('ajax/nhom-inbox')) ?>"
+     data-private-user="<?= (int) $user['id'] ?>"
      data-conversation-token="<?= e($message_action_token) ?>"
      data-current-conversation="<?= (int) $conversation_id ?>" data-inbox-url="<?= e(site_url('messenger')) ?>">
     <!-- Danh sách hội thoại -->
@@ -53,6 +56,12 @@ $chat_groups = array_values(array_filter($chat_groups ?? array(), function ($gro
 
         <section class="tk-ms-private is-expanded" aria-label="Tin nhắn riêng">
         <div class="tk-ms-private-content" id="tk-ms-private-content">
+        <section class="ig-sidebar" aria-label="Nhóm riêng của bạn">
+            <div class="ig-sidebar-head"><strong>Nhóm của bạn</strong><button type="button" data-ig-create>Tạo nhóm</button></div>
+            <p data-ig-list-status role="status">Đang tải nhóm…</p>
+            <ul class="ig-groups" data-ig-list></ul>
+            <button type="button" data-ig-list-more hidden>Xem thêm nhóm</button>
+        </section>
         <?php if (empty($conversations)): ?>
             <div class="tk-ms-none" data-private-empty <?= $chat_groups ? 'hidden' : '' ?>>
                 <span class="tk-empty__ic"><?= tk_icon('message') ?></span>
@@ -92,6 +101,8 @@ $chat_groups = array_values(array_filter($chat_groups ?? array(), function ($gro
                         </a>
                         <button class="tk-ms-conversation-more" type="button"
                                 data-conversation-id="<?= (int) $c['id'] ?>"
+                                data-block-url="<?= e(site_url('ajax/tin-nhan/' . (int) $c['id'] . '/chan')) ?>"
+                                data-blocked-by-me="<?= in_array((int) $c['other_id'], $blocked_user_ids, true) ? '1' : '0' ?>"
                                 data-delete-url="<?= e(site_url('ajax/tin-nhan/' . (int) $c['id'] . '/xoa-hoi-thoai')) ?>"
                                 data-notification-url="<?= e(site_url('ajax/tin-nhan/' . (int) $c['id'] . '/thong-bao')) ?>"
                                 data-notifications-enabled="<?= !isset($c['notifications_enabled']) || $c['notifications_enabled'] ? '1' : '0' ?>"
@@ -110,7 +121,9 @@ $chat_groups = array_values(array_filter($chat_groups ?? array(), function ($gro
 
     <!-- Khung chat -->
     <div class="tk-ms-pane">
-        <?php if (!$partner): ?>
+        <?php if ($private_group_id): ?>
+            <?php $this->load->view('account/_private_group', array('private_group_id' => $private_group_id)); ?>
+        <?php elseif (!$partner): ?>
             <div class="tk-ms-idle">
                 <span class="tk-empty__ic"><?= tk_icon('message') ?></span>
                 <h3>Chọn một cuộc trò chuyện</h3>
@@ -144,6 +157,8 @@ $chat_groups = array_values(array_filter($chat_groups ?? array(), function ($gro
                                 data-message-history="<?= e(site_url('ajax/tin-nhan/' . (int) $conversation_id . '/tim-kiem')) ?>">
                             <?= tk_icon('search') ?><span>Tìm tin nhắn cũ</span>
                         </button>
+                        <button type="button" data-ig-add-peer="<?= (int) $partner['id'] ?>" data-ig-peer-name="<?= e(display_name($partner)) ?>">Thêm vào nhóm</button>
+                        <button type="button" data-ig-common="<?= (int) $partner['id'] ?>">Xem nhóm chung</button>
                         <form method="post" action="<?= e(site_url('ajax/tin-nhan/' . (int) $conversation_id . '/chan')) ?>">
                             <input type="hidden" name="action_token" value="<?= e($message_action_token) ?>">
                             <input type="hidden" name="action" value="<?= $blocked_by_me ? 'unblock' : 'block' ?>">

@@ -12,6 +12,7 @@ function avatar_url($path, $gender) { return ''; }
 function is_online($date) { return false; }
 function time_ago($date) { return '1 giờ trước'; }
 $case = $argv[2] ?? 'mixed';
+$blocked_user_ids = array();
 $partner = null; $message_action_token = str_repeat('a',64); $conversation_id = 0; $user = array('id'=>1);
 $chat_groups = array(); $conversations = array();
 if ($case !== 'empty') {
@@ -21,7 +22,7 @@ if ($case !== 'empty') {
     $group['id']=6; $group['name']='Nhóm công khai'; $group['mode']='public'; $chat_groups[]=$group;
 }
 if ($case === 'mixed') {
-    $conversations[] = array('id'=>9,'display_name'=>'Nguyễn Văn An','last_message_id'=>12,'last_type'=>'text',
+    $conversations[] = array('id'=>9,'other_id'=>2,'display_name'=>'Nguyễn Văn An','last_message_id'=>12,'last_type'=>'text',
         'last_content'=>'Xin chào','last_sender_id'=>1,'avatar'=>null,'gender'=>'other','last_active_at'=>null,
         'last_at'=>'2026-11-10 10:00:00','unread'=>0);
 }

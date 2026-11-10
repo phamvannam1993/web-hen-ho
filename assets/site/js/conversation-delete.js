@@ -14,10 +14,16 @@
     notificationIcon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>';
     var notificationLabel = document.createElement('span'); notificationLabel.textContent = 'Tắt thông báo';
     notifications.append(notificationIcon,notificationLabel);
-    menu.append(notifications,remove); document.body.append(menu);
+    var block = document.createElement('button'); block.type = 'button'; block.dataset.action = 'block';
+    var blockIcon = document.createElement('span'); blockIcon.className = 'conversation-delete-icon'; blockIcon.setAttribute('aria-hidden','true');
+    blockIcon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/></svg>';
+    var blockLabel = document.createElement('span'); blockLabel.textContent = 'Chặn người này'; block.append(blockIcon,blockLabel);
+    menu.append(notifications,block,remove); document.body.append(menu);
     var nativePopover = typeof menu.showPopover === 'function', selected = null;
     var generation = 0, states = new Map(), tokens = new Map(), expiryTimers=new Map();
     function label(button) {
+        blockLabel.textContent = button.dataset.blockedByMe === '1' ? 'Bỏ chặn người này' : 'Chặn người này';
+        block.disabled = !button.dataset.blockUrl || button.disabled;
         var enabled = button.dataset.notificationsMuted !== '1' && button.dataset.notificationsEnabled !== '0';
         notificationLabel.textContent = enabled ? 'Tắt thông báo' : 'Bật thông báo';
         notifications.disabled = !button.dataset.notificationUrl || button.dataset.notificationBusy === '1';
@@ -153,6 +159,26 @@
     }
     document.addEventListener('visibilitychange',refreshMuted);
     refreshMuted();
+    block.onclick = function () {
+        var button = selected;
+        if (!button || !button.isConnected || button.disabled || !button.dataset.blockUrl) return;
+        var unblocking = button.dataset.blockedByMe === '1';
+        close(true);
+        function perform() {
+            if (!button.isConnected || button.disabled) return;
+            button.disabled = true;
+            var form = document.createElement('form'); form.method = 'post';
+            form.setAttribute('action', button.dataset.blockUrl); form.hidden = true;
+            [['action_token',root.dataset.conversationToken],['action',unblocking ? 'unblock' : 'block']].forEach(function (field) {
+                var input = document.createElement('input'); input.type = 'hidden'; input.name = field[0]; input.value = field[1]; form.append(input);
+            });
+            document.body.append(form);
+            HTMLFormElement.prototype.submit.call(form);
+        }
+        var message = unblocking ? 'Bỏ chặn người này ở phía bạn?' : 'Chặn người này? Hai bạn sẽ không thể nhắn tin và xem hồ sơ của nhau.';
+        if (window.appModal) window.appModal({title:unblocking ? 'Bỏ chặn người này?' : 'Chặn người này?',message:message,confirmText:unblocking ? 'Bỏ chặn' : 'Chặn',onConfirm:perform});
+        else if (window.confirm(message)) perform();
+    };
     remove.onclick = function () {
         var button = selected;
         if (!button || !button.isConnected || button.disabled) return;

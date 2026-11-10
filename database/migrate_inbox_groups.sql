@@ -36,11 +36,13 @@ CREATE TABLE IF NOT EXISTS `inbox_group_messages` (
   `sender_id` BIGINT UNSIGNED NOT NULL,
   `type` ENUM('text','image','system') NOT NULL DEFAULT 'text',
   `content` TEXT NOT NULL,
+  `client_message_id` VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `deleted_at` DATETIME DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_inbox_messages_group` (`group_id`, `id`),
   KEY `idx_inbox_messages_sender` (`sender_id`),
+  UNIQUE KEY `uq_inbox_message_retry` (`group_id`, `sender_id`, `client_message_id`),
   CONSTRAINT `fk_inbox_messages_group`
     FOREIGN KEY (`group_id`) REFERENCES `inbox_groups` (`id`)
     ON DELETE CASCADE,
