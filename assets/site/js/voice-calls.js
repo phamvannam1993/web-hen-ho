@@ -8,7 +8,7 @@
         && window.crypto && window.crypto.randomUUID
         && window.HTMLDialogElement;
     var base = root.dataset.base.replace(/\/?$/, '/');
-    var current = null;
+    var current = null, incomingGeneration = 0, pendingIncoming = null;
     var dialog = document.createElement('dialog');
     dialog.className = 'voice-dialog';
     dialog.setAttribute('aria-labelledby', 'voice-title');
@@ -238,8 +238,17 @@
     play.onclick = function () {
         audio.play().then(function () { play.hidden = true; }).catch(function () {});
     };
-    rt.on('voice.incoming', function (m) {
+    rt.on('voice.incoming', async function (m) {
         if (!supported || current) return;
+        var generation=++incomingGeneration; pendingIncoming=m.callId;
+        try {
+            var response=await fetch(base+'ajax/tin-nhan/'+Number(m.conversationId)+'/thong-bao',{credentials:'same-origin',cache:'no-store'});
+            if (!response.ok) return;
+            var state=await response.json();
+            if (!state.ok || state.calls_notifications_enabled === false || current || generation !== incomingGeneration) return;
+        } catch (_) { return; }
+        if (generation !== incomingGeneration) return;
+        pendingIncoming=null;
         show({
             id: m.callId, cid: m.conversationId,
             name: m.name, incoming: true,
@@ -261,6 +270,7 @@
     });
     ['offer', 'answer'].forEach(function (type) {
         rt.on('voice.' + type, function (m) {
+            if (pendingIncoming === m.callId) { incomingGeneration++; pendingIncoming=null; }
             var s = current;
             if (!s || s.id !== m.callId || !s.accepted || !s.pc
                 || s.remoteSet || (type === 'offer') !== s.incoming) return;
@@ -282,10 +292,12 @@
     });
     rt.on('open', refresh);
     rt.on('close', function () {
+        incomingGeneration++; pendingIncoming=null;
         if (current) finish(current, reasons.connection, false);
         refresh();
     });
     window.addEventListener('pagehide', function () {
+        incomingGeneration++; pendingIncoming=null;
         if (current) finish(current, reasons.ended, true);
     });
     refresh();

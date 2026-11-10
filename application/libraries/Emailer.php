@@ -61,6 +61,10 @@ class Emailer
     /** Mỗi tin nhắn tạo một email thông báo, không chứa nội dung tin nhắn. */
     public function new_message($receiver_id, $sender, $conversation_id)
     {
+        try {
+            $this->CI->load->model('m_conversation_notification');
+            if (!$this->CI->m_conversation_notification->enabled($conversation_id,$receiver_id)) return false;
+        } catch (Throwable $e) { return false; }
         return $this->CI->m_email->enqueue(
             $receiver_id, 'new_message',
             $this->ten($sender) . ' đã nhắn tin cho bạn',

@@ -29,7 +29,7 @@ function createVoice({ config, clients, send }) {
     }
     const event = { t: 'voice.ended', callId: c.id, reason };
     if (open(c.a)) send(c.a, event);
-    if (c.peer) peers(c.peer, event);
+    if (c.peer && !c.suppressed) peers(c.peer, event);
   }
 
   async function authorize(uid, conversationId) {
@@ -47,7 +47,7 @@ function createVoice({ config, clients, send }) {
     const data = await response.json();
     if (!data.ok || !Number.isSafeInteger(data.peer?.id)
       || data.peer.id <= 0) throw new Error('permission');
-    return data.peer;
+    return { ...data.peer, notificationsEnabled: data.calls_notifications_enabled !== false };
   }
 
   async function pair(c) {
@@ -67,7 +67,7 @@ function createVoice({ config, clients, send }) {
     let c = calls.get(m.callId);
     if (m.t === 'voice.end') {
       if (c && (c.a === ws || c.b === ws
-        || (!c.b && c.state === 'ringing' && c.peer === ws.uid))) {
+        || (!c.suppressed && !c.b && c.state === 'ringing' && c.peer === ws.uid))) {
         end(c, 'ended');
       }
       return;
@@ -99,11 +99,12 @@ function createVoice({ config, clients, send }) {
         if (![...(clients.get(c.peer) || [])].some(fresh)) {
           return end(c, 'offline');
         }
-        busy.set(c.peer, c);
+        c.suppressed = !identities.caller.notificationsEnabled;
+        if (!c.suppressed) busy.set(c.peer, c);
         c.state = 'ringing';
         c.until = Date.now() + 35000;
         send(ws, { t: 'voice.ringing', callId: c.id });
-        peers(c.peer, {
+        if (!c.suppressed) peers(c.peer, {
           t: 'voice.incoming', callId: c.id,
           conversationId: c.cid, name: identities.caller.name,
         });
@@ -115,7 +116,7 @@ function createVoice({ config, clients, send }) {
 
     if (!c || !live(c)) return;
     if (m.t === 'voice.accept') {
-      if (c.state !== 'ringing' || c.b || ws.uid !== c.peer) return;
+      if (c.suppressed || c.state !== 'ringing' || c.b || ws.uid !== c.peer) return;
       c.b = ws;
       c.state = 'authorizing';
       c.expires = Math.min(c.expires, ws.authExpiresAt);

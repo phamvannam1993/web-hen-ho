@@ -19,6 +19,7 @@ class MessageDb {
     public function insert($table, $data) {
         $this->inserts[] = $table;
         if ($table === 'conversations') $this->conversation = array('id' => 9);
+        return true;
     }
     public function query($sql, $params = array()) { return $this; }
     public function result_array() { return array(); }

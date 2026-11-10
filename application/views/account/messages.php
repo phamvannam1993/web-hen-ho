@@ -11,39 +11,35 @@
  * #emoji-panel, .emoji-tabs, #emoji-list, #chat-seen, .chat-msg/.mine/.is-image/.emoji-only.
  */
 $dang_mo = (bool) $partner;
-
-/** Giờ của tin cuối: hôm nay thì H:i, hôm qua thì "Hôm qua", còn lại d/m. */
-$gio_ngan = function ($t) {
-    if (!$t) return '';
-    $ts = strtotime($t);
-    if (date('Y-m-d', $ts) === date('Y-m-d')) return date('H:i', $ts);
-    if (date('Y-m-d', $ts) === date('Y-m-d', strtotime('-1 day'))) return 'Hôm qua';
-    return date('d/m', $ts);
-};
+$chat_groups = array_values(array_filter($chat_groups ?? array(), function ($group) {
+    return ($group['mode'] ?? '') === 'guest';
+}));
 ?>
-<div class="tk-card tk-ms<?= $dang_mo ? ' is-open' : '' ?>">
+<div class="tk-card tk-ms<?= $dang_mo ? ' is-open' : '' ?>"
+     data-conversation-token="<?= e($message_action_token) ?>"
+     data-current-conversation="<?= (int) $conversation_id ?>" data-inbox-url="<?= e(site_url('messenger')) ?>">
     <!-- Danh sách hội thoại -->
     <div class="tk-ms-side">
         <div class="tk-ms-side__h">
             <h1 class="tk-ms-side__t">Tin nhắn</h1>
-            <?php if (!empty($conversations)): ?>
                 <div class="tk-input-wrap tk-input-wrap--lead tk-ms-search">
                     <?= tk_icon('search') ?>
                     <input class="tk-input" type="search" id="tk-ms-search" placeholder="Tìm cuộc trò chuyện" autocomplete="off">
                 </div>
-            <?php endif; ?>
         </div>
 
+        <div class="tk-ms-tabs" role="tablist" aria-label="Danh sách tin nhắn">
+            <button type="button" id="tk-ms-tab-priority" role="tab" aria-selected="true"
+                    aria-controls="tk-ms-inbox-panel" data-inbox-tab="priority">Ưu tiên</button>
+            <button type="button" id="tk-ms-tab-clubs" role="tab" aria-selected="false" tabindex="-1"
+                    aria-controls="tk-ms-inbox-panel" data-inbox-tab="clubs">Clubs Chat's</button>
+        </div>
+        <div class="tk-ms-inbox-panel" id="tk-ms-inbox-panel" role="tabpanel"
+             aria-labelledby="tk-ms-tab-priority" tabindex="0">
         <?php if (!empty($chat_groups)): ?>
-            <details class="tk-ms-groups">
-                <summary class="tk-ms-groups__toggle">
-                    <?= tk_icon('message') ?><span>Clubs Chat's</span>
-                    <span class="tk-ms-groups__count"><?= count($chat_groups) ?></span>
-                    <svg class="tk-ic tk-ms-groups__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-                </summary>
-                <ul class="tk-ms-groups__list" aria-label="Clubs Chat's">
+                <ul class="tk-ms-groups__list" aria-label="Nhóm chat ẩn danh">
                     <?php foreach ($chat_groups as $g): ?>
-                        <li><a class="tk-ms-item" href="<?= e($g['url']) ?>" data-inbox-group="<?= (int) $g['id'] ?>" data-panel-url="<?= site_url('ajax/nhom-panel/' . (int) $g['id']) ?>">
+                        <li data-name="<?= e(mb_strtolower($g['name'])) ?>"><a class="tk-ms-item" href="<?= e($g['url']) ?>" data-inbox-group="<?= (int) $g['id'] ?>" data-panel-url="<?= site_url('ajax/nhom-panel/' . (int) $g['id']) ?>">
                             <span class="tk-ms-av"><img src="<?= e($g['avatar']) ?>" alt="" width="40" height="40" loading="lazy"></span>
                             <span class="tk-ms-item__b">
                                 <span class="tk-ms-item__n"><?= e($g['name']) ?></span>
@@ -53,14 +49,12 @@ $gio_ngan = function ($t) {
                         </a></li>
                     <?php endforeach; ?>
                 </ul>
-            </details>
         <?php endif; ?>
 
-        <section class="tk-ms-private is-expanded">
-        <button type="button" class="tk-ms-private-title" aria-expanded="true" aria-controls="tk-ms-private-content"><?= tk_icon('message') ?><span>Tin nhắn riêng</span><svg class="tk-ic tk-ms-private-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+        <section class="tk-ms-private is-expanded" aria-label="Tin nhắn riêng">
         <div class="tk-ms-private-content" id="tk-ms-private-content">
         <?php if (empty($conversations)): ?>
-            <div class="tk-ms-none">
+            <div class="tk-ms-none" data-private-empty <?= $chat_groups ? 'hidden' : '' ?>>
                 <span class="tk-empty__ic"><?= tk_icon('message') ?></span>
                 <h3>Chưa có cuộc trò chuyện nào</h3>
                 <p>Chọn một hồ sơ và nhắn tin để bắt đầu làm quen.</p>
@@ -75,8 +69,9 @@ $gio_ngan = function ($t) {
                         : ($c['last_type'] === 'image' ? 'Đã gửi một ảnh' : excerpt($c['last_content'], 60));
                     if ((int) $c['last_sender_id'] === (int) $user['id']) $cuoi = 'Bạn: ' . $cuoi;
                     ?>
-                    <li data-name="<?= e(mb_strtolower($ten)) ?>">
+                    <li class="tk-ms-conversation-row" data-name="<?= e(mb_strtolower($ten)) ?>">
                         <a class="tk-ms-item<?= $conversation_id == $c['id'] ? ' is-active' : '' ?>"
+                           data-conversation-id="<?= (int) $c['id'] ?>" data-last-message-id="<?= (int) $c['last_message_id'] ?>"
                            href="<?= site_url('messenger/' . $c['id']) ?>"<?= $conversation_id == $c['id'] ? ' aria-current="page"' : '' ?>>
                             <span class="tk-ms-av">
                                 <img src="<?= e(avatar_url($c['avatar'], $c['gender'])) ?>" alt="<?= e($ten) ?>" loading="lazy">
@@ -84,20 +79,33 @@ $gio_ngan = function ($t) {
                             </span>
                             <span class="tk-ms-item__b">
                                 <span class="tk-ms-item__n"><?= e($ten) ?></span>
-                                <span class="tk-ms-item__l<?= $c['unread'] ? ' is-unread' : '' ?>"><?= e($cuoi) ?></span>
+                                <span class="inbox-muted-indicator" <?= (!isset($c['notifications_enabled']) || $c['notifications_enabled']) && (!isset($c['calls_notifications_enabled']) || $c['calls_notifications_enabled']) ? 'hidden' : '' ?>
+                                      aria-label="Đã tắt thông báo" title="Đã tắt thông báo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 3 18 18M10.6 4.2A6 6 0 0 1 18 10v4l2 3M6 6a6 6 0 0 0-1 4v4l-2 3h14M10 21h4"/></svg></span>
+                                <span class="tk-ms-preview-line">
+                                    <span class="tk-ms-item__l<?= $c['unread'] ? ' is-unread' : '' ?>"><?= e($cuoi) ?></span>
+                                    <?php if ($c['last_at']): ?><span class="tk-ms-preview-time">· <?= e(time_ago($c['last_at'])) ?></span><?php endif; ?>
+                                </span>
                             </span>
                             <span class="tk-ms-item__r">
-                                <span class="tk-ms-item__t"><?= $gio_ngan($c['last_at']) ?></span>
                                 <?php if ($c['unread']): ?><span class="tk-count"><?= (int) $c['unread'] ?></span><?php endif; ?>
                             </span>
                         </a>
+                        <button class="tk-ms-conversation-more" type="button"
+                                data-conversation-id="<?= (int) $c['id'] ?>"
+                                data-delete-url="<?= e(site_url('ajax/tin-nhan/' . (int) $c['id'] . '/xoa-hoi-thoai')) ?>"
+                                data-notification-url="<?= e(site_url('ajax/tin-nhan/' . (int) $c['id'] . '/thong-bao')) ?>"
+                                data-notifications-enabled="<?= !isset($c['notifications_enabled']) || $c['notifications_enabled'] ? '1' : '0' ?>"
+                                data-notifications-muted="<?= (isset($c['notifications_enabled']) && !$c['notifications_enabled']) || (isset($c['calls_notifications_enabled']) && !$c['calls_notifications_enabled']) ? '1' : '0' ?>"
+                                aria-label="<?= e('Thao tác cuộc trò chuyện với ' . $ten) ?>"
+                                aria-haspopup="true" aria-expanded="false">⋯</button>
                     </li>
                 <?php endforeach; ?>
             </ul>
-            <p class="tk-ms-nores" id="tk-ms-nores" hidden>Không tìm thấy cuộc trò chuyện nào.</p>
         <?php endif; ?>
         </div>
         </section>
+        <p class="tk-ms-nores" id="tk-ms-nores" hidden>Không tìm thấy cuộc trò chuyện nào.</p>
+        </div>
     </div>
 
     <!-- Khung chat -->
@@ -149,6 +157,7 @@ $gio_ngan = function ($t) {
 
             <div class="tk-ms-body" id="chat-body"
                  data-pin-url="<?= e(site_url('ajax/tin-nhan/' . (int) $conversation_id . '/ghim')) ?>"
+                 data-recall-url="<?= e(site_url('ajax/tin-nhan/' . (int) $conversation_id . '/thu-hoi')) ?>"
                  data-peer-avatar="<?= e(avatar_url($partner['avatar'] ?? null, $partner['gender'] ?? 'other')) ?>"
                  data-conversation="<?= (int) $conversation_id ?>"
                  data-last-id="<?= $messages ? (int) end($messages)['id'] : 0 ?>">
@@ -171,8 +180,14 @@ $gio_ngan = function ($t) {
                     <?php $next = $messages[$index + 1] ?? null;
                     $continues = $next && (int) $next['sender_id'] === (int) $m['sender_id']
                         && substr($next['created_at'], 0, 10) === substr($m['created_at'], 0, 10); ?>
-                    <div class="chat-msg <?= $mine ? 'mine' : '' ?> <?= $m['type'] === 'image' ? 'is-image' : '' ?>" data-message-id="<?= (int) $m['id'] ?>" data-day="<?= e(substr($m['created_at'], 0, 10)) ?>">
+                    <div class="chat-msg <?= $mine ? 'mine' : '' ?> <?= $m['type'] === 'image' ? 'is-image' : '' ?> <?= !empty($m['recalled']) ? 'is-recalled' : '' ?>" data-message-type="<?= e($m['type']) ?>" data-recalled="<?= !empty($m['recalled']) ? '1' : '0' ?>" data-message-id="<?= (int) $m['id'] ?>" data-day="<?= e(substr($m['created_at'], 0, 10)) ?>">
                         <?php if (!$mine): ?><img class="chat-peer-avatar" src="<?= e(avatar_url($partner['avatar'] ?? null, $partner['gender'] ?? 'other')) ?>" alt=""><?php endif; ?>
+                        <?php if (!empty($m['reply'])): $reply = $m['reply']; ?>
+                            <button type="button" class="pm-reply-quote" data-reply-to-id="<?= (int) $reply['id'] ?>" <?= !$reply['available'] ? 'disabled' : '' ?>>
+                                <strong><?= !$reply['available'] ? 'Tin nhắn' : ($reply['mine'] ? 'Bạn' : 'Đối phương') ?></strong>
+                                <span><?= e($reply['content']) ?></span>
+                            </button>
+                        <?php endif; ?>
                         <?php if ($m['type'] === 'image'): ?>
                             <a href="<?= base_url(ltrim($m['content'], '/')) ?>" target="_blank">
                                 <img src="<?= base_url(ltrim($m['content'], '/')) ?>" alt="Ảnh" loading="lazy">
@@ -233,36 +248,4 @@ $gio_ngan = function ($t) {
 
 <script src="<?= base_url('assets/site/js/inbox-layout.js') ?>?v=<?= @filemtime(FCPATH . 'assets/site/js/inbox-layout.js') ?>" defer></script>
 
-<?php if (!empty($conversations)): ?>
-<script>
-/* Lọc danh sách hội thoại theo tên ngay trên trang */
-(function () {
-    var q = document.getElementById('tk-ms-search');
-    var list = document.getElementById('tk-ms-list');
-    var none = document.getElementById('tk-ms-nores');
-    if (!q || !list) return;
-    q.addEventListener('input', function () {
-        var v = q.value.trim().toLowerCase(), con = 0;
-        list.querySelectorAll('li').forEach(function (li) {
-            var ok = !v || li.getAttribute('data-name').indexOf(v) !== -1;
-            li.hidden = !ok;
-            if (ok) con++;
-        });
-        none.hidden = con > 0;
-    });
-})();
-</script>
-<?php endif; ?>
-
-<script>
-(function () {
-    var toggle = document.querySelector('.tk-ms-private-title');
-    var content = document.getElementById('tk-ms-private-content');
-    toggle.addEventListener('click', function () {
-        var expanded = toggle.getAttribute('aria-expanded') !== 'true';
-        toggle.setAttribute('aria-expanded', String(expanded));
-        content.hidden = !expanded;
-        toggle.parentElement.classList.toggle('is-expanded', expanded);
-    });
-})();
-</script>
+<script src="<?= base_url('assets/site/js/inbox-tabs.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/inbox-tabs.js') ?>" defer></script>

@@ -555,6 +555,7 @@ CREATE TABLE `messages` (
   `id`              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `conversation_id` BIGINT UNSIGNED NOT NULL,
   `sender_id`       BIGINT UNSIGNED NOT NULL,
+  `reply_to_id`     BIGINT UNSIGNED DEFAULT NULL,
   `type`            ENUM('text','image','system') NOT NULL DEFAULT 'text',
   `content`         TEXT NOT NULL,
   `read_at`         DATETIME DEFAULT NULL,
@@ -562,8 +563,40 @@ CREATE TABLE `messages` (
   `deleted_at`      DATETIME DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_msg_conv` (`conversation_id`,`id`),
+  KEY `idx_message_reply` (`reply_to_id`),
   CONSTRAINT `fk_msg_conv` FOREIGN KEY (`conversation_id`) REFERENCES `conversations` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_msg_sender` FOREIGN KEY (`sender_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Mốc xóa lịch sử riêng của từng người, giữ nguyên dữ liệu phía đối phương.
+DROP TABLE IF EXISTS `conversation_notification_preferences`;
+CREATE TABLE `conversation_notification_preferences` (
+  `conversation_id` BIGINT UNSIGNED NOT NULL,
+  `user_id` BIGINT UNSIGNED NOT NULL,
+  `notifications_enabled` TINYINT UNSIGNED NOT NULL DEFAULT 1,
+  `message_muted_until` BIGINT UNSIGNED DEFAULT NULL,
+  `calls_notifications_enabled` TINYINT UNSIGNED NOT NULL DEFAULT 1,
+  `calls_muted_until` BIGINT UNSIGNED DEFAULT NULL,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`conversation_id`, `user_id`),
+  KEY `idx_cnp_user` (`user_id`),
+  CONSTRAINT `fk_cnp_conversation` FOREIGN KEY (`conversation_id`) REFERENCES `conversations` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_cnp_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Mốc xóa lịch sử riêng của từng người, giữ nguyên dữ liệu phía đối phương.
+DROP TABLE IF EXISTS `conversation_deletions`;
+CREATE TABLE `conversation_deletions` (
+  `conversation_id` BIGINT UNSIGNED NOT NULL,
+  `user_id` BIGINT UNSIGNED NOT NULL,
+  `deleted_through_message_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `deleted_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`conversation_id`, `user_id`),
+  KEY `idx_cd_user` (`user_id`),
+  CONSTRAINT `fk_cd_conversation` FOREIGN KEY (`conversation_id`)
+    REFERENCES `conversations` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_cd_user` FOREIGN KEY (`user_id`)
+    REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Phòng chat chung: mọi thành viên đã đăng nhập đều xem và gửi được

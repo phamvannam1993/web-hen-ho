@@ -258,6 +258,7 @@
     var listTimer = null;
     var sending = false;
     var renderedIds = new Set();
+    var deletedThrough = Object.create(null), chatVersion = 0, listVersion = 0;
 
     var RT = window.Realtime || null;
     function rtLive() { return !!(RT && RT.connected); }
@@ -364,6 +365,11 @@
             ten.className = 'cw-row-name';
             ten.textContent = it.name;
             b.appendChild(ten);
+            if (it.notifications_enabled === false || it.calls_notifications_enabled === false) {
+                var muted = document.createElement('span'); muted.className = 'cw-inbox-muted';
+                muted.title = 'Đã tắt thông báo'; muted.setAttribute('aria-label','Đã tắt thông báo');
+                muted.textContent = '🔕'; b.appendChild(muted);
+            }
             var t = document.createElement('small');
             t.textContent = it.time || '';
             top.appendChild(b);
@@ -394,8 +400,9 @@
 
     function loadList() {
         if (isGuest || !listEl) { return Promise.resolve(); }
+        var currentList = ++listVersion;
         return api('ajax/hoi-thoai').then(function (res) {
-            if (!res.ok) { return; }
+            if (!res.ok || currentList !== listVersion) { return; }
             duLieuList = res.items || [];
             if (dang_mo && dang_mo.kind === 'chat') {
                 var peer = duLieuList.find(function (item) { return Number(item.id) === Number(dang_mo.id); });
@@ -509,7 +516,10 @@
 
         var wrap = document.createElement('div');
         wrap.dataset.messageId = m.id;
+        wrap.dataset.messageType = m.type;
         wrap.className = 'cw-msg' + (m.mine ? ' mine' : '') + (noiTiep ? ' is-cont' : '');
+        if (m.recalled) wrap.classList.add('is-recalled');
+        wrap.dataset.recalled = m.recalled ? '1' : '0';
 
         // Avatar chỉ vẽ ở tin đầu nhóm, và chỉ với tin của người khác
         if (!m.mine) {
@@ -580,6 +590,13 @@
         col.appendChild(meta);
 
         wrap.appendChild(col);
+        if (window.MessageReply && dang_mo && dang_mo.kind === 'chat' && !m.recalled) {
+            window.MessageReply.render(wrap,m.reply,bodyEl);
+            var replyButton = document.createElement('button'); replyButton.type = 'button';
+            replyButton.className = 'pm-widget-reply'; replyButton.textContent = 'Trả lời';
+            replyButton.onclick = function () { window.MessageReply.select(formEl,wrap); };
+            col.append(replyButton);
+        }
         return wrap;
     }
 
@@ -643,6 +660,8 @@
 
     /** Mở phòng chat chung. */
     function moPhong() {
+        if (window.MessageReply) window.MessageReply.clear(formEl);
+        chatVersion++; bodyEl.dataset.deletedThrough = '0';
         if (historySearch) { historySearch.hidden = true; delete historySearch.dataset.messageHistory; }
         var voiceButton = document.getElementById('cw-voice');
         if (voiceButton) {
@@ -677,6 +696,8 @@
 
     /** Mở một hội thoại riêng. */
     function moChat(info) {
+        if (window.MessageReply) window.MessageReply.clear(formEl);
+        chatVersion++; bodyEl.dataset.deletedThrough = String(deletedThrough[info.id] || 0);
         if (historySearch) {
             historySearch.dataset.messageHistory = base + 'ajax/tin-nhan/' + Number(info.id) + '/tim-kiem';
             historySearch.hidden = false;
@@ -728,6 +749,8 @@
 
     /** Quay lại danh sách (màn hẹp). */
     function veDanhSach() {
+        if (window.MessageReply) window.MessageReply.clear(formEl);
+        chatVersion++;
         root.dispatchEvent(new CustomEvent('cw:close-group'));
         closeOnline(false);
         root.classList.remove('is-chat');
@@ -773,9 +796,15 @@
 
         if (rtLive() && lastId > 0 && arguments[0] !== true) { return; }
         var hoi_thoai = dang_mo.id;   // ghim lại để đối chiếu khi câu trả lời về
+        var currentChat = chatVersion;
         return api('ajax/tin-nhan/' + hoi_thoai + '?after=' + lastId).then(function (res) {
             if (!res.ok || !dang_mo || dang_mo.kind !== 'chat') { return; }
-            if (Number(dang_mo.id) !== Number(hoi_thoai)) { return; }
+            if (Number(dang_mo.id) !== Number(hoi_thoai) || currentChat !== chatVersion) { return; }
+            var cutoff = Math.max(deletedThrough[hoi_thoai] || 0, Number(bodyEl.dataset.deletedThrough || 0));
+            if (Number(res.deleted_through_message_id || 0) < cutoff) return;
+            if (window.MessageRecall) window.MessageRecall.clearBefore(bodyEl,res.deleted_through_message_id);
+            cutoff = Number(bodyEl.dataset.deletedThrough || 0);
+            res.messages = (res.messages || []).filter(function (m) { return Number(m.id) > cutoff; });
             setPeerActivity(res);
 
             if (lastId === 0) {
@@ -786,6 +815,7 @@
             (res.messages || []).forEach(function (m) {
                 if (m.id > lastId) { lastId = m.id; }
             });
+            lastId = Math.max(lastId,cutoff);
 
             if (res.messages && res.messages.length) { loadList(); }
             updateSeen(res.latest_seen_id);
@@ -832,6 +862,9 @@
             }
 
             var data = new FormData(formEl);
+            var replySnapshot = window.MessageReply && window.MessageReply.capture(formEl);
+            var sendingVersion = chatVersion;
+            var imageSnapshot = fileEl && fileEl.files[0];
             var url  = dang_mo.kind === 'room' ? 'ajax/phong-chat/gui' : 'ajax/send-message';
 
             sending = true;
@@ -842,20 +875,28 @@
 
             api(url, { method: 'POST', body: data }).then(function (res) {
                 formEl.classList.remove('is-sending');
-                if (fileEl) { fileEl.value = ''; }
+                if (sendingVersion !== chatVersion) return;
                 if (!res.ok) {
+                    if (res.image_sent) {
+                        if (fileEl && fileEl.files[0] === imageSnapshot) fileEl.value = '';
+                        tai(true); loadList();
+                    }
+                    if (!inputEl.value) inputEl.value = text;
                     if (window.appNeed && window.appNeed(res)) { return; }
                     if (window.appModal) {
                         window.appModal({ type: 'error', title: 'Không gửi được', message: res.message });
                     }
                     return;
                 }
+                if (window.MessageReply) window.MessageReply.sent(formEl,replySnapshot);
+                if (fileEl && fileEl.files[0] === imageSnapshot) fileEl.value = '';
                 tai();
                 loadList();
                 loadRoomSummary();
             }).catch(function () {
                 formEl.classList.remove('is-sending');
-                if (fileEl) { fileEl.value = ''; }
+                if (sendingVersion !== chatVersion) return;
+                if (!inputEl.value) inputEl.value = text;
                 if (window.appModal) {
                     window.appModal({
                         type: 'error', title: 'Không gửi được',
@@ -1044,9 +1085,37 @@
         });
     });
 
+    bodyEl.addEventListener('conversation-history-cleared',function (event) {
+        if (!dang_mo || dang_mo.kind !== 'chat') return;
+        deletedThrough[dang_mo.id] = Math.max(deletedThrough[dang_mo.id] || 0,event.detail.cutoff);
+        renderedIds.forEach(function (id) { if (Number(id) <= event.detail.cutoff) renderedIds.delete(id); });
+        convoEl.querySelectorAll('.message-history-dialog[open]').forEach(function (dialog) { dialog.close(); });
+    });
+    document.addEventListener('private-conversation-deleted',function (event) {
+        var id = Number(event.detail.id), cutoff = Number(event.detail.deleted_through_message_id || 0);
+        deletedThrough[id] = Math.max(deletedThrough[id] || 0,cutoff);
+        listVersion++;
+        duLieuList = duLieuList.filter(function (item) { return Number(item.id) !== id; });
+        veList();
+        if (dang_mo && dang_mo.kind === 'chat' && Number(dang_mo.id) === id) {
+            convoEl.querySelectorAll('.message-history-dialog[open]').forEach(function (dialog) { dialog.close(); });
+            bodyEl.textContent = ''; bodyEl.dataset.deletedThrough = String(cutoff);
+            renderedIds.clear(); lastId = 0; ngayCuoi = null; nguoiCuoi = null;
+            veDanhSach();
+        } else loadList();
+    });
+
     /* ------------------------- Realtime ------------------------- */
 
     if (RT) {
+        RT.on('chat.notification-preference',function (msg) {
+            document.dispatchEvent(new CustomEvent('private-conversation-notifications',{
+                detail:Object.assign({},msg,{id:msg.conversationId})}));
+        });
+        RT.on('chat.deleted',function (msg) {
+            document.dispatchEvent(new CustomEvent('private-conversation-deleted',{detail:{id:msg.conversationId,
+                deleted_through_message_id:msg.deleted_through_message_id}}));
+        });
         RT.on('room.message', function (msg) {
             if (!dang_mo || dang_mo.kind !== 'room') { loadRoomSummary(); return; }
             themTin(msg.message);
@@ -1069,6 +1138,7 @@
         });
 
         RT.on('chat.message', function (msg) {
+            if (Number(msg.message.id) <= (deletedThrough[msg.conversationId] || 0)) return;
             if (dang_mo && dang_mo.kind === 'chat' && Number(dang_mo.id) === Number(msg.conversationId)) {
                 themTin(msg.message);
                 if (msg.message.id > lastId) { lastId = msg.message.id; }
@@ -1078,10 +1148,31 @@
         });
     }
 
+    if (window.MessageReply) window.MessageReply.mount(bodyEl,formEl,function () {
+        return dang_mo && dang_mo.kind === 'chat' ? String(dang_mo.id) : null;
+    });
+    if (window.MessageRecall) {
+        window.MessageRecall.watch(bodyEl, function () {
+            return !panel.hidden && dang_mo && dang_mo.kind === 'chat'
+                ? base + 'ajax/tin-nhan/' + Number(dang_mo.id) + '/thu-hoi' : null;
+        }, loadList);
+    }
+
     /* Số chưa đọc và tóm tắt phòng chung lấy ngay khi vào trang */
     loadRoomSummary();
     if (!isGuest) {
         loadList();
         document.addEventListener('dating-contact-added', loadList);
+        document.addEventListener('private-message-recalled', loadList);
+        document.addEventListener('private-conversation-notifications',function (event) {
+            listVersion++;
+            duLieuList.forEach(function (item) {
+                if (Number(item.id) === Number(event.detail.id)) {
+                    item.notifications_enabled = event.detail.notifications_enabled;
+                    if(typeof event.detail.calls_notifications_enabled==='boolean') item.calls_notifications_enabled=event.detail.calls_notifications_enabled;
+                }
+            });
+            veList();
+        });
     }
 })();

@@ -1,0 +1,188 @@
+(function () {
+    'use strict';
+    var root = document.querySelector('.tk-ms[data-conversation-token]');
+    if (!root) return;
+    var menu = document.createElement('div'); menu.className = 'conversation-delete-menu';
+    menu.setAttribute('popover', 'auto'); menu.setAttribute('aria-label', 'Thao tác cuộc trò chuyện');
+    var remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Xóa cuộc trò chuyện';
+    var icon = document.createElement('span'); icon.className = 'conversation-delete-icon'; icon.setAttribute('aria-hidden','true');
+    icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg>';
+    remove.prepend(icon);
+    remove.dataset.action = 'delete';
+    var notifications = document.createElement('button'); notifications.type = 'button'; notifications.dataset.action = 'notifications';
+    var notificationIcon = document.createElement('span'); notificationIcon.className = 'conversation-delete-icon'; notificationIcon.setAttribute('aria-hidden','true');
+    notificationIcon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>';
+    var notificationLabel = document.createElement('span'); notificationLabel.textContent = 'Tắt thông báo';
+    notifications.append(notificationIcon,notificationLabel);
+    menu.append(notifications,remove); document.body.append(menu);
+    var nativePopover = typeof menu.showPopover === 'function', selected = null;
+    var generation = 0, states = new Map(), tokens = new Map(), expiryTimers=new Map();
+    function label(button) {
+        var enabled = button.dataset.notificationsMuted !== '1' && button.dataset.notificationsEnabled !== '0';
+        notificationLabel.textContent = enabled ? 'Tắt thông báo' : 'Bật thông báo';
+        notifications.disabled = !button.dataset.notificationUrl || button.dataset.notificationBusy === '1';
+    }
+    function applyState(data) {
+        var id = String(data.id), enabled = data.notifications_enabled === true;
+        var muted=typeof data.muted==='boolean' ? data.muted : !enabled || data.calls_notifications_enabled===false;
+        clearTimeout(expiryTimers.get(id));
+        root.querySelectorAll('.tk-ms-conversation-more').forEach(function (button) {
+            if (button.dataset.conversationId !== id) return;
+            button.dataset.notificationsEnabled = enabled ? '1' : '0';
+            button.dataset.notificationsMuted=muted ? '1' : '0';
+            var indicator = button.closest('li').querySelector('.inbox-muted-indicator');
+            if (indicator) indicator.hidden = !muted;
+            if (selected === button) label(button);
+            var deadlines=[data.message_muted_until,data.calls_muted_until].map(Number).filter(function (n) {return n>Number(data.server_time || 0);});
+            if(deadlines.length && button.dataset.notificationUrl) {
+                var delay=Math.max(1000,(Math.min.apply(null,deadlines)-Number(data.server_time))*1000+250);
+                expiryTimers.set(id,setTimeout(function () {
+                    if(!button.isConnected)return;
+                    request(button.dataset.notificationUrl).then(function (fresh) {
+                        applyState(fresh);document.dispatchEvent(new CustomEvent('private-conversation-notifications',{detail:fresh}));
+                    }).catch(function () {});
+                },Math.min(delay,2147483647)));
+            }
+        });
+    }
+    function request(url,options) {
+        return fetch(url,Object.assign({credentials:'same-origin',cache:'no-store'},options)).then(function (response) {
+            return response.json().then(function (data) {
+                if (!response.ok || !data.ok) throw new Error(data.message || 'Không cập nhật được thông báo.');
+                return data;
+            });
+        });
+    }
+    function failure(error) {
+        if (window.appModal) window.appModal({type:'error',title:'Thông báo inbox',message:error.message});
+        else window.alert(error.message);
+    }
+    function opened() { return nativePopover ? menu.matches(':popover-open') : menu.classList.contains('is-open'); }
+    function close(focus) {
+        if (nativePopover) { if (opened()) menu.hidePopover(); }
+        else menu.classList.remove('is-open');
+        if (selected) {
+            selected.setAttribute('aria-expanded','false');
+            if (focus && selected.isConnected) selected.focus({preventScroll:true});
+        }
+    }
+    menu.addEventListener('toggle', function () { if (selected) selected.setAttribute('aria-expanded', opened() ? 'true' : 'false'); });
+    root.addEventListener('click', function (event) {
+        var button = event.target.closest('.tk-ms-conversation-more');
+        if (!button || button.disabled) return;
+        event.preventDefault(); event.stopPropagation();
+        if (selected === button && opened()) { close(true); return; }
+        close(false); selected = button; label(button);
+        var current = ++generation;
+        states.delete(button.dataset.conversationId);
+        if (button.dataset.notificationUrl) {
+            notifications.disabled = true;
+            request(button.dataset.notificationUrl).then(function (data) {
+                if (current !== generation || selected !== button || !button.isConnected) return;
+                states.set(button.dataset.conversationId,data); tokens.set(button.dataset.conversationId,data.action_token);
+                applyState(data); notifications.disabled = !data.notifications_available || button.dataset.notificationBusy === '1';
+            }).catch(function (error) { if (current === generation && opened()) { notifications.disabled = true; failure(error); } });
+        }
+        if (nativePopover) menu.showPopover(); else menu.classList.add('is-open');
+        selected.setAttribute('aria-expanded','true');
+        var bounds = button.getBoundingClientRect(), viewport = window.visualViewport;
+        var left = viewport ? viewport.offsetLeft : 0, top = viewport ? viewport.offsetTop : 0;
+        var width = viewport ? viewport.width : innerWidth, height = viewport ? viewport.height : innerHeight;
+        menu.style.left = Math.max(left+8, Math.min(bounds.left,left+width-menu.offsetWidth-8))+'px';
+        var y = bounds.bottom+4;
+        if (y+menu.offsetHeight > top+height-8) y = bounds.top-menu.offsetHeight-4;
+        menu.style.top = Math.max(top+8,y)+'px';
+    });
+    function deleted(event) {
+        var id = String(event.detail.id), cutoff = Number(event.detail.deleted_through_message_id || 0);
+        root.querySelectorAll('.tk-ms-conversation-more').forEach(function (button) {
+            if (button.dataset.conversationId === id) button.closest('li').remove();
+        });
+        if (selected && !selected.isConnected) close(false);
+        if (!root.querySelector('.tk-ms-conversation-more')) {
+            var empty = document.getElementById('tk-ms-nores');
+            if (empty) { empty.textContent = 'Chưa có cuộc trò chuyện nào.'; empty.hidden = false; }
+        }
+        var feed = root.querySelector('#chat-body'), pane = root.querySelector('.tk-ms-pane');
+        if (feed && root.dataset.currentConversation === id) {
+            if (window.MessageRecall) window.MessageRecall.clearBefore(feed,cutoff);
+            if (!pane.hidden) window.location.assign(root.dataset.inboxUrl);
+        }
+    }
+    document.addEventListener('private-conversation-deleted', deleted);
+    document.addEventListener('private-conversation-notifications',function (event) {
+        applyState(event.detail);
+        states.delete(String(event.detail.id));
+        if (selected && selected.dataset.conversationId === String(event.detail.id)) {
+            generation++; close(false);
+        }
+    });
+    notifications.onclick = async function () {
+        var button = selected;
+        if (!button || !button.isConnected || notifications.disabled || button.dataset.notificationBusy === '1') return;
+        var id = button.dataset.conversationId, state = states.get(id);
+        if (!state || !state.notifications_available) return;
+        var muted=typeof state.muted==='boolean' ? state.muted : !state.notifications_enabled || state.calls_notifications_enabled===false;
+        var choice={scope:'both',duration:'0'};
+        close(true);
+        if(!muted) {
+            if(!window.InboxMuteDialog)return;
+            choice=await window.InboxMuteDialog.choose(button);
+            if(!choice || !button.isConnected)return;
+        }
+        button.dataset.notificationBusy = '1'; notifications.disabled = true;
+        var body = new FormData(); body.set('action_token',tokens.get(id));
+        body.set('notifications_enabled',muted ? '1' : '0');
+        body.set('mute_scope',choice.scope);body.set('mute_duration',choice.duration);
+        request(button.dataset.notificationUrl,{method:'POST',body:body}).then(function (data) {
+            states.set(id,data); applyState(data); if (selected === button) close(true);
+            document.dispatchEvent(new CustomEvent('private-conversation-notifications',{detail:data}));
+        }).catch(failure).finally(function () {
+            button.dataset.notificationBusy = '0'; if (selected === button) label(button);
+        });
+    };
+    function refreshMuted() {
+        if(document.hidden)return;
+        root.querySelectorAll('.tk-ms-conversation-more[data-notifications-muted="1"]').forEach(function (button) {
+            if(!button.dataset.notificationUrl || button.dataset.notificationBusy==='1')return;
+            var version=generation;
+            request(button.dataset.notificationUrl).then(function (state) {
+                if(version===generation && button.isConnected && button.dataset.notificationBusy!=='1')applyState(state);
+            }).catch(function () {});
+        });
+    }
+    document.addEventListener('visibilitychange',refreshMuted);
+    refreshMuted();
+    remove.onclick = function () {
+        var button = selected;
+        if (!button || !button.isConnected || button.disabled) return;
+        close(true);
+        function perform() {
+            if (!button.isConnected || button.disabled) return;
+            button.disabled = true;
+            var body = new FormData(); body.set('action_token',root.dataset.conversationToken);
+            fetch(button.dataset.deleteUrl,{method:'POST',body:body,credentials:'same-origin',cache:'no-store'})
+                .then(function (response) { return response.json().then(function (data) {
+                    if (!response.ok || !data.ok) throw new Error(data.message || 'Không xóa được cuộc trò chuyện.');
+                    return data;
+                }); }).then(function (data) {
+                    document.dispatchEvent(new CustomEvent('private-conversation-deleted',{detail:data}));
+                }).catch(function (error) {
+                    button.disabled = false;
+                    if (window.appModal) window.appModal({type:'error',title:'Không xóa được',message:error.message});
+                    else window.alert(error.message);
+                });
+        }
+        var message = 'Xóa lịch sử cuộc trò chuyện phía bạn? Người kia vẫn giữ lịch sử. Khi có tin nhắn mới, cuộc trò chuyện sẽ hiện lại.';
+        if (window.appModal) window.appModal({title:'Xóa cuộc trò chuyện?',message:message,danger:true,confirmText:'Xóa',onConfirm:perform});
+        else if (window.confirm(message)) perform();
+    };
+    document.addEventListener('click',function (event) { if (!menu.contains(event.target) && selected && !selected.contains(event.target)) close(false); });
+    document.addEventListener('keydown',function (event) { if (event.key === 'Escape' && opened()) { event.preventDefault(); close(true); } });
+    root.addEventListener('scroll',function () { close(false); },true);
+    window.addEventListener('resize',function () { close(false); });
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize',function () { close(false); });
+        window.visualViewport.addEventListener('scroll',function () { close(false); });
+    }
+})();

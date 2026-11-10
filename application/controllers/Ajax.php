@@ -140,14 +140,15 @@ class Ajax extends MY_Controller
 
         $receiver = (int) $this->input->post('receiver_id');
         $content  = trim((string) $this->input->post('content', true));
+        $reply_to_id = $this->input->post('reply_to_id');
 
         // Ảnh gửi kèm được lưu thành một tin nhắn riêng loại "image"
         $image = $this->upload_chat_image();
         if ($image) {
-            $sent = $this->m_interaction->send_message($this->auth->id(), $receiver, $image, 'image');
+            $sent = $this->m_interaction->send_message($this->auth->id(), $receiver, $image, 'image', $reply_to_id);
             if (!$sent['ok']) {
                 if ($this->input->is_ajax_request()) {
-                    return $this->json($sent);
+                    return $this->json($sent, $sent['status'] ?? 200);
                 }
                 set_flash('danger', $sent['message']);
                 redirect('messenger');
@@ -171,13 +172,19 @@ class Ajax extends MY_Controller
             redirect('messenger');
         }
 
-        $result = $this->m_interaction->send_message($this->auth->id(), $receiver, $content);
+        $result = $this->m_interaction->send_message($this->auth->id(), $receiver, $content, 'text', $reply_to_id);
+        if (!$result['ok'] && $image && !empty($sent['ok'])) {
+            $result['image_sent'] = true;
+            $result['conversation_id'] = $sent['conversation_id'];
+            $result['message_id'] = $sent['message_id'];
+            $result['message'] = 'Ảnh đã gửi. Phần chữ chưa gửi: ' . $result['message'];
+        }
         if ($result['ok'] && $this->chat_image_error) {
             $result['warning'] = $this->chat_image_error;
         }
 
         if ($this->input->is_ajax_request()) {
-            return $this->json($result);
+            return $this->json($result, $result['status'] ?? 200);
         }
         set_flash($result['ok'] ? 'success' : 'danger', $result['ok'] ? 'Đã gửi tin nhắn.' : $result['message']);
         redirect($result['ok'] ? 'messenger/' . $result['conversation_id'] : 'messenger');
@@ -440,6 +447,8 @@ class Ajax extends MY_Controller
                                                (int) $r['last_sender_id'] === (int) $me),
                 'time'    => $r['last_at'] ? time_ago($r['last_at']) : '',
                 'unread'  => (int) $r['unread'],
+                'notifications_enabled' => !isset($r['notifications_enabled']) || (bool)$r['notifications_enabled'],
+                'calls_notifications_enabled' => !isset($r['calls_notifications_enabled']) || (bool)$r['calls_notifications_enabled'],
             );
         }
 
@@ -531,8 +540,10 @@ class Ajax extends MY_Controller
         if (mb_strlen($q) < 2 || mb_strlen($q) > 100 || $before === false) {
             return $this->json(array('ok' => false, 'message' => 'Nhập từ 2 đến 100 ký tự và mốc tìm kiếm hợp lệ.'), 422);
         }
+        $cutoff = $this->m_interaction->conversation_cutoff($conversation_id, $me);
         $this->db->select('id, sender_id, type, content, created_at')
             ->from('messages')->where('conversation_id', (int) $conversation_id)
+            ->where('id >', $cutoff)
             ->where('deleted_at', null)->where('type', 'text')->like('content', $q);
         if ($before) $this->db->where('id <', $before);
         $rows = $this->db->order_by('id', 'DESC')->limit(21)->get()->result_array();
@@ -554,6 +565,7 @@ class Ajax extends MY_Controller
 
     public function poll_messages($conversation_id)
     {
+        $this->output->set_header('Cache-Control: private, no-store');
         if (!$this->require_login()) {
             return;
         }
@@ -564,23 +576,27 @@ class Ajax extends MY_Controller
             return $this->json(array('ok' => false, 'message' => 'Không có quyền xem hội thoại này.'), 403);
         }
 
-        $after = (int) $this->input->get('after');
-        $rows  = $this->db->select('m.id, m.sender_id, m.type, m.content, m.created_at, m.read_at')
+        $cutoff = $this->m_interaction->conversation_cutoff($conversation_id, $me);
+        $after = max((int) $this->input->get('after'), $cutoff);
+        $rows  = $this->db->select('m.*')
             ->from('messages m')
             ->where('m.conversation_id', $conversation_id)
             ->where('m.id >', $after)
-            ->where('m.deleted_at', null)
             ->order_by('m.id', 'ASC')->limit(50)->get()->result_array();
 
         // đánh dấu đã đọc phần của đối phương
+        $rows = $this->m_interaction->with_replies($rows, $conversation_id, $me);
         $this->m_interaction->mark_read($conversation_id, $me);
 
         $messages = array();
         foreach ($rows as $r) {
+            $r = $this->m_interaction->message_for_display($r);
             $la_cua_toi = (int) $r['sender_id'] === (int) $me;
             $messages[] = array(
                 'id'      => (int) $r['id'],
                 'mine'    => $la_cua_toi,
+                'recalled' => $r['recalled'],
+                'reply' => $r['reply'],
                 'type'    => $r['type'],
                 'content' => $r['type'] === 'image' ? base_url(ltrim($r['content'], '/')) : $r['content'],
                 'time'    => date('H:i', strtotime($r['created_at'])),
@@ -594,11 +610,13 @@ class Ajax extends MY_Controller
         // đối phương đã đọc tin của tôi chưa
         $seen = (int) $this->db->from('messages')
             ->where('conversation_id', $conversation_id)
+            ->where('id >', $cutoff)
             ->where('sender_id', $me)->where('read_at', null)
             ->count_all_results() === 0;
 
         $other_id = (int) $conv['user_low_id'] === (int) $me ? $conv['user_high_id'] : $conv['user_low_id'];
         $latest_seen = $this->db->select_max('id')->where('conversation_id', $conversation_id)
+            ->where('id >', $cutoff)
             ->where('sender_id', $me)->where('read_at IS NOT NULL', null, false)->where('deleted_at', null)->get('messages')->row_array();
         $other = $this->db->select('last_active_at, avatar, gender')->where('id', $other_id)->get('users')->row_array();
         foreach ($messages as &$message) {
@@ -606,6 +624,7 @@ class Ajax extends MY_Controller
         }
         unset($message);
         return $this->json(array('ok' => true, 'messages' => $messages, 'seen' => $seen, 'latest_seen_id' => (int) ($latest_seen['id'] ?? 0),
+            'deleted_through_message_id' => $cutoff,
             'online' => (bool) is_online($other['last_active_at'] ?? null),
             'activity' => !empty($other['last_active_at']) ? 'Hoạt động ' . time_ago($other['last_active_at']) : 'Chưa có thông tin hoạt động'));
     }

@@ -394,6 +394,22 @@ class M_interaction extends CI_Model
      */
     public function conversations($user_id)
     {
+        $user_id = (int) $user_id;
+        $has_deletions = $this->db->table_exists('conversation_deletions');
+        $deletion_join = $has_deletions ? ' LEFT JOIN conversation_deletions d ON d.conversation_id = c.id AND d.user_id = ' . $user_id : '';
+        $deletion_filter = $has_deletions ? ' AND (d.user_id IS NULL OR COALESCE(c.last_message_id, 0) > d.deleted_through_message_id)' : '';
+        $unread_filter = $has_deletions ? ' AND x.id > COALESCE(d.deleted_through_message_id, 0)' : '';
+        $has_notifications = $this->db->table_exists('conversation_notification_preferences');
+        $notification_join = $has_notifications ? ' LEFT JOIN conversation_notification_preferences np
+            ON np.conversation_id = c.id AND np.user_id = ' . $user_id : '';
+        $notification_select = $has_notifications ? 'COALESCE(np.notifications_enabled, 1)' : '1';
+        $calls_select='1';
+        if ($has_notifications && $this->db->field_exists('message_muted_until','conversation_notification_preferences')
+            && $this->db->field_exists('calls_notifications_enabled','conversation_notification_preferences')
+            && $this->db->field_exists('calls_muted_until','conversation_notification_preferences')) {
+            $notification_select='(COALESCE(np.notifications_enabled, 1) = 1 OR (np.message_muted_until IS NOT NULL AND np.message_muted_until <= UNIX_TIMESTAMP()))';
+            $calls_select='(COALESCE(np.calls_notifications_enabled, 1) = 1 OR (np.calls_muted_until IS NOT NULL AND np.calls_muted_until <= UNIX_TIMESTAMP()))';
+        }
         // Bổ sung liên hệ cho lượt thích cũ; không tạo tin nhắn tự động.
         $this->db->query("INSERT IGNORE INTO conversations (user_low_id, user_high_id)
             SELECT LEAST(l.user_id, l.target_id), GREATEST(l.user_id, l.target_id)
@@ -408,24 +424,199 @@ class M_interaction extends CI_Model
                   AND existing.user_high_id = GREATEST(l.user_id, l.target_id))", array((int) $user_id));
         return $this->db->query(
             "SELECT c.*, u.id AS other_id, u.display_name, u.nickname, u.slug AS user_slug, u.avatar,
-                    u.gender, u.last_active_at,
-                    m.content AS last_content, m.sender_id AS last_sender_id,
-                    m.type AS last_type, m.created_at AS last_at,
+                    u.gender, u.last_active_at, " . $notification_select . " AS notifications_enabled, " . $calls_select . " AS calls_notifications_enabled,
+                    CASE WHEN m.deleted_at IS NULL THEN m.content ELSE 'Tin nhắn đã được thu hồi' END AS last_content,
+                    m.sender_id AS last_sender_id,
+                    CASE WHEN m.deleted_at IS NULL THEN m.type ELSE 'system' END AS last_type, m.created_at AS last_at,
                     (SELECT COUNT(*) FROM messages x
-                      WHERE x.conversation_id = c.id AND x.sender_id <> ? AND x.read_at IS NULL) AS unread
+                      WHERE x.conversation_id = c.id AND x.sender_id <> ? AND x.read_at IS NULL" . $unread_filter . ") AS unread
                FROM conversations c
                JOIN users u ON u.id = IF(c.user_low_id = ?, c.user_high_id, c.user_low_id)
-               LEFT JOIN messages m ON m.id = c.last_message_id
-              WHERE ? IN (c.user_low_id, c.user_high_id) AND u.deleted_at IS NULL
+               LEFT JOIN messages m ON m.id = c.last_message_id" . $deletion_join . $notification_join . "
+              WHERE ? IN (c.user_low_id, c.user_high_id) AND u.deleted_at IS NULL" . $deletion_filter . "
               ORDER BY c.last_message_at DESC, c.id DESC",
             array($user_id, $user_id, $user_id)
         )->result_array();
     }
 
-    public function messages($conversation_id, $limit = 100)
+    public function conversation_cutoff($conversation_id, $user_id)
     {
-        return $this->db->where('conversation_id', $conversation_id)->where('deleted_at', null)
+        if (!$this->db->table_exists('conversation_deletions')) return 0;
+        $query = $this->db->query(
+            'SELECT deleted_through_message_id FROM conversation_deletions WHERE conversation_id = ? AND user_id = ?',
+            array((int) $conversation_id, (int) $user_id)
+        );
+        if (!$query) throw new RuntimeException('Không tải được trạng thái hội thoại.', 503);
+        $row = $query->row_array();
+        return $row ? (int) $row['deleted_through_message_id'] : 0;
+    }
+
+    public function delete_conversation($conversation_id, $user_id)
+    {
+        foreach (array($conversation_id, $user_id) as $id) {
+            if (filter_var($id, FILTER_VALIDATE_INT, array('options' => array('min_range' => 1))) === false) {
+                throw new InvalidArgumentException('ID không hợp lệ.', 422);
+            }
+        }
+        $conversation_id = (int) $conversation_id; $user_id = (int) $user_id;
+        if (!$this->db->table_exists('conversation_deletions')) {
+            throw new RuntimeException('Tính năng xóa hội thoại chưa sẵn sàng. Cần cập nhật cơ sở dữ liệu.', 503);
+        }
+        $run = function ($sql, array $params) {
+            $result = $this->db->query($sql, $params);
+            if (!$result) throw new RuntimeException('Không lưu được thay đổi hội thoại.', 503);
+            return $result;
+        };
+        if (!$this->db->trans_begin()) throw new RuntimeException('Không bắt đầu được thao tác xóa hội thoại.', 503);
+        try {
+            $conversation = $run(
+                'SELECT id FROM conversations WHERE id = ? AND ? IN (user_low_id, user_high_id) FOR UPDATE',
+                array($conversation_id, $user_id)
+            )->row_array();
+            if (!$conversation) throw new RuntimeException('Không có quyền truy cập hội thoại này.', 403);
+            $last = $run(
+                'SELECT id FROM messages WHERE conversation_id = ? ORDER BY id DESC LIMIT 1 FOR UPDATE',
+                array($conversation_id)
+            )->row_array();
+            $cutoff = $last ? (int) $last['id'] : 0;
+            $run(
+                'INSERT INTO conversation_deletions (conversation_id, user_id, deleted_through_message_id)
+                 VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE
+                 deleted_through_message_id = GREATEST(deleted_through_message_id, VALUES(deleted_through_message_id)),
+                 deleted_at = CURRENT_TIMESTAMP',
+                array($conversation_id, $user_id, $cutoff)
+            );
+            $cutoff = $this->conversation_cutoff($conversation_id, $user_id);
+            if (!$this->db->trans_status() || !$this->db->trans_commit()) {
+                throw new RuntimeException('Không lưu được thay đổi hội thoại.', 503);
+            }
+        } catch (Throwable $e) {
+            $this->db->trans_rollback(); throw $e;
+        }
+        return array('id' => $conversation_id, 'deleted_through_message_id' => $cutoff);
+    }
+
+    public function recall_message($conversation_id, $user_id, $message_id)
+    {
+        foreach (array($conversation_id, $user_id, $message_id) as $id) {
+            if (filter_var($id, FILTER_VALIDATE_INT,
+                array('options' => array('min_range' => 1))) === false) {
+                throw new InvalidArgumentException('ID không hợp lệ.', 422);
+            }
+        }
+        $conversation_id = (int) $conversation_id;
+        $user_id = (int) $user_id;
+        $message_id = (int) $message_id;
+        $run = function ($sql, array $params) {
+            $result = $this->db->query($sql, $params);
+            if ($result === false) {
+                throw new RuntimeException('Không xử lý được thao tác thu hồi.', 503);
+            }
+            return $result;
+        };
+        if (!$this->db->trans_begin()) {
+            throw new RuntimeException('Không bắt đầu được thao tác thu hồi.', 503);
+        }
+        try {
+            $conversation = $run(
+                'SELECT id FROM conversations
+                 WHERE id = ? AND ? IN (user_low_id, user_high_id) FOR UPDATE',
+                array($conversation_id, $user_id)
+            )->row_array();
+            if (!$conversation) {
+                throw new RuntimeException('Không có quyền truy cập hội thoại này.', 403);
+            }
+            $message = $run(
+                'SELECT id, sender_id, deleted_at FROM messages
+                 WHERE conversation_id = ? AND id = ? FOR UPDATE',
+                array($conversation_id, $message_id)
+            )->row_array();
+            if (!$message) {
+                throw new RuntimeException('Không tìm thấy tin nhắn.', 404);
+            }
+            if ($message_id <= $this->conversation_cutoff($conversation_id, $user_id)) {
+                throw new RuntimeException('Không tìm thấy tin nhắn.', 404);
+            }
+            if ((int) $message['sender_id'] !== $user_id) {
+                throw new RuntimeException('Bạn chỉ có thể thu hồi tin nhắn của mình.', 403);
+            }
+            if (empty($message['deleted_at'])) {
+                $run(
+                    'UPDATE messages SET deleted_at = CURRENT_TIMESTAMP,
+                         type = ?, content = ?
+                     WHERE id = ? AND conversation_id = ? AND sender_id = ?
+                         AND deleted_at IS NULL',
+                    array('system', 'Tin nhắn đã được thu hồi',
+                        $message_id, $conversation_id, $user_id)
+                );
+            }
+            if ($this->db->table_exists('conversation_pins')) {
+                $run(
+                    'DELETE FROM conversation_pins
+                     WHERE conversation_id = ? AND message_id = ?',
+                    array($conversation_id, $message_id)
+                );
+            }
+            if (!$this->db->trans_status() || !$this->db->trans_commit()) {
+                throw new RuntimeException('Không lưu được thao tác thu hồi.', 503);
+            }
+        } catch (Throwable $e) {
+            $this->db->trans_rollback();
+            throw $e;
+        }
+        return array('id' => $message_id, 'recalled' => true);
+    }
+
+    public function message_for_display(array $row)
+    {
+        $row['recalled'] = !empty($row['deleted_at']);
+        if ($row['recalled']) {
+            $row['type'] = 'system';
+            $row['content'] = 'Tin nhắn đã được thu hồi';
+        }
+        return $row;
+    }
+
+    public function with_replies(array $rows, $conversation_id, $user_id)
+    {
+        $ids = array();
+        foreach ($rows as &$row) {
+            $row = $this->message_for_display($row);
+            $row['reply'] = null;
+            if (!$row['recalled'] && !empty($row['reply_to_id'])) $ids[] = (int) $row['reply_to_id'];
+        }
+        unset($row);
+        if (!$ids) return $rows;
+        $ids = array_values(array_unique($ids));
+        $cutoff = $this->conversation_cutoff($conversation_id, $user_id);
+        $query = $this->db->query(
+            'SELECT id, sender_id, type, content, deleted_at FROM messages
+             WHERE conversation_id = ? AND id > ? AND id IN (' . implode(',', array_fill(0, count($ids), '?')) . ')',
+            array_merge(array((int) $conversation_id, $cutoff), $ids)
+        );
+        if (!$query) throw new RuntimeException('Không tải được tin nhắn được trả lời.', 503);
+        $parents = array();
+        foreach ($query->result_array() as $parent) $parents[(int) $parent['id']] = $this->message_for_display($parent);
+        foreach ($rows as &$row) {
+            if ($row['recalled'] || empty($row['reply_to_id'])) continue;
+            $id = (int) $row['reply_to_id']; $parent = $parents[$id] ?? null;
+            $row['reply'] = array('id' => $id, 'available' => (bool) $parent,
+                'mine' => $parent && (int) $parent['sender_id'] === (int) $user_id,
+                'recalled' => $parent ? $parent['recalled'] : false,
+                'type' => $parent ? $parent['type'] : 'system',
+                'content' => !$parent ? 'Tin nhắn không còn hiển thị' : ($parent['type'] === 'image' ? '[Hình ảnh]' : mb_substr($parent['content'], 0, 120)));
+        }
+        unset($row);
+        return $rows;
+    }
+
+    public function messages($conversation_id, $limit = 100, $user_id = 0)
+    {
+        $cutoff = $user_id ? $this->conversation_cutoff($conversation_id, $user_id) : 0;
+        $rows = $this->db->where('conversation_id', $conversation_id)
+            ->where('id >', $cutoff)
             ->order_by('id', 'ASC')->limit($limit)->get('messages')->result_array();
+        return $this->with_replies($rows, $conversation_id, $user_id);
     }
 
     /** Trả về lý do từ chối hoặc null khi được nhắn tin. Giá trị matched cũ được hiểu là all. */
@@ -453,8 +644,16 @@ class M_interaction extends CI_Model
     }
 
     /** Gửi tin nhắn theo quyền nhận tin và trạng thái chặn. */
-    public function send_message($sender_id, $receiver_id, $content, $type = 'text')
+    public function send_message($sender_id, $receiver_id, $content, $type = 'text', $reply_to_id = null)
     {
+        $reply_id = 0;
+        if ($reply_to_id !== null && $reply_to_id !== '' && $reply_to_id !== 0 && $reply_to_id !== '0') {
+            $reply_id = filter_var($reply_to_id, FILTER_VALIDATE_INT, array('options' => array('min_range' => 1)));
+            if ($reply_id === false) return array('ok' => false, 'status' => 422, 'message' => 'ID tin được trả lời không hợp lệ.');
+            if (!$this->db->field_exists('reply_to_id', 'messages')) {
+                return array('ok' => false, 'status' => 503, 'message' => 'Tính năng trả lời chưa sẵn sàng. Cần cập nhật cơ sở dữ liệu.');
+            }
+        }
         $error = $this->message_permission($sender_id, $receiver_id);
         if ($error !== null) return array('ok' => false, 'message' => $error);
 
@@ -462,19 +661,47 @@ class M_interaction extends CI_Model
         if (!$conv) {
             return array('ok' => false, 'message' => 'Không mở được hội thoại với người này.');
         }
-        $this->db->insert('messages', array(
+        $data = array(
             'conversation_id' => $conv['id'],
             'sender_id'       => $sender_id,
             'type'            => $type,
             'content'         => $content,
-        ));
-        $message_id = $this->db->insert_id();
+        );
+        $transaction = false;
+        try {
+            if ($reply_id) {
+                if (!$this->db->trans_begin()) throw new RuntimeException('Không bắt đầu được thao tác trả lời.', 503);
+                $transaction = true;
+                $query = $this->db->query('SELECT id FROM conversations WHERE id = ? FOR UPDATE', array((int) $conv['id']));
+                if (!$query || !$query->row_array()) throw new RuntimeException('Không mở được hội thoại.', 503);
+                $query = $this->db->query('SELECT id FROM messages WHERE id = ? AND conversation_id = ?
+                    AND deleted_at IS NULL FOR UPDATE', array($reply_id, (int) $conv['id']));
+                if (!$query) throw new RuntimeException('Không kiểm tra được tin được trả lời.', 503);
+                if (!$query->row_array() || $reply_id <= $this->conversation_cutoff($conv['id'], $sender_id)) {
+                    throw new RuntimeException('Tin được trả lời không còn hiển thị trong hội thoại.', 422);
+                }
+                $data['reply_to_id'] = $reply_id;
+            }
+            if (!$this->db->insert('messages', $data)) throw new RuntimeException('Không lưu được tin nhắn.', 503);
+            $message_id = $this->db->insert_id();
+            $updated = $this->db->query(
+                'UPDATE conversations SET
+                    last_message_at = CASE WHEN COALESCE(last_message_id, 0) <= ? THEN ? ELSE last_message_at END,
+                    last_message_id = GREATEST(COALESCE(last_message_id, 0), ?) WHERE id = ?',
+                array($message_id, date('Y-m-d H:i:s'), $message_id, $conv['id'])
+            );
+            if (!$updated) throw new RuntimeException('Không cập nhật được hội thoại.', 503);
+            if ($transaction && (!$this->db->trans_status() || !$this->db->trans_commit())) {
+                throw new RuntimeException('Không lưu được tin nhắn trả lời.', 503);
+            }
+        } catch (Throwable $e) {
+            if ($transaction) $this->db->trans_rollback();
+            $safe = $e instanceof RuntimeException && in_array($e->getCode(), array(422, 503), true);
+            return array('ok' => false, 'status' => $safe ? $e->getCode() : 503, 'message' => $safe
+                ? $e->getMessage() : 'Không gửi được tin nhắn. Vui lòng thử lại.');
+        }
         require_once APPPATH . 'libraries/Achievements.php';
         Achievements::sync($this->db, $sender_id);
-        $this->db->where('id', $conv['id'])->update('conversations', array(
-            'last_message_id' => $message_id,
-            'last_message_at' => date('Y-m-d H:i:s'),
-        ));
 
         // Đẩy tức thời tới người nhận (web + ứng dụng) qua máy chủ WebSocket
         $this->load->library('realtime');
@@ -494,7 +721,9 @@ class M_interaction extends CI_Model
 
     public function mark_read($conversation_id, $user_id)
     {
+        $cutoff = $this->conversation_cutoff($conversation_id, $user_id);
         $this->db->where('conversation_id', $conversation_id)
+            ->where('id >', $cutoff)
             ->where('sender_id !=', $user_id)->where('read_at', null)
             ->update('messages', array('read_at' => date('Y-m-d H:i:s')));
 
@@ -511,11 +740,14 @@ class M_interaction extends CI_Model
 
     public function unread_count($user_id)
     {
+        $deletion_filter = $this->db->table_exists('conversation_deletions')
+            ? ' AND NOT EXISTS (SELECT 1 FROM conversation_deletions d WHERE d.conversation_id = c.id
+                AND d.user_id = ' . (int) $user_id . ' AND m.id <= d.deleted_through_message_id)' : '';
         return (int) $this->db->query(
             "SELECT COUNT(*) AS c FROM messages m
                JOIN conversations c ON c.id = m.conversation_id
               WHERE ? IN (c.user_low_id, c.user_high_id)
-                AND m.sender_id <> ? AND m.read_at IS NULL",
+                AND m.sender_id <> ? AND m.read_at IS NULL" . $deletion_filter,
             array($user_id, $user_id)
         )->row('c');
     }

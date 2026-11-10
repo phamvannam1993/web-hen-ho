@@ -31,14 +31,16 @@ class EmailTestRenderer {
     }
 }
 class EmailTestCron extends Cron {
-    public $m_email, $m_user;
+    public $m_email, $m_user, $load, $m_conversation_notification;
     function __construct() {}
 }
 class EmailTestRecipient {
     function find($id) { return array('id' => $id, 'status' => 'active', 'deleted_at' => null, 'email' => 'member@example.test'); }
 }
 function verify($ok, $label) { if (!$ok) throw new Exception($label); }
-$emailTestCI = (object) array('load' => new EmailTestLoader(), 'm_email' => new EmailTestQueue());
+class EmailTestConversationNotification { function enabled($conversation_id,$user_id) { return true; } }
+$emailTestCI = (object) array('load' => new EmailTestLoader(), 'm_email' => new EmailTestQueue(),
+    'm_conversation_notification' => new EmailTestConversationNotification());
 $emailer = new Emailer();
 $sender = array('display_name' => 'Tên thật', 'nickname' => 'Bằng Lăng', 'avatar' => 'uploads/avatar.jpg', 'gender' => 'female');
 $emailer->new_message(7, $sender, 42);
@@ -61,6 +63,7 @@ verify(strpos($html, 'Xem tin nhắn') !== false && strpos($html, $payload['avat
 $emailer->new_message(7, array('display_name' => 'Bạn mới', 'gender' => 'male'), 42);
 verify(strpos($emailTestCI->m_email->rows[2]['payload']['avatar'], 'avatar-male.svg') !== false, 'Fallback avatar');
 $cron = new EmailTestCron(); $cron->m_email = $emailTestCI->m_email;
+$cron->load = $emailTestCI->load; $cron->m_conversation_notification = $emailTestCI->m_conversation_notification;
 $cron->m_user = new EmailTestRecipient();
 $validate = new ReflectionMethod(Cron::class, 'con_hop_le'); $validate->setAccessible(true);
 verify($validate->invoke($cron, array('user_id' => 7, 'type' => 'new_message', 'related_id' => 42, 'to_email' => 'member@example.test')) === true, 'Do not suppress emails for online/read users');

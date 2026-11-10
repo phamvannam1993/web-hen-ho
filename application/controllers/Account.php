@@ -447,17 +447,17 @@ class Account extends Member_Controller
             $partner  = $this->m_user->find($other_id);
             $send_error = $this->m_interaction->message_permission($me['id'], $other_id);
             $can_send = $send_error === null;
-            $messages = $this->m_interaction->messages($conversation_id);
+            $messages = $this->m_interaction->messages($conversation_id, 100, $me['id']);
             $this->m_interaction->mark_read($conversation_id, $me['id']);
             $blocked_by_me = $this->db->where('user_id', (int) $me['id'])->where('blocked_id', (int) $other_id)
                 ->count_all_results('blocks') > 0;
-            $message_action_token = $this->session->userdata('private_message_action_token');
-            if (!is_string($message_action_token) || !preg_match('/^[a-f0-9]{64}$/D', $message_action_token)) {
-                $message_action_token = bin2hex(random_bytes(32));
-                $this->session->set_userdata('private_message_action_token', $message_action_token);
-            }
         }
 
+        $message_action_token = $this->session->userdata('private_message_action_token');
+        if (!is_string($message_action_token) || !preg_match('/^[a-f0-9]{64}$/D', $message_action_token)) {
+            $message_action_token = bin2hex(random_bytes(32));
+            $this->session->set_userdata('private_message_action_token', $message_action_token);
+        }
         $conversations = $this->m_interaction->conversations($me['id']);
         $chat_groups = array();
         $this->load->helper('chat_group');

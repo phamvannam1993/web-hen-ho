@@ -1,0 +1,134 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Conversation deletion browser tests</title>
+<link rel="stylesheet" href="../assets/site/css/account/messages.css">
+<link rel="stylesheet" href="../assets/site/css/conversation-delete.css">
+<style>
+:root { --tk-muted-fg:#777; --tk-fg:#222; --tk-secondary:#fff0f5; --tk-primary:#d1273f; }
+body { font:14px sans-serif; padding:10px; }.tk-ms { width:340px; }
+#cw-body { min-height:20px; } #cw-panel { display:block; } .cw-msg { padding:4px; }
+</style>
+<div class="tk-ms" data-conversation-token="fixture-token" data-current-conversation="0" data-inbox-url="#inbox">
+ <ul id="tk-ms-list">
+  <li class="tk-ms-conversation-row" data-name="a"><a class="tk-ms-item" href="#9"><span class="tk-ms-av"></span><span class="tk-ms-item__b"><span class="tk-ms-item__n">Nguyễn Văn A</span><span class="tk-ms-item__l">Old history A</span></span><span class="tk-ms-item__r">23/10</span></a><button type="button" class="tk-ms-conversation-more" data-conversation-id="9" data-delete-url="https://example.test/ajax/tin-nhan/9/xoa-hoi-thoai" aria-expanded="false">⋯</button></li>
+  <li class="tk-ms-conversation-row" data-name="b"><a class="tk-ms-item" href="#10"><span class="tk-ms-av"></span><span class="tk-ms-item__b"><span class="tk-ms-item__n">Nguyễn Văn B</span><span class="tk-ms-item__l">Old history B</span></span><span class="tk-ms-item__r">24/10</span></a><button type="button" class="tk-ms-conversation-more" data-conversation-id="10" data-delete-url="https://example.test/ajax/tin-nhan/10/xoa-hoi-thoai" aria-expanded="false">⋯</button></li>
+ </ul>
+ <p id="tk-ms-nores" hidden></p><div class="tk-ms-pane"></div>
+</div>
+<div id="chat-widget" data-base="https://example.test/" data-guest="0">
+ <button id="cw-bubble">Chat</button><span id="cw-badge"></span>
+ <div id="cw-panel"><div id="cw-side"><input id="cw-search"><div id="cw-list"></div></div>
+  <div id="cw-idle">Choose chat</div>
+  <div id="cw-convo" hidden><button id="cw-back">Back</button><a id="cw-avatar-link"><img id="cw-avatar"></a><span id="cw-avatar-room"></span><a id="cw-profile-link"><b id="cw-name"></b></a><small id="cw-status"></small><button id="cw-history-search">Search</button><div id="cw-body"></div><form id="cw-form"><input id="cw-receiver"><input id="cw-input"><input id="cw-file" type="file"></form></div>
+ </div>
+</div>
+<pre id="result" data-status="running">RUNNING</pre>
+<script>
+'use strict';
+var intervals=[],requests=[],modal=null,errors=[],markers=new Map(),deferPoll=false,pendingPoll=null,holdList=false,pendingList=null;
+var serverMessages=new Map([[9,[makeMessage(1),makeMessage(2)]],[10,[makeMessage(3),makeMessage(4)]]]);
+function makeMessage(id) { return {id:id,mine:false,type:'text',content:'message-'+id,time:'12:00',day:'Today',day_key:'2026-11-10'}; }
+window.addEventListener('error',function (e) { errors.push(e.message); });
+window.setInterval=function (fn) {intervals.push(fn);return intervals.length;};
+window.clearInterval=function () {};
+window.appModal=function (opts) {modal=opts;};
+window.Realtime={connected:true,listeners:{},on:function (t,fn) {(this.listeners[t] ||= []).push(fn);},emit:function (t,data) {(this.listeners[t] || []).forEach(function (fn) {fn(data);});},send:function () {}};
+function response(data,ok) {return {ok:ok!==false,json:function () {return Promise.resolve(data);}};}
+function visible(id) { return (serverMessages.get(id) || []).filter(function (m) {return m.id>(markers.get(id) || 0);}); }
+window.fetch=function (url,options) {
+ options=options || {};var parsed=new URL(url),path=parsed.pathname;
+ requests.push({url:url,method:options.method || 'GET'});
+ if (path.endsWith('/ajax/hoi-thoai')) {
+  var items=[];serverMessages.forEach(function (messages,id) {if(visible(id).length)items.push({id:id,user_id:id+100,name:'User '+id,avatar:'',online:true,profile_url:'#profile',last:visible(id).at(-1).content,time:'12:00',unread:0});});
+  if(holdList){holdList=false;return new Promise(function(resolve){pendingList=function(){resolve(response({ok:true,items:items,unread:0}));};});}
+  return Promise.resolve(response({ok:true,items:items,unread:0}));
+ }
+ if (path.includes('/ajax/tin-nhan/')) {
+  var id=Number(path.match(/tin-nhan\/(\d+)/)[1]);
+  if(path.endsWith('/xoa-hoi-thoai')) {
+   if(options.method!=='POST' || options.body.get('action_token')!=='fixture-token')throw new Error('Missing token');
+   if(id===12)return Promise.resolve(response({ok:false,message:'Retry deletion later'},false));
+   var cutoff=(serverMessages.get(id) || []).at(-1)?.id || 0;markers.set(id,cutoff);
+   return Promise.resolve(response({ok:true,id:id,deleted_through_message_id:cutoff}));
+  }
+  if(path.endsWith('/thu-hoi'))return Promise.resolve(response({ok:true,action_token:'fixture-token',recalled_ids:[],deleted_through_message_id:markers.get(id) || 0}));
+  if(deferPoll){deferPoll=false;return new Promise(function (resolve){pendingPoll=resolve;});}
+  var after=Number(parsed.searchParams.get('after') || 0);
+  return Promise.resolve(response({ok:true,messages:visible(id).filter(function(m){return m.id>after;}),online:true,latest_seen_id:0,deleted_through_message_id:markers.get(id) || 0}));
+ }
+ return Promise.resolve(response({ok:true,messages:[],online:0}));
+};
+</script>
+<script src="../assets/site/js/message-recall.js"></script>
+<script src="../assets/site/js/chat-widget.js"></script>
+<script src="../assets/site/js/conversation-delete.js"></script>
+<script>
+(async function () {
+ var result=document.getElementById('result'),count=0;
+ function check(ok,message){if(!ok)throw new Error(message);count++;}
+ function tick(){return new Promise(function(resolve){setTimeout(resolve,20);});}
+ async function until(condition){for(var i=0;i<100;i++){if(condition())return;await tick();}throw new Error('Timeout');}
+ function button(id){return document.querySelector('.tk-ms-conversation-more[data-conversation-id="'+id+'"]');}
+ function widgetRow(id){return document.querySelector('#cw-list [data-conv="'+id+'"]');}
+ function openMenu(id){button(id).click();}
+ function chooseDelete(){document.querySelector('.conversation-delete-menu [data-action="delete"]').click();}
+ function widgetIds(){return Array.from(document.querySelectorAll('#cw-body [data-message-id]')).map(function(m){return Number(m.dataset.messageId);});}
+ try {
+  await until(function(){return !!widgetRow(9);});
+  check(!errors.length,'Real widget script initialized');
+  holdList=true;Realtime.emit('chat.message',{conversationId:99,message:makeMessage(999)});
+  await until(function(){return !!pendingList;});
+  document.dispatchEvent(new CustomEvent('private-conversation-notifications',{detail:{id:9,notifications_enabled:false}}));
+  check(!!widgetRow(9).querySelector('.cw-inbox-muted'),'Preference event updates actual widget mute indicator');
+  pendingList();await tick();
+  check(!!widgetRow(9).querySelector('.cw-inbox-muted'),'Old list response cannot overwrite mute indicator');
+  document.dispatchEvent(new CustomEvent('private-conversation-notifications',{detail:{id:9,notifications_enabled:true}}));
+  check(!button(9).closest('a'),'Sidebar dots are separate from navigation link');
+  var dot=button(9).getBoundingClientRect(),rowBounds=button(9).closest('li').getBoundingClientRect();
+  check(Math.abs(dot.right-(rowBounds.right-12))<1,'Dots placed in right corner');
+  widgetRow(9).click();await until(function(){return widgetIds().join(',')==='1,2';});
+  openMenu(9);var menu=document.querySelector('.conversation-delete-menu');
+  check(menu.querySelector('[data-action="delete"]').textContent==='Xóa cuộc trò chuyện','Delete command visible');
+  var bounds=menu.getBoundingClientRect();check(bounds.left>=0 && bounds.right<=innerWidth,'Menu fits viewport');
+  document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+  check(button(9).getAttribute('aria-expanded')==='false','Escape closes menu');
+  openMenu(9);chooseDelete();check(modal.danger && modal.message.includes('Người kia vẫn giữ lịch sử'),'Confirmation explains per-user effect');
+  check(!requests.some(function(r){return r.method==='POST';}),'Cancel does not send delete request');
+  openMenu(9);chooseDelete();modal.onConfirm();
+  await until(function(){return !button(9);});
+  check(markers.get(9)===2 && serverMessages.get(9).length===2,'Deletion keeps original peer history');
+  check(document.getElementById('cw-convo').hidden && widgetIds().length===0,'Deleting current widget chat closes and clears DOM');
+  check(!widgetRow(9) && !!widgetRow(10),'List removes only deleted conversation');
+  Realtime.emit('chat.message',{conversationId:9,message:makeMessage(1)});
+  await tick();check(!widgetRow(9) && widgetIds().length===0,'Late old realtime message does not resurrect chat');
+  serverMessages.get(9).push(makeMessage(5));Realtime.emit('chat.message',{conversationId:9,message:makeMessage(5)});
+  await until(function(){return !!widgetRow(9);});widgetRow(9).click();
+  await until(function(){return widgetIds().join(',')==='5';});
+  check(widgetIds().join(',')==='5','New message restores chat with only new history');
+  openMenu(10);chooseDelete();modal.onConfirm();
+  await until(function(){return !button(10);});
+  check(!document.getElementById('cw-convo').hidden && widgetIds().join(',')==='5','Deleting another conversation keeps current chat');
+  check(!document.getElementById('tk-ms-nores').hidden,'Empty sidebar gets empty state');
+  deferPoll=true;Realtime.emit('chat.seen',{conversationId:9});await until(function(){return !!pendingPoll;});
+  markers.set(9,5);Realtime.emit('chat.deleted',{conversationId:9,deleted_through_message_id:5});
+  check(document.getElementById('cw-convo').hidden && !widgetIds().length,'Remote actor-only delete event clears current widget');
+  serverMessages.get(9).push(makeMessage(6));Realtime.emit('chat.message',{conversationId:9,message:makeMessage(6)});
+  await until(function(){return !!widgetRow(9);});widgetRow(9).click();await until(function(){return widgetIds().join(',')==='6';});
+  pendingPoll(response({ok:true,messages:[makeMessage(1)],deleted_through_message_id:0}));await tick();
+  check(widgetIds().join(',')==='6','Old HTTP response ignored after same conversation reopened');
+  markers.set(9,6);intervals.forEach(function(fn){fn();});
+  await until(function(){return widgetIds().length===0;});
+  check(Realtime.connected && !widgetIds().length,'Independent polling clears history with realtime connected');
+  serverMessages.get(9).push(makeMessage(7));Realtime.emit('chat.message',{conversationId:9,message:makeMessage(7)});
+  await until(function(){return widgetIds().join(',')==='7';});
+  check(widgetIds().join(',')==='7','New realtime message accepted after cutoff');
+  var failed=document.createElement('li');failed.className='tk-ms-conversation-row';
+  failed.innerHTML='<button class="tk-ms-conversation-more" data-conversation-id="12" data-delete-url="https://example.test/ajax/tin-nhan/12/xoa-hoi-thoai">⋯</button>';
+  document.getElementById('tk-ms-list').append(failed);openMenu(12);chooseDelete();modal.onConfirm();
+  await until(function(){return modal.type==='error';});
+  check(!!button(12) && !button(12).disabled,'Failed deletion preserves row and allows retry');
+  check(!errors.length,'No uncaught browser errors');
+  result.dataset.status='pass';result.textContent='PASS: '+count+' browser assertions; sidebar menu/confirmation, actual widget, per-user deletion, new messages, HTTP/RT races and failures.';
+ } catch(error){result.dataset.status='fail';result.textContent='FAIL after '+count+' assertions: '+error.stack+' ERRORS='+errors.join(';');}
+})();
+</script>

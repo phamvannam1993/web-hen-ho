@@ -549,6 +549,10 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 </div>
 
 <script defer src="<?= base_url('assets/site/js/password-toggle.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/password-toggle.js') ?>"></script>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/message-recall.css') ?>?v=<?= filemtime(FCPATH.'assets/site/css/message-recall.css') ?>">
+<script defer src="<?= base_url('assets/site/js/message-recall.js') ?>?v=<?= filemtime(FCPATH.'assets/site/js/message-recall.js') ?>"></script>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/message-reply.css') ?>?v=<?= filemtime(FCPATH.'assets/site/css/message-reply.css') ?>">
+<script defer src="<?= base_url('assets/site/js/message-reply.js') ?>?v=<?= filemtime(FCPATH.'assets/site/js/message-reply.js') ?>"></script>
 <script defer src="<?= base_url('assets/site/js/app.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/app.js') ?>" data-base="<?= e(rtrim(site_url(), '/') . '/') ?>"></script>
 <script defer src="<?= base_url('assets/site/js/member-feed.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/member-feed.js') ?>"></script>
 <script defer src="<?= base_url('assets/site/js/date-select.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/date-select.js') ?>"></script>
@@ -569,6 +573,10 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 <link rel="stylesheet" href="<?= base_url('assets/site/css/message-history.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/message-history.css') ?>">
 <script defer src="<?= base_url('assets/site/js/message-history.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/message-history.js') ?>"></script>
 <?php if ($content_view === 'account/messages'): ?>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/inbox-mute-dialog.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/inbox-mute-dialog.css') ?>">
+<script defer src="<?= base_url('assets/site/js/inbox-mute-dialog.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/inbox-mute-dialog.js') ?>"></script>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/conversation-delete.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/conversation-delete.css') ?>">
+<script defer src="<?= base_url('assets/site/js/conversation-delete.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/conversation-delete.js') ?>"></script>
 <link rel="stylesheet" href="<?= base_url('assets/site/css/private-message-menu.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/private-message-menu.css') ?>">
 <script defer src="<?= base_url('assets/site/js/private-message-menu.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/private-message-menu.js') ?>"></script>
 <?php endif; ?>

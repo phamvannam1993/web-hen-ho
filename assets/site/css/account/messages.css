@@ -38,6 +38,16 @@ body.is-messages-page .site-page-content { min-height:0; }
 .tk-ms-private-chevron { margin-left:auto; }
 .tk-ms-private.is-expanded .tk-ms-private-chevron { transform:rotate(180deg); }
 .tk-ms-private .tk-ms-list { overflow:visible; }
+.tk-ms-tabs { display:flex; flex-shrink:0; gap:20px; padding:0 16px; border-bottom:1px solid var(--tk-border); }
+.tk-ms-tabs [role="tab"] { position:relative; padding:12px 0; border:0; background:transparent; color:var(--tk-muted-fg); font:inherit; font-size:13px; font-weight:600; cursor:pointer; }
+.tk-ms-tabs [aria-selected="true"] { color:var(--tk-primary); }
+.tk-ms-tabs [aria-selected="true"]::after { content:""; position:absolute; bottom:-1px; left:0; right:0; height:2px; border-radius:2px; background:currentColor; }
+.tk-ms-tabs [role="tab"]:focus-visible { outline:2px solid var(--tk-primary); outline-offset:3px; }
+.tk-ms-inbox-panel { flex:1; min-height:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y; -webkit-overflow-scrolling:touch; }
+.tk-ms-inbox-panel .tk-ms-groups__list { max-height:none; margin:0; padding:0; overflow:visible; }
+.tk-ms-inbox-panel .tk-ms-private { display:block; min-height:0; overflow:visible; }
+.tk-ms-inbox-panel .tk-ms-private-content,.tk-ms-inbox-panel .tk-ms-list { overflow:visible; }
+.tk-ms-inbox-panel [hidden] { display:none !important; }
 /* Use the wrapper's SVG, without the browser's native search icon. */
 .tk-ms-search input[type="search"] { -webkit-appearance: none; appearance: none; }
 .tk-ms-search input::-webkit-search-decoration,

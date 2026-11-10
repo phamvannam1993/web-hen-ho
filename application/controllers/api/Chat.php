@@ -39,6 +39,8 @@ class Chat extends Api_Controller
                 'empty'   => !$r['last_message_id'],
                 'time'    => $r['last_at'] ? time_ago($r['last_at']) : '',
                 'unread'  => (int) $r['unread'],
+                'notifications_enabled' => !isset($r['notifications_enabled']) || (bool)$r['notifications_enabled'],
+                'calls_notifications_enabled' => !isset($r['calls_notifications_enabled']) || (bool)$r['calls_notifications_enabled'],
             );
         }
 
@@ -80,6 +82,7 @@ class Chat extends Api_Controller
      */
     public function messages($conversation_id = 0)
     {
+        $this->output->set_header('Cache-Control: private, no-store');
         if (!$this->can_auth()) {
             return;
         }
@@ -90,9 +93,10 @@ class Chat extends Api_Controller
         }
         $other_id = (int) $conv['user_low_id'] === $me ? (int) $conv['user_high_id'] : (int) $conv['user_low_id'];
 
+        $cutoff = $this->m_interaction->conversation_cutoff($conv['id'], $me);
         $after = (int) $this->input->get('after');
-        $this->db->select('id, sender_id, type, content, created_at, read_at')
-            ->from('messages')->where('conversation_id', $conv['id'])->where('deleted_at', null);
+        $this->db->select('*')
+            ->from('messages')->where('conversation_id', $conv['id'])->where('id >', $cutoff);
         if ($after > 0) {
             $rows = $this->db->where('id >', $after)->order_by('id', 'ASC')->limit(50)->get()->result_array();
         } else {
@@ -100,6 +104,7 @@ class Chat extends Api_Controller
         }
 
         // đánh dấu đã đọc phần của đối phương
+        $rows = $this->m_interaction->with_replies($rows, $conv['id'], $me);
         $this->m_interaction->mark_read($conv['id'], $me);
 
         $ds = array();
@@ -110,9 +115,10 @@ class Chat extends Api_Controller
 
         // đối phương đã đọc hết tin của tôi chưa
         $seen = (int) $this->db->from('messages')->where('conversation_id', $conv['id'])
+            ->where('id >', $cutoff)
             ->where('sender_id', $me)->where('read_at', null)->count_all_results() === 0;
 
-        $ra = array('messages' => $ds, 'seen' => $seen);
+        $ra = array('messages' => $ds, 'seen' => $seen, 'deleted_through_message_id' => $cutoff);
         if ($after <= 0) {
             $other = $this->m_user->find($other_id);
             $ra['partner']  = $other ? $this->ho_so($other) + array('activity' => $this->hoat_dong($other['last_active_at'])) : null;
@@ -131,6 +137,7 @@ class Chat extends Api_Controller
         }
         $nhan    = (int) $this->body('receiver_id');
         $content = trim(strip_tags((string) $this->body('content')));
+        $reply_to_id = $this->body('reply_to_id');
         $image   = $this->tai_anh('image', 'chat', 10240);
 
         if ($content === '' && !$image) {
@@ -140,21 +147,25 @@ class Chat extends Api_Controller
         $gui = array();
         // Ảnh gửi kèm được lưu thành một tin riêng loại "image", như web
         if ($image) {
-            $kq = $this->m_interaction->send_message($this->me['id'], $nhan, $image, 'image');
+            $kq = $this->m_interaction->send_message($this->me['id'], $nhan, $image, 'image', $reply_to_id);
             if (!$kq['ok']) {
-                return $this->loi($kq['message'], 403);
+                return $this->loi($kq['message'], $kq['status'] ?? 403);
             }
             $gui[] = $kq['message_id'];
+            $image_conversation_id = (int) $kq['conversation_id'];
         }
         if ($content !== '') {
-            $kq = $this->m_interaction->send_message($this->me['id'], $nhan, mb_substr($content, 0, 2000));
+            $kq = $this->m_interaction->send_message($this->me['id'], $nhan, mb_substr($content, 0, 2000), 'text', $reply_to_id);
             if (!$kq['ok']) {
-                return $this->loi($kq['message'], 403);
+                if ($gui) return $this->loi('Ảnh đã gửi. Phần chữ chưa gửi: '.$kq['message'],
+                    $kq['status'] ?? 403, array('image_sent'=>true,'message_ids'=>$gui,'conversation_id'=>$image_conversation_id));
+                return $this->loi($kq['message'], $kq['status'] ?? 403);
             }
             $gui[] = $kq['message_id'];
         }
 
         $rows = $this->db->where_in('id', $gui)->order_by('id')->get('messages')->result_array();
+        $rows = $this->m_interaction->with_replies($rows, $kq['conversation_id'], $this->me['id']);
         return $this->ok(array(
             'conversation_id' => (int) $kq['conversation_id'],
             'messages'        => array_map(function ($r) {
@@ -314,9 +325,12 @@ class Chat extends Api_Controller
 
     private function tin(array $r, $cua_toi)
     {
+        $r = $this->m_interaction->message_for_display($r);
         return array(
             'id'      => (int) $r['id'],
             'mine'    => (bool) $cua_toi,
+            'recalled' => $r['recalled'],
+            'reply' => $r['reply'] ?? null,
             'type'    => $r['type'],
             'content' => $r['type'] === 'image' ? (function_exists('chat_group_image_url') ? chat_group_image_url($r) : base_url(ltrim($r['content'], '/'))) : $r['content'],
             'time'    => date('H:i', strtotime($r['created_at'])),

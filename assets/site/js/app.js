@@ -1366,14 +1366,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (e.key === 'Escape') { panel.hidden = true; }
     });
 
-    /* Gửi ảnh: chọn xong là gửi luôn, khỏi bấm thêm nút Gửi */
-    var attach = document.querySelector('.chat-attach input[type=file]');
-    if (attach) {
-        attach.addEventListener('change', function () {
-            if (attach.files && attach.files.length) { attach.closest('form').submit(); }
-        });
-    }
-
     /* Luôn cuộn xuống tin nhắn mới nhất khi mở hội thoại */
     var body = document.getElementById('chat-body');
     if (body) { body.scrollTop = body.scrollHeight; }
@@ -1399,6 +1391,10 @@ document.addEventListener('DOMContentLoaded', function () {
     var hello = document.getElementById('chat-hello');
     var helloButton = document.getElementById('chat-hello-send');
     var sending = false;
+    var attachment = form.querySelector('input[type=file]');
+    if (attachment) attachment.addEventListener('change',function () {
+        if (attachment.files && attachment.files.length) form.requestSubmit();
+    });
 
     if (helloButton) {
         helloButton.addEventListener('click', function () {
@@ -1449,7 +1445,10 @@ document.addEventListener('DOMContentLoaded', function () {
     function renderMessage(m) {
         var div = document.createElement('div');
         div.className = 'chat-msg' + (m.mine ? ' mine' : '') + (m.type === 'image' ? ' is-image' : '');
+        if (m.recalled) div.classList.add('is-recalled');
+        div.dataset.recalled = m.recalled ? '1' : '0';
         div.dataset.messageId = m.id;
+        div.dataset.messageType = m.type;
         if (!m.mine) {
             var avatar = document.createElement('img'); avatar.className = 'chat-peer-avatar';
             avatar.src = m.avatar || body.dataset.peerAvatar; avatar.alt = ''; div.appendChild(avatar);
@@ -1489,6 +1488,7 @@ document.addEventListener('DOMContentLoaded', function () {
             t.appendChild(seen);
         }
         div.appendChild(t);
+        if (window.MessageReply) window.MessageReply.render(div,m.reply,body);
         return div;
     }
 
@@ -1500,6 +1500,9 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(function (r) { return r.json(); })
         .then(function (res) {
             if (!res.ok) { return; }
+            if (Number(res.deleted_through_message_id || 0) < Number(body.dataset.deletedThrough || 0)) return;
+            if (window.MessageRecall) window.MessageRecall.clearBefore(body,res.deleted_through_message_id);
+            lastId = Math.max(lastId,Number(body.dataset.deletedThrough || 0));
             var stick = atBottom();
 
             if (hello && res.messages.length) { hello.hidden = true; }
@@ -1525,18 +1528,19 @@ document.addEventListener('DOMContentLoaded', function () {
     setInterval(poll, 4000);
     scrollDown();
 
-    /* Gửi tin nhắn chữ bằng AJAX; gửi ảnh vẫn để form submit như cũ */
+    /* Gửi tin chữ và ảnh bằng AJAX để giữ bản nháp nếu gửi lỗi. */
     form.addEventListener('submit', function (e) {
         if (sending) { e.preventDefault(); return; }
         var file = form.querySelector('input[type=file]');
-        if (file && file.files && file.files.length) { return; }
 
         e.preventDefault();
         var text = (input.value || '').trim();
-        if (!text) { return; }
+        if (!text && !(file && file.files.length)) { return; }
 
         // Lấy dữ liệu form TRƯỚC khi xoá ô nhập, nếu không máy chủ nhận nội dung rỗng
         var fd = new FormData(form);
+        var replySnapshot = window.MessageReply && window.MessageReply.capture(form);
+        var imageSnapshot = file && file.files[0];
         sending = true;
         input.value = '';
         fetch(form.action, {
@@ -1547,6 +1551,10 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(function (r) { return r.json(); })
         .then(function (res) {
             if (!res.ok) {
+                if (res.image_sent) {
+                    if (file && file.files[0] === imageSnapshot) file.value = '';
+                    poll();
+                }
                 if (!input.value) { input.value = text; }
                 if (window.appNeed && window.appNeed(res)) { return; }
                 if (window.appModal) {
@@ -1555,6 +1563,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
             if (hello) { hello.hidden = true; }
+            if (window.MessageReply) window.MessageReply.sent(form,replySnapshot);
+            if (file && file.files[0] === imageSnapshot) file.value = '';
             poll();
         })
         .catch(function () {

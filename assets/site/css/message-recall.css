@@ -1,0 +1,3 @@
+.chat-msg.is-recalled > p,
+.cw-msg.is-recalled .cw-msg-col > p { font-style:italic; opacity:.75; }
+.pm-message-menu button[hidden] { display:none; }

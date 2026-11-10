@@ -145,10 +145,20 @@ class Realtime
     public function tin_rieng($conversation_id, array $row, $sender_id, $receiver_id)
     {
         foreach (array($receiver_id => false, $sender_id => true) as $uid => $cua_toi) {
+            $this->CI->load->model('m_interaction');
+            if ((int) $row['id'] <= $this->CI->m_interaction->conversation_cutoff($conversation_id, $uid)) continue;
+            $visible = $this->CI->m_interaction->with_replies(array($row), $conversation_id, $uid);
+            $notify = false;
+            try {
+                $this->CI->load->model('m_conversation_notification');
+                $notify = !$cua_toi && $this->CI->m_conversation_notification->enabled($conversation_id,$uid);
+            } catch (Throwable $e) { /* Tin vẫn được chuyển, không báo khi chưa đọc được tùy chọn. */ }
             $this->publish((int) $uid, array(
                 't'              => 'chat.message',
                 'conversationId' => (int) $conversation_id,
-                'message'        => $this->tin($row, $cua_toi) + array('seen' => false, 'sender_id' => (int) $sender_id),
+                'message'        => $this->tin($visible[0], $cua_toi) + array('reply' => $visible[0]['reply'],
+                    'recalled' => $visible[0]['recalled'], 'seen' => false, 'sender_id' => (int) $sender_id),
+                'notify' => $notify,
             ));
         }
     }

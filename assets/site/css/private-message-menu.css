@@ -1,6 +1,6 @@
 .tk-ms .chat-msg { position:relative; max-width:calc(80% - 32px); }
 .tk-ms .chat-msg.is-image { width:260px; max-width:calc(100% - 35px); }
-.pm-message-more { position:absolute; top:4px; left:calc(100% + 5px); display:flex; align-items:center; justify-content:center; width:30px; height:30px; margin:0; padding:0; border:1px solid #eadce1; border-radius:50%; background:#fff; color:#766773; font:inherit; font-size:22px; line-height:1; cursor:pointer; }
+.pm-message-more { position:absolute; top:50%; transform:translateY(-50%); left:calc(100% + 5px); display:flex; align-items:center; justify-content:center; width:30px; height:30px; margin:0; padding:0; border:1px solid #eadce1; border-radius:50%; background:#fff; color:#766773; font:inherit; font-size:22px; line-height:1; cursor:pointer; }
 .chat-msg.mine .pm-message-more { left:auto; right:calc(100% + 5px); }
 .pm-message-more:focus-visible, .pm-message-menu button:focus-visible { outline:2px solid var(--pink,#d1273f); outline-offset:2px; }
 .pm-message-menu { display:none; position:fixed; z-index:90; inset:auto; box-sizing:border-box; width:170px; max-width:calc(100vw - 16px); overflow-y:auto; margin:0; padding:5px; border:1px solid #eadce1; border-radius:10px; background:#fff; color:#382d38; box-shadow:0 8px 24px #382d3833; }
@@ -9,6 +9,10 @@
 .pm-message-menu button { display:block; width:100%; padding:10px; border:0; border-radius:6px; background:transparent; color:inherit; text-align:left; font:inherit; font-size:13px; cursor:pointer; }
 .pm-message-menu button:hover { background:#fff0f5; }
 .pm-message-menu button:disabled { opacity:.5; cursor:default; }
+.pm-message-menu > button { display:flex; align-items:center; gap:10px; padding:8px; }
+.pm-action-icon { display:flex; align-items:center; justify-content:center; flex:0 0 28px; width:28px; height:28px; border-radius:9px; background:#fff0f5; color:#ed315e; }
+.pm-action-icon svg { width:18px; height:18px; }
+.pm-message-menu .pm-action-danger { color:#ed315e; }
 .pm-pin-strip { display:flex; flex-shrink:0; align-items:center; gap:8px; padding:8px 12px; border-bottom:1px solid #eadce1; background:#fff0f5; color:#65434d; font-size:12px; }
 .pm-pin-strip span { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .pm-pin-strip button { flex-shrink:0; padding:6px 8px; border:1px solid #eadce1; border-radius:7px; background:#fff; color:#d1273f; font:inherit; cursor:pointer; }

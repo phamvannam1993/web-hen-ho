@@ -44,14 +44,16 @@ class M_conversation_pin extends CI_Model
         if (!$this->db->table_exists('conversation_pins')) {
             return array('pins_available' => false, 'pinned' => null);
         }
+        $this->load->model('m_interaction');
+        $cutoff = $this->m_interaction->conversation_cutoff($conversation_id, $user_id);
         $pin = $this->run(
             'SELECT m.id, m.conversation_id, m.sender_id, m.type,
                     m.content, m.created_at, p.pinned_by_user_id, p.updated_at
              FROM conversation_pins p
              JOIN messages m ON m.id = p.message_id
                  AND m.conversation_id = p.conversation_id
-             WHERE p.conversation_id = ? AND m.deleted_at IS NULL',
-            array((int) $conversation['id'])
+             WHERE p.conversation_id = ? AND m.deleted_at IS NULL AND m.id > ?',
+            array((int) $conversation['id'], $cutoff)
         )->row_array();
         return array('pins_available' => true, 'pinned' => $pin ?: null);
     }
@@ -73,6 +75,10 @@ class M_conversation_pin extends CI_Model
         }
         try {
             $this->conversation($conversation_id, $user_id, true);
+            $this->load->model('m_interaction');
+            if ($message_id <= $this->m_interaction->conversation_cutoff($conversation_id, $user_id)) {
+                throw new RuntimeException('Không tìm thấy tin nhắn.', 404);
+            }
             if ($pin) {
                 $message = $this->run(
                     'SELECT id FROM messages
