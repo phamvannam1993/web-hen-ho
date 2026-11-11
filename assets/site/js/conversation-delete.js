@@ -73,11 +73,20 @@
         }
     }
     menu.addEventListener('toggle', function () { if (selected) selected.setAttribute('aria-expanded', opened() ? 'true' : 'false'); });
+    var pointerToggle = null;
+    root.addEventListener('pointerdown', function (event) {
+        var button = event.target.closest('.tk-ms-conversation-more');
+        pointerToggle = button && selected === button && opened() ? button : null;
+    }, true);
+    root.addEventListener('pointercancel', function () { pointerToggle = null; });
+    root.addEventListener('keydown', function () { pointerToggle = null; });
     root.addEventListener('click', function (event) {
         var button = event.target.closest('.tk-ms-conversation-more');
         if (!button || button.disabled) return;
         event.preventDefault(); event.stopPropagation();
-        if (selected === button && opened()) { close(true); return; }
+        var shouldClose = pointerToggle === button || (selected === button && opened());
+        pointerToggle = null;
+        if (shouldClose) { generation++; close(true); return; }
         close(false); selected = button; label(button);
         var current = ++generation;
         states.delete(button.dataset.conversationId);

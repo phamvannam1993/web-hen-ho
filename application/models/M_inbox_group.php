@@ -204,6 +204,35 @@ class M_inbox_group extends CI_Model
             'content' => $row['content'], 'created_at' => $row['created_at']);
     }
 
+    public function rename($group_id, $user_id, $name)
+    {
+        $user_id = $this->ready($user_id);
+        $name = is_string($name) ? trim($name) : '';
+        if (mb_strlen($name) < 2 || mb_strlen($name) > 120 || preg_match('/^[\s\p{Cf}]*$/u', $name)) {
+            throw new InvalidArgumentException('Tên nhóm cần từ 2 đến 120 ký tự.');
+        }
+        return $this->transaction(function () use ($group_id, $user_id, $name) {
+            $group = $this->group($group_id, $user_id, true);
+            if ((int) $group['owner_id'] !== $user_id) throw new RuntimeException('Chỉ người tạo nhóm được đổi tên nhóm.', 403);
+            $this->run('UPDATE inbox_groups SET name=? WHERE id=?', array($name, $group['id']));
+            return $this->detail($group['id'], $user_id);
+        });
+    }
+
+    public function remove_member($group_id, $user_id, $target_id)
+    {
+        $user_id = $this->ready($user_id); $target_id = $this->id($target_id);
+        return $this->transaction(function () use ($group_id, $user_id, $target_id) {
+            $group = $this->group($group_id, $user_id, true);
+            if ((int) $group['owner_id'] !== $user_id) throw new RuntimeException('Chỉ người tạo nhóm được xoá thành viên.', 403);
+            if ($target_id === (int) $group['owner_id']) throw new InvalidArgumentException('Không thể xoá người tạo nhóm.');
+            $member = $this->run('SELECT user_id FROM inbox_group_members WHERE group_id=? AND user_id=? AND left_at IS NULL', array($group['id'], $target_id))->row_array();
+            if (!$member) throw new RuntimeException('Người này không còn trong nhóm.', 409);
+            $this->run('UPDATE inbox_group_members SET left_at=? WHERE group_id=? AND user_id=? AND left_at IS NULL', array(date('Y-m-d H:i:s'), $group['id'], $target_id));
+            return $this->detail($group['id'], $user_id);
+        });
+    }
+
     public function detail($group_id, $user_id)
     {
         $user_id = $this->ready($user_id);
@@ -212,6 +241,7 @@ class M_inbox_group extends CI_Model
             FROM inbox_group_members m JOIN users u ON u.id=m.user_id
             WHERE m.group_id=? AND m.left_at IS NULL AND u.deleted_at IS NULL ORDER BY u.id', array($group['id']))->result_array();
         $group['id'] = (int) $group['id']; $group['owner_id'] = (int) $group['owner_id'];
+        $group['can_manage'] = $group['owner_id'] === $user_id;
         $group['members'] = array_map(function ($row) {
             return array('id' => (int) $row['id'], 'name' => display_name($row), 'avatar' => avatar_url($row['avatar'], $row['gender']));
         }, $members);

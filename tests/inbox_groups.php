@@ -77,6 +77,26 @@ $forward=$model->messages($empty['id'],1,'0','0');check(count($forward['messages
 $rest=$model->messages($empty['id'],1,'0',(string)$forward['messages'][29]['id']);check(count($rest['messages'])===5&&!$rest['has_more']&&$rest['messages'][4]['content']==='Empty backlog 34','after0 backlog no gaps');
 echo "PASS: nhóm rỗng rồi có 35 tin, after=0 nhận lần lượt 30+5 không bỏ sót\n";
 
+$managed=$model->create(1,'Nhóm quản lý',array('2','3'));$managedId=$managed['id'];
+check($model->detail($managedId,1)['can_manage']===true&&$model->detail($managedId,2)['can_manage']===false,'owner management permission');
+$renamed=$model->rename($managedId,1,'  Gia đình mới  ');check($renamed['name']==='Gia đình mới'&&$model->detail($managedId,2)['name']==='Gia đình mới','rename visible to members');
+denied(fn()=>$model->rename($managedId,2,'Tên trái phép'),403);denied(fn()=>$model->rename($managedId,5,'Người ngoài'),403);
+foreach(array('', 'x',str_repeat('a',121),array('bad'),"\u{200B}\u{200B}")as$bad)denied(fn()=>$model->rename($managedId,1,$bad),422);
+check($model->detail($managedId,1)['name']==='Gia đình mới','invalid rename preserves name');
+denied(fn()=>$model->remove_member($managedId,2,'3'),403);denied(fn()=>$model->remove_member($managedId,5,'3'),403);
+denied(fn()=>$model->remove_member($managedId,1,'1'),422);denied(fn()=>$model->remove_member($managedId,1,'999'),409);
+$oldMessage=$model->send($managedId,2,'Tin trước khi bị xoá','manage_old_message_01');
+$removed=$model->remove_member($managedId,1,'2');check(count($removed['members'])===2&&!in_array(2,array_column($removed['members'],'id'),true),'owner removes member');
+denied(fn()=>$model->remove_member($managedId,1,'2'),409);
+denied(fn()=>$model->detail($managedId,2),403);denied(fn()=>$model->messages($managedId,2),403);
+denied(fn()=>$model->send($managedId,2,'Tin trước khi bị xoá','manage_old_message_01'),403);
+denied(fn()=>$model->send($managedId,2,'Tin sau','manage_new_message_01'),403);
+denied(fn()=>$model->add($managedId,2,array('4')),403);denied(fn()=>$model->read($managedId,2,(string)$oldMessage['id']),403);
+check(!in_array($managedId,array_column($model->listing(2)['groups'],'id'),true),'removed group absent from sidebar');
+check(count($model->messages($managedId,1)['messages'])===1,'removal preserves chat history');
+$model->add($managedId,3,array('2'));check(count($model->detail($managedId,2)['members'])===3,'existing members can still add and re-invite');
+echo "PASS management: owner rename/remove, validation, owner protected, removed user loses all group access, history retained and re-invite works\n";
+
 $before=$db->count_all_results('inbox_groups');$members=$db->count_all_results('inbox_group_members');
 // An injected SQLite error must roll back the group and all inserted members.
 set_error_handler(function ($severity, $message) { if (strpos($message, 'fixture write failure') !== false) return true; return false; });

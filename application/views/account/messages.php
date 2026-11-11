@@ -49,7 +49,8 @@ $chat_groups = array_values(array_filter($chat_groups ?? array(), function ($gro
                                 <span class="tk-ms-item__l"><?= e($g['last'] !== '' ? (!empty($g['last_sender']) ? $g['last_sender'] . ': ' : '') . $g['last'] : 'Chưa có tin nhắn') ?></span>
                             </span>
                             <?php if ($g['unread']): ?><span class="tk-count"><?= $g['unread'] > 99 ? '99+' : (int) $g['unread'] ?></span><?php endif; ?>
-                        </a></li>
+                        </a><button type="button" class="cg-inbox-more" data-cg-inbox-more
+                            aria-label="<?= e('Tùy chọn nhóm ' . $g['name']) ?>" aria-haspopup="true" aria-expanded="false">⋯</button></li>
                     <?php endforeach; ?>
                 </ul>
         <?php endif; ?>

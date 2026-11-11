@@ -55,6 +55,13 @@ ALTER TABLE inbox_group_messages
 2. Đặt tên, tìm và chọn từng người bằng tên/biệt danh, avatar và ID, rồi tạo nhóm.
 3. Trong menu ⋯ cạnh tên người đang chat, dùng **Thêm vào nhóm** hoặc **Xem nhóm chung**.
 4. Mở nhóm trong danh sách; **Thêm người** và **Thành viên** nằm ở đầu khung chat.
+
+Người tạo nhóm có thể **Đổi tên nhóm** ở đầu khung chat hoặc menu ba chấm
+cạnh nhóm trong danh sách. Trong **Thành viên**, người tạo nhóm có nút **Xoá**
+để gỡ người khác sau khi xác nhận; không thể gỡ chính người tạo nhóm.
+Người bị gỡ mất quyền đọc/gửi và không còn thấy nhóm trong danh sách.
+Lịch sử tin nhắn vẫn được giữ. Mọi thành viên hiện tại vẫn được thêm người,
+kể cả mời lại người đã bị gỡ. Các thao tác này không cần thêm bảng/cột mới.
 5. Bản này hỗ trợ chat văn bản, tải lịch sử và số tin chưa đọc. Tin mới cập nhật
    theo chu kỳ bốn giây. Gửi ảnh và rời nhóm chưa nằm trong giao diện này.
 

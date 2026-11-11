@@ -75,6 +75,20 @@ class Inbox_groups extends CI_Controller
         });
     }
 
+    public function rename($id = 0)
+    {
+        return $this->respond('post', function ($uid) use ($id) {
+            return array('group' => $this->m_inbox_group->rename($id, $uid, $this->input->post('name')));
+        });
+    }
+
+    public function remove_member($id = 0)
+    {
+        return $this->respond('post', function ($uid) use ($id) {
+            return array('group' => $this->m_inbox_group->remove_member($id, $uid, $this->input->post('user_id')));
+        });
+    }
+
     public function detail($id = 0)
     {
         return $this->respond('get', function ($uid) use ($id) {

@@ -47,6 +47,11 @@
         if (fallbackPopover && !fallbackPopover.contains(event.target)) closeFallbackPopover();
     }, true);
     function node(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; }
+    function copyGroupLink(url, copied) {
+        function manualCopy() { window.prompt('Sao chép liên kết để mời vào nhóm:', url); }
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') navigator.clipboard.writeText(url).then(copied).catch(manualCopy);
+        else manualCopy();
+    }
     function outsideDialog(dialog, event) {
         var bounds = dialog.getBoundingClientRect();
         return event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom;
@@ -207,16 +212,23 @@
         // The fallback popover moves the menu outside root while it is open.
         this.notificationsButton = this.groupMenu.querySelector('[data-cg-notifications]');
         this.notificationsButton.onclick = function () { self.act('notifications', {enabled: self.group && self.group.notifications ? '0' : '1'}); };
+        var inviteButton = this.groupMenu.querySelector('[data-cg-invite]');
+        if (inviteButton) inviteButton.onclick = function () {
+            copyGroupLink(inviteButton.dataset.cgInvite, function () {
+                if (!self.destroyed) self.flash('Đã sao chép liên kết mời vào nhóm.');
+            });
+        };
         root.querySelector('[data-cg-share]').onclick = function () {
             var url = self.group ? self.group.url : location.href;
             if (navigator.share) navigator.share({title: self.group && self.group.name, url: url}).catch(function () {});
-            else if (navigator.clipboard) navigator.clipboard.writeText(url).then(function () { self.status.textContent = 'Đã sao chép liên kết nhóm.'; }).catch(function () { self.status.textContent = url; });
+            else if (navigator.clipboard) navigator.clipboard.writeText(url).then(function () { if (!self.destroyed) self.flash('Đã sao chép liên kết nhóm.'); }).catch(function () { self.status.textContent = url; });
             else self.status.textContent = url;
         };
         this.visibility = function () { if (!document.hidden && self.active()) { self.open().then(function () { self.presence(); self.load(); }); } else self.presence(); };
         document.addEventListener('visibilitychange', this.visibility); window.addEventListener('focus', this.visibility); window.addEventListener('blur', this.visibility);
         this.onlineDialog = root.querySelector('[data-cg-online-dialog]');
         this.rulesDialog = root.querySelector('[data-cg-rules-dialog]');
+        this.setupMembers();
         root.querySelector('[data-cg-online]').onclick = function () {
             if (!self.onlineDialog.open) self.onlineDialog.showModal();
             self.people();
@@ -226,6 +238,56 @@
         this.open().then(function () { self.presence(); self.load(); }).catch(function (e) { self.status.textContent = e.message; self.load(); });
         this.timer = setInterval(function () { if (self.active()) { self.load(); if (!self.heart || Date.now() - self.heart > 15000) self.presence(); } }, 4000);
     }
+    Chat.prototype.setupMembers = function () {
+        var self = this;
+        this.membersDialog = this.root.querySelector('[data-cg-members-dialog]');
+        if (!this.membersDialog) return;
+        var input = this.root.querySelector('[data-cg-members-search]');
+        var list = this.root.querySelector('[data-cg-members-list]');
+        var status = this.root.querySelector('[data-cg-members-status]');
+        var more = this.root.querySelector('[data-cg-members-more]');
+        var generation = 0, cursor = null;
+        function load(append) {
+            var current = ++generation;
+            more.disabled = true;
+            status.textContent = 'Đang tải…';
+            self.request('members', null, {q: input.value.trim(), before_id: append ? cursor : '0'}).then(function (r) {
+                if (self.destroyed || current !== generation || !self.membersDialog.open) return;
+                if (!append) list.replaceChildren();
+                r.members.forEach(function (member) {
+                    var row = node(member.can_open_profile ? 'button' : 'div', 'cg-member-row');
+                    var image = node('img'); image.src = member.avatar; image.alt = ''; image.loading = 'lazy';
+                    var text = node('span', 'cg-member-text'); text.append(node('span', '', member.name));
+                    if (member.role) text.append(node('small', 'cg-member-role', member.role));
+                    row.append(image, text);
+                    if (member.can_open_profile) {
+                        row.type = 'button'; row.setAttribute('aria-label', 'Xem hồ sơ ẩn danh của ' + member.name);
+                        row.onclick = function () { self.showAnonymous(member); };
+                    }
+                    list.append(row);
+                });
+                cursor = r.next_before;
+                more.hidden = !r.has_more;
+                status.textContent = list.children.length ? '' : 'Không tìm thấy thành viên.';
+            }).catch(function (e) {
+                if (self.destroyed || current !== generation || !self.membersDialog.open) return;
+                status.textContent = e.message;
+                if (!append || e.code === 401 || e.code === 403 || e.code === 404) { list.replaceChildren(); more.hidden = true; }
+            }).finally(function () { if (current === generation) more.disabled = false; });
+        }
+        this.root.querySelector('[data-cg-members-open]').onclick = function () {
+            if (self.membersDialog.open) return;
+            input.value = ''; cursor = null; list.replaceChildren(); more.hidden = true;
+            self.membersDialog.showModal(); input.focus(); load(false);
+        };
+        input.addEventListener('input', function () {
+            generation++; clearTimeout(self.memberSearchTimer);
+            list.replaceChildren(); more.hidden = true; status.textContent = 'Đang tìm…';
+            self.memberSearchTimer = setTimeout(function () { load(false); }, 300);
+        });
+        more.onclick = function () { load(true); };
+        this.membersDialog.addEventListener('close', function () { generation++; clearTimeout(self.memberSearchTimer); });
+    };
     Chat.prototype.setupEmojiPicker = function () {
         var self = this, input = this.form.content, trigger = this.root.querySelector('[data-cg-emoji]');
         var panel = node('div', 'cg-composer-emojis'); panel.hidden = true;
@@ -597,6 +659,7 @@
     Chat.prototype.destroy = function () {
         if (this.destroyed) return;
         clearTimeout(this.toastTimer);
+        clearTimeout(this.memberSearchTimer);
         if (this.toast) this.toast.remove();
         this.clearAttachment();
         if (fallbackPopover && this.root.contains(fallbackPopover.cgAnchor)) closePopover(fallbackPopover);
@@ -606,7 +669,7 @@
         if (this.emojiPanel) this.emojiPanel.remove();
         if (this.nicknameDialog && this.nicknameDialog.open) this.nicknameDialog.close();
         if (this.uploadAuth && this.uploadAuth.open) this.uploadAuth.close();
-        [this.onlineDialog, this.rulesDialog].forEach(function (dialog) { if (dialog && dialog.open) dialog.close(); });
+        [this.onlineDialog, this.rulesDialog, this.membersDialog].forEach(function (dialog) { if (dialog && dialog.open) dialog.close(); });
         this.request('presence', {active: '0'}).catch(function () {}); this.destroyed = true;
         clearInterval(this.timer); clearTimeout(this.reconnect);
         document.removeEventListener('visibilitychange', this.visibility); window.removeEventListener('focus', this.visibility); window.removeEventListener('blur', this.visibility);
@@ -630,30 +693,78 @@
             inbox.querySelectorAll('[data-inbox-group]').forEach(function (link) { link.classList.remove('is-active'); });
             inbox.dispatchEvent(new CustomEvent('inbox:change'));
         }
+        function openInboxGroup(link, action) {
+            var currentRoot = inboxGroupPane.querySelector('[data-group-chat]');
+            var currentChat = currentRoot && currentRoot.groupChat;
+            if (action && currentChat && !currentChat.destroyed && String(currentRoot.dataset.groupId) === link.dataset.inboxGroup) {
+                var currentAction = currentRoot.querySelector(action);
+                if (currentAction) currentAction.click();
+                return;
+            }
+            closeInboxGroup();
+            var request = ++inboxRequest;
+            privatePane.hidden = true; inboxGroupPane.hidden = false;
+            inbox.classList.add('is-open'); link.classList.add('is-active');
+            var back = node('button', 'cg-widget-back', '←');
+            back.type = 'button'; back.setAttribute('aria-label', 'Về danh sách tin nhắn');
+            back.onclick = closeInboxGroup;
+            var content = node('div', 'cg-widget-content', 'Đang tải nhóm…');
+            inboxGroupPane.append(back, content);
+            inbox.dispatchEvent(new CustomEvent('inbox:change'));
+            fetch(link.dataset.panelUrl, {credentials:'same-origin'}).then(function (response) {
+                if (!response.ok) throw new Error('Chưa mở được nhóm. Vui lòng thử lại.');
+                return response.text();
+            }).then(function (html) {
+                if (request !== inboxRequest) return;
+                content.innerHTML = html;
+                var pageBack = content.querySelector('.cg-groups-back');
+                if (pageBack) pageBack.replaceWith(back);
+                var root = content.querySelector('[data-group-chat]');
+                mount(root);
+                var actionButton = action && root && root.querySelector(action);
+                if (actionButton) actionButton.click();
+            }).catch(function (error) { if (request === inboxRequest) content.textContent = error.message; });
+        }
+        var sidebarFeedback = {};
         inbox.querySelectorAll('[data-inbox-group]').forEach(function (link) {
             link.addEventListener('click', function (event) {
                 if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
-                event.preventDefault(); closeInboxGroup();
-                var request = ++inboxRequest;
-                privatePane.hidden = true; inboxGroupPane.hidden = false;
-                inbox.classList.add('is-open'); link.classList.add('is-active');
-                var back = node('button', 'cg-widget-back', '←');
-                back.type = 'button'; back.setAttribute('aria-label', 'Về danh sách tin nhắn');
-                back.onclick = closeInboxGroup;
-                var content = node('div', 'cg-widget-content', 'Đang tải nhóm…');
-                inboxGroupPane.append(back, content);
-                inbox.dispatchEvent(new CustomEvent('inbox:change'));
-                fetch(link.dataset.panelUrl, {credentials:'same-origin'}).then(function (response) {
-                    if (!response.ok) throw new Error('Chưa mở được nhóm. Vui lòng thử lại.');
-                    return response.text();
-                }).then(function (html) {
-                    if (request !== inboxRequest) return;
-                    content.innerHTML = html;
-                    var pageBack = content.querySelector('.cg-groups-back');
-                    if (pageBack) pageBack.replaceWith(back);
-                    mount(content.querySelector('[data-group-chat]'));
-                }).catch(function (error) { if (request === inboxRequest) content.textContent = error.message; });
+                event.preventDefault(); openInboxGroup(link);
             });
+            var toggle = link.closest('li').querySelector('[data-cg-inbox-more]');
+            if (!toggle) return;
+            var menu = node('div', 'cg-group-menu');
+            menu.setAttribute('popover', 'auto'); menu.setAttribute('aria-label', 'Tùy chọn nhóm');
+            menu.id = 'cg-inbox-menu-' + key(); toggle.setAttribute('aria-controls', menu.id);
+            menu.addEventListener('toggle', function () { toggle.setAttribute('aria-expanded', popoverOpen(menu) ? 'true' : 'false'); });
+            [
+                ['Danh sách thành viên', '[data-cg-members-open]'],
+                ['Mời bằng liên kết', 'copy'],
+                ['Nội quy', '[data-cg-rules-open]'],
+                ['Tìm tin nhắn cũ', '[data-message-history]']
+            ].forEach(function (option) {
+                var button = node('button', '', option[0]); button.type = 'button';
+                button.onclick = function () {
+                    closePopover(menu); toggle.focus({preventScroll:true});
+                    if (option[1] === 'copy') {
+                        copyGroupLink(link.href, function () { Chat.prototype.flash.call(sidebarFeedback, 'Đã sao chép liên kết mời vào nhóm.'); });
+                    } else openInboxGroup(link, option[1]);
+                };
+                menu.append(button);
+            });
+            link.closest('li').append(menu);
+            var wasOpen = false;
+            toggle.addEventListener('pointerdown', function () { wasOpen = popoverOpen(menu); });
+            toggle.addEventListener('pointercancel', function () { wasOpen = false; });
+            toggle.addEventListener('keydown', function () { wasOpen = false; });
+            toggle.onclick = function () {
+                if (wasOpen) { wasOpen = false; closePopover(menu); return; }
+                showPopover(menu, toggle, true);
+            };
+        });
+        window.addEventListener('pagehide', function () {
+            clearTimeout(sidebarFeedback.toastTimer);
+            if (sidebarFeedback.toast) sidebarFeedback.toast.remove();
         });
     }
     var saved = document.querySelector('[data-cg-saved]'), groupPanel = null;

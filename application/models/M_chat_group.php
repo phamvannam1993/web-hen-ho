@@ -321,6 +321,39 @@ class M_chat_group extends CI_Model
         return $this->m_profile_access->purchase($quote['id'],$actor['user']['id'],$version);
     }
 
+    public function members($group, $actor, $q = null, $before = null)
+    {
+        $this->access($group, $actor);
+        if ($group['identity_mode'] !== 'guest') throw new RuntimeException('Không tìm thấy nhóm ẩn danh.', 404);
+        if (($q !== null && !is_string($q)) || ($before !== null && !is_string($before))) throw new InvalidArgumentException('Bộ lọc không hợp lệ.');
+        $q = trim($q ?? '');
+        if (mb_strlen($q) > 40 || ($before !== null && (!preg_match('/^(0|[1-9][0-9]*)$/D', $before) || strlen($before) > strlen((string) PHP_INT_MAX) || (strlen($before) === strlen((string) PHP_INT_MAX) && strcmp($before, (string) PHP_INT_MAX) > 0)))) {
+            throw new InvalidArgumentException('Bộ lọc không hợp lệ.');
+        }
+        $keys = $this->blocked_keys($actor);
+        $this->db->select('p.id,p.public_id,p.nickname,p.user_id,u.role,m.user_id AS moderator_id')
+            ->from('chat_group_people p')->join('users u', 'u.id = p.user_id', 'left')
+            ->join('chat_group_moderators m', 'm.group_id = p.group_id AND m.user_id = p.user_id', 'left')
+            ->where('p.group_id', $group['id'])->where('p.is_banned', 0)
+            ->group_start()->where('p.user_id', null)
+                ->or_group_start()->where('u.status', 'active')->where('u.deleted_at', null)->group_end()->group_end();
+        if ($keys) $this->db->where_not_in('p.actor_key', $keys);
+        if ($q !== '') $this->db->like('p.nickname', $q);
+        if ((int) $before > 0) $this->db->where('p.id <', (int) $before);
+        $rows = $this->db->order_by('p.id', 'DESC')->limit(31)->get()->result_array();
+        $more = count($rows) > 30;
+        $rows = array_slice($rows, 0, 30);
+        $members = array_map(function ($p) {
+            $role = $p['role'] === 'super_admin' || ($p['role'] === 'admin' && $p['moderator_id']) ? 'Admin'
+                : ($p['role'] === 'moderator' && $p['moderator_id'] ? 'Kiểm duyệt viên' : null);
+            // Explicit anonymous-only payload: never expose user IDs, real names or contact fields.
+            return array('id' => $p['public_id'], 'name' => $p['nickname'],
+                'avatar' => chat_group_guest_avatar_url($p['public_id']), 'role' => $role,
+                'can_open_profile' => !empty($p['user_id']));
+        }, $rows);
+        return array('members' => $members, 'has_more' => $more, 'next_before' => $more ? (string) end($rows)['id'] : null);
+    }
+
     public function online($group, $actor)
     {
         $this->access($group, $actor);
