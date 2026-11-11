@@ -1,17 +1,21 @@
-.inbox-mute-dialog { box-sizing:border-box; width:min(550px,calc(100vw - 24px)); max-height:calc(100dvh - 32px); margin:auto; padding:0; overflow:auto; border:1px solid #393b3d; border-radius:13px; background:#252728; color:#e5e7eb; box-shadow:0 20px 80px #0008; font-family:inherit; color-scheme:dark; }
-.inbox-mute-dialog::backdrop { background:#0009; }
-.inbox-mute-dialog header { display:flex; align-items:center; gap:10px; min-height:60px; padding:10px 15px; box-sizing:border-box; border-bottom:1px solid #616366; }
+.inbox-mute-dialog { box-sizing:border-box; width:min(550px,calc(100vw - 24px)); max-height:calc(100dvh - 32px); margin:auto; padding:0; overflow:auto; border:1px solid var(--tk-border,#eadce1); border-radius:18px; background:var(--card,#fff); color:var(--tk-fg,var(--ink,#2c2c2c)); box-shadow:0 20px 64px #382d3833; font-family:inherit; color-scheme:light; }
+.inbox-mute-dialog::backdrop { background:rgba(44,28,35,.4); }
+.inbox-mute-dialog header { display:flex; align-items:center; gap:10px; min-height:60px; padding:14px 18px; box-sizing:border-box; border-bottom:1px solid var(--tk-border,#eadce1); background:var(--bg,#fdf0f4); }
 .inbox-mute-dialog h2 { flex:1; margin:0; text-align:center; font-size:19px; line-height:1.35; font-weight:700; }
-.inbox-mute-dialog header button { display:flex; align-items:center; justify-content:center; flex:0 0 36px; width:36px; height:36px; padding:0; border:0; border-radius:50%; background:#3b3d3e; color:inherit; font-size:26px; cursor:pointer; }
+.inbox-mute-dialog header button { display:flex; align-items:center; justify-content:center; flex:0 0 36px; width:36px; height:36px; padding:0; border:1px solid var(--tk-border,#eadce1); border-radius:50%; background:var(--card,#fff); color:var(--tk-muted-fg,var(--muted,#6d6d6d)); font-size:26px; cursor:pointer; }
+.inbox-mute-dialog header button:hover { background:var(--tk-accent,#fff0f5); color:var(--pink,#d1273f); }
 .inbox-mute-dialog [hidden] { display:none; }
 .inbox-mute-dialog form { padding:14px 16px 16px; }
 .inbox-mute-dialog fieldset { min-width:0; margin:0; padding:0; border:0; }
 .inbox-mute-legend { position:absolute; width:1px; height:1px; padding:0; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
-.inbox-mute-dialog label { display:flex; align-items:center; gap:9px; min-height:48px; padding:3px 8px; box-sizing:border-box; cursor:pointer; font-size:14px; font-weight:600; }
-.inbox-mute-dialog input[type="radio"] { flex:0 0 24px; width:24px; height:24px; margin:0; accent-color:#5358ff; cursor:pointer; }
-.inbox-mute-dialog p { margin:8px 0 26px; font-size:14px; line-height:1.5; }
+.inbox-mute-dialog label { display:flex; align-items:center; gap:10px; min-height:48px; padding:3px 10px; box-sizing:border-box; border-radius:10px; cursor:pointer; font-size:14px; font-weight:600; }
+.inbox-mute-dialog label:hover,.inbox-mute-dialog label:has(input:checked) { background:var(--tk-accent,#fff0f5); }
+.inbox-mute-dialog input[type="radio"] { flex:0 0 22px; width:22px; height:22px; margin:0; accent-color:var(--pink,#d1273f); cursor:pointer; }
+.inbox-mute-dialog p { margin:12px 0 24px; color:var(--tk-muted-fg,var(--muted,#6d6d6d)); font-size:14px; line-height:1.6; }
 .inbox-mute-dialog footer { display:flex; gap:8px; }
-.inbox-mute-dialog footer button { flex:1; min-height:38px; padding:8px 12px; border:0; border-radius:8px; background:#3b3d3e; color:inherit; font:inherit; font-size:14px; font-weight:600; cursor:pointer; }
-.inbox-mute-dialog [data-next] { background:#4b50ff; color:#fff; }
-.inbox-mute-dialog button:focus-visible,.inbox-mute-dialog input:focus-visible { outline:2px solid #aaaaff; outline-offset:3px; }
+.inbox-mute-dialog footer button { flex:1; min-height:42px; padding:10px 12px; border:1px solid var(--tk-border,#eadce1); border-radius:10px; background:var(--tk-secondary,#f8edf0); color:inherit; font:inherit; font-size:14px; font-weight:600; cursor:pointer; }
+.inbox-mute-dialog [data-cancel]:hover { background:var(--tk-accent,#fff0f5); }
+.inbox-mute-dialog [data-next] { border-color:transparent; background:var(--pink,#d1273f); color:#fff; }
+.inbox-mute-dialog [data-next]:hover { background:var(--pink-dark,#b21f35); }
+.inbox-mute-dialog button:focus-visible,.inbox-mute-dialog input:focus-visible { outline:2px solid var(--pink,#d1273f); outline-offset:3px; }
 @media(max-width:400px) { .inbox-mute-dialog h2 { font-size:16px; } .inbox-mute-dialog header { padding:10px; } }

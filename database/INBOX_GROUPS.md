@@ -6,6 +6,24 @@ xem nhóm và đọc/gửi tin. Mọi thành viên đều được tìm người
 
 ## Khởi tạo lần đầu
 
+Trên server, sau khi cập nhật code, chạy tại thư mục gốc dự án:
+
+```sh
+php database/migrate_inbox_groups.php
+```
+
+Lệnh tự lấy `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS` từ môi trường hoặc file
+`.env` giống website, không cần nhập lại tên database hay mật khẩu. PHP CLI cần
+extension `pdo_mysql`, tài khoản database cần quyền tạo bảng và thay đổi cấu trúc.
+Lệnh tạo các bảng còn thiếu và bổ sung `client_message_id` cùng khóa chống gửi
+trùng nếu thiếu trên bảng cũ; có thể chạy lại. Nếu gặp lỗi, lệnh trả mã thoát 1
+và in nguyên nhân. MySQL không rollback các thay đổi cấu trúc đã chạy thành công.
+Xem trước mà không kết nối database: `php database/migrate_inbox_groups.php --dry-run`.
+
+Không dùng `php database/migrate_inbox_groups.sql`: PHP không thực thi file SQL.
+
+Hoặc nhập SQL trực tiếp:
+
 Trong thư mục dự án, chạy bằng tài khoản MySQL có quyền tạo bảng:
 
 ```sh
