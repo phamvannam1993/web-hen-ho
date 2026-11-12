@@ -88,6 +88,25 @@ $route['api/account/email-prefs']         = 'api/account/email_prefs';
 $route['api/conversations']               = 'api/chat/conversations';
 $route['api/conversations/open/(:num)']   = 'api/chat/open/$1';
 $route['api/conversations/(:num)']        = 'api/chat/messages/$1';
+$route['api/conversations/(:num)/pin']           = 'api/chat/pin/$1';
+$route['api/conversations/(:num)/recall']        = 'api/chat/recall/$1';
+$route['api/conversations/(:num)/notifications'] = 'api/chat/notifications/$1';
+$route['api/conversations/(:num)/delete']        = 'api/chat/delete_conversation/$1';
+$route['api/conversations/(:num)/block']         = 'api/chat/block/$1';
+$route['api/conversations/(:num)/search']        = 'api/chat/search/$1';
+
+/* Nhóm chat riêng trong hộp thư cho ứng dụng — api/Inbox_groups.php */
+$route['api/inbox-groups']                       = 'api/inbox_groups/mine';
+$route['api/inbox-groups/create']                = 'api/inbox_groups/create';
+$route['api/inbox-groups/users']                 = 'api/inbox_groups/users';
+$route['api/inbox-groups/common/(:num)']         = 'api/inbox_groups/common/$1';
+$route['api/inbox-groups/(:num)']                = 'api/inbox_groups/detail/$1';
+$route['api/inbox-groups/(:num)/add']            = 'api/inbox_groups/add/$1';
+$route['api/inbox-groups/(:num)/rename']         = 'api/inbox_groups/rename/$1';
+$route['api/inbox-groups/(:num)/remove-member']  = 'api/inbox_groups/remove_member/$1';
+$route['api/inbox-groups/(:num)/messages']       = 'api/inbox_groups/messages/$1';
+$route['api/inbox-groups/(:num)/send']           = 'api/inbox_groups/send/$1';
+$route['api/inbox-groups/(:num)/read']           = 'api/inbox_groups/read/$1';
 $route['api/messages']                    = 'api/chat/send';
 $route['api/room']                        = 'api/chat/room';
 $route['api/room/send']                   = 'api/chat/room_send';
