@@ -177,7 +177,7 @@
         var el = node('dialog', 'ig-dialog' + (compact ? ' ig-dialog-compact' : ''));
         if (typeof el.showModal !== 'function') { window.alert('Vui lòng cập nhật trình duyệt để sử dụng nhóm inbox.'); return null; }
         var header = node('header'), heading = node('h2', '', title), close = node('button', '', 'Đóng');
-        heading.id = 'ig-dialog-title'; el.setAttribute('aria-labelledby', heading.id);
+        heading.id = 'ig-dialog-title-' + (sticky ? 'sticky' : 'inbox'); el.setAttribute('aria-labelledby', heading.id);
         close.type = 'button'; close.onclick = function () { el.close(); };
         header.append(heading, close);
         var body = node('div', 'ig-dialog-body'), status = node('p', 'ig-dialog-status'); status.setAttribute('role', 'status');

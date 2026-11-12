@@ -666,6 +666,7 @@
 
     /** Mở phòng chat chung. */
     function moPhong() {
+        formEl.querySelectorAll('input:not([type="hidden"]), button').forEach(function (field) { field.disabled = isGuest; });
         delete bodyEl.dataset.pinUrl; delete bodyEl.dataset.recallUrl; delete bodyEl.dataset.conversation;
         var conversationMore = document.getElementById('cw-conversation-more');
         if (conversationMore) conversationMore.hidden = true;
@@ -730,7 +731,7 @@
             var callButton = document.getElementById(id);
             if (callButton) {
                 callButton.dataset.voiceCall = String(info.id);
-                callButton.hidden = false;
+                callButton.hidden = !!info.blocked_by_me;
             }
         });
         var profileUrl = info.profile_url || '';
@@ -758,7 +759,8 @@
         nameEl.textContent = info.name || '';
         setPeerActivity(info);
         if (receiver) { receiver.value = info.user_id || ''; }
-        if (inputEl) { inputEl.placeholder = 'Vui lòng nhập tin nhắn'; }
+        formEl.querySelectorAll('input:not([type="hidden"]), button').forEach(function (field) { field.disabled = isGuest || !!info.blocked_by_me; });
+        if (inputEl) { inputEl.placeholder = info.blocked_by_me ? 'Bạn đã chặn người này. Hãy bỏ chặn để nhắn tin.' : 'Vui lòng nhập tin nhắn'; }
 
         moKhung();
         bodyEl.dataset.conversation = String(info.id);
@@ -1138,6 +1140,11 @@
     });
 
     /* ------------------------- Realtime ------------------------- */
+    document.addEventListener('private-conversation-blocked',function (event) {
+        duLieuList.forEach(function (item) { if (Number(item.id) === Number(event.detail.id)) item.blocked_by_me = event.detail.blocked_by_me; });
+        veList();
+        if (dang_mo && Number(dang_mo.id) === Number(event.detail.id)) veDanhSach();
+    });
 
     if (RT) {
         RT.on('chat.notification-preference',function (msg) {

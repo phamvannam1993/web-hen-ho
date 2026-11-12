@@ -191,6 +191,14 @@
         function perform() {
             if (!button.isConnected || button.disabled) return;
             button.disabled = true;
+            if (root.id === 'chat-widget') {
+                var body = new FormData(); body.set('action_token',root.dataset.conversationToken);
+                body.set('action',unblocking ? 'unblock' : 'block');
+                request(button.dataset.blockUrl,{method:'POST',body:body,headers:{'X-Requested-With':'XMLHttpRequest'}})
+                    .then(function (data) { document.dispatchEvent(new CustomEvent('private-conversation-blocked',{detail:data})); })
+                    .catch(failure).finally(function () { button.disabled = false; });
+                return;
+            }
             var form = document.createElement('form'); form.method = 'post';
             form.setAttribute('action', button.dataset.blockUrl); form.hidden = true;
             [['action_token',root.dataset.conversationToken],['action',unblocking ? 'unblock' : 'block']].forEach(function (field) {
@@ -231,6 +239,11 @@
     document.addEventListener('keydown',function (event) { if (event.key === 'Escape' && opened()) { event.preventDefault(); close(true); } });
     root.addEventListener('scroll',function () { close(false); },true);
     root.addEventListener('cw:conversation-change',function () { generation++; close(false); selected = null; });
+    document.addEventListener('private-conversation-blocked',function (event) {
+        root.querySelectorAll('.tk-ms-conversation-more, [data-cw-conversation-more]').forEach(function (button) {
+            if (button.dataset.conversationId === String(event.detail.id)) button.dataset.blockedByMe = event.detail.blocked_by_me ? '1' : '0';
+        });
+    });
     root.addEventListener('cw:close-group',function () { generation++; close(false); });
     window.addEventListener('resize',function () { close(false); });
     if (window.visualViewport) {
