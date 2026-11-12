@@ -84,6 +84,8 @@ function createVoice({ config, clients, send }) {
       cooldown.set(ws.uid, now + 10000);
       c = {
         id: m.callId, cid: m.conversationId, uid: ws.uid,
+        // Gọi video: cùng luồng báo hiệu, chỉ khác SDP có thêm track camera
+        video: m.video === true,
         a: ws, b: null, peer: 0, state: 'pending', stage: 0,
         until: now + 35000,
         expires: Math.min(ws.authExpiresAt, now + 50 * 60000),
@@ -103,10 +105,10 @@ function createVoice({ config, clients, send }) {
         if (!c.suppressed) busy.set(c.peer, c);
         c.state = 'ringing';
         c.until = Date.now() + 35000;
-        send(ws, { t: 'voice.ringing', callId: c.id });
+        send(ws, { t: 'voice.ringing', callId: c.id, video: c.video });
         if (!c.suppressed) peers(c.peer, {
           t: 'voice.incoming', callId: c.id,
-          conversationId: c.cid, name: identities.caller.name,
+          conversationId: c.cid, name: identities.caller.name, video: c.video,
         });
       } catch {
         end(c, 'permission');
@@ -127,8 +129,8 @@ function createVoice({ config, clients, send }) {
         c.state = 'connecting';
         c.until = Date.now() + 60000;
         c.checkAt = Date.now() + 30000;
-        send(c.a, { t: 'voice.accepted', callId: c.id });
-        send(c.b, { t: 'voice.accepted', callId: c.id });
+        send(c.a, { t: 'voice.accepted', callId: c.id, video: c.video });
+        send(c.b, { t: 'voice.accepted', callId: c.id, video: c.video });
       } catch {
         end(c, 'permission');
       }
@@ -141,7 +143,8 @@ function createVoice({ config, clients, send }) {
     if (c.state !== 'connecting'
       || (offer ? c.a !== ws || c.stage !== 0
         : c.b !== ws || c.stage !== 1)) return;
-    if (typeof m.sdp !== 'string' || m.sdp.length > 12000
+    // SDP có video dài hơn nhiều (nhiều codec + relay candidate) so với chỉ âm thanh
+    if (typeof m.sdp !== 'string' || m.sdp.length > (c.video ? 40000 : 12000)
       || !m.sdp.startsWith('v=0')
       || !/^a=candidate:.* typ relay(?: |$)/m.test(m.sdp)) {
       return end(c, 'connection');

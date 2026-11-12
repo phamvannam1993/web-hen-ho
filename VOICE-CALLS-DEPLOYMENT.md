@@ -1,8 +1,8 @@
-# Gọi thoại 1–1
+# Gọi thoại và gọi video 1–1
 
 ## Điều kiện
 
-- Web HTTPS, microphone được cấp quyền, WebSocket WSS hoạt động.
+- Web HTTPS, microphone (và camera khi gọi video) được cấp quyền, WebSocket WSS hoạt động.
 - Node >=18; PHP và Node dùng cùng REALTIME_SECRET.
 - REALTIME_APP_URL trỏ đúng ứng dụng PHP để Node gọi endpoint nội bộ.
 - TURN hỗ trợ credential tạm thời theo shared secret, ví dụ coturn
@@ -21,6 +21,18 @@ Chỉ bật tính năng sau khi cấu hình TURN và kiểm tra hai mạng khác
 Mở listener và dải relay port phù hợp trong firewall theo cấu hình TURN.
 Giới hạn bandwidth/allocation của TURN để kiểm soát tài nguyên.
 
+## Gọi video
+
+- Dùng chung luồng báo hiệu `voice.*`; lời mời có thêm `video: true`, Node chuyển cờ này
+  trong `voice.ringing`, `voice.incoming`, `voice.accepted`. SDP có video được tới 40000 ký tự
+  (thoại giữ 12000).
+- Nút "Gọi video" (`data-voice-call` + `data-video="1"`) cạnh nút gọi thoại; trong cuộc gọi có
+  Tắt/Bật camera và Đổi camera (khi máy có từ hai camera, thay track không cần thương lượng lại).
+- Video đi qua TURN như âm thanh → tốn băng thông relay hơn nhiều (khoảng 0,5–1,5 Mbit/s mỗi chiều
+  ở 640×480); xem lại giới hạn bandwidth/allocation của TURN trước khi bật.
+- Ứng dụng di động gọi được với web: `GET /api/conversations/{id}/call-config` cấp TURN tạm bằng token,
+  cùng luật quyền gọi (`Voice::peer`) với web.
+
 ## Hành vi
 
 - Chỉ gọi từ hội thoại riêng; kiểm quyền cả hai người.
@@ -33,7 +45,7 @@ Giới hạn bandwidth/allocation của TURN để kiểm soát tài nguyên.
 - Quyền gọi được kiểm tra lại khi thiết lập và định kỳ khoảng 30 giây.
 - Mất WebSocket hoặc rời trang sẽ kết thúc cuộc gọi.
 - Non-trickle ICE: chờ gathering hoàn tất tối đa 15 giây mỗi bên.
-- Chưa ghi âm, lưu lịch sử, gọi nhóm hay nhận cuộc gọi khi đóng web.
+- Chưa ghi âm/ghi hình, lưu lịch sử, gọi nhóm hay nhận cuộc gọi khi đóng web/ứng dụng.
 - Trình duyệt có thể chặn phát âm thanh tự động; dùng nút Bật âm thanh.
 - Một tiến trình Node quản lý cuộc gọi; chưa hỗ trợ nhiều instance độc lập.
 - Restart Node sẽ kết thúc các cuộc gọi đang diễn ra.
@@ -49,5 +61,8 @@ Giới hạn bandwidth/allocation của TURN để kiểm soát tài nguyên.
 6. Ngắt mạng, đóng tab, hết token; đối phương phải nhận trạng thái kết thúc.
 7. Sai TURN secret/port: báo lỗi và giải phóng microphone.
 8. DevTools WebRTC: đường truyền dùng relay, không kết nối trực tiếp.
+9. Gọi video hai chiều web ↔ web và web ↔ ứng dụng; tắt/bật camera, đổi camera trên điện thoại.
+
+Kiểm tra tự động phần báo hiệu: `node tests/voice_mute.js` và `node tests/voice_video.js`.
 
 Tài liệu này không tự thay đổi server, firewall hoặc triển khai production.

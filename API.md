@@ -155,7 +155,8 @@ Mỗi lần gọi API có token hợp lệ đều **tự chấm công chuỗi**,
 |---|---|---|
 | GET  | `/api/conversations` | Hội thoại + `new_matches` (đã ghép đôi nhưng chưa nhắn) |
 | POST | `/api/conversations/open/{user_id}` | Mở / tạo hội thoại — chỉ khi đã ghép đôi (**403** + `need_match`) |
-| GET  | `/api/conversations/{id}?after=` | Lần đầu: 50 tin gần nhất + `partner`, `can_send`. Sau đó chỉ tin mới hơn `after` |
+| GET  | `/api/conversations/{id}?after=` | Lần đầu: 50 tin gần nhất + `partner`, `can_send`, `blocked_by_me`, `has_more`. Sau đó chỉ tin mới hơn `after` |
+| GET  | `/api/conversations/{id}?before=` | 50 tin cũ hơn `before` + `has_more` (kéo xem lịch sử, nhảy tới kết quả tìm kiếm) |
 | POST | `/api/messages` | `{receiver_id, content}` + ảnh `image` |
 | GET  | `/api/room?after=` | Phòng chat chung = nhóm 1 của Clubs Chat's. Sau `migrate_chat_groups.php` phải đăng nhập (**403** "Đăng nhập để truy cập nhóm này.") |
 | POST | `/api/room/send` | `{content}` + ảnh `image`. Tối đa 15 tin/phút (**429**) |
@@ -182,6 +183,7 @@ Bản API của `Message_actions` (web), cùng model nên cùng luật. Thân PO
 | GET/POST | `/api/conversations/{id}/notifications` | GET → `{notifications_enabled, calls_notifications_enabled, muted, message_muted_until, calls_muted_until, server_time}`. POST `{enabled, scope?: "messages"\|"calls"\|"both", duration?: 0\|900\|3600\|28800\|86400}` (giây; 0 = đến khi bật lại) |
 | POST | `/api/conversations/{id}/delete` | Xoá lịch sử phía mình (người kia vẫn còn). Trả `deleted_through_message_id` |
 | POST | `/api/conversations/{id}/block` | `{action: "block"\|"unblock"}` — chặn người đang chat |
+| GET  | `/api/conversations/{id}/call-config` | Cấu hình gọi thoại/video: `{peer: {id, name}, rtc: {enabled, expiresAt, iceTransportPolicy: "relay", iceServers}}` (TURN tạm 1 giờ). **503** chưa bật gọi, **403** không được gọi người này. Báo hiệu qua WebSocket như web: `voice.invite {callId, conversationId, video}` … xem `VOICE-CALLS-DEPLOYMENT.md` |
 | GET  | `/api/conversations/{id}/search?q=&before=` | Tìm tin chữ (2–100 ký tự), 20 tin/lần mới trước; `has_more`, `next_before` |
 
 `GET /api/conversations` có thêm `notifications_enabled`, `calls_notifications_enabled` cho mỗi hội thoại.
@@ -202,10 +204,11 @@ Bản API của `Inbox_groups` (web), model `M_inbox_group` — tách khỏi Clu
 | POST | `/api/inbox-groups/{id}/rename` | `{name}` — chỉ người tạo |
 | POST | `/api/inbox-groups/{id}/remove-member` | `{user_id}` — chỉ người tạo, không gỡ được chính mình |
 | GET  | `/api/inbox-groups/{id}/messages?before=` \| `?after=` | 30 tin/lần: `{messages: [{id, mine, sender_id, sender_name, content, created_at}], has_more, next_before}` |
-| POST | `/api/inbox-groups/{id}/send` | `{content, client_message_id}` (16–64 ký tự `[A-Za-z0-9_-]`; gửi lại cùng mã không bị trùng) |
+| POST | `/api/inbox-groups/{id}/send` | `{content, client_message_id}` (16–62 ký tự `[A-Za-z0-9_-]`; gửi lại cùng mã không bị trùng). Gửi ảnh: multipart tệp `image` (≤ 10 MB), có thể kèm `content`. Trả `messages` + `message` (tin cuối); tin có `type: text\|image` (ảnh: `content` là URL) |
+| POST | `/api/inbox-groups/{id}/leave` | Tự rời nhóm. Người tạo rời → quyền chuyển cho người vào sớm nhất; hết người → đóng nhóm |
 | POST | `/api/inbox-groups/{id}/read` | `{message_id}` — đánh dấu đã đọc tới tin này |
 
-Chỉ có tin chữ; tin mới hỏi định kỳ bằng `?after=` (web: 4 giây).
+Tin mới hỏi định kỳ bằng `?after=` (web: 4 giây). Web hiện được ảnh gửi từ ứng dụng; nút gửi ảnh / rời nhóm hiện chỉ có trên ứng dụng.
 
 ## Clubs Chat's (nhóm chat)
 

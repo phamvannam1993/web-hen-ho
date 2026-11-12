@@ -148,9 +148,9 @@ class M_inbox_group extends CI_Model
         foreach ($rows as &$row) {
             $row['id'] = (int) $row['id']; $row['owner_id'] = (int) $row['owner_id']; $row['member_count'] = (int) $row['member_count'];
             $member = $this->run('SELECT last_read_message_id FROM inbox_group_members WHERE group_id=? AND user_id=?', array($row['id'], $user_id))->row_array();
-            $last = $this->visible($row['id'], $user_id, 'x.id, x.content, x.created_at', ' ORDER BY x.id DESC LIMIT 1')->row_array();
+            $last = $this->visible($row['id'], $user_id, 'x.id, x.type, x.content, x.created_at', ' ORDER BY x.id DESC LIMIT 1')->row_array();
             $unread = $this->visible($row['id'], $user_id, 'COUNT(*) AS total', ' AND x.id>? AND x.sender_id<>?', array((int) $member['last_read_message_id'], $user_id))->row_array();
-            $row['last_content'] = $last ? $last['content'] : '';
+            $row['last_content'] = $last ? ($last['type'] === 'image' ? '[Hình ảnh]' : $last['content']) : '';
             $row['last_at'] = $last ? $last['created_at'] : null;
             $row['unread'] = (int) $unread['total'];
         }
@@ -199,9 +199,11 @@ class M_inbox_group extends CI_Model
 
     private function message($row, $user_id)
     {
+        $type = $row['type'] ?? 'text';
         return array('id' => (int) $row['id'], 'mine' => (int) $row['sender_id'] === $user_id,
-            'sender_id' => (int) $row['sender_id'], 'sender_name' => display_name($row),
-            'content' => $row['content'], 'created_at' => $row['created_at']);
+            'sender_id' => (int) $row['sender_id'], 'sender_name' => display_name($row), 'type' => $type,
+            'content' => $type === 'image' ? base_url(ltrim($row['content'], '/')) : $row['content'],
+            'created_at' => $row['created_at']);
     }
 
     public function rename($group_id, $user_id, $name)
@@ -230,6 +232,32 @@ class M_inbox_group extends CI_Model
             if (!$member) throw new RuntimeException('Người này không còn trong nhóm.', 409);
             $this->run('UPDATE inbox_group_members SET left_at=? WHERE group_id=? AND user_id=? AND left_at IS NULL', array(date('Y-m-d H:i:s'), $group['id'], $target_id));
             return $this->detail($group['id'], $user_id);
+        });
+    }
+
+    /**
+     * Tự rời nhóm. Người tạo rời thì quyền quản lý chuyển cho thành viên vào sớm nhất còn lại;
+     * không còn ai thì đóng nhóm. Lịch sử tin vẫn giữ; được thành viên khác mời lại như người bị gỡ.
+     */
+    public function leave($group_id, $user_id)
+    {
+        $user_id = $this->ready($user_id);
+        return $this->transaction(function () use ($group_id, $user_id) {
+            $group = $this->group($group_id, $user_id, true);
+            $this->run('UPDATE inbox_group_members SET left_at=? WHERE group_id=? AND user_id=? AND left_at IS NULL',
+                array(date('Y-m-d H:i:s'), $group['id'], $user_id));
+            $owner = (int) $group['owner_id'];
+            if ($owner === $user_id) {
+                $next = $this->run('SELECT user_id FROM inbox_group_members WHERE group_id=? AND left_at IS NULL
+                    ORDER BY joined_at ASC, user_id ASC LIMIT 1', array($group['id']))->row_array();
+                if ($next) {
+                    $owner = (int) $next['user_id'];
+                    $this->run('UPDATE inbox_groups SET owner_id=? WHERE id=?', array($owner, $group['id']));
+                } else {
+                    $this->run('UPDATE inbox_groups SET status=? WHERE id=?', array('closed', $group['id']));
+                }
+            }
+            return array('id' => (int) $group['id'], 'left' => true, 'owner_id' => $owner);
         });
     }
 
@@ -276,10 +304,29 @@ class M_inbox_group extends CI_Model
         if (!is_string($client_id) || !preg_match('/^[a-zA-Z0-9_-]{16,64}$/D', $client_id)) {
             throw new InvalidArgumentException('Mã gửi tin nhắn không hợp lệ.');
         }
+        return $this->store($group_id, $user_id, 'text', $content, $client_id);
+    }
+
+    /** Gửi ảnh: `$path` là đường dẫn tương đối đã lưu (uploads/...), do controller tải lên. */
+    public function send_image($group_id, $user_id, $path, $client_id)
+    {
+        $user_id = $this->ready($user_id);
+        if (!is_string($path) || !preg_match('#^uploads/[A-Za-z0-9_./-]+$#D', $path) || strpos($path, '..') !== false) {
+            throw new InvalidArgumentException('Ảnh không hợp lệ.');
+        }
+        if (!is_string($client_id) || !preg_match('/^[a-zA-Z0-9_-]{16,64}$/D', $client_id)) {
+            throw new InvalidArgumentException('Mã gửi tin nhắn không hợp lệ.');
+        }
+        return $this->store($group_id, $user_id, 'image', $path, $client_id);
+    }
+
+    /** Ghi một tin (chữ/ảnh) — kiểm tra thành viên, chặn và chống gửi trùng theo client_message_id. */
+    private function store($group_id, $user_id, $type, $content, $client_id)
+    {
         if (!$this->db->field_exists('client_message_id', 'inbox_group_messages')) {
             throw new RuntimeException('Cần cập nhật dữ liệu nhóm trước khi gửi tin.', 503);
         }
-        return $this->transaction(function () use ($group_id, $user_id, $content, $client_id) {
+        return $this->transaction(function () use ($group_id, $user_id, $type, $content, $client_id) {
             $group = $this->group($group_id, $user_id, true);
             $actor = $this->run('SELECT id FROM users WHERE id=? AND status=? AND deleted_at IS NULL FOR UPDATE', array($user_id, 'active'))->row_array();
             if (!$actor) throw new RuntimeException('Tài khoản không có quyền gửi tin.', 403);
@@ -292,7 +339,7 @@ class M_inbox_group extends CI_Model
                 if ($existing['content'] !== $content || $existing['deleted_at'] !== null) throw new RuntimeException('Mã gửi đã được dùng cho tin nhắn khác.', 409);
                 return $this->message($existing, $user_id);
             }
-            $this->run('INSERT INTO inbox_group_messages (group_id, sender_id, type, content, client_message_id) VALUES (?, ?, ?, ?, ?)', array($group['id'], $user_id, 'text', $content, $client_id));
+            $this->run('INSERT INTO inbox_group_messages (group_id, sender_id, type, content, client_message_id) VALUES (?, ?, ?, ?, ?)', array($group['id'], $user_id, $type, $content, $client_id));
             $id = (int) $this->db->insert_id();
             $row = $this->visible($group['id'], $user_id, 'x.*, u.display_name, u.nickname', ' AND x.id=?', array($id))->row_array();
             if (!$row) throw new RuntimeException('Chưa lưu được tin nhắn.', 503);

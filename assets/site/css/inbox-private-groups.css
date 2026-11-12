@@ -58,3 +58,6 @@
 .ig-dialog-status { margin:0; flex-shrink:0; font-size:12px; color:#756872; }
 .ig-dialog button:disabled,.ig-form button:disabled { opacity:.5; cursor:wait; }
 .ig-choice { display:block; width:100%; margin:6px 0; text-align:left; }
+
+/* Ảnh trong nhóm riêng (gửi từ ứng dụng) */
+.ig-message-image{display:block;max-width:min(240px,100%);max-height:320px;border-radius:12px;object-fit:cover}

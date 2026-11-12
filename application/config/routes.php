@@ -94,6 +94,7 @@ $route['api/conversations/(:num)/notifications'] = 'api/chat/notifications/$1';
 $route['api/conversations/(:num)/delete']        = 'api/chat/delete_conversation/$1';
 $route['api/conversations/(:num)/block']         = 'api/chat/block/$1';
 $route['api/conversations/(:num)/search']        = 'api/chat/search/$1';
+$route['api/conversations/(:num)/call-config']   = 'api/chat/call_config/$1';
 
 /* Nhóm chat riêng trong hộp thư cho ứng dụng — api/Inbox_groups.php */
 $route['api/inbox-groups']                       = 'api/inbox_groups/mine';
@@ -107,6 +108,7 @@ $route['api/inbox-groups/(:num)/remove-member']  = 'api/inbox_groups/remove_memb
 $route['api/inbox-groups/(:num)/messages']       = 'api/inbox_groups/messages/$1';
 $route['api/inbox-groups/(:num)/send']           = 'api/inbox_groups/send/$1';
 $route['api/inbox-groups/(:num)/read']           = 'api/inbox_groups/read/$1';
+$route['api/inbox-groups/(:num)/leave']          = 'api/inbox_groups/leave/$1';
 $route['api/messages']                    = 'api/chat/send';
 $route['api/room']                        = 'api/chat/room';
 $route['api/room/send']                   = 'api/chat/room_send';

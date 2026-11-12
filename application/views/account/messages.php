@@ -147,6 +147,10 @@ $chat_groups = array_values(array_filter($chat_groups ?? array(), function ($gro
                         data-voice-call="<?= (int) $conversation_id ?>"
                         aria-label="Gọi thoại" title="Gọi thoại"
                         disabled><?= tk_icon('phone') ?></button>
+                <button type="button" class="tk-btn tk-btn--ghost tk-btn--icon-sm"
+                        data-voice-call="<?= (int) $conversation_id ?>" data-video="1"
+                        aria-label="Gọi video" title="Gọi video"
+                        disabled><?= tk_icon('video') ?></button>
                 <?php endif; ?>
                 <details class="tk-ms-more">
                     <summary aria-label="Tùy chọn hội thoại" title="Tùy chọn hội thoại"><span aria-hidden="true">⋯</span></summary>

@@ -13,7 +13,7 @@
 .voice-name { font-weight: 700; overflow-wrap: anywhere; }
 .voice-status { min-height: 48px; color: #6e6275; }
 .voice-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
-.voice-dialog button, #cw-voice {
+.voice-dialog button, #cw-voice, #cw-video {
     padding: 10px 16px;
     border: 1px solid #eadce8;
     border-radius: 12px;
@@ -25,11 +25,19 @@
 .voice-dialog [data-accept] { background: #216e4b; color: #fff; }
 .voice-dialog [data-end] { background: #ad3152; color: #fff; }
 .voice-dialog [data-play] { margin-top: 12px; }
-.voice-dialog button:focus-visible, #cw-voice:focus-visible {
+.voice-dialog button:focus-visible, #cw-voice:focus-visible, #cw-video:focus-visible {
     outline: 3px solid #d890bc;
     outline-offset: 3px;
 }
-.voice-dialog [hidden], #cw-voice[hidden] { display: none; }
-#cw-voice { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 8px; margin-top: 4px; }
-#cw-voice svg { width: 20px; height: 20px; }
+.voice-dialog [hidden], #cw-voice[hidden], #cw-video[hidden] { display: none; }
+#cw-voice, #cw-video { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 8px; margin-top: 4px; }
+#cw-voice svg, #cw-video svg { width: 20px; height: 20px; }
 [data-voice-call]:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Gọi video: khung rộng hơn, hình người kia 4:3, hình mình nhỏ ở góc */
+.voice-dialog.is-video { width: min(560px, calc(100vw - 24px)); padding: 18px; }
+.voice-video { position: relative; margin: 0 0 12px; border-radius: 14px; overflow: hidden; background: #1d1022; aspect-ratio: 4 / 3; }
+.voice-remote { width: 100%; height: 100%; object-fit: cover; display: block; }
+.voice-local { position: absolute; right: 10px; bottom: 10px; width: 28%; max-width: 150px; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 10px; border: 2px solid #fff; background: #3a2742; transform: scaleX(-1); }
+.voice-local.is-off { visibility: hidden; }
+@media (max-width: 480px) { .voice-dialog.is-video { padding: 12px; } .voice-video { aspect-ratio: 3 / 4; } }

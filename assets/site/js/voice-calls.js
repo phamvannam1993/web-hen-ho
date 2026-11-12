@@ -13,11 +13,16 @@
     dialog.className = 'voice-dialog';
     dialog.setAttribute('aria-labelledby', 'voice-title');
     dialog.innerHTML = '<h2 id="voice-title">Gọi thoại</h2>'
+        // Gọi video: hình người kia chiếm khung, hình mình ở góc (tắt tiếng để không vọng)
+        + '<div class="voice-video" hidden><video class="voice-remote" autoplay playsinline></video>'
+        + '<video class="voice-local" autoplay playsinline muted></video></div>'
         + '<p class="voice-name"></p>'
         + '<p class="voice-status" role="status"></p>'
         + '<div class="voice-actions">'
         + '<button type="button" data-accept hidden>Nhận cuộc gọi</button>'
         + '<button type="button" data-mute hidden>Tắt mic</button>'
+        + '<button type="button" data-camera hidden>Tắt camera</button>'
+        + '<button type="button" data-flip hidden>Đổi camera</button>'
         + '<button type="button" data-end>Đóng</button></div>'
         + '<audio autoplay playsinline></audio>'
         + '<button type="button" data-play hidden>Bật âm thanh</button>';
@@ -29,6 +34,12 @@
     var end = dialog.querySelector('[data-end]');
     var play = dialog.querySelector('[data-play]');
     var audio = dialog.querySelector('audio');
+    var title = dialog.querySelector('#voice-title');
+    var videoBox = dialog.querySelector('.voice-video');
+    var remoteVideo = dialog.querySelector('.voice-remote');
+    var localVideo = dialog.querySelector('.voice-local');
+    var camera = dialog.querySelector('[data-camera]');
+    var flip = dialog.querySelector('[data-flip]');
     var reasons = {
         busy: 'Người dùng đang bận hoặc bạn gọi quá nhanh.',
         offline: 'Người dùng hiện chưa kết nối.',
@@ -43,7 +54,8 @@
         document.querySelectorAll('[data-voice-call]').forEach(function (b) {
             b.disabled = !supported || !rt.connected;
             b.title = !supported ? 'Cần HTTPS hoặc localhost và trình duyệt hỗ trợ gọi thoại'
-                : (!rt.connected ? 'Chưa kết nối máy chủ gọi thoại' : 'Gọi thoại');
+                : (!rt.connected ? 'Chưa kết nối máy chủ gọi thoại'
+                : (b.dataset.video === '1' ? 'Gọi video' : 'Gọi thoại'));
         });
     }
     function send(s, type, extra) {
@@ -68,19 +80,26 @@
         }
         if (s.stream) s.stream.getTracks().forEach(function (t) { t.stop(); });
         audio.srcObject = null;
-        accept.hidden = mute.hidden = play.hidden = true;
+        remoteVideo.srcObject = localVideo.srcObject = null;
+        videoBox.hidden = true;
+        dialog.classList.remove('is-video');
+        accept.hidden = mute.hidden = play.hidden = camera.hidden = flip.hidden = true;
         end.textContent = 'Đóng';
         status.textContent = text;
         refresh();
     }
     function fail(s, error) {
         finish(s, error.name === 'NotAllowedError'
-            ? 'Hãy cho phép dùng microphone để gọi thoại.'
+            ? (s.video ? 'Hãy cho phép dùng camera và microphone để gọi video.' : 'Hãy cho phép dùng microphone để gọi thoại.')
+            : error.name === 'NotFoundError' || error.name === 'NotReadableError'
+            ? (s.video ? 'Không mở được camera hoặc microphone.' : 'Không mở được microphone.')
             : (error.message || reasons.connection), true);
     }
     function show(s, text) {
         current = s;
-        name.textContent = s.name || 'Cuộc gọi thoại';
+        title.textContent = s.video ? 'Gọi video' : 'Gọi thoại';
+        dialog.classList.toggle('is-video', !!s.video);
+        name.textContent = s.name || (s.video ? 'Cuộc gọi video' : 'Cuộc gọi thoại');
         status.textContent = text;
         accept.hidden = !s.incoming;
         mute.hidden = play.hidden = true;
@@ -116,21 +135,35 @@
         name.textContent = s.name;
         var stream = await navigator.mediaDevices.getUserMedia({
             audio: { echoCancellation: true, noiseSuppression: true },
-            video: false,
+            video: s.video ? { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } : false,
         });
         if (current !== s) {
             stream.getTracks().forEach(function (t) { t.stop(); });
             return false;
         }
         s.stream = stream;
+        if (s.video) {
+            s.facing = 'user';
+            localVideo.srcObject = stream;
+            videoBox.hidden = false;
+            camera.hidden = false;
+            camera.textContent = 'Tắt camera';
+            // Nút đổi camera chỉ khi máy có từ hai camera (điện thoại)
+            navigator.mediaDevices.enumerateDevices().then(function (list) {
+                if (current === s) flip.hidden = list.filter(function (d) { return d.kind === 'videoinput'; }).length < 2;
+            }).catch(function () {});
+        }
         s.pc = new RTCPeerConnection({
             iceServers: data.rtc.iceServers, iceTransportPolicy: 'relay',
         });
         stream.getTracks().forEach(function (t) { s.pc.addTrack(t, stream); });
         s.pc.ontrack = function (event) {
             if (current !== s) return;
-            audio.srcObject = event.streams[0] || new MediaStream([event.track]);
-            audio.play().catch(function () {
+            var remote = event.streams[0] || new MediaStream([event.track]);
+            // Gọi video: thẻ video phát cả tiếng; thoại: thẻ audio như cũ
+            var player = s.video ? remoteVideo : audio;
+            if (player.srcObject !== remote) player.srcObject = remote;
+            player.play().catch(function () {
                 if (current === s) play.hidden = false;
             });
         };
@@ -189,7 +222,7 @@
         if (current !== s) return;
         var sdp = pc.localDescription.sdp;
         if (!/^a=candidate:.* typ relay(?: |$)/m.test(sdp)) {
-            throw new Error('TURN chưa cung cấp được kết nối thoại.');
+            throw new Error('TURN chưa cung cấp được kết nối ' + (s.video ? 'video.' : 'thoại.'));
         }
         send(s, 'voice.' + type, { sdp: sdp });
     }
@@ -202,13 +235,13 @@
         }
         var s = {
             id: crypto.randomUUID(), cid: Number(button.dataset.voiceCall),
-            incoming: false,
+            incoming: false, video: button.dataset.video === '1',
         };
-        show(s, 'Đang chuẩn bị microphone…');
+        show(s, s.video ? 'Đang chuẩn bị camera và microphone…' : 'Đang chuẩn bị microphone…');
         prepare(s).then(function (ready) {
             if (!ready || current !== s) return;
             status.textContent = 'Đang gọi…';
-            send(s, 'voice.invite', { conversationId: s.cid });
+            send(s, 'voice.invite', { conversationId: s.cid, video: !!s.video });
         }).catch(function (error) { fail(s, error); });
     });
     accept.onclick = function () {
@@ -217,7 +250,7 @@
         s.accepting = true;
         accept.hidden = true;
         end.textContent = 'Hủy gọi';
-        status.textContent = 'Đang chuẩn bị microphone…';
+        status.textContent = s.video ? 'Đang chuẩn bị camera và microphone…' : 'Đang chuẩn bị microphone…';
         prepare(s).then(function (ready) {
             if (ready && current === s) send(s, 'voice.accept');
         }).catch(function (error) { fail(s, error); });
@@ -236,7 +269,40 @@
         mute.textContent = current.stream.getAudioTracks()[0].enabled ? 'Tắt mic' : 'Bật mic';
     };
     play.onclick = function () {
-        audio.play().then(function () { play.hidden = true; }).catch(function () {});
+        (current && current.video ? remoteVideo : audio).play()
+            .then(function () { play.hidden = true; }).catch(function () {});
+    };
+    camera.onclick = function () {
+        if (!current || !current.stream) return;
+        var tracks = current.stream.getVideoTracks();
+        tracks.forEach(function (t) { t.enabled = !t.enabled; });
+        var on = tracks.length && tracks[0].enabled;
+        camera.textContent = on ? 'Tắt camera' : 'Bật camera';
+        localVideo.classList.toggle('is-off', !on);
+    };
+    /** Đổi camera trước/sau: lấy track mới rồi thay trên kết nối, không cần thương lượng lại. */
+    flip.onclick = async function () {
+        var s = current;
+        if (!s || !s.stream || !s.pc || s.flipping) return;
+        s.flipping = true;
+        try {
+            var facing = s.facing === 'user' ? 'environment' : 'user';
+            var fresh = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing, width: { ideal: 640 }, height: { ideal: 480 } } });
+            var track = fresh.getVideoTracks()[0];
+            if (current !== s) { track.stop(); return; }
+            var old = s.stream.getVideoTracks()[0];
+            track.enabled = !old || old.enabled;
+            var sender = s.pc.getSenders().find(function (x) { return x.track && x.track.kind === 'video'; });
+            if (sender) await sender.replaceTrack(track);
+            if (old) { s.stream.removeTrack(old); old.stop(); }
+            s.stream.addTrack(track);
+            s.facing = facing;
+            localVideo.srcObject = s.stream;
+        } catch (e) {
+            status.textContent = 'Không đổi được camera.';
+        } finally {
+            s.flipping = false;
+        }
     };
     rt.on('voice.incoming', async function (m) {
         if (!supported || current) return;
@@ -251,8 +317,8 @@
         pendingIncoming=null;
         show({
             id: m.callId, cid: m.conversationId,
-            name: m.name, incoming: true,
-        }, 'Cuộc gọi thoại đến');
+            name: m.name, incoming: true, video: m.video === true,
+        }, m.video === true ? 'Cuộc gọi video đến' : 'Cuộc gọi thoại đến');
     });
     rt.on('voice.ringing', function (m) {
         if (current && current.id === m.callId) status.textContent = 'Đang đổ chuông…';
@@ -265,7 +331,7 @@
         s.timer = setTimeout(function () {
             finish(s, reasons.connection, true);
         }, 60000);
-        status.textContent = 'Đang kết nối thoại…';
+        status.textContent = s.video ? 'Đang kết nối video…' : 'Đang kết nối thoại…';
         if (!s.incoming) description(s, 'offer').catch(function (e) { fail(s, e); });
     });
     ['offer', 'answer'].forEach(function (type) {

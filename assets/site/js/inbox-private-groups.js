@@ -331,7 +331,14 @@
         messages.forEach(function (message) {
             if (ids.has(message.id)) return; ids.add(message.id);
             var item = node('article', 'ig-message' + (message.mine ? ' mine' : '')); item.dataset.messageId = message.id;
-            item.append(node('small', '', message.mine ? 'Bạn' : message.sender_name), node('p', '', message.content), node('small', '', message.created_at));
+            // Tin ảnh (gửi từ ứng dụng): hiện ảnh, bấm mở bản gốc
+            var body = node('p', '', message.type === 'image' ? undefined : message.content);
+            if (message.type === 'image') {
+                var link = node('a'); link.href = message.content; link.target = '_blank'; link.rel = 'noopener';
+                var img = node('img', 'ig-message-image'); img.src = message.content; img.alt = 'Hình ảnh'; img.loading = 'lazy';
+                link.append(img); body.append(link);
+            }
+            item.append(node('small', '', message.mine ? 'Bạn' : message.sender_name), body, node('small', '', message.created_at));
             fragment.append(item); first = first ? Math.min(first, message.id) : message.id;
         });
         if (older) feed.prepend(fragment); else feed.append(fragment);

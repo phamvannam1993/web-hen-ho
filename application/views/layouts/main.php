@@ -482,6 +482,9 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
                         <button type="button" id="cw-voice" data-voice-call
                                 aria-label="Gọi thoại" title="Gọi thoại"
                                 hidden disabled><?= tk_icon('phone') ?></button>
+                        <button type="button" id="cw-video" data-voice-call data-video="1"
+                                aria-label="Gọi video" title="Gọi video"
+                                hidden disabled><?= tk_icon('video') ?></button>
                         <?php endif; ?>
                         <button type="button" class="cw-online-toggle" id="cw-online-toggle" hidden
                                 aria-expanded="false" aria-controls="cw-online-panel" aria-haspopup="dialog">

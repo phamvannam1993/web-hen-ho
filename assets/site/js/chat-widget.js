@@ -663,11 +663,13 @@
         if (window.MessageReply) window.MessageReply.clear(formEl);
         chatVersion++; bodyEl.dataset.deletedThrough = '0';
         if (historySearch) { historySearch.hidden = true; delete historySearch.dataset.messageHistory; }
-        var voiceButton = document.getElementById('cw-voice');
-        if (voiceButton) {
-            voiceButton.hidden = true;
-            delete voiceButton.dataset.voiceCall;
-        }
+        ['cw-voice', 'cw-video'].forEach(function (id) {
+            var callButton = document.getElementById(id);
+            if (callButton) {
+                callButton.hidden = true;
+                delete callButton.dataset.voiceCall;
+            }
+        });
         document.getElementById('cw-avatar-link').hidden = true;
         document.getElementById('cw-avatar-link').removeAttribute('href');
         document.getElementById('cw-profile-link').removeAttribute('href');
@@ -702,11 +704,13 @@
             historySearch.dataset.messageHistory = base + 'ajax/tin-nhan/' + Number(info.id) + '/tim-kiem';
             historySearch.hidden = false;
         }
-        var voiceButton = document.getElementById('cw-voice');
-        if (voiceButton) {
-            voiceButton.dataset.voiceCall = String(info.id);
-            voiceButton.hidden = false;
-        }
+        ['cw-voice', 'cw-video'].forEach(function (id) {
+            var callButton = document.getElementById(id);
+            if (callButton) {
+                callButton.dataset.voiceCall = String(info.id);
+                callButton.hidden = false;
+            }
+        });
         var profileUrl = info.profile_url || '';
         var avatarLink = document.getElementById('cw-avatar-link');
         var profileLink = document.getElementById('cw-profile-link');
