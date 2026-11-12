@@ -1,4 +1,7 @@
 .ig-sidebar { padding:10px 12px; border-bottom:1px solid var(--tk-border,#eadce1); }
+.cw-private-group-pane { display:flex; flex:1; min-height:0; flex-direction:column; overflow:hidden; }
+.cw-private-group-pane[hidden] { display:none; }
+.cw-private-group-pane .ig-chat { height:100%; }
 .ig-sidebar-head,.ig-head { display:flex; align-items:center; gap:8px; }
 .ig-sidebar-head { justify-content:space-between; }
 .ig-sidebar p,.ig-sidebar a small { font-size:12px; color:#756872; }

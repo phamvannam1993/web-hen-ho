@@ -88,12 +88,54 @@
         status.textContent = text;
         refresh();
     }
+    function mediaErrorMessage(error, device) {
+        if (error.name === 'NotAllowedError' || error.name === 'SecurityError') {
+            return 'Chưa được phép sử dụng ' + device + '. Hãy mở quyền của trang web cạnh thanh địa chỉ, cho phép dùng '
+                + device + ' rồi gọi lại. Nếu vẫn bị chặn, hãy kiểm tra quyền riêng tư trên thiết bị.';
+        }
+        if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+            return 'Không tìm thấy ' + device + '. Hãy kết nối hoặc bật ' + device
+                + ' trên thiết bị rồi gọi lại.' + (device === 'camera' ? ' Bạn vẫn có thể gọi thoại.' : '');
+        }
+        if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+            return 'Không mở được ' + device + '. Thiết bị có thể đang được ứng dụng khác sử dụng hoặc gặp lỗi. '
+                + 'Hãy đóng ứng dụng đang dùng ' + device + ' và kiểm tra thiết bị rồi gọi lại.';
+        }
+        if (error.name === 'OverconstrainedError') {
+            return device === 'camera'
+                ? 'Camera hiện tại không đáp ứng chế độ quay được yêu cầu. Hãy chọn camera khác trong cài đặt trình duyệt rồi gọi lại.'
+                : 'Micro hiện tại không đáp ứng chế độ thu âm được yêu cầu. Hãy chọn micro khác trong cài đặt trình duyệt rồi gọi lại.';
+        }
+        if (error.name === 'AbortError') {
+            return 'Việc mở ' + device + ' bị gián đoạn. Hãy kiểm tra kết nối thiết bị rồi gọi lại.';
+        }
+        return null;
+    }
+    async function callMedia(video) {
+        var stream;
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                audio: { echoCancellation: true, noiseSuppression: true }, video: false,
+            });
+        } catch (error) {
+            throw new Error(mediaErrorMessage(error, 'micro') || 'Không thể mở micro. Hãy kiểm tra thiết bị rồi gọi lại.');
+        }
+        if (!video) return stream;
+        try {
+            // Mở riêng từng thiết bị để biết chính xác camera hay micro gặp lỗi.
+            var cameraStream = await navigator.mediaDevices.getUserMedia({
+                audio: false,
+                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+            });
+            cameraStream.getVideoTracks().forEach(function (track) { stream.addTrack(track); });
+        } catch (error) {
+            stream.getTracks().forEach(function (track) { track.stop(); });
+            throw new Error(mediaErrorMessage(error, 'camera') || 'Không thể mở camera. Hãy kiểm tra thiết bị rồi gọi lại.');
+        }
+        return stream;
+    }
     function fail(s, error) {
-        finish(s, error.name === 'NotAllowedError'
-            ? (s.video ? 'Hãy cho phép dùng camera và microphone để gọi video.' : 'Hãy cho phép dùng microphone để gọi thoại.')
-            : error.name === 'NotFoundError' || error.name === 'NotReadableError'
-            ? (s.video ? 'Không mở được camera hoặc microphone.' : 'Không mở được microphone.')
-            : (error.message || reasons.connection), true);
+        finish(s, error.message || reasons.connection, true);
     }
     function show(s, text) {
         current = s;
@@ -133,10 +175,7 @@
         }
         s.name = data.peer.name;
         name.textContent = s.name;
-        var stream = await navigator.mediaDevices.getUserMedia({
-            audio: { echoCancellation: true, noiseSuppression: true },
-            video: s.video ? { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } : false,
-        });
+        var stream = await callMedia(s.video);
         if (current !== s) {
             stream.getTracks().forEach(function (t) { t.stop(); });
             return false;
@@ -215,7 +254,10 @@
             s.cancelGather = function () { done(new Error('Cuộc gọi đã hủy.')); };
             pc.addEventListener('icegatheringstatechange', changed);
             timer = setTimeout(function () {
-                done(new Error('Không kết nối được TURN. Hãy thử lại.'));
+                // Một giao diện mạng có thể còn chờ dù giao diện khác đã lấy được relay.
+                var hasRelay = pc.localDescription
+                    && /^a=candidate:.* typ relay(?: |$)/m.test(pc.localDescription.sdp);
+                done(hasRelay ? null : new Error('Không lấy được kết nối TURN. Hãy kiểm tra máy chủ TURN và mạng.'));
             }, 15000);
             changed();
         });
@@ -299,7 +341,8 @@
             s.facing = facing;
             localVideo.srcObject = s.stream;
         } catch (e) {
-            status.textContent = 'Không đổi được camera.';
+            status.textContent = mediaErrorMessage(e, 'camera')
+                || 'Không đổi được camera. Hãy kiểm tra camera còn lại rồi thử lại.';
         } finally {
             s.flipping = false;
         }

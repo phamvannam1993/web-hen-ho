@@ -1,6 +1,6 @@
 (function () {
     'use strict';
-    var root = document.querySelector('.tk-ms[data-conversation-token]');
+    function mount(root) {
     if (!root) return;
     var menu = document.createElement('div'); menu.className = 'conversation-delete-menu';
     menu.setAttribute('popover', 'auto'); menu.setAttribute('aria-label', 'Thao tác cuộc trò chuyện');
@@ -18,10 +18,25 @@
     var blockIcon = document.createElement('span'); blockIcon.className = 'conversation-delete-icon'; blockIcon.setAttribute('aria-hidden','true');
     blockIcon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/></svg>';
     var blockLabel = document.createElement('span'); blockLabel.textContent = 'Chặn người này'; block.append(blockIcon,blockLabel);
-    menu.append(notifications,block,remove); document.body.append(menu);
+    menu.append(notifications,block,remove); root.append(menu);
+    var profile, addToGroup, commonGroups;
+    if (root.id === 'chat-widget') {
+        profile = document.createElement('a'); profile.textContent = 'Xem hồ sơ';
+        addToGroup = document.createElement('button'); addToGroup.type = 'button'; addToGroup.textContent = 'Thêm vào nhóm';
+        commonGroups = document.createElement('button'); commonGroups.type = 'button'; commonGroups.textContent = 'Xem nhóm chung';
+        menu.prepend(profile,addToGroup,commonGroups);
+        [profile,addToGroup,commonGroups].forEach(function (item) { item.addEventListener('click', function () { close(false); }); });
+    }
     var nativePopover = typeof menu.showPopover === 'function', selected = null;
     var generation = 0, states = new Map(), tokens = new Map(), expiryTimers=new Map();
     function label(button) {
+        if (profile) {
+            profile.href = button.dataset.profileUrl || '#'; profile.hidden = !button.dataset.profileUrl;
+            addToGroup.dataset.igAddPeer = button.dataset.peerId || '';
+            addToGroup.dataset.igPeerName = button.dataset.peerName || '';
+            commonGroups.dataset.igCommon = button.dataset.peerId || '';
+            addToGroup.hidden = commonGroups.hidden = !button.dataset.peerId;
+        }
         blockLabel.textContent = button.dataset.blockedByMe === '1' ? 'Bỏ chặn người này' : 'Chặn người này';
         block.disabled = !button.dataset.blockUrl || button.disabled;
         var enabled = button.dataset.notificationsMuted !== '1' && button.dataset.notificationsEnabled !== '0';
@@ -32,11 +47,11 @@
         var id = String(data.id), enabled = data.notifications_enabled === true;
         var muted=typeof data.muted==='boolean' ? data.muted : !enabled || data.calls_notifications_enabled===false;
         clearTimeout(expiryTimers.get(id));
-        root.querySelectorAll('.tk-ms-conversation-more').forEach(function (button) {
+        root.querySelectorAll('.tk-ms-conversation-more, [data-cw-conversation-more]').forEach(function (button) {
             if (button.dataset.conversationId !== id) return;
             button.dataset.notificationsEnabled = enabled ? '1' : '0';
             button.dataset.notificationsMuted=muted ? '1' : '0';
-            var indicator = button.closest('li').querySelector('.inbox-muted-indicator');
+            var indicator = (button.closest('li, [data-conversation-row]') || button.parentElement).querySelector('.inbox-muted-indicator');
             if (indicator) indicator.hidden = !muted;
             if (selected === button) label(button);
             var deadlines=[data.message_muted_until,data.calls_muted_until].map(Number).filter(function (n) {return n>Number(data.server_time || 0);});
@@ -75,13 +90,13 @@
     menu.addEventListener('toggle', function () { if (selected) selected.setAttribute('aria-expanded', opened() ? 'true' : 'false'); });
     var pointerToggle = null;
     root.addEventListener('pointerdown', function (event) {
-        var button = event.target.closest('.tk-ms-conversation-more');
+        var button = event.target.closest('.tk-ms-conversation-more, [data-cw-conversation-more]');
         pointerToggle = button && selected === button && opened() ? button : null;
     }, true);
     root.addEventListener('pointercancel', function () { pointerToggle = null; });
     root.addEventListener('keydown', function () { pointerToggle = null; });
     root.addEventListener('click', function (event) {
-        var button = event.target.closest('.tk-ms-conversation-more');
+        var button = event.target.closest('.tk-ms-conversation-more, [data-cw-conversation-more]');
         if (!button || button.disabled) return;
         event.preventDefault(); event.stopPropagation();
         var shouldClose = pointerToggle === button || (selected === button && opened());
@@ -110,11 +125,11 @@
     });
     function deleted(event) {
         var id = String(event.detail.id), cutoff = Number(event.detail.deleted_through_message_id || 0);
-        root.querySelectorAll('.tk-ms-conversation-more').forEach(function (button) {
-            if (button.dataset.conversationId === id) button.closest('li').remove();
+        root.querySelectorAll('.tk-ms-conversation-more, [data-cw-conversation-more]').forEach(function (button) {
+            if (button.dataset.conversationId === id) { var row = button.closest('li, [data-conversation-row]'); if (row) row.remove(); }
         });
         if (selected && !selected.isConnected) close(false);
-        if (!root.querySelector('.tk-ms-conversation-more')) {
+        if (!root.querySelector('.tk-ms-conversation-more, [data-cw-conversation-more]')) {
             var empty = document.getElementById('tk-ms-nores');
             if (empty) { empty.textContent = 'Chưa có cuộc trò chuyện nào.'; empty.hidden = false; }
         }
@@ -158,7 +173,7 @@
     };
     function refreshMuted() {
         if(document.hidden)return;
-        root.querySelectorAll('.tk-ms-conversation-more[data-notifications-muted="1"]').forEach(function (button) {
+        root.querySelectorAll('.tk-ms-conversation-more[data-notifications-muted="1"], [data-cw-conversation-more][data-notifications-muted="1"]').forEach(function (button) {
             if(!button.dataset.notificationUrl || button.dataset.notificationBusy==='1')return;
             var version=generation;
             request(button.dataset.notificationUrl).then(function (state) {
@@ -215,9 +230,13 @@
     document.addEventListener('click',function (event) { if (!menu.contains(event.target) && selected && !selected.contains(event.target)) close(false); });
     document.addEventListener('keydown',function (event) { if (event.key === 'Escape' && opened()) { event.preventDefault(); close(true); } });
     root.addEventListener('scroll',function () { close(false); },true);
+    root.addEventListener('cw:conversation-change',function () { generation++; close(false); selected = null; });
+    root.addEventListener('cw:close-group',function () { generation++; close(false); });
     window.addEventListener('resize',function () { close(false); });
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize',function () { close(false); });
         window.visualViewport.addEventListener('scroll',function () { close(false); });
     }
+    }
+    document.querySelectorAll('.tk-ms[data-conversation-token], #chat-widget[data-conversation-token]').forEach(function (root) { if (root.dataset.conversationToken) mount(root); });
 })();

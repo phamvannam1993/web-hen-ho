@@ -394,7 +394,13 @@
 
             row.dataset.conv = it.id;
             row.addEventListener('click', function () { moChat(it); });
-            listEl.appendChild(row);
+            var holder = document.createElement('div'); holder.className = 'cw-conversation-row';
+            holder.dataset.conversationRow = '';
+            var more = document.createElement('button'); more.type = 'button'; more.className = 'cw-conversation-more';
+            more.textContent = '⋯'; more.dataset.cwConversationMore = '';
+            more.setAttribute('aria-label', 'Tùy chọn cuộc trò chuyện với ' + it.name);
+            more.setAttribute('aria-haspopup','true'); more.setAttribute('aria-expanded','false');
+            conversationActions(more,it); holder.append(row,more); listEl.appendChild(holder);
         });
     }
 
@@ -660,6 +666,10 @@
 
     /** Mở phòng chat chung. */
     function moPhong() {
+        delete bodyEl.dataset.pinUrl; delete bodyEl.dataset.recallUrl; delete bodyEl.dataset.conversation;
+        var conversationMore = document.getElementById('cw-conversation-more');
+        if (conversationMore) conversationMore.hidden = true;
+        root.dispatchEvent(new CustomEvent('cw:conversation-change'));
         if (window.MessageReply) window.MessageReply.clear(formEl);
         chatVersion++; bodyEl.dataset.deletedThrough = '0';
         if (historySearch) { historySearch.hidden = true; delete historySearch.dataset.messageHistory; }
@@ -697,6 +707,18 @@
     }
 
     /** Mở một hội thoại riêng. */
+    function conversationActions(button, info) {
+        if (!button) return;
+        var endpoint = base + 'ajax/tin-nhan/' + Number(info.id);
+        button.dataset.conversationId = String(info.id);
+        button.dataset.blockUrl = endpoint + '/chan'; button.dataset.deleteUrl = endpoint + '/xoa-hoi-thoai';
+        button.dataset.notificationUrl = endpoint + '/thong-bao';
+        button.dataset.blockedByMe = info.blocked_by_me ? '1' : '0';
+        button.dataset.notificationsEnabled = info.notifications_enabled === false ? '0' : '1';
+        button.dataset.notificationsMuted = info.notifications_enabled === false || info.calls_notifications_enabled === false ? '1' : '0';
+        button.dataset.peerId = String(info.user_id || ''); button.dataset.peerName = info.name || '';
+        button.dataset.profileUrl = info.profile_url || ''; button.hidden = false;
+    }
     function moChat(info) {
         if (window.MessageReply) window.MessageReply.clear(formEl);
         chatVersion++; bodyEl.dataset.deletedThrough = String(deletedThrough[info.id] || 0);
@@ -739,6 +761,11 @@
         if (inputEl) { inputEl.placeholder = 'Vui lòng nhập tin nhắn'; }
 
         moKhung();
+        bodyEl.dataset.conversation = String(info.id);
+        bodyEl.dataset.pinUrl = base + 'ajax/tin-nhan/' + Number(info.id) + '/ghim';
+        bodyEl.dataset.recallUrl = base + 'ajax/tin-nhan/' + Number(info.id) + '/thu-hoi';
+        conversationActions(document.getElementById('cw-conversation-more'),info);
+        root.dispatchEvent(new CustomEvent('cw:conversation-change'));
         danhDauDangMo();
         bodyEl.textContent = '';
 
@@ -1032,6 +1059,7 @@
         // Fallback chat menus are moved to document.body.
         var menu = e.target.closest('.cg-popover-open');
         if (menu && menu.cgTrigger && root.contains(menu.cgTrigger)) return;
+        if (e.target.closest('.pm-message-menu, .conversation-delete-menu, .ig-row-menu')) return;
 
         if (!panel.hidden && !root.contains(e.target)) { dongChat(); }
     });

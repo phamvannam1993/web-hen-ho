@@ -1,8 +1,10 @@
 (function () {
     'use strict';
-    var feed = document.getElementById('chat-body');
-    if (!feed || !feed.dataset.pinUrl) return;
-    var pane = feed.closest('.tk-ms-pane');
+    function mount(feed) {
+    if (!feed || feed.dataset.messageMenuMounted === '1') return;
+    var pane = feed.closest('.tk-ms-pane, .cw-convo');
+    if (!pane) return;
+    feed.dataset.messageMenuMounted = '1';
     var endpoint = feed.dataset.pinUrl;
     var nativePopover = typeof HTMLElement.prototype.showPopover === 'function';
     var token = '', pinned = null, available = false, reading = false, writing = false, version = 0;
@@ -29,9 +31,9 @@
     var strip = node('div', 'pm-pin-strip'); strip.hidden = true;
     var stripText = node('span');
     var unpin = node('button', '', 'Bỏ ghim'); unpin.type = 'button';
-    strip.append(stripText, unpin); feed.before(strip);
+    strip.append(stripText, unpin); (feed.closest('.cw-body-wrap') || feed).before(strip);
     var status = node('p', 'pm-action-status'); status.hidden = true;
-    status.setAttribute('role', 'status'); feed.before(status);
+    status.setAttribute('role', 'status'); (feed.closest('.cw-body-wrap') || feed).before(status);
     var menu = node('div', 'pm-message-menu'); menu.setAttribute('popover', 'auto');
     menu.setAttribute('aria-label', 'Thao tác tin nhắn');
     var pin = node('button', '', 'Ghim'); pin.type = 'button';
@@ -41,7 +43,7 @@
     action(reply,'Trả lời','reply'); action(pin,'Ghim','pin');
     action(copy,'Sao chép','copy'); action(recall,'Thu hồi','recall');
     recall.classList.add('pm-action-danger');
-    var form = pane.querySelector('.chat-form');
+    var form = pane.querySelector('.chat-form, .cw-form');
     if (window.MessageReply) window.MessageReply.mount(feed,form);
     reply.disabled = !form;
     menu.append(reply, pin, copy, recall); pane.append(menu);
@@ -59,7 +61,7 @@
     function messageText(message) {
         var text = message.querySelector('p');
         if (text) return text.textContent;
-        var image = message.querySelector('a[href]');
+        var image = message.querySelector('a[href]:not(.cw-msg-name)');
         return image ? image.href : '';
     }
     function showMenu(button, message) {
@@ -87,7 +89,7 @@
         menu.style.top = Math.max(top + 8, y) + 'px';
     }
     function decorate(message) {
-            if (!message.matches || !message.matches('.chat-msg[data-message-id]') || message.dataset.recalled === '1' || message.querySelector('.pm-message-more')) return;
+            if (!feed.dataset.pinUrl || !message.matches || !message.matches('.chat-msg[data-message-id], .cw-msg[data-message-id]') || message.dataset.recalled === '1' || message.querySelector('.pm-message-more')) return;
             var button = node('button', 'pm-message-more', '⋯'); button.type = 'button';
             button.setAttribute('aria-label', 'Thao tác tin nhắn'); button.setAttribute('title', 'Thao tác tin nhắn');
             button.setAttribute('aria-haspopup', 'true'); button.setAttribute('aria-expanded', 'false');
@@ -122,7 +124,7 @@
         });
     }
     function refresh() {
-        if (reading || writing || document.hidden || pane.hidden || !feed.isConnected) return;
+        if (reading || writing || !endpoint || document.hidden || pane.hidden || !feed.isConnected || !feed.getClientRects().length) return;
         reading = true; var current = version;
         json(endpoint, {credentials: 'same-origin'}).then(function (data) {
             if (current !== version || !feed.isConnected) return;
@@ -140,8 +142,8 @@
         body.set('message_id', String(messageId)); body.set('action', action);
         json(endpoint, {method: 'POST', credentials: 'same-origin', body: body}).then(function (data) {
             if (current === version) { applyState(data); notify(''); }
-        }).catch(function (error) { notify(error.message); })
-        .then(function () { writing = false; applyState({pins_available: available, pinned: pinned}); refresh(); });
+        }).catch(function (error) { if (current === version) notify(error.message); })
+        .then(function () { writing = false; if (current === version) applyState({pins_available: available, pinned: pinned}); refresh(); });
     }
     pin.onclick = function () {
         if (!selected || !selected.isConnected) return;
@@ -157,11 +159,13 @@
         if (writing || !selected || !selected.isConnected || !selected.classList.contains('mine')
             || selected.dataset.recalled === '1' || !window.MessageRecall) return;
         var message = selected;
+        var recallEndpoint = feed.dataset.recallUrl;
         writing = true; version++; closeMenu(true); notify('');
+        var current = version;
         recall.disabled = true; pin.disabled = true; unpin.disabled = true;
-        window.MessageRecall.recall(feed.dataset.recallUrl, message.dataset.messageId).then(function () {
-            window.MessageRecall.apply(message);
-        }).catch(function (error) { notify(error.message); })
+        window.MessageRecall.recall(recallEndpoint, message.dataset.messageId).then(function () {
+            if (current === version) window.MessageRecall.apply(message);
+        }).catch(function (error) { if (current === version) notify(error.message); })
         .then(function () { writing = false; recall.disabled = false; refresh(); });
     };
     feed.addEventListener('message-recalled', function (event) {
@@ -179,7 +183,7 @@
             applyState({pins_available: available, pinned: null});
         }
     });
-    var refreshRecalls = window.MessageRecall && window.MessageRecall.watch(feed, function () {
+    var refreshRecalls = feed.id !== 'cw-body' && window.MessageRecall && window.MessageRecall.watch(feed, function () {
         return pane.hidden ? null : feed.dataset.recallUrl;
     });
     feed.addEventListener('conversation-history-cleared',function (event) {
@@ -220,6 +224,14 @@
         changes.forEach(function (change) { change.addedNodes.forEach(decorate); });
     }).observe(feed, {childList: true});
     new MutationObserver(function () {
+        version++; closeMenu(false); token = ''; selected = trigger = null;
+        endpoint = feed.dataset.pinUrl || '';
+        applyState({pins_available:false,pinned:null}); notify('');
+        feed.querySelectorAll('.pm-message-more').forEach(function (button) { button.remove(); });
+        feed.querySelectorAll('[data-message-id]').forEach(decorate);
+        refresh(); if (refreshRecalls) refreshRecalls();
+    }).observe(feed, {attributes:true,attributeFilter:['data-pin-url']});
+    new MutationObserver(function () {
         if (pane.hidden) closeMenu(false);
         else { refresh(); if (refreshRecalls) refreshRecalls(); }
     })
@@ -227,4 +239,6 @@
     document.addEventListener('visibilitychange', refresh);
     feed.querySelectorAll('.chat-msg[data-message-id]').forEach(decorate);
     refresh(); setInterval(refresh, 4000);
+    }
+    document.querySelectorAll('#chat-body[data-pin-url], #cw-body').forEach(mount);
 })();

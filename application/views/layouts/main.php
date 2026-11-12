@@ -384,6 +384,9 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 <!-- Chat nổi: khách xem được phòng chung, muốn gửi thì phải đăng nhập.
      Thành viên chưa khai xong hồ sơ cũng chỉ được xem như khách. -->
 <div id="chat-widget" class="chat-widget" data-base="<?= site_url() ?>"
+     data-conversation-token="<?= e($message_action_token ?? '') ?>"
+     data-private-groups-api="<?= e(site_url('ajax/nhom-inbox')) ?>"
+     data-private-user="<?= (int) ($user['id'] ?? 0) ?>" data-inbox-url="<?= e(site_url('messenger')) ?>"
      data-ws-url="<?= e($ws_url ?? '') ?>" data-ws-token="<?= e($ws_token ?? '') ?>"
      data-guest="<?= $user ? '0' : '1' ?>"
      data-need-verify="<?= !empty($chua_xac_thuc) ? '1' : '0' ?>">
@@ -445,6 +448,12 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
                     */ ?>
                 <?php endif; ?>
                 <?php if ($user): ?>
+                    <section class="ig-sidebar" aria-label="Nhóm riêng của bạn">
+                        <div class="ig-sidebar-head"><strong>Nhóm của bạn</strong><button type="button" data-ig-create>Tạo nhóm</button></div>
+                        <p data-ig-list-status role="status">Đang tải nhóm…</p>
+                        <ul class="ig-groups" data-ig-list></ul>
+                        <button type="button" data-ig-list-more hidden>Xem thêm nhóm</button>
+                    </section>
                     <p class="cw-side-label">Trò chuyện riêng</p>
                     <div id="cw-list"><p class="cw-empty">Đang tải…</p></div>
                 <?php else: ?>
@@ -463,6 +472,11 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 
         <?php /* Cột phải: nội dung hội thoại đang mở (phòng chung hoặc chat riêng) */ ?>
         <section class="cw-main" id="cw-main">
+            <?php if ($user): ?>
+            <div class="cw-private-group-pane" hidden>
+                <?php $this->load->view('account/_private_group', array('private_group_id' => 0, 'sticky_group' => true)); ?>
+            </div>
+            <?php endif; ?>
             <div class="cw-idle" id="cw-idle">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v11H9.5L5.5 20v-3.5H4z"/></svg>
                 <p>Chọn một hội thoại để bắt đầu</p>
@@ -493,6 +507,10 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
                     </div>
                     <button type="button" id="cw-history-search" class="message-history-trigger message-history-trigger--icon"
                             aria-label="Tìm tin nhắn cũ" title="Tìm tin nhắn cũ" hidden><?= tk_icon('search') ?></button>
+                    <?php if ($user): ?>
+                    <button type="button" id="cw-conversation-more" class="cw-conversation-more" data-cw-conversation-more
+                            aria-label="Tùy chọn cuộc trò chuyện" aria-haspopup="true" aria-expanded="false" hidden>⋯</button>
+                    <?php endif; ?>
                 </header>
 
                 <div class="cw-body-wrap">
@@ -575,7 +593,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 
 <link rel="stylesheet" href="<?= base_url('assets/site/css/message-history.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/message-history.css') ?>">
 <script defer src="<?= base_url('assets/site/js/message-history.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/message-history.js') ?>"></script>
-<?php if ($content_view === 'account/messages'): ?>
+<?php if ($user): ?>
 <link rel="stylesheet" href="<?= base_url('assets/site/css/inbox-mute-dialog.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/inbox-mute-dialog.css') ?>">
 <script defer src="<?= base_url('assets/site/js/inbox-mute-dialog.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/inbox-mute-dialog.js') ?>"></script>
 <link rel="stylesheet" href="<?= base_url('assets/site/css/conversation-delete.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/conversation-delete.css') ?>">

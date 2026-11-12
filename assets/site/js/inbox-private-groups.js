@@ -1,13 +1,14 @@
 (function () {
     'use strict';
-    var root = document.querySelector('.tk-ms[data-private-groups-api]');
+    function mount(root) {
     if (!root) return;
     var base = root.dataset.privateGroupsApi.replace(/\/$/, '');
+    var sticky = root.id === 'chat-widget', chatVersion = 0;
     var inboxUrl = root.dataset.inboxUrl, uid = Number(root.dataset.privateUser);
     var list = root.querySelector('[data-ig-list]'), listStatus = root.querySelector('[data-ig-list-status]');
     var moreGroups = root.querySelector('[data-ig-list-more]');
     var token = '', groupCursor = 0, listing = false, listingPromise = null, loadedPages = 1, dialog = null;
-    var chat = root.querySelector('[data-private-group]'), pane = chat && chat.closest('.tk-ms-pane');
+    var chat = root.querySelector('[data-private-group]'), pane = chat && chat.closest('.tk-ms-pane, .cw-private-group-pane');
     var gid = chat ? Number(chat.dataset.privateGroup) : 0;
     var feed = chat && chat.querySelector('[data-ig-feed]');
     var chatStatus = chat && chat.querySelector('[data-ig-status]');
@@ -87,6 +88,27 @@
         return el;
     }
     function groupUrl(id) { return inboxUrl + '?nhom=' + encodeURIComponent(id); }
+    function openGroup(id) {
+        if (!sticky) { location.assign(groupUrl(id)); return; }
+        root.dispatchEvent(new CustomEvent('cw:close-group'));
+        gid = Number(id); chatVersion++;
+        chat.dataset.privateGroup = String(gid); feed.replaceChildren(); ids.clear();
+        first = last = readThrough = 0; loaded = false; pendingSend = null; currentGroup = null;
+        sendForm.elements.content.value = ''; chatStatus.textContent = 'Đang tải nhóm…';
+        chat.querySelector('[data-ig-name]').textContent = 'Đang tải nhóm…';
+        chat.querySelector('[data-ig-count]').textContent = '';
+        chat.querySelector('[data-ig-header-more]').disabled = true;
+        sendForm.querySelectorAll('textarea,button').forEach(function (el) { el.disabled = true; });
+        if (dialog && dialog.open) dialog.close();
+        pane.hidden = false;
+        root.dispatchEvent(new CustomEvent('cw:open-group', {detail:{id:'private-' + gid}}));
+        loadDetail(); loadGroups(false).then(function () { loadMessages(false); }); updateSelection();
+    }
+    if (sticky) {
+        root.addEventListener('cw:close-group', function () { chatVersion++; pane.hidden = true; closeRowMenu(); });
+        root.addEventListener('cw:open-group', function (event) { if (event.detail.id !== 'private-' + gid) pane.hidden = true; });
+        chat.querySelector('[data-ig-back]').onclick = function (event) { event.preventDefault(); root.dispatchEvent(new CustomEvent('cw:group-back')); };
+    }
     function request(path, values, query) {
         var url = new URL(base + path, location.href);
         Object.keys(query || {}).forEach(function (key) { if (query[key] !== undefined && query[key] !== null) url.searchParams.set(key, query[key]); });
@@ -106,11 +128,12 @@
             });
         });
     }
-    function active() { return !!chat && chat.isConnected && !pane.hidden && !document.hidden; }
+    function active() { return gid > 0 && !!chat && chat.isConnected && !pane.hidden && !document.hidden; }
     function atBottom() { return feed.scrollHeight - feed.scrollTop - feed.clientHeight < 70; }
     function groupRow(group) {
         var item = node('li'); item.dataset.name = group.name.toLocaleLowerCase('vi');
         var link = node('a'); link.href = groupUrl(group.id); link.dataset.igGroupId = group.id;
+        if (sticky) link.onclick = function (event) { event.preventDefault(); openGroup(group.id); };
         var text = node('span'); text.append(node('strong', '', group.name), node('small', '', group.last_content || (group.member_count + ' thành viên')));
         link.append(text);
         if (group.unread) link.append(node('span', 'ig-count', group.unread > 99 ? '99+' : group.unread));
@@ -283,7 +306,7 @@
                 loadGroups(false);
                 if (!box.current()) return;
                 if (targetGroup) { box.status.textContent = 'Đã thêm thành viên.'; if (gid === Number(targetGroup)) loadDetail(); box.el.close(); }
-                else location.assign(groupUrl(data.group.id));
+                else openGroup(data.group.id);
             }).catch(function (error) { if (box.current()) box.status.textContent = error.message; })
             .then(function () { saving = false; if (box.current()) summary(); });
         };
@@ -304,10 +327,13 @@
                 if (!box.current()) return; if (data.action_token) token = data.action_token;
                 data.groups.forEach(function (group) {
                     var choice = node(common ? 'a' : 'button', 'ig-choice', group.name + ' · ' + group.member_count + ' thành viên');
-                    if (common) choice.href = groupUrl(group.id);
+                    if (common) {
+                        choice.href = groupUrl(group.id);
+                        if (sticky) choice.onclick = function (event) { event.preventDefault(); openGroup(group.id); };
+                    }
                     else { choice.type = 'button'; choice.onclick = function () {
                         if (busy) return; busy = true; choices.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
-                        request('/' + group.id + '/them', {user_ids: [peerId]}).then(function () { loadGroups(false); if (box.current()) location.assign(groupUrl(group.id)); })
+                        request('/' + group.id + '/them', {user_ids: [peerId]}).then(function () { loadGroups(false); if (box.current()) openGroup(group.id); })
                         .catch(function (error) { if (box.current()) box.status.textContent = error.message; })
                         .then(function () { busy = false; choices.querySelectorAll('button').forEach(function (b) { b.disabled = false; }); });
                     }; } choices.append(choice);
@@ -346,16 +372,17 @@
     }
     function acknowledge() {
         if (!active() || !loaded || !token || !last || readBusy || last <= readThrough || !atBottom()) return;
-        readBusy = true; var through = last;
-        request('/' + gid + '/da-doc', {message_id: through}).then(function () { readThrough = Math.max(readThrough, through); })
+        readBusy = true; var through = last, version = chatVersion;
+        request('/' + gid + '/da-doc', {message_id: through}).then(function () { if (version === chatVersion) readThrough = Math.max(readThrough, through); })
         .catch(function () {}).then(function () { readBusy = false; });
     }
     function loadMessages(older) {
         if (!active() || historyBusy) return Promise.resolve();
         historyBusy = true; olderButton.disabled = true;
+        var version = chatVersion;
         var wasBottom = !loaded || atBottom(), height = feed.scrollHeight, top = feed.scrollTop;
         return request('/' + gid + '/tin-nhan', null, older ? {before: first} : (loaded ? {after: last} : {})).then(function (data) {
-            if (!active()) return;
+            if (!active() || version !== chatVersion) return;
             appendMessages(data.messages, older);
             if (!older) data.messages.forEach(function (message) { last = Math.max(last, message.id); });
             if (older || !loaded) olderButton.hidden = !data.has_more;
@@ -364,6 +391,7 @@
             else if (wasBottom) feed.scrollTop = feed.scrollHeight;
             chatStatus.textContent = ''; sendForm.querySelectorAll('textarea,button').forEach(function (el) { el.disabled = sending || !token; }); acknowledge();
         }).catch(function (error) {
+            if (version !== chatVersion) return;
             chatStatus.textContent = error.message;
             if (error.status === 403) { loaded = false; sendForm.querySelectorAll('textarea,button').forEach(function (el) { el.disabled = true; }); feed.replaceChildren(); ids.clear(); first = 0; last = 0; readThrough = 0; }
         }).then(function () { historyBusy = false; olderButton.disabled = false; });
@@ -376,9 +404,11 @@
         chat.querySelector('[data-ig-header-more]').disabled = false;
     }
     function loadDetail() {
+        if (!gid) return Promise.resolve();
+        var version = chatVersion;
         return request('/' + gid + '/chi-tiet').then(function (data) {
             applyDetail(data.group);
-        }).catch(function (error) { chatStatus.textContent = error.message; });
+        }).catch(function (error) { if (version === chatVersion) chatStatus.textContent = error.message; });
     }
     if (chat) {
         var headerMore = chat.querySelector('[data-ig-header-more]'), headerWasOpen = false;
@@ -404,19 +434,23 @@
                 pendingSend = {text: text, key: Array.from(bytes).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('')};
             }
             sending = true; sendForm.querySelector('button').disabled = true;
+            var version = chatVersion;
             request('/' + gid + '/gui', {content: text, client_message_id: pendingSend.key}).then(function (data) {
+                if (version !== chatVersion) return;
                 appendMessages([data.message], false);
                 if (sendForm.elements.content.value.trim() === text) sendForm.elements.content.value = '';
                 pendingSend = null; feed.scrollTop = feed.scrollHeight; chatStatus.textContent = ''; acknowledge(); loadGroups(false);
-            }).catch(function (error) { chatStatus.textContent = error.message + ' Nội dung vẫn được giữ để thử lại.'; })
+            }).catch(function (error) { if (version === chatVersion) chatStatus.textContent = error.message + ' Nội dung vẫn được giữ để thử lại.'; })
             .then(function () { sending = false; sendForm.querySelector('button').disabled = !loaded || !token; });
         };
-        loadDetail();
+        if (gid) loadDetail();
     }
     function refresh() { if (!document.hidden) { loadGroups(false); if (active()) loadDetail(); } }
-    loadGroups(false).then(function () { if (chat) loadMessages(false); });
+    loadGroups(false).then(function () { if (chat && gid) loadMessages(false); });
     setInterval(function () { if (active()) loadMessages(false); }, 4000);
     setInterval(function () { if ((!dialog || !dialog.open) && !menuOpen()) refresh(); }, 12000);
-    document.addEventListener('visibilitychange', function () { if (!document.hidden) { refresh(); if (chat) loadMessages(false); } });
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) { refresh(); if (chat && gid) loadMessages(false); } });
     if (pane) new MutationObserver(function () { updateSelection(); if (!pane.hidden) { loadMessages(false); loadDetail(); } }).observe(pane, {attributes: true, attributeFilter: ['hidden']});
+    }
+    document.querySelectorAll('.tk-ms[data-private-groups-api], #chat-widget[data-private-groups-api]').forEach(function (root) { if (Number(root.dataset.privateUser)) mount(root); });
 })();
