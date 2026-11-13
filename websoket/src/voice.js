@@ -1,6 +1,6 @@
 'use strict';
 
-function createVoice({ config, clients, send }) {
+function createVoice({ config, clients, send, log = () => {} }) {
   const calls = new Map();
   const busy = new Map();
   const cooldown = new Map();
@@ -23,6 +23,8 @@ function createVoice({ config, clients, send }) {
 
   function end(c, reason) {
     if (calls.get(c.id) !== c) return;
+    log({event:'voice.ended',callId:c.id,reason,phase:c.state,
+      elapsedSeconds:Math.max(0,Math.floor((Date.now()-c.startedAt)/1000))});
     calls.delete(c.id);
     for (const uid of [c.uid, c.peer]) {
       if (busy.get(uid) === c) busy.delete(uid);
@@ -84,6 +86,7 @@ function createVoice({ config, clients, send }) {
       cooldown.set(ws.uid, now + 10000);
       c = {
         id: m.callId, cid: m.conversationId, uid: ws.uid,
+        startedAt: now,
         // Gọi video: cùng luồng báo hiệu, chỉ khác SDP có thêm track camera
         video: m.video === true,
         a: ws, b: null, peer: 0, state: 'pending', stage: 0,

@@ -38,6 +38,11 @@
 .voice-dialog [data-accept]:hover { background:#19583b; }
 .voice-dialog [data-end]:hover { background:#922341; }
 .voice-dialog [data-play] { margin-top: 12px; }
+.voice-dialog button:disabled { opacity:.5; cursor:wait; }
+.voice-output { margin-top:16px; padding:12px; border:1px solid #eadce8; border-radius:12px; background:#fff8fb; text-align:left; }
+.voice-output label { display:block; margin-bottom:8px; font-size:13px; font-weight:600; }
+.voice-output select { width:100%; min-height:44px; padding:8px; border:1px solid #d9c5d5; border-radius:8px; background:#fff; color:#302437; font:inherit; font-size:14px; }
+.voice-feedback { margin:12px 0 0; font-size:13px; line-height:1.5; color:#6e6275; }
 .voice-dialog button:focus-visible, #cw-voice:focus-visible, #cw-video:focus-visible {
     outline: 3px solid #d890bc;
     outline-offset: 3px;

@@ -5,7 +5,7 @@ const vm = require('node:vm');
 
 // Exercise the browser's SDP gathering flow without microphone access or real timers.
 const source = fs.readFileSync(require.resolve('../assets/site/js/voice-calls.js'), 'utf8');
-const start = source.indexOf('    async function description(s, type) {');
+const start = source.indexOf('    async function gatherDescription(s, type) {');
 const end = source.indexOf("    document.addEventListener('click'", start);
 assert(start >= 0 && end > start);
 const descriptionSource = source.slice(start, end);
@@ -28,6 +28,7 @@ async function scenario({ relay, complete, cancel = false }) {
         setTimeout: fn => { timeout = fn; return 1; },
         clearTimeout: () => {},
         send: (_, type, payload) => sent.push({ type, payload }),
+        fail: () => {},
     });
     vm.runInContext(descriptionSource, context);
     const pending = context.description(s, 'offer');
@@ -62,5 +63,29 @@ async function scenario({ relay, complete, cancel = false }) {
     const canceled = await scenario({ relay: true, complete: false, cancel: true });
     assert.match(canceled.error.message, /hủy/);
     assert.equal(canceled.sent.length, 0);
-    console.log('voice ICE: complete, slow interface, unavailable relay, cancellation passed');
+
+    let offers = 0, failCount = 0;
+    const sent = [];
+    const s = {};
+    const context = vm.createContext({current:s,send:(_,type)=>sent.push(type),fail:()=>{failCount++;}});
+    vm.runInContext(descriptionSource, context);
+    context.gatherDescription = async () => { offers++; return relaySdp; };
+    await context.warmOffer(s);
+    assert.equal(sent.length, 0, 'Preparing during ringing must not send the offer');
+    await context.description(s, 'offer');
+    assert.equal(offers, 1, 'Acceptance reuses the prepared offer');
+    assert.deepEqual(sent, ['voice.offer']);
+    assert.equal(failCount, 0);
+
+    let reject;
+    const canceledCall = {};
+    context.current = canceledCall;
+    context.gatherDescription = () => new Promise((_,rejectOffer) => { reject = rejectOffer; });
+    const warming = context.warmOffer(canceledCall);
+    context.current = {};
+    reject(new Error('canceled'));
+    await assert.rejects(warming, /canceled/);
+    assert.equal(failCount, 0, 'A canceled warmup must not affect a subsequent call');
+    assert.equal(sent.length, 1);
+    console.log('voice ICE: gathering, relay failures, cancellation, warmup and offer reuse passed');
 })().catch(error => { console.error(error); process.exitCode = 1; });

@@ -23,6 +23,9 @@ Giới hạn bandwidth/allocation của TURN để kiểm soát tài nguyên.
 
 ## Gọi video
 
+- Nút “Loa / tai nghe” chọn đầu ra cho tiếng cuộc gọi (cả thoại và video), dùng `selectAudioOutput`/`setSinkId` khi trình duyệt hỗ trợ. Nếu không có API, hướng dẫn chọn đầu ra qua hệ thống; web không giả lập bật loa ngoài bằng việc tăng âm lượng.
+- Tắt camera sẽ ngừng gửi track video và dừng camera trên máy; bật lại xin mở camera rồi `replaceTrack`, không tạo cuộc gọi mới. Micro tiếp tục hoạt động. Nếu mở lại thất bại, cuộc gọi vẫn giữ âm thanh và hiển thị lỗi cụ thể.
+
 - Dùng chung luồng báo hiệu `voice.*`; lời mời có thêm `video: true`, Node chuyển cờ này
   trong `voice.ringing`, `voice.incoming`, `voice.accepted`. SDP có video được tới 40000 ký tự
   (thoại giữ 12000).
@@ -45,13 +48,26 @@ Giới hạn bandwidth/allocation của TURN để kiểm soát tài nguyên.
 - Quyền gọi được kiểm tra lại khi thiết lập và định kỳ khoảng 30 giây.
 - Mất WebSocket hoặc rời trang sẽ kết thúc cuộc gọi.
 - Non-trickle ICE: chờ gathering hoàn tất tối đa 15 giây mỗi bên.
+- Web lấy sẵn một bộ ICE candidate sau khi xác thực quyền gọi, song song với việc mở micro/camera; audio và video dùng chung transport (`max-bundle`).
+- Bên gọi chuẩn bị SDP/relay ngay lúc đổ chuông, chỉ gửi offer khi người nhận đồng ý; tái sử dụng kết quả đã chuẩn bị để giảm thời gian chờ sau khi nhận. Không tự mở micro/camera của người nhận trước khi họ bấm nhận cuộc gọi.
 - Chưa ghi âm/ghi hình, lưu lịch sử, gọi nhóm hay nhận cuộc gọi khi đóng web/ứng dụng.
 - Trình duyệt có thể chặn phát âm thanh tự động; dùng nút Bật âm thanh.
+- Âm báo gọi nằm trong `assets/site/audio/`: `goi-den.mp3` (chuông đến), `goi-di.mp3` (chuông đi) và `end-call.mp3` (kết thúc). Đẩy cả ba file cùng `voice-calls.js` khi triển khai.
+- Chuông lặp trong lúc chờ nhận, dừng khi nhận/hủy/kết thúc. Trình duyệt có thể cần người dùng tương tác với trang trước khi cho phép phát chuông đến.
 - Một tiến trình Node quản lý cuộc gọi; chưa hỗ trợ nhiều instance độc lập.
 - Restart Node sẽ kết thúc các cuộc gọi đang diễn ra.
 - Nếu bật CSRF sau này, cần cấu hình riêng endpoint nội bộ dùng shared secret.
 
 ## Kiểm tra trước khi bật
+
+### Khi cuộc gọi tự ngắt sau vài phút
+
+- Mã không đặt giới hạn 5 phút. Token realtime lấy khi tải trang có hạn 1 giờ; nếu trang đã mở lâu, cuộc gọi mới có thể chỉ còn vài phút trước khi token hết hạn. Tải lại cả hai trang rồi thử để loại trừ trường hợp này.
+- Node ghi một dòng `[voice]` khi kết thúc: `reason`, `phase`, `elapsedSeconds`, `callId`. Trình duyệt ghi `[voice] call ended` cùng trạng thái WebRTC/ICE. Log không chứa token, TURN secret hoặc SDP.
+- `expired`: hết token hoặc đạt giới hạn cuộc gọi; `permission`: kiểm tra quyền định kỳ không thành công; `connection`: WebSocket đóng hoặc tiến trình Node dừng.
+- Nếu Node ghi `ended`, xem thêm log trình duyệt: có thể người dùng chủ động kết thúc hoặc WebRTC bị lỗi rồi trình duyệt gửi yêu cầu kết thúc. `webrtc-failed`/`webrtc-disconnected` khác với `websocket-closed`.
+- Khi cần chẩn đoán production, cập nhật `websoket/src/voice.js`, `websoket/src/server.js`, `assets/site/js/voice-calls.js`, rồi restart tiến trình realtime. Lấy log Node và coturn ở cùng thời điểm xảy ra lỗi; không tự tăng TURN permission lifetime hoặc bỏ kiểm tra quyền.
+- Kiểm thử thời hạn bằng đồng hồ giả: `node tests/voice_duration.js` (vượt 6 phút, thu hồi quyền, giới hạn 50 phút, token cũ chỉ còn 5 phút). Đây không thay thế kiểm thử cuộc gọi thật trên mạng production.
 
 1. Hai tài khoản trên hai thiết bị/mạng khác nhau: gọi, nhận, nghe hai chiều.
 2. Thử tắt/bật mic, từ chối, hủy trước khi nhận và hết thời gian đổ chuông.

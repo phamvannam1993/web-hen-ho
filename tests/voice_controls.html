@@ -1,0 +1,77 @@
+<!doctype html><meta charset="utf-8"><title>Call controls browser tests</title>
+<link rel="stylesheet" href="../assets/site/css/voice-calls.css">
+<div id="chat-widget" data-base="https://example.test/" data-guest="0"></div>
+<button data-voice-call="9" data-video="1">Video call</button>
+<pre id="result" data-status="running">RUNNING</pre>
+<script>
+const tracks=[],errors=[];let cameraMissing=false;
+window.addEventListener('error',e=>errors.push(e.message));
+window.Audio=class{play(){return Promise.resolve()}pause(){}};
+function mediaStream(kind){
+ const t={kind,enabled:true,stopped:false,stop(){this.stopped=true}};tracks.push(t);
+ const values=[t],s=new MediaStream();
+ s.getTracks=()=>values.slice();s.getVideoTracks=()=>values.filter(t=>t.kind==='video');
+ s.getAudioTracks=()=>values.filter(t=>t.kind==='audio');s.addTrack=t=>values.push(t);
+ s.removeTrack=t=>values.splice(values.indexOf(t),1);return s;
+}
+Object.defineProperty(navigator,'mediaDevices',{configurable:true,value:{
+ getUserMedia:async c=>{if(c.video&&cameraMissing)throw {name:'NotFoundError'};return mediaStream(c.video?'video':'audio')},
+ enumerateDevices:async()=>[{kind:'audiooutput',deviceId:'speaker',label:'Speakers'},{kind:'audiooutput',deviceId:'headset',label:'Headset'},
+ {kind:'videoinput',deviceId:'front'},{kind:'videoinput',deviceId:'back'}],
+}});
+HTMLMediaElement.prototype.setSinkId=async function(id){this.fixtureSink=id};
+Object.defineProperty(HTMLMediaElement.prototype,'sinkId',{configurable:true,get(){return this.fixtureSink||''}});
+const sdp='v=0\r\na=candidate:1 1 udp 1 192.0.2.1 49160 typ relay\r\n';
+window.RTCPeerConnection=class{
+ constructor(){this.connectionState='new';this.iceGatheringState='complete'}
+ addTrack(track){const sender={track,replaceTrack:async function(t){this.track=t}};return sender}
+ createOffer(){return Promise.resolve({type:'offer',sdp})}
+ async setLocalDescription(d){this.localDescription=d}
+ async setRemoteDescription(){this.connectionState='connected';this.onconnectionstatechange()}
+ addEventListener(){} removeEventListener(){} close(){this.connectionState='closed'}
+};
+const listeners={};
+window.Realtime={connected:true,on:(name,fn)=>{listeners[name]=fn},sendDirect:m=>{
+ if(m.t==='voice.invite')setTimeout(()=>listeners['voice.accepted']({callId:m.callId}),0);
+ if(m.t==='voice.offer')setTimeout(()=>listeners['voice.answer']({callId:m.callId,sdp}),0);
+ return true;
+}};
+window.fetch=async()=>({ok:true,json:async()=>({ok:true,peer:{name:'Peer'},rtc:{enabled:true,iceTransportPolicy:'relay',
+ iceServers:[{urls:['turn:example.test:3478']}],expiresAt:Math.floor(Date.now()/1000)+3600}})});
+</script>
+<script src="../assets/site/js/voice-calls.js"></script>
+<script>
+(async()=>{
+ let n=0;const result=document.getElementById('result');
+ const tick=()=>new Promise(r=>setTimeout(r,10));
+ function check(ok,text){if(!ok)throw Error(text);n++}
+ async function until(fn){for(let i=0;i<100;i++){if(fn())return;await tick()}throw Error('Timed out '+fn)}
+ try{
+  document.querySelector('[data-voice-call]').click();
+  const camera=document.querySelector('[data-camera]'),output=document.querySelector('[data-output]');
+  await until(()=>!camera.hidden&&!output.hidden&&document.querySelector('.voice-status').textContent==='Đã kết nối');
+  check(true,'Video call exposes camera and output controls');
+  camera.click();await until(()=>camera.getAttribute('aria-pressed')==='true');
+  check(tracks[1].stopped&&!tracks[0].stopped,'Turning camera off releases camera and keeps microphone');
+  cameraMissing=true;camera.click();await until(()=>document.querySelector('.voice-feedback').textContent.includes('Không tìm thấy camera'));
+  check(camera.getAttribute('aria-pressed')==='true'&&!tracks[0].stopped,'Failed resume keeps audio and reports camera problem');
+  cameraMissing=false;camera.click();await until(()=>camera.getAttribute('aria-pressed')==='false');
+  check(!tracks.at(-1).stopped,'Camera resumes');
+  output.click();await until(()=>!document.querySelector('.voice-output').hidden);
+  const select=document.querySelector('#voice-output-select');select.value='speaker';select.dispatchEvent(new Event('change'));
+  await until(()=>document.querySelector('.voice-remote').sinkId==='speaker');
+  check(document.querySelector('audio').sinkId==='','Video routes sound using remote video player');
+  check(output.getAttribute('aria-label').includes('Speakers'),'Output label identifies selected device');
+  navigator.mediaDevices.selectAudioOutput=async()=>({deviceId:'headset',label:'Headset'});
+  await tick();output.click();await until(()=>document.querySelector('.voice-remote').sinkId==='headset');
+  check(true,'Native audio-output picker works');
+  HTMLMediaElement.prototype.setSinkId=undefined;await tick();output.click();
+  check(document.querySelector('.voice-feedback').textContent.includes('không hỗ trợ'),'Unsupported browser explains system audio controls');
+  document.querySelector('[data-end]').click();
+  check(tracks.every(t=>t.stopped),'Hangup releases all active media');
+  check(camera.hidden&&output.hidden&&document.querySelector('.voice-output').hidden,'Hangup hides controls');
+  check(errors.length===0,'No browser errors: '+errors.join(';'));
+  result.dataset.status='pass';result.textContent='PASS: '+n+' call-control browser assertions';
+ }catch(e){result.dataset.status='fail';result.textContent='FAIL after '+n+': '+e.stack+'; errors='+errors.join(';')}
+})();
+</script>
