@@ -556,6 +556,7 @@ CREATE TABLE `messages` (
   `conversation_id` BIGINT UNSIGNED NOT NULL,
   `sender_id`       BIGINT UNSIGNED NOT NULL,
   `reply_to_id`     BIGINT UNSIGNED DEFAULT NULL,
+  `call_id`         CHAR(36) DEFAULT NULL,
   `type`            ENUM('text','image','system') NOT NULL DEFAULT 'text',
   `content`         TEXT NOT NULL,
   `read_at`         DATETIME DEFAULT NULL,
@@ -564,6 +565,7 @@ CREATE TABLE `messages` (
   PRIMARY KEY (`id`),
   KEY `idx_msg_conv` (`conversation_id`,`id`),
   KEY `idx_message_reply` (`reply_to_id`),
+  UNIQUE KEY `uq_message_call` (`call_id`),
   CONSTRAINT `fk_msg_conv` FOREIGN KEY (`conversation_id`) REFERENCES `conversations` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_msg_sender` FOREIGN KEY (`sender_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

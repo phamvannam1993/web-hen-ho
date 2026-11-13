@@ -527,7 +527,7 @@ class M_interaction extends CI_Model
                 throw new RuntimeException('Không có quyền truy cập hội thoại này.', 403);
             }
             $message = $run(
-                'SELECT id, sender_id, deleted_at FROM messages
+                'SELECT id, sender_id, deleted_at, type FROM messages
                  WHERE conversation_id = ? AND id = ? FOR UPDATE',
                 array($conversation_id, $message_id)
             )->row_array();
@@ -539,6 +539,9 @@ class M_interaction extends CI_Model
             }
             if ((int) $message['sender_id'] !== $user_id) {
                 throw new RuntimeException('Bạn chỉ có thể thu hồi tin nhắn của mình.', 403);
+            }
+            if (empty($message['deleted_at']) && $message['type'] === 'system') {
+                throw new RuntimeException('Không thể sửa hoặc thu hồi lịch sử cuộc gọi.', 403);
             }
             if (empty($message['deleted_at'])) {
                 $run(

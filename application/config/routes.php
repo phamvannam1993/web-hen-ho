@@ -116,6 +116,7 @@ $route['api/realtime']                    = 'api/chat/realtime';
 $route['api/realtime/read']               = 'api/chat/realtime_read';
 $route['ajax/voice-config/(:num)']         = 'voice_calls/config/$1';
 $route['internal/voice/authorize']        = 'voice_calls/authorize';
+$route['internal/voice/completed']        = 'voice_calls/completed';
 
 /* Clubs Chat's (nhóm chat) cho ứng dụng — api/Groups.php */
 $route['api/groups']                      = 'api/groups/index';

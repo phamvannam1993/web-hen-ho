@@ -4,6 +4,7 @@ function createVoice({ config, clients, send, log = () => {} }) {
   const calls = new Map();
   const busy = new Map();
   const cooldown = new Map();
+  const saving = new Set();
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const open = ws => ws && ws.readyState === 1;
   const fresh = ws => open(ws) && Number.isFinite(ws.authExpiresAt)
@@ -21,7 +22,24 @@ function createVoice({ config, clients, send, log = () => {} }) {
       && (!c.b || fresh(c.b)) && c.expires > Date.now();
   }
 
-  function end(c, reason) {
+  async function saveResult(data) {
+    // Same callId for every attempt: PHP's unique key guarantees one message.
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        const response = await fetch(config.appUrl + '/internal/voice/completed', {
+          method:'POST', redirect:'error', signal:AbortSignal.timeout(5000),
+          headers:{'Content-Type':'application/json','X-Realtime-Secret':config.secret},
+          body:JSON.stringify(data),
+        });
+        if (response.ok && (await response.json()).ok) return;
+        if ([400,403,409,422].includes(response.status)) break;
+      } catch { /* A temporary HTTP failure must not lose the result immediately. */ }
+      if (attempt < 4) await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+    }
+    log({event:'voice.history_failed',callId:data.callId});
+  }
+
+  function end(c, reason, declined = false) {
     if (calls.get(c.id) !== c) return;
     log({event:'voice.ended',callId:c.id,reason,phase:c.state,
       elapsedSeconds:Math.max(0,Math.floor((Date.now()-c.startedAt)/1000))});
@@ -32,6 +50,17 @@ function createVoice({ config, clients, send, log = () => {} }) {
     const event = { t: 'voice.ended', callId: c.id, reason };
     if (open(c.a)) send(c.a, event);
     if (c.peer && !c.suppressed) peers(c.peer, event);
+    // No history for an invite that failed participant authorization.
+    if (c.peer) {
+      const connected = c.connectedAt !== undefined;
+      const outcome = connected ? 'completed' : declined ? 'declined'
+        : reason === 'busy' ? 'busy' : !c.b ? 'missed' : 'failed';
+      const job = saveResult({callId:c.id,conversationId:c.cid,uid:c.uid,peerId:c.peer,
+        video:c.video,outcome,durationSeconds:connected
+          ? Math.min(3000,Math.max(0,Math.floor((Date.now()-c.connectedAt)/1000))) : 0});
+      saving.add(job);
+      job.finally(() => saving.delete(job));
+    }
   }
 
   async function authorize(uid, conversationId) {
@@ -76,7 +105,7 @@ function createVoice({ config, clients, send, log = () => {} }) {
     if (m.t === 'voice.end') {
       if (c && (c.a === ws || c.b === ws
         || (!c.suppressed && !c.b && c.state === 'ringing' && c.peer === ws.uid))) {
-        end(c, 'ended');
+        end(c, 'ended', !c.b && ws.uid === c.peer);
       }
       return;
     }
@@ -94,7 +123,7 @@ function createVoice({ config, clients, send, log = () => {} }) {
         id: m.callId, cid: m.conversationId, uid: ws.uid,
         startedAt: now,
         // Gọi video: cùng luồng báo hiệu, chỉ khác SDP có thêm track camera
-        video: m.video === true,
+        video: m.video === true || m.video === 1 || m.video === '1' || m.video === 'true',
         callerTrickle: m.trickle === true, trickle: false, iceA: 0, iceB: 0,
         a: ws, b: null, peer: 0, state: 'pending', stage: 0,
         until: now + 35000,
@@ -127,6 +156,12 @@ function createVoice({ config, clients, send, log = () => {} }) {
     }
 
     if (!c || !live(c)) return;
+    if (m.t === 'voice.connected') {
+      if ((ws === c.a || ws === c.b) && c.b
+        && (c.stage === 2 || c.stage === 'answer-pending')
+        && c.connectedAt === undefined) c.connectedAt = Date.now();
+      return;
+    }
     if (m.t === 'voice.accept') {
       if (c.suppressed || c.state !== 'ringing' || c.b || ws.uid !== c.peer) return;
       c.b = ws;
@@ -192,7 +227,7 @@ function createVoice({ config, clients, send, log = () => {} }) {
         c.until = c.expires;
       }
       send(offer ? c.b : c.a, {
-        t: m.t, callId: c.id, sdp: m.sdp,
+        t: m.t, callId: c.id, sdp: m.sdp, video: c.video,
       });
     } catch {
       end(c, 'permission');
@@ -231,6 +266,7 @@ function createVoice({ config, clients, send, log = () => {} }) {
       clearInterval(timer);
       for (const c of calls.values()) end(c, 'connection');
       cooldown.clear();
+      return Promise.allSettled([...saving]);
     },
   };
 }

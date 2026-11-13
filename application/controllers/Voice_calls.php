@@ -71,6 +71,29 @@ class Voice_calls extends CI_Controller
         return $this->reply(array('ok'=>true,'peer'=>$peer,'calls_notifications_enabled'=>$calls_enabled));
     }
 
+    /** Kết thúc cuộc gọi: Node ký bằng secret nội bộ; client không được ghi lịch sử. */
+    public function completed()
+    {
+        if ($this->input->method() !== 'post') return $this->reply(array('ok'=>false), 405);
+        if (!$this->realtime->la_may_chu($this->input->get_request_header('X-Realtime-Secret', false))) {
+            return $this->reply(array('ok'=>false), 403);
+        }
+        $body = json_decode($this->input->raw_input_stream, true);
+        if (!is_array($body)) return $this->reply(array('ok'=>false), 400);
+        try {
+            $this->load->model('m_call_message');
+            $result = $this->m_call_message->save_result($body);
+            if ($result['created']) {
+                $this->realtime->tin_rieng($body['conversationId'], $result['row'], $body['uid'], $body['peerId']);
+            }
+            return $this->reply(array('ok'=>true, 'messageId'=>(int) $result['row']['id']));
+        } catch (Throwable $e) {
+            log_message('error', 'Call history: ' . $e->getMessage());
+            $status = in_array($e->getCode(), array(403,409,422), true) ? $e->getCode() : 503;
+            return $this->reply(array('ok'=>false), $status);
+        }
+    }
+
     private function positive_id($value)
     {
         if (!is_int($value) && !is_string($value)) return 0;

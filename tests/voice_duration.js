@@ -8,7 +8,8 @@ class Clock extends Date { static now() { return now; } }
 const sandbox = vm.createContext({
     module:{exports:{}}, Date:Clock, AbortSignal:{timeout:()=>null},
     setInterval:fn=>{tick=fn;return {unref(){}};}, clearInterval:()=>{},
-    fetch:async (_,options)=>{
+    fetch:async (url,options)=>{
+        if (url.endsWith('/completed')) return {ok:true,json:async()=>({ok:true})};
         const {uid} = JSON.parse(options.body);
         return {ok:allowed,json:async()=>({ok:true,peer:{id:uid===1?2:1,name:'Peer'},calls_notifications_enabled:true})};
     },

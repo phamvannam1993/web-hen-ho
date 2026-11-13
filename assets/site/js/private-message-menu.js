@@ -73,7 +73,7 @@
         action(pin,isPinned ? 'Bỏ ghim' : 'Ghim',isPinned ? 'unpin' : 'pin');
         pin.disabled = !available || !token || writing;
         copy.disabled = !copyValue;
-        recall.hidden = !message.classList.contains('mine');
+        recall.hidden = !message.classList.contains('mine') || message.dataset.messageType === 'system';
         recall.disabled = writing || !feed.dataset.recallUrl;
         reply.disabled = !form || writing;
         if (nativePopover) menu.showPopover(); else menu.classList.add('is-open');
@@ -157,7 +157,7 @@
     };
     recall.onclick = function () {
         if (writing || !selected || !selected.isConnected || !selected.classList.contains('mine')
-            || selected.dataset.recalled === '1' || !window.MessageRecall) return;
+            || selected.dataset.recalled === '1' || selected.dataset.messageType === 'system' || !window.MessageRecall) return;
         var message = selected;
         var recallEndpoint = feed.dataset.recallUrl;
         writing = true; version++; closeMenu(true); notify('');

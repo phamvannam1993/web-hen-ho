@@ -258,6 +258,63 @@
     function fail(s, error) {
         finish(s, error.message || reasons.connection, true);
     }
+    function videoRequested(message) {
+        return message.video === true || message.video === 1
+            || message.video === '1' || message.video === 'true';
+    }
+    function showVideo(s) {
+        s.video = true;
+        title.textContent = 'Gọi video';
+        dialog.classList.add('is-video');
+        videoBox.hidden = false;
+        localVideo.srcObject = s.stream;
+        localVideo.classList.remove('is-off');
+        s.facing = 'user';
+        s.cameraEnabled = true;
+        camera.hidden = false;
+        setControl(camera, 'Tắt camera', 'camera', false);
+        navigator.mediaDevices.enumerateDevices().then(function (list) {
+            if (current !== s) return;
+            s.cameraCount = list.filter(function (d) { return d.kind === 'videoinput'; }).length;
+            flip.hidden = !s.cameraEnabled || s.cameraCount < 2;
+        }).catch(function () {});
+    }
+    /** Recover a video call if an older incoming notification omitted its type. */
+    function ensureVideo(s) {
+        if (s.videoSender) return Promise.resolve(true);
+        if (s.videoSetup) return s.videoSetup;
+        s.videoSetup = (async function () {
+            var fresh = null, adopted = false;
+            s.video = true;
+            title.textContent = 'Gọi video';
+            dialog.classList.add('is-video');
+            status.textContent = 'Đang chuẩn bị camera…';
+            try {
+                fresh = await navigator.mediaDevices.getUserMedia({audio:false,
+                    video:{facingMode:'user',width:{ideal:640},height:{ideal:480}}});
+                if (current !== s) return false;
+                var track = fresh.getVideoTracks()[0];
+                if (!track) throw new Error('Không tìm thấy camera. Hãy kiểm tra thiết bị rồi gọi lại.');
+                s.videoSender = s.pc.addTrack(track, s.stream);
+                s.stream.addTrack(track);
+                adopted = true;
+                showVideo(s);
+                // Stop the audio-only player when the same remote stream moves to video.
+                if (s.remoteStream) {
+                    audio.pause(); audio.srcObject = null;
+                    remoteVideo.srcObject = s.remoteStream;
+                    remoteVideo.play().catch(function () { if (current === s) play.hidden = false; });
+                }
+                status.textContent = 'Đang kết nối video…';
+                return true;
+            } catch (error) {
+                throw new Error(mediaErrorMessage(error,'camera') || error.message);
+            } finally {
+                if (fresh && !adopted) fresh.getTracks().forEach(function (track) { track.stop(); });
+            }
+        })();
+        return s.videoSetup;
+    }
     function show(s, text) {
         callSounds.stop();
         current = s;
@@ -328,29 +385,16 @@
             return false;
         }
         s.stream = stream;
-        if (s.video) {
-            s.facing = 'user';
-            s.cameraEnabled = true;
-            localVideo.srcObject = stream;
-            videoBox.hidden = false;
-            camera.hidden = false;
-            setControl(camera, 'Tắt camera', 'camera', false);
-            localVideo.classList.remove('is-off');
-            // Nút đổi camera chỉ khi máy có từ hai camera (điện thoại)
-            navigator.mediaDevices.enumerateDevices().then(function (list) {
-                if (current === s) {
-                    s.cameraCount = list.filter(function (d) { return d.kind === 'videoinput'; }).length;
-                    flip.hidden = !s.cameraEnabled || s.cameraCount < 2;
-                }
-            }).catch(function () {});
-        }
+        if (s.video) showVideo(s);
         stream.getTracks().forEach(function (t) {
             var sender = s.pc.addTrack(t, stream);
             if (t.kind === 'video') s.videoSender = sender;
         });
         s.pc.ontrack = function (event) {
             if (current !== s) return;
-            var remote = event.streams[0] || new MediaStream([event.track]);
+            var remote = s.remoteStream || event.streams[0] || new MediaStream();
+            if (remote.getTracks().indexOf(event.track) === -1) remote.addTrack(event.track);
+            s.remoteStream = remote;
             // Gọi video: thẻ video phát cả tiếng; thoại: thẻ audio như cũ
             var player = s.video ? remoteVideo : audio;
             if (player.srcObject !== remote) player.srcObject = remote;
@@ -368,6 +412,7 @@
                 s.disconnect = null;
                 setControl(end, 'Kết thúc', 'end');
                 if (!s.clock) {
+                    send(s, 'voice.connected');
                     console.info('[voice] connected', {callId:s.id,trickle:!!s.trickle,
                         afterAcceptedMs:s.acceptedAt ? Date.now()-s.acceptedAt : null,gatherMs:s.gatherMs});
                     s.startedAt = Date.now();
@@ -645,8 +690,8 @@
         pendingIncoming=null;
         show({
             id: m.callId, cid: m.conversationId,
-            name: m.name, incoming: true, video: m.video === true,
-        }, m.video === true ? 'Cuộc gọi video đến' : 'Cuộc gọi thoại đến');
+            name: m.name, incoming: true, video: videoRequested(m),
+        }, videoRequested(m) ? 'Cuộc gọi video đến' : 'Cuộc gọi thoại đến');
     });
     rt.on('voice.ringing', function (m) {
         if (current && current.id === m.callId) status.textContent = 'Đang đổ chuông…';
@@ -657,6 +702,9 @@
         s.accepted = true;
         s.acceptedAt = Date.now();
         s.trickle = m.trickle === true;
+        if (s.incoming && videoRequested(m)) {
+            ensureVideo(s).catch(function (error) { if (current === s) fail(s,error); });
+        }
         if (s.resumeGather) s.resumeGather();
         callSounds.stop();
         clearTimeout(s.timer);
@@ -667,20 +715,25 @@
         if (!s.incoming) description(s, 'offer').catch(function (e) { fail(s, e); });
     });
     ['offer', 'answer'].forEach(function (type) {
-        rt.on('voice.' + type, function (m) {
+        rt.on('voice.' + type, async function (m) {
             if (pendingIncoming === m.callId) { incomingGeneration++; pendingIncoming=null; }
             var s = current;
             if (!s || s.id !== m.callId || !s.accepted || !s.pc
                 || s.remoteSet || (type === 'offer') !== s.incoming) return;
             s.remoteSet = true;
-            s.pc.setRemoteDescription({ type: type, sdp: m.sdp })
-                .then(function () {
-                    if (current !== s) return;
-                    s.remoteReady = true;
-                    (s.remoteIce || []).forEach(function (candidate) { addRemoteIce(s,candidate); });
-                    s.remoteIce = [];
-                    if (current === s && type === 'offer') return description(s, 'answer');
-                }).catch(function (e) { fail(s, e); });
+            try {
+                // The answer must include our camera even if the first notification lost video=true.
+                var offeredVideo = type === 'offer' && typeof m.sdp === 'string'
+                    && /^m=video [1-9][0-9]* /m.test(m.sdp);
+                if (s.incoming && (videoRequested(m) || offeredVideo || s.videoSetup)) await ensureVideo(s);
+                if (current !== s) return;
+                await s.pc.setRemoteDescription({ type: type, sdp: m.sdp });
+                if (current !== s) return;
+                s.remoteReady = true;
+                (s.remoteIce || []).forEach(function (candidate) { addRemoteIce(s,candidate); });
+                s.remoteIce = [];
+                if (type === 'offer') await description(s, 'answer');
+            } catch (error) { if (current === s) fail(s,error); }
         });
     });
     rt.on('voice.ice', function (m) {

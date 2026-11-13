@@ -183,7 +183,7 @@ Bản API của `Message_actions` (web), cùng model nên cùng luật. Thân PO
 | GET/POST | `/api/conversations/{id}/notifications` | GET → `{notifications_enabled, calls_notifications_enabled, muted, message_muted_until, calls_muted_until, server_time}`. POST `{enabled, scope?: "messages"\|"calls"\|"both", duration?: 0\|900\|3600\|28800\|86400}` (giây; 0 = đến khi bật lại) |
 | POST | `/api/conversations/{id}/delete` | Xoá lịch sử phía mình (người kia vẫn còn). Trả `deleted_through_message_id` |
 | POST | `/api/conversations/{id}/block` | `{action: "block"\|"unblock"}` — chặn người đang chat |
-| GET  | `/api/conversations/{id}/call-config` | Cấu hình gọi thoại/video: `{peer: {id, name}, rtc: {enabled, expiresAt, iceTransportPolicy: "relay", iceServers}}` (TURN tạm 1 giờ). **503** chưa bật gọi, **403** không được gọi người này. Báo hiệu qua WebSocket như web: `voice.invite {callId, conversationId, video}` … xem `VOICE-CALLS-DEPLOYMENT.md` |
+| GET  | `/api/conversations/{id}/call-config` | Cấu hình gọi thoại/video: `{peer: {id, name}, rtc: {enabled, expiresAt, iceTransportPolicy: "relay", iceServers}}` (TURN tạm 1 giờ). **503** chưa bật gọi, **403** không được gọi người này. Báo hiệu qua WebSocket như web: `voice.invite {callId, conversationId, video}`; gửi `voice.connected {callId}` khi WebRTC đã kết nối để tính thời lượng. Kết thúc/gọi nhỡ tự lưu một tin `type: system` trong hội thoại, không sửa/thu hồi được. Xem `VOICE-CALLS-DEPLOYMENT.md` |
 | GET  | `/api/conversations/{id}/search?q=&before=` | Tìm tin chữ (2–100 ký tự), 20 tin/lần mới trước; `has_more`, `next_before` |
 
 `GET /api/conversations` có thêm `notifications_enabled`, `calls_notifications_enabled` cho mỗi hội thoại.

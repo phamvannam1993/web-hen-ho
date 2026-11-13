@@ -401,6 +401,7 @@ echo "Đã sẵn sàng ghim tin nhắn.\n";
 $pdo->exec(file_get_contents(__DIR__ . '/migrate_conversation_deletions.sql'));
 echo "Đã sẵn sàng xóa cuộc trò chuyện phía người dùng.\n";
 require __DIR__ . '/migrate_private_message_replies.php';
+require __DIR__ . '/migrate_call_messages.php';
 $pdo->exec(file_get_contents(__DIR__ . '/migrate_conversation_notifications.sql'));
 echo "Đã sẵn sàng bật/tắt thông báo inbox.\n";
 require __DIR__ . '/migrate_conversation_mute_options.php';

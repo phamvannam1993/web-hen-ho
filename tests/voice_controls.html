@@ -4,7 +4,8 @@
 <button data-voice-call="9" data-video="1">Video call</button>
 <pre id="result" data-status="running">RUNNING</pre>
 <script>
-const tracks=[],errors=[],iceApplied=[];let cameraMissing=false,lastPc,offerBeforeComplete=false;
+const tracks=[],errors=[],iceApplied=[],sent=[],requests=[];let cameraMissing=false,lastPc,offerBeforeComplete=false;
+let acceptedVideo, incomingSdp;
 window.addEventListener('error',e=>errors.push(e.message));
 window.Audio=class{play(){return Promise.resolve()}pause(){}};
 function mediaStream(kind){
@@ -15,7 +16,7 @@ function mediaStream(kind){
  s.removeTrack=t=>values.splice(values.indexOf(t),1);return s;
 }
 Object.defineProperty(navigator,'mediaDevices',{configurable:true,value:{
- getUserMedia:async c=>{if(c.video&&cameraMissing)throw {name:'NotFoundError'};return mediaStream(c.video?'video':'audio')},
+ getUserMedia:async c=>{requests.push(c);if(c.video&&cameraMissing)throw {name:'NotFoundError'};return mediaStream(c.video?'video':'audio')},
  enumerateDevices:async()=>[{kind:'audiooutput',deviceId:'speaker',label:'Speakers'},{kind:'audiooutput',deviceId:'headset',label:'Headset'},
  {kind:'videoinput',deviceId:'front'},{kind:'videoinput',deviceId:'back'}],
 }});
@@ -23,9 +24,13 @@ HTMLMediaElement.prototype.setSinkId=async function(id){this.fixtureSink=id};
 Object.defineProperty(HTMLMediaElement.prototype,'sinkId',{configurable:true,get(){return this.fixtureSink||''}});
 const sdp='v=0\r\na=candidate:1 1 udp 1 192.0.2.1 49160 typ relay\r\n';
 window.RTCPeerConnection=class extends EventTarget{
- constructor(){super();lastPc=this;this.connectionState='new';this.iceGatheringState='gathering'}
- addTrack(track){const sender={track,replaceTrack:async function(t){this.track=t}};return sender}
+ constructor(){super();lastPc=this;this.senders=[];this.connectionState='new';this.iceGatheringState='gathering'}
+ addTrack(track){const sender={track,replaceTrack:async function(t){this.track=t}};this.senders.push(sender);return sender}
  createOffer(){return Promise.resolve({type:'offer',sdp})}
+ createAnswer(){
+  if(/^m=video /m.test(this.remoteDescription.sdp)&&!this.senders.some(s=>s.track&&s.track.kind==='video'))throw Error('Answer missing local camera');
+  return Promise.resolve({type:'answer',sdp});
+ }
  async setLocalDescription(d){
   this.localDescription={type:d.type,sdp:'v=0\r\n'};
   this.candidateTimer=setTimeout(()=>{
@@ -35,13 +40,18 @@ window.RTCPeerConnection=class extends EventTarget{
   },10);
   this.completeTimer=setTimeout(()=>{this.iceGatheringState='complete';this.dispatchEvent(new Event('icegatheringstatechange'))},2000);
  }
- async setRemoteDescription(){this.connectionState='connected';this.onconnectionstatechange()}
+ async setRemoteDescription(d){this.remoteDescription=d;this.connectionState='connected';this.onconnectionstatechange()}
  async addIceCandidate(candidate){iceApplied.push(candidate)}
  close(){this.connectionState='closed';clearTimeout(this.candidateTimer);clearTimeout(this.completeTimer)}
 };
 const listeners={};
 window.Realtime={connected:true,on:(name,fn)=>{listeners[name]=fn},sendDirect:m=>{
+ sent.push(m);
  if(m.t==='voice.invite')setTimeout(()=>listeners['voice.accepted']({callId:m.callId,trickle:true}),0);
+ if(m.t==='voice.accept')setTimeout(()=>{
+  listeners['voice.accepted']({callId:m.callId,trickle:true,video:acceptedVideo});
+  listeners['voice.offer']({callId:m.callId,sdp:incomingSdp});
+ },0);
  if(m.t==='voice.offer'){
   offerBeforeComplete=lastPc.iceGatheringState==='gathering';
   listeners['voice.ice']({callId:m.callId,candidate:{candidate:'candidate:2 1 udp 1 192.0.2.2 49161 typ relay',sdpMid:'0',sdpMLineIndex:0}});
@@ -65,6 +75,9 @@ window.fetch=async()=>({ok:true,json:async()=>({ok:true,peer:{name:'Peer'},rtc:{
   const camera=document.querySelector('[data-camera]'),output=document.querySelector('[data-output]');
   await until(()=>!camera.hidden&&!output.hidden&&document.querySelector('.voice-status').textContent==='Đã kết nối');
   check(offerBeforeComplete,'Connection starts before ICE gathering completes');
+  check(sent.filter(m=>m.t==='voice.connected').length===1,'Connected media reports duration start to server');
+  lastPc.onconnectionstatechange();
+  check(sent.filter(m=>m.t==='voice.connected').length===1,'Repeated connected event does not restart duration');
   await until(()=>iceApplied.length===2);
   check(iceApplied[1]===null,'ICE arriving before/after SDP is applied in order');
   check(true,'Video call exposes camera and output controls');
@@ -87,6 +100,35 @@ window.fetch=async()=>({ok:true,json:async()=>({ok:true,peer:{name:'Peer'},rtc:{
   document.querySelector('[data-end]').click();
   check(tracks.every(t=>t.stopped),'Hangup releases all active media');
   check(camera.hidden&&output.hidden&&document.querySelector('.voice-output').hidden,'Hangup hides controls');
+  async function receive(video,serverVideo,hasVideo){
+   const callId=crypto.randomUUID(),before=requests.length;
+   acceptedVideo=serverVideo;incomingSdp=sdp+(hasVideo?'m=video 9 UDP/TLS/RTP/SAVPF 96\r\n':'');
+   await listeners['voice.incoming']({callId,conversationId:9,name:'Caller A',video});
+   check(requests.length===before,'Incoming notification never opens camera before acceptance');
+   if(video===true||video==='1')check(document.querySelector('#voice-title').textContent==='Gọi video','Incoming video uses video UI');
+   document.querySelector('[data-accept]').click();
+   await until(()=>sent.some(m=>m.callId===callId&&m.t==='voice.answer'));
+   return callId;
+  }
+  await receive(true,true,true);
+  check(!camera.hidden&&!document.querySelector('.voice-video').hidden,'Receiver sees camera controls and video preview');
+  check(lastPc.senders.some(s=>s.track.kind==='video')&&lastPc.senders.some(s=>s.track.kind==='audio'),'Receiver sends both camera and microphone');
+  const canvas=document.createElement('canvas'),remoteCamera=canvas.captureStream().getVideoTracks()[0];
+  const ctx=new AudioContext(),remoteMic=ctx.createMediaStreamDestination().stream.getAudioTracks()[0];
+  lastPc.ontrack({streams:[],track:remoteCamera});lastPc.ontrack({streams:[],track:remoteMic});
+  const remote=document.querySelector('.voice-remote').srcObject;
+  check(remote.getVideoTracks()[0]===remoteCamera&&remote.getAudioTracks()[0]===remoteMic,'Streamless remote audio and video remain together in video player');
+  document.querySelector('[data-end]').click();remoteCamera.stop();remoteMic.stop();await ctx.close();
+  await receive('1',true,true);
+  check(!camera.hidden,'Numeric-string video flag opens receiver camera');document.querySelector('[data-end]').click();
+  await receive(undefined,true,true);
+  check(document.querySelector('#voice-title').textContent==='Gọi video'&&!camera.hidden,'Accepted event recovers missing incoming video flag');document.querySelector('[data-end]').click();
+  await receive(undefined,undefined,true);
+  check(document.querySelector('#voice-title').textContent==='Gọi video'&&lastPc.senders.some(s=>s.track.kind==='video'),'SDP video offer recovers missing flags before answer');document.querySelector('[data-end]').click();
+  const camerasBefore=requests.filter(c=>c.video).length;
+  await receive(false,false,false);
+  check(document.querySelector('#voice-title').textContent==='Gọi thoại'&&camera.hidden,'Audio call keeps audio UI');
+  check(requests.filter(c=>c.video).length===camerasBefore,'Audio call does not request camera');document.querySelector('[data-end]').click();
   check(errors.length===0,'No browser errors: '+errors.join(';'));
   result.dataset.status='pass';result.textContent='PASS: '+n+' call-control browser assertions';
  }catch(e){result.dataset.status='fail';result.textContent='FAIL after '+n+': '+e.stack+'; errors='+errors.join(';')}
