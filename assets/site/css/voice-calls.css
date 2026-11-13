@@ -14,16 +14,29 @@
 .voice-status { min-height: 48px; color: #6e6275; }
 .voice-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 .voice-dialog button, #cw-voice, #cw-video {
-    padding: 10px 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 56px;
+    height: 56px;
+    padding: 0;
     border: 1px solid #eadce8;
-    border-radius: 12px;
+    border-radius: 50%;
     background: #fff;
     color: #692b5a;
     font: inherit;
     cursor: pointer;
+    transition: background .15s, box-shadow .15s;
 }
+.voice-dialog button svg { width: 24px; height: 24px; pointer-events: none; }
+.voice-control-label { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; border:0; }
+.voice-dialog button:hover { background:#fff0f6; box-shadow:0 3px 12px #692b5a18; }
+.voice-dialog button[aria-pressed="true"] { background:#fce5ed; border-color:#eab4c6; color:#ad3152; }
 .voice-dialog [data-accept] { background: #216e4b; color: #fff; }
 .voice-dialog [data-end] { background: #ad3152; color: #fff; }
+.voice-dialog [data-accept]:hover { background:#19583b; }
+.voice-dialog [data-end]:hover { background:#922341; }
 .voice-dialog [data-play] { margin-top: 12px; }
 .voice-dialog button:focus-visible, #cw-voice:focus-visible, #cw-video:focus-visible {
     outline: 3px solid #d890bc;
@@ -32,6 +45,7 @@
 .voice-dialog [hidden], #cw-voice[hidden], #cw-video[hidden] { display: none; }
 #cw-voice, #cw-video { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 8px; margin-top: 4px; }
 #cw-voice svg, #cw-video svg { width: 20px; height: 20px; }
+.tk-ms-head [data-voice-call] { width:40px; height:40px; padding:8px; border-radius:50%; }
 [data-voice-call]:disabled { opacity: .5; cursor: not-allowed; }
 
 /* Gọi video: khung rộng hơn, hình người kia 4:3, hình mình nhỏ ở góc */
@@ -41,3 +55,5 @@
 .voice-local { position: absolute; right: 10px; bottom: 10px; width: 28%; max-width: 150px; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 10px; border: 2px solid #fff; background: #3a2742; transform: scaleX(-1); }
 .voice-local.is-off { visibility: hidden; }
 @media (max-width: 480px) { .voice-dialog.is-video { padding: 12px; } .voice-video { aspect-ratio: 3 / 4; } }
+@media (max-width: 480px) { .voice-dialog button { width:48px; height:48px; } .voice-actions { gap:8px; } }
+@media (prefers-reduced-motion: reduce) { .voice-dialog button { transition:none; } }
