@@ -4,7 +4,7 @@
 <button data-voice-call="9" data-video="1">Video call</button>
 <pre id="result" data-status="running">RUNNING</pre>
 <script>
-const tracks=[],errors=[];let cameraMissing=false;
+const tracks=[],errors=[],iceApplied=[];let cameraMissing=false,lastPc,offerBeforeComplete=false;
 window.addEventListener('error',e=>errors.push(e.message));
 window.Audio=class{play(){return Promise.resolve()}pause(){}};
 function mediaStream(kind){
@@ -22,18 +22,32 @@ Object.defineProperty(navigator,'mediaDevices',{configurable:true,value:{
 HTMLMediaElement.prototype.setSinkId=async function(id){this.fixtureSink=id};
 Object.defineProperty(HTMLMediaElement.prototype,'sinkId',{configurable:true,get(){return this.fixtureSink||''}});
 const sdp='v=0\r\na=candidate:1 1 udp 1 192.0.2.1 49160 typ relay\r\n';
-window.RTCPeerConnection=class{
- constructor(){this.connectionState='new';this.iceGatheringState='complete'}
+window.RTCPeerConnection=class extends EventTarget{
+ constructor(){super();lastPc=this;this.connectionState='new';this.iceGatheringState='gathering'}
  addTrack(track){const sender={track,replaceTrack:async function(t){this.track=t}};return sender}
  createOffer(){return Promise.resolve({type:'offer',sdp})}
- async setLocalDescription(d){this.localDescription=d}
+ async setLocalDescription(d){
+  this.localDescription={type:d.type,sdp:'v=0\r\n'};
+  this.candidateTimer=setTimeout(()=>{
+   this.localDescription={type:d.type,sdp};
+   const event=new Event('icecandidate');Object.defineProperty(event,'candidate',{value:{candidate:sdp.split('a=')[1].trim(),sdpMid:'0',sdpMLineIndex:0}});
+   if(this.onicecandidate)this.onicecandidate(event);this.dispatchEvent(event);
+  },10);
+  this.completeTimer=setTimeout(()=>{this.iceGatheringState='complete';this.dispatchEvent(new Event('icegatheringstatechange'))},2000);
+ }
  async setRemoteDescription(){this.connectionState='connected';this.onconnectionstatechange()}
- addEventListener(){} removeEventListener(){} close(){this.connectionState='closed'}
+ async addIceCandidate(candidate){iceApplied.push(candidate)}
+ close(){this.connectionState='closed';clearTimeout(this.candidateTimer);clearTimeout(this.completeTimer)}
 };
 const listeners={};
 window.Realtime={connected:true,on:(name,fn)=>{listeners[name]=fn},sendDirect:m=>{
- if(m.t==='voice.invite')setTimeout(()=>listeners['voice.accepted']({callId:m.callId}),0);
- if(m.t==='voice.offer')setTimeout(()=>listeners['voice.answer']({callId:m.callId,sdp}),0);
+ if(m.t==='voice.invite')setTimeout(()=>listeners['voice.accepted']({callId:m.callId,trickle:true}),0);
+ if(m.t==='voice.offer'){
+  offerBeforeComplete=lastPc.iceGatheringState==='gathering';
+  listeners['voice.ice']({callId:m.callId,candidate:{candidate:'candidate:2 1 udp 1 192.0.2.2 49161 typ relay',sdpMid:'0',sdpMLineIndex:0}});
+  setTimeout(()=>listeners['voice.answer']({callId:m.callId,sdp}),0);
+  setTimeout(()=>listeners['voice.ice']({callId:m.callId,candidate:null}),5);
+ }
  return true;
 }};
 window.fetch=async()=>({ok:true,json:async()=>({ok:true,peer:{name:'Peer'},rtc:{enabled:true,iceTransportPolicy:'relay',
@@ -50,6 +64,9 @@ window.fetch=async()=>({ok:true,json:async()=>({ok:true,peer:{name:'Peer'},rtc:{
   document.querySelector('[data-voice-call]').click();
   const camera=document.querySelector('[data-camera]'),output=document.querySelector('[data-output]');
   await until(()=>!camera.hidden&&!output.hidden&&document.querySelector('.voice-status').textContent==='Đã kết nối');
+  check(offerBeforeComplete,'Connection starts before ICE gathering completes');
+  await until(()=>iceApplied.length===2);
+  check(iceApplied[1]===null,'ICE arriving before/after SDP is applied in order');
   check(true,'Video call exposes camera and output controls');
   camera.click();await until(()=>camera.getAttribute('aria-pressed')==='true');
   check(tracks[1].stopped&&!tracks[0].stopped,'Turning camera off releases camera and keeps microphone');

@@ -195,6 +195,7 @@
         if (s.pc) {
             s.pc.onconnectionstatechange = null;
             s.pc.ontrack = null;
+            s.pc.onicecandidate = null;
             s.pc.close();
         }
         if (s.stream) s.stream.getTracks().forEach(function (t) { t.stop(); });
@@ -308,6 +309,19 @@
             iceServers: data.rtc.iceServers, iceTransportPolicy: 'relay',
             iceCandidatePoolSize: 1, bundlePolicy: 'max-bundle',
         });
+        s.pc.onicecandidate = function (event) {
+            if (current !== s) return;
+            var candidate = event.candidate;
+            // Chỉ chuyển relay; không gửi địa chỉ host hoặc server-reflexive.
+            if (candidate && !/^candidate:.* typ relay(?: |$)/.test(candidate.candidate)) return;
+            var value = candidate ? {candidate:candidate.candidate,sdpMid:candidate.sdpMid,sdpMLineIndex:candidate.sdpMLineIndex} : null;
+            if (s.sdpSent && s.trickle) {
+                try { send(s,'voice.ice',{candidate:value}); } catch (error) { fail(s,error); }
+            } else {
+                s.localIce = s.localIce || [];
+                if (s.localIce.length < 128) s.localIce.push(value);
+            }
+        };
         var stream = await callMedia(s.video);
         if (current !== s) {
             stream.getTracks().forEach(function (t) { t.stop(); });
@@ -354,6 +368,8 @@
                 s.disconnect = null;
                 setControl(end, 'Kết thúc', 'end');
                 if (!s.clock) {
+                    console.info('[voice] connected', {callId:s.id,trickle:!!s.trickle,
+                        afterAcceptedMs:s.acceptedAt ? Date.now()-s.acceptedAt : null,gatherMs:s.gatherMs});
                     s.startedAt = Date.now();
                     s.clock = setInterval(function () {
                         var seconds = Math.floor((Date.now() - s.startedAt) / 1000);
@@ -377,22 +393,30 @@
     }
     async function gatherDescription(s, type) {
         var pc = s.pc;
+        var gatherStartedAt = Date.now();
         var value = type === 'offer' ? await pc.createOffer() : await pc.createAnswer();
         if (current !== s) return;
         await pc.setLocalDescription(value);
         await new Promise(function (resolve, reject) {
-            var timer;
+            var timer, settled = false;
             function done(error) {
+                if (settled) return;
+                settled = true;
                 clearTimeout(timer);
                 pc.removeEventListener('icegatheringstatechange', changed);
+                pc.removeEventListener('icecandidate', changed);
                 s.cancelGather = null;
+                s.resumeGather = null;
                 if (error) reject(error); else resolve();
             }
             function changed() {
-                if (pc.iceGatheringState === 'complete') done();
+                if (pc.iceGatheringState === 'complete' || s.trickle && pc.localDescription
+                    && /^a=candidate:.* typ relay(?: |$)/m.test(pc.localDescription.sdp)) done();
             }
             s.cancelGather = function () { done(new Error('Cuộc gọi đã hủy.')); };
+            s.resumeGather = changed;
             pc.addEventListener('icegatheringstatechange', changed);
+            pc.addEventListener('icecandidate', changed);
             timer = setTimeout(function () {
                 // Một giao diện mạng có thể còn chờ dù giao diện khác đã lấy được relay.
                 var hasRelay = pc.localDescription
@@ -406,6 +430,7 @@
         if (!/^a=candidate:.* typ relay(?: |$)/m.test(sdp)) {
             throw new Error('TURN chưa cung cấp được kết nối ' + (s.video ? 'video.' : 'thoại.'));
         }
+        s.gatherMs = Date.now() - gatherStartedAt;
         return sdp;
     }
     function warmOffer(s) {
@@ -420,6 +445,22 @@
         var sdp = await (type === 'offer' ? warmOffer(s) : gatherDescription(s, type));
         if (current !== s || !sdp) return;
         send(s, 'voice.' + type, { sdp: sdp });
+        s.sdpSent = true;
+        if (s.trickle) (s.localIce || []).forEach(function (candidate) {
+            if (!candidate || !sdp.includes('a=' + candidate.candidate)) send(s,'voice.ice',{candidate:candidate});
+        });
+        s.localIce = [];
+    }
+    function addRemoteIce(s, candidate) {
+        if (current !== s || !s.trickle) return;
+        if (!s.remoteReady) {
+            s.remoteIce = s.remoteIce || [];
+            if (s.remoteIce.length < 128) s.remoteIce.push(candidate);
+            return;
+        }
+        s.remoteIceTask = (s.remoteIceTask || Promise.resolve()).then(function () {
+            if (current === s) return s.pc.addIceCandidate(candidate);
+        }).catch(function (error) { if (current === s) fail(s,error); });
     }
     document.addEventListener('click', function (event) {
         var button = event.target.closest('[data-voice-call]');
@@ -437,7 +478,7 @@
             if (!ready || current !== s) return;
             status.textContent = 'Đang gọi…';
             warmOffer(s);
-            send(s, 'voice.invite', { conversationId: s.cid, video: !!s.video });
+            send(s, 'voice.invite', { conversationId: s.cid, video: !!s.video, trickle:true });
             callSounds.play('outgoing');
         }).catch(function (error) { fail(s, error); });
     });
@@ -450,7 +491,7 @@
         setControl(end, 'Hủy gọi', 'end');
         status.textContent = s.video ? 'Đang chuẩn bị camera và microphone…' : 'Đang chuẩn bị microphone…';
         prepare(s).then(function (ready) {
-            if (ready && current === s) send(s, 'voice.accept');
+            if (ready && current === s) send(s, 'voice.accept', {trickle:true});
         }).catch(function (error) { fail(s, error); });
     };
     end.onclick = function () {
@@ -614,6 +655,9 @@
         var s = current;
         if (!s || s.id !== m.callId || s.accepted) return;
         s.accepted = true;
+        s.acceptedAt = Date.now();
+        s.trickle = m.trickle === true;
+        if (s.resumeGather) s.resumeGather();
         callSounds.stop();
         clearTimeout(s.timer);
         s.timer = setTimeout(function () {
@@ -631,9 +675,17 @@
             s.remoteSet = true;
             s.pc.setRemoteDescription({ type: type, sdp: m.sdp })
                 .then(function () {
+                    if (current !== s) return;
+                    s.remoteReady = true;
+                    (s.remoteIce || []).forEach(function (candidate) { addRemoteIce(s,candidate); });
+                    s.remoteIce = [];
                     if (current === s && type === 'offer') return description(s, 'answer');
                 }).catch(function (e) { fail(s, e); });
         });
+    });
+    rt.on('voice.ice', function (m) {
+        var s = current;
+        if (s && s.id === m.callId && s.accepted && s.pc) addRemoteIce(s,m.candidate);
     });
     ['ended', 'error', 'dismiss'].forEach(function (type) {
         rt.on('voice.' + type, function (m) {

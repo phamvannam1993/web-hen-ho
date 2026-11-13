@@ -47,7 +47,10 @@ Giới hạn bandwidth/allocation của TURN để kiểm soát tài nguyên.
 - Đổ chuông tối đa 35 giây; thiết lập kết nối tối đa 60 giây.
 - Quyền gọi được kiểm tra lại khi thiết lập và định kỳ khoảng 30 giây.
 - Mất WebSocket hoặc rời trang sẽ kết thúc cuộc gọi.
-- Non-trickle ICE: chờ gathering hoàn tất tối đa 15 giây mỗi bên.
+- Web mới gửi `trickle:true` trong `voice.invite` và `voice.accept`. Node chỉ bật chế độ nhanh khi cả hai bên hỗ trợ, báo lại qua `voice.accepted.trickle`.
+- Với chế độ nhanh, gửi SDP ngay khi có relay đầu tiên, không chờ toàn bộ giao diện mạng. Các relay còn lại được chuyển tiếp bằng `voice.ice {callId,candidate}`; phía nhận xếp hàng nếu SDP chưa áp dụng xong. Chỉ chấp nhận relay, tối đa 128 gói mỗi phía/cuộc gọi.
+- Nếu một phía là client cũ hoặc Node cũ không xác nhận `trickle:true`, giữ luồng non-trickle: chờ gathering hoàn tất tối đa 15 giây mỗi bên.
+- Sau khi xác định người tham gia, Node kiểm tra quyền hai phía song song cho bước nhận/offer/answer và kiểm tra định kỳ; không bỏ kiểm tra chặn, trạng thái tài khoản hoặc quyền gọi.
 - Web lấy sẵn một bộ ICE candidate sau khi xác thực quyền gọi, song song với việc mở micro/camera; audio và video dùng chung transport (`max-bundle`).
 - Bên gọi chuẩn bị SDP/relay ngay lúc đổ chuông, chỉ gửi offer khi người nhận đồng ý; tái sử dụng kết quả đã chuẩn bị để giảm thời gian chờ sau khi nhận. Không tự mở micro/camera của người nhận trước khi họ bấm nhận cuộc gọi.
 - Chưa ghi âm/ghi hình, lưu lịch sử, gọi nhóm hay nhận cuộc gọi khi đóng web/ứng dụng.
@@ -80,5 +83,11 @@ Giới hạn bandwidth/allocation của TURN để kiểm soát tài nguyên.
 9. Gọi video hai chiều web ↔ web và web ↔ ứng dụng; tắt/bật camera, đổi camera trên điện thoại.
 
 Kiểm tra tự động phần báo hiệu: `node tests/voice_mute.js` và `node tests/voice_video.js`.
+
+Kiểm tra tối ưu kết nối: `node tests/voice_trickle.js`, `node tests/voice_ice.js`; kiểm thử trình duyệt `tests/voice_controls.html` mô phỏng relay đến sớm nhưng gathering hoàn tất muộn để xác nhận kết nối bắt đầu trước khi hết chờ.
+
+Triển khai tối ưu này cần cập nhật **cả** `assets/site/js/voice-calls.js` và `websoket/src/voice.js`, rồi restart tiến trình realtime. Chỉ cập nhật JS trên web sẽ vẫn dùng luồng cũ nếu Node chưa hỗ trợ thương lượng trickle.
+
+Đo trên trình duyệt thật bằng dòng Console `[voice] connected`: `trickle:true` xác nhận hai bên/Node đã bật luồng nhanh; `afterAcceptedMs` là thời gian từ khi nhận xác nhận của Node đến khi WebRTC kết nối, `gatherMs` là thời gian chuẩn bị SDP/relay cục bộ. Không suy ra tốc độ production chỉ từ kiểm thử mô phỏng.
 
 Tài liệu này không tự thay đổi server, firewall hoặc triển khai production.

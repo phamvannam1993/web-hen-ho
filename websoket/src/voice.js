@@ -53,10 +53,16 @@ function createVoice({ config, clients, send, log = () => {} }) {
   }
 
   async function pair(c) {
-    const peer = await authorize(c.uid, c.cid);
+    let peer, caller;
+    if (c.peer) {
+      [peer, caller] = await Promise.all([authorize(c.uid, c.cid), authorize(c.peer, c.cid)]);
+    } else {
+      peer = await authorize(c.uid, c.cid);
+      if (!live(c) || peer.id === c.uid) throw new Error('permission');
+      caller = await authorize(peer.id, c.cid);
+    }
     if (!live(c) || peer.id === c.uid
       || (c.peer && c.peer !== peer.id)) throw new Error('permission');
-    const caller = await authorize(peer.id, c.cid);
     if (!live(c) || caller.id !== c.uid) throw new Error('permission');
     return { peer, caller };
   }
@@ -89,6 +95,7 @@ function createVoice({ config, clients, send, log = () => {} }) {
         startedAt: now,
         // Gọi video: cùng luồng báo hiệu, chỉ khác SDP có thêm track camera
         video: m.video === true,
+        callerTrickle: m.trickle === true, trickle: false, iceA: 0, iceB: 0,
         a: ws, b: null, peer: 0, state: 'pending', stage: 0,
         until: now + 35000,
         expires: Math.min(ws.authExpiresAt, now + 50 * 60000),
@@ -130,13 +137,36 @@ function createVoice({ config, clients, send, log = () => {} }) {
         await pair(c);
         if (!live(c) || c.state !== 'authorizing') return;
         c.state = 'connecting';
+        c.trickle = c.callerTrickle && m.trickle === true;
         c.until = Date.now() + 60000;
         c.checkAt = Date.now() + 30000;
-        send(c.a, { t: 'voice.accepted', callId: c.id, video: c.video });
-        send(c.b, { t: 'voice.accepted', callId: c.id, video: c.video });
+        send(c.a, { t: 'voice.accepted', callId: c.id, video: c.video, trickle: c.trickle });
+        send(c.b, { t: 'voice.accepted', callId: c.id, video: c.video, trickle: c.trickle });
       } catch {
         end(c, 'permission');
       }
+      return;
+    }
+
+    if (m.t === 'voice.ice') {
+      if (!c.trickle || (c.state !== 'connecting' && c.state !== 'active')) return;
+      const fromCaller = ws === c.a;
+      if (!fromCaller && ws !== c.b) return;
+      if (fromCaller ? c.stage === 0 : c.stage !== 'answer-pending' && c.stage !== 2) return;
+      const count = fromCaller ? 'iceA' : 'iceB';
+      if (c[count] >= 128) return;
+      let candidate = null;
+      if (m.candidate !== null) {
+        const value = m.candidate;
+        if (!value || typeof value.candidate !== 'string' || value.candidate.length > 2048
+          || !/^candidate:[^\r\n]+ typ relay(?: |$)[^\r\n]*$/.test(value.candidate)
+          || !(value.sdpMid == null || typeof value.sdpMid === 'string' && value.sdpMid.length <= 64)
+          || !(value.sdpMLineIndex == null || Number.isInteger(value.sdpMLineIndex) && value.sdpMLineIndex >= 0 && value.sdpMLineIndex <= 16)
+          || value.sdpMid == null && value.sdpMLineIndex == null) return;
+        candidate = {candidate:value.candidate,sdpMid:value.sdpMid ?? null,sdpMLineIndex:value.sdpMLineIndex ?? null};
+      }
+      c[count]++;
+      send(fromCaller ? c.b : c.a, {t:'voice.ice',callId:c.id,candidate});
       return;
     }
 

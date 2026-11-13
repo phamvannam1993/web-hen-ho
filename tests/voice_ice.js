@@ -11,18 +11,19 @@ assert(start >= 0 && end > start);
 const descriptionSource = source.slice(start, end);
 const relaySdp = 'v=0\r\na=candidate:1 1 udp 1 127.0.0.1 49160 typ relay\r\n';
 
-async function scenario({ relay, complete, cancel = false }) {
-    let timeout, listener, removed = 0;
+async function scenario({ relay, complete, cancel = false, trickle = false }) {
+    let timeout, removed = 0, timedOut = false;
+    const listeners = new Map();
     const sent = [];
     const pc = {
         iceGatheringState: complete ? 'complete' : 'gathering',
         localDescription: { sdp: relay ? relaySdp : 'v=0\r\n' },
         createOffer: async () => ({ type: 'offer', sdp: 'v=0\r\n' }),
         setLocalDescription: async () => {},
-        addEventListener: (_, fn) => { listener = fn; },
-        removeEventListener: (_, fn) => { assert.equal(fn, listener); removed++; },
+        addEventListener: (type, fn) => { listeners.set(type,fn); },
+        removeEventListener: (type, fn) => { assert.equal(fn, listeners.get(type)); removed++; },
     };
-    const s = { pc };
+    const s = { pc, trickle };
     const context = vm.createContext({
         current: s,
         setTimeout: fn => { timeout = fn; return 1; },
@@ -35,12 +36,12 @@ async function scenario({ relay, complete, cancel = false }) {
     // Allow createOffer/setLocalDescription promises to settle.
     while (!timeout) await Promise.resolve();
     if (cancel) s.cancelGather();
-    else if (!complete) timeout();
+    else if (!complete && !(trickle && relay)) { timedOut = true; timeout(); }
     let error;
     try { await pending; } catch (e) { error = e; }
-    assert.equal(removed, 1);
+    assert.equal(removed, 2);
     assert.equal(s.cancelGather, null);
-    return { sent, error };
+    return { sent, error, timedOut };
 }
 
 (async () => {
@@ -51,6 +52,11 @@ async function scenario({ relay, complete, cancel = false }) {
     const slowInterface = await scenario({ relay: true, complete: false });
     assert.equal(slowInterface.error, undefined);
     assert.equal(slowInterface.sent[0].payload.sdp, relaySdp);
+    assert.equal(slowInterface.timedOut,true,'Legacy peers still wait for complete gathering or deadline');
+    const fast = await scenario({relay:true,complete:false,trickle:true});
+    assert.equal(fast.error,undefined);
+    assert.equal(fast.timedOut,false,'Negotiated trickle sends first relay without waiting for gathering timeout');
+    assert.equal(fast.sent[0].type,'voice.offer');
 
     const unavailable = await scenario({ relay: false, complete: false });
     assert.match(unavailable.error.message, /TURN/);
@@ -87,5 +93,19 @@ async function scenario({ relay, complete, cancel = false }) {
     await assert.rejects(warming, /canceled/);
     assert.equal(failCount, 0, 'A canceled warmup must not affect a subsequent call');
     assert.equal(sent.length, 1);
-    console.log('voice ICE: gathering, relay failures, cancellation, warmup and offer reuse passed');
+
+    const candidates=[],remote={trickle:true,pc:{addIceCandidate:async c=>candidates.push(c)}};
+    context.current=remote;
+    context.addRemoteIce(remote,{candidate:'first'});
+    context.addRemoteIce(remote,null);
+    assert.equal(candidates.length,0,'Candidates arriving before SDP are queued');
+    remote.remoteReady=true;
+    remote.remoteIce.forEach(c=>context.addRemoteIce(remote,c));
+    await remote.remoteIceTask;
+    assert.equal(candidates.length,2);
+    assert.equal(candidates[1],null);
+    context.current={};context.addRemoteIce(remote,{candidate:'stale'});
+    await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(candidates.length,2,'Old calls cannot inject candidates into a new call');
+    console.log('voice ICE: fast trickle, legacy fallback, relay failures, cancellation, warmup and remote queues passed');
 })().catch(error => { console.error(error); process.exitCode = 1; });
