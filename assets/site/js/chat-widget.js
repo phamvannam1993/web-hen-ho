@@ -1125,7 +1125,7 @@
         if (!dang_mo || dang_mo.kind !== 'chat') return;
         deletedThrough[dang_mo.id] = Math.max(deletedThrough[dang_mo.id] || 0,event.detail.cutoff);
         renderedIds.forEach(function (id) { if (Number(id) <= event.detail.cutoff) renderedIds.delete(id); });
-        convoEl.querySelectorAll('.message-history-dialog[open]').forEach(function (dialog) { dialog.close(); });
+        convoEl.querySelectorAll('.message-history-panel').forEach(function (panel) { panel.closeHistory(); });
     });
     document.addEventListener('private-conversation-deleted',function (event) {
         var id = Number(event.detail.id), cutoff = Number(event.detail.deleted_through_message_id || 0);
@@ -1134,7 +1134,7 @@
         duLieuList = duLieuList.filter(function (item) { return Number(item.id) !== id; });
         veList();
         if (dang_mo && dang_mo.kind === 'chat' && Number(dang_mo.id) === id) {
-            convoEl.querySelectorAll('.message-history-dialog[open]').forEach(function (dialog) { dialog.close(); });
+            convoEl.querySelectorAll('.message-history-panel').forEach(function (panel) { panel.closeHistory(); });
             bodyEl.textContent = ''; bodyEl.dataset.deletedThrough = String(cutoff);
             renderedIds.clear(); lastId = 0; ngayCuoi = null; nguoiCuoi = null;
             veDanhSach();

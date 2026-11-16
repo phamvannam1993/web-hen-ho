@@ -72,6 +72,7 @@ body.is-messages-page .tk-ms-inbox-panel .tk-ms-private-content { overflow:visib
 .tk-ms-search input::-webkit-search-cancel-button { cursor: pointer; }
 
 .tk-ms-list { flex:1; overflow-y:auto; min-height:0; margin:0; padding:0; list-style:none; }
+.tk-ms-list > li[data-name] + li[data-name] { border-top:1px solid #f0edef; }
 .tk-ms-item {
   display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center;
   gap: 10px; padding: 10px 12px; transition: background-color .15s;
@@ -113,7 +114,7 @@ body.is-messages-page .tk-ms-inbox-panel .tk-ms-private-content { overflow:visib
 }
 .tk-ms-head__who { display: flex; flex: 1; align-items: center; gap: 12px; min-width: 0; }
 .tk-ms-more { position: relative; flex-shrink: 0; }
-.tk-ms-more summary { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 36px; height: 36px; border: 1px solid var(--tk-border); border-radius: 9px; background: #fff; color: var(--pink, #d1273f); font-size: 24px; line-height: 1; list-style: none; cursor: pointer; }
+.tk-ms-more summary { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 36px; height: 36px; border: 0; border-radius: 9px; background: transparent; color: var(--pink, #d1273f); font-size: 24px; line-height: 1; list-style: none; cursor: pointer; }
 .tk-ms-more summary::-webkit-details-marker { display: none; }
 .tk-ms-more summary:focus-visible { outline: 2px solid var(--pink, #d1273f); outline-offset: 2px; }
 .tk-ms-more-menu { position: absolute; z-index: 65; top: calc(100% + 6px); right: 0; width: 200px; max-width: calc(100vw - 32px); padding: 4px; border: 1px solid var(--tk-border); border-radius: 10px; background: #fff; box-shadow: 0 8px 24px #7c283b26; }
@@ -217,7 +218,7 @@ body.is-messages-page .tk-ms-inbox-panel .tk-ms-private-content { overflow:visib
 @media (max-width: 1023.98px) {
   body.is-messages-page .tk-mhead { display: none; }
   .tk-ms-inbox-panel .tk-ms-item,
-  .tk-ms-inbox-panel .ig-group-row a { padding-top:16px; padding-bottom:16px; }
+  .tk-ms-inbox-panel .ig-group-row a { padding-top:12px; padding-bottom:12px; }
   .tk-ms-inbox-panel .tk-ms-item .tk-ms-av img,
   .tk-ms-inbox-panel .ig-group-avatar { width:52px; height:52px; }
   .tk-ms-inbox-panel .tk-ms-conversation-row .tk-ms-item { grid-template-columns:52px minmax(0,1fr) 28px; }

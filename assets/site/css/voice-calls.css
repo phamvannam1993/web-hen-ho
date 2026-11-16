@@ -56,7 +56,7 @@
 .tk-ms-head [data-voice-call],.cw-head #cw-voice,.cw-head #cw-video,.cw-head .cw-conversation-more {
     box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
     width:36px; height:36px; min-height:36px; margin:0; padding:6px;
-    border:1px solid var(--tk-border,#eadce1); border-radius:9px; background:#fff; color:var(--pink,#d1273f);
+    border:0; border-radius:9px; background:transparent; box-shadow:none; color:var(--pink,#d1273f);
 }
-.tk-ms-head [data-voice-call] .tk-ic,.cw-head #cw-voice svg,.cw-head #cw-video svg { width:22px; height:22px; }
+.tk-ms-head [data-voice-call] .tk-ic,.cw-head #cw-voice svg,.cw-head #cw-video svg { width:20px; height:20px; }
 .cw-head #cw-voice[hidden],.cw-head #cw-video[hidden],.cw-head .cw-conversation-more[hidden] { display:none; }

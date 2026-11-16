@@ -189,7 +189,7 @@
     feed.addEventListener('conversation-history-cleared',function (event) {
         version++; closeMenu(false); selected = null; trigger = null; copyValue = '';
         applyState({pins_available:available,pinned:null});
-        pane.querySelectorAll('.message-history-dialog[open]').forEach(function (dialog) { dialog.close(); });
+        pane.querySelectorAll('.message-history-panel').forEach(function (panel) { panel.closeHistory(); });
         document.querySelectorAll('.tk-ms-item[data-conversation-id][data-last-message-id]').forEach(function (item) {
             if (item.dataset.conversationId === feed.dataset.conversation && Number(item.dataset.lastMessageId) <= event.detail.cutoff) item.closest('li').remove();
         });

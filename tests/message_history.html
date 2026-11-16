@@ -1,0 +1,48 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Inline message search regression</title>
+<link rel="stylesheet" href="../assets/site/css/message-history.css">
+<style>.fixture-host{display:flex;flex-direction:column;height:480px;width:min(360px,100%)}.fixture-feed{flex:1}body{margin:8px}#result{white-space:pre-wrap}</style>
+<div id="fixtures"></div><pre id="result" data-status="running">RUNNING</pre>
+<script>
+const requests=[];
+window.fetch=(url,options)=>new Promise(resolve=>requests.push({url:new URL(url),options,reply(data){resolve({ok:true,json:async()=>Object.assign({ok:true},data)})}}));
+</script>
+<script src="../assets/site/js/message-history.js"></script>
+<script>
+(async()=>{
+ const result=document.querySelector('#result'),fixtures=document.querySelector('#fixtures');let n=0;
+ function check(ok,text){if(!ok)throw Error(text);n++}
+ const tick=()=>new Promise(r=>setTimeout(r,20));
+ async function until(fn){for(let i=0;i<70;i++){if(fn())return;await tick()}throw Error('Timeout: '+fn)}
+ function submit(panel,value){panel.querySelector('input').value=value;panel.querySelector('form').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}))}
+ try{
+  for(const type of ['inbox','sticky','group']){
+   fixtures.replaceChildren();requests.length=0;
+   const shell=document.createElement('div');if(type==='sticky')shell.id='chat-widget';else shell.className='tk-ms';
+   const host=document.createElement('div');host.className='fixture-host '+({inbox:'tk-ms-pane',sticky:'cw-convo',group:'cg-chat'}[type]);
+   const header=document.createElement('header');header.className={inbox:'tk-ms-head',sticky:'cw-head',group:'cg-header'}[type];header.textContent='Tên hội thoại';
+   const trigger=document.createElement('button');trigger.textContent='Tìm tin nhắn cũ';trigger.dataset.messageHistory='https://example.test/search';if(type==='group')trigger.dataset.messageHistoryCursor='before_id';header.append(trigger);
+   const feed=document.createElement('div');feed.className='fixture-feed';feed.textContent='Tin đang xem';
+   const draft=document.createElement('textarea');draft.value='Nội dung đang soạn';host.append(header,feed,draft);shell.append(host);fixtures.append(shell);trigger.click();
+   let panel=host.querySelector('.message-history-panel');
+   check(!!panel&&!document.querySelector('dialog'),'Inline panel without popup: '+type);
+   check(document.activeElement===panel.querySelector('input')&&getComputedStyle(feed).display==='none','Focused search replaces feed: '+type);
+   submit(panel,'a');await tick();check(requests.length===0,'Short query skipped');
+   submit(panel,'xin chào');check(requests.length===1&&requests[0].url.searchParams.get('q')==='xin chào','Search endpoint query');
+   requests[0].reply({messages:[{mine:true,content:'<img src=x onerror=bad()>',created_at:'2026-11-16'}],has_more:true,next_before:21});
+   await until(()=>panel.querySelectorAll('article').length===1);
+   check(!panel.querySelector('article img')&&panel.querySelector('article p').textContent.includes('<img'),'Results escape text');
+   panel.querySelector('.message-history-more').click();check(requests[1].url.searchParams.get(type==='group'?'before_id':'before')==='21','Correct cursor per chat type');
+   requests[1].reply({messages:[{sender:{name:'Người gửi'},content:'Tin cũ',created_at:'2026-11-15'}],has_more:false});await until(()=>panel.querySelectorAll('article').length===2);
+   check(panel.querySelector('.message-history-more').hidden,'Pagination exhausted');
+   submit(panel,'cũ');submit(panel,'mới');requests[3].reply({messages:[{content:'Kết quả mới',created_at:'today'}]});await until(()=>panel.querySelector('article p')?.textContent==='Kết quả mới');
+   requests[2].reply({messages:[{content:'Kết quả cũ',created_at:'yesterday'}]});await tick();check(panel.querySelectorAll('article').length===1&&panel.querySelector('article p').textContent==='Kết quả mới','Stale request discarded');
+   const input=panel.querySelector('input');input.value='tự tìm';input.dispatchEvent(new Event('input'));await until(()=>requests.length===5);requests[4].reply({messages:[]});await until(()=>panel.querySelector('.message-history-status').textContent.includes('Không tìm thấy'));
+   panel.querySelector('.message-history-back').click();check(!host.querySelector('.message-history-panel')&&getComputedStyle(feed).display!=='none'&&draft.value==='Nội dung đang soạn','Back restores chat and draft');
+   trigger.click();panel=host.querySelector('.message-history-panel');shell.dispatchEvent(new Event(type==='sticky'?'cw:conversation-change':'inbox:change'));check(!host.querySelector('.message-history-panel'),'Changing conversation closes search');
+   trigger.click();panel=host.querySelector('.message-history-panel');panel.querySelector('input').dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));check(!host.querySelector('.message-history-panel'),'Escape closes inline search');
+  }
+  result.dataset.status='pass';result.textContent='PASS: '+n+' inline search assertions across inbox, sticky and groups';
+ }catch(error){result.dataset.status='fail';result.textContent='FAIL: '+error.stack}
+})();
+</script>
