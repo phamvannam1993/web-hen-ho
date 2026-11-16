@@ -41,7 +41,7 @@ $this->load->view('layouts/seo', array('seo_path' => $seo_path, 'can_index' => $
 <link rel="stylesheet" href="<?= base_url('assets/site/css/style.css') ?>?v=<?= @md5_file(FCPATH.'assets/site/css/style.css') ?>">
 <link rel="icon" type="image/x-icon" href="<?= base_url('assets/site/img/favicon.ico') . '?v=' . md5_file(FCPATH . 'assets/site/img/favicon.ico') ?>">
 <link rel="manifest" href="<?= base_url('manifest.webmanifest') . '?v=' . md5_file(FCPATH . 'manifest.webmanifest') ?>">
-<meta name="theme-color" content="#d1273f">
+<meta name="theme-color" content="#ffeaed">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Saigon Cupid">
 <meta name="mobile-web-app-capable" content="yes">

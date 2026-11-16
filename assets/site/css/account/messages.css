@@ -17,11 +17,11 @@ body.is-messages-page .site-page-content { min-height:0; }
 
 /* ── Danh sách hội thoại ── */
 .tk-ms-side { display: flex; flex-direction: column; min-height: 0; }
-.tk-ms-side__h { display:flex; align-items:center; gap:10px; padding:12px; border-bottom:1px solid var(--tk-border); background:var(--tk-accent,#fff0f5); }
+.tk-ms-side__h { display:flex; align-items:center; gap:10px; padding:5px 12px; border-bottom:1px solid var(--tk-border); background:var(--tk-accent,#ffeaed); }
 .tk-ms-side__t { font-size: 16px; line-height: 24px; font-weight: 700; }
 .tk-ms-search { flex:1; min-width:0; margin:0; }
 .tk-ms-search .tk-input { height:36px; border-color:transparent; border-radius:10px; background:transparent; transition:background-color .18s ease,border-color .18s ease; }
-.tk-ms-search .tk-input:focus { background:#fff; }
+.tk-ms-search .tk-input:focus { background:#fff; border-color:transparent; outline:none; box-shadow:none; }
 .tk-ms-search-back { box-sizing:border-box; display:flex; align-items:center; justify-content:center; flex-shrink:0; width:0; height:42px; margin-right:-10px; padding:0; border:0; border-radius:8px; overflow:hidden; background:transparent; color:var(--tk-primary,#d1273f); cursor:pointer; opacity:0; visibility:hidden; transform:translateX(-6px); transition:width .18s ease,padding .18s ease,margin-right .18s ease,opacity .18s ease,transform .18s ease,visibility .18s; }
 .tk-ms-side__h.is-search-focused .tk-ms-search-back { width:32px; margin-right:0; padding:4px; opacity:1; visibility:visible; transform:translateX(0); }
 .tk-ms-search-back[hidden] { display:none; }
@@ -194,7 +194,7 @@ body.is-messages-page .tk-ms-inbox-panel .tk-ms-private-content { overflow:visib
 .tk-ms-locked { padding: 12px; border-top: 1px solid var(--tk-border); }
 
 @media (min-width: 640px) {
-  .tk-ms-side__h { padding: 16px; }
+  .tk-ms-side__h { padding:6px 16px; }
   .tk-ms-search { margin-top:0; }
   .tk-ms-side__t { font-size: 18px; line-height: 28px; }
   .tk-ms-item { gap: 12px; padding: 12px 16px; }
@@ -229,7 +229,7 @@ body.is-messages-page .tk-ms-inbox-panel .tk-ms-private-content { overflow:visib
     border: 0; border-radius: 0; box-shadow: none;
   }
   html.tk-inbox-list .tk-ms-side { height: 100%; overflow: hidden; }
-  html.tk-inbox-list .tk-ms-side__h { flex-shrink:0; background:var(--tk-accent,#fff0f5); }
+  html.tk-inbox-list .tk-ms-side__h { flex-shrink:0; background:var(--tk-accent,#ffeaed); }
   html.tk-inbox-list .tk-ms-private-content { overflow-x: hidden; touch-action: pan-y; }
   body.is-messages-page .site-footer { display: none; }
   .tk-ms.is-open .tk-ms-side { display: none; }
