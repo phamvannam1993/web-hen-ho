@@ -109,10 +109,14 @@
     function active() { return !!chat && chat.isConnected && !pane.hidden && !document.hidden; }
     function atBottom() { return feed.scrollHeight - feed.scrollTop - feed.clientHeight < 70; }
     function groupRow(group) {
-        var item = node('li'); item.dataset.name = group.name.toLocaleLowerCase('vi');
+        var item = node('li', 'ig-group-row'); item.dataset.lastAt = group.last_at || ''; item.dataset.name = group.name.toLocaleLowerCase('vi');
         var link = node('a'); link.href = groupUrl(group.id); link.dataset.igGroupId = group.id;
-        var text = node('span'); text.append(node('strong', '', group.name), node('small', '', group.last_content || (group.member_count + ' thành viên')));
-        link.append(text);
+        var avatar = node('img', 'ig-group-avatar'); avatar.src = root.dataset.privateGroupAvatar; avatar.alt = ''; avatar.width = avatar.height = 40; avatar.loading = 'lazy';
+        var text = node('span', 'ig-group-text'), preview = node('small', 'tk-ms-preview-line');
+        var time = node('span', 'tk-ms-preview-time', group.time ? '· ' + group.time : ''); time.hidden = !group.last_at; time.title = group.last_at || '';
+        preview.append(node('span', 'ig-preview-content', group.last_content || (group.member_count + ' thành viên')), time);
+        text.append(node('strong', '', group.name), preview);
+        link.append(avatar, text);
         if (group.unread) link.append(node('span', 'ig-count', group.unread > 99 ? '99+' : group.unread));
         if (Number(group.id) === gid && pane && !pane.hidden) { link.setAttribute('aria-current', 'page'); link.classList.add('is-active'); }
         var more = node('button', 'ig-row-more', '⋯'); more.type = 'button'; more.setAttribute('aria-label', 'Tùy chọn nhóm ' + group.name); more.setAttribute('aria-haspopup', 'true'); more.setAttribute('aria-expanded', 'false');
@@ -137,7 +141,7 @@
         }
         listingPromise = page(more ? groupCursor : 0).then(function (data) {
             closeRowMenu();
-            if (!more) list.replaceChildren();
+            if (!more) list.querySelectorAll('.ig-group-row').forEach(function (row) { row.remove(); });
             groups.forEach(function (group) { list.append(groupRow(group)); });
             loadedPages = more ? loadedPages + 1 : pages;
             groupCursor = data.next_before || 0; moreGroups.hidden = !data.has_more;

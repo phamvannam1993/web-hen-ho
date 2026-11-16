@@ -17,18 +17,22 @@ $chat_groups = array_values(array_filter($chat_groups ?? array(), function ($gro
 }));
 ?>
 <div class="tk-card tk-ms<?= $dang_mo ? ' is-open' : '' ?>"
+     data-inbox-conversations-url="<?= e(site_url('ajax/hoi-thoai')) ?>"
+     data-inbox-groups-url="<?= e(site_url('ajax/nhom/0/sticky')) ?>"
      data-private-groups-api="<?= e(site_url('ajax/nhom-inbox')) ?>"
+     data-private-group-avatar="<?= e(base_url('assets/images/group-default.jpg')) ?>"
      data-private-user="<?= (int) $user['id'] ?>"
      data-conversation-token="<?= e($message_action_token) ?>"
      data-current-conversation="<?= (int) $conversation_id ?>" data-inbox-url="<?= e(site_url('messenger')) ?>">
     <!-- Danh sách hội thoại -->
     <div class="tk-ms-side">
         <div class="tk-ms-side__h">
-            <h1 class="tk-ms-side__t">Tin nhắn</h1>
-                <div class="tk-input-wrap tk-input-wrap--lead tk-ms-search">
-                    <?= tk_icon('search') ?>
-                    <input class="tk-input" type="search" id="tk-ms-search" placeholder="Tìm cuộc trò chuyện" autocomplete="off">
-                </div>
+            <button type="button" class="tk-ms-search-back" data-inbox-search-back aria-label="Thoát ô tìm kiếm" hidden><?= tk_icon('chevron-left') ?></button>
+            <div class="tk-input-wrap tk-input-wrap--lead tk-ms-search">
+                <?= tk_icon('search') ?>
+                <input class="tk-input" type="search" id="tk-ms-search" placeholder="Tìm kiếm" aria-label="Tìm cuộc trò chuyện" autocomplete="off">
+            </div>
+            <button type="button" class="tk-ms-create-group" data-ig-create aria-label="Tạo nhóm mới" title="Tạo nhóm mới"><?= tk_icon('plus') ?></button>
         </div>
 
         <div class="tk-ms-tabs" role="tablist" aria-label="Danh sách tin nhắn">
@@ -39,39 +43,23 @@ $chat_groups = array_values(array_filter($chat_groups ?? array(), function ($gro
         </div>
         <div class="tk-ms-inbox-panel" id="tk-ms-inbox-panel" role="tabpanel"
              aria-labelledby="tk-ms-tab-priority" tabindex="0">
-        <?php if (!empty($chat_groups)): ?>
-                <ul class="tk-ms-groups__list" aria-label="Nhóm chat ẩn danh">
+        <section class="tk-ms-private is-expanded" aria-label="Hội thoại">
+        <div class="tk-ms-private-content" id="tk-ms-private-content">
+            <ul class="tk-ms-list" id="tk-ms-list" data-ig-list aria-label="Danh sách hội thoại">
                     <?php foreach ($chat_groups as $g): ?>
-                        <li data-name="<?= e(mb_strtolower($g['name'])) ?>"><a class="tk-ms-item" href="<?= e($g['url']) ?>" data-inbox-group="<?= (int) $g['id'] ?>" data-panel-url="<?= site_url('ajax/nhom-panel/' . (int) $g['id']) ?>">
+                        <li class="tk-ms-anonymous-row" data-last-at="<?= e($g['last_at'] ?? '') ?>" data-name="<?= e(mb_strtolower($g['name'])) ?>"><a class="tk-ms-item" href="<?= e($g['url']) ?>" data-inbox-group="<?= (int) $g['id'] ?>" data-panel-url="<?= site_url('ajax/nhom-panel/' . (int) $g['id']) ?>">
                             <span class="tk-ms-av"><img src="<?= e($g['avatar']) ?>" alt="" width="40" height="40" loading="lazy"></span>
                             <span class="tk-ms-item__b">
                                 <span class="tk-ms-item__n"><?= e($g['name']) ?></span>
-                                <span class="tk-ms-item__l"><?= e($g['last'] !== '' ? (!empty($g['last_sender']) ? $g['last_sender'] . ': ' : '') . $g['last'] : 'Chưa có tin nhắn') ?></span>
+                                <span class="tk-ms-preview-line">
+                                    <span class="tk-ms-item__l"><?= e($g['last'] !== '' ? (!empty($g['last_sender']) ? $g['last_sender'] . ': ' : '') . $g['last'] : 'Chưa có tin nhắn') ?></span>
+                                    <span class="tk-ms-preview-time" title="<?= e($g['last_at'] ?? '') ?>" <?= empty($g['last_at']) ? 'hidden' : '' ?>><?= !empty($g['last_at']) ? '· ' . e(time_ago($g['last_at'])) : '' ?></span>
+                                </span>
                             </span>
                             <?php if ($g['unread']): ?><span class="tk-count"><?= $g['unread'] > 99 ? '99+' : (int) $g['unread'] ?></span><?php endif; ?>
                         </a><button type="button" class="cg-inbox-more" data-cg-inbox-more
                             aria-label="<?= e('Tùy chọn nhóm ' . $g['name']) ?>" aria-haspopup="true" aria-expanded="false">⋯</button></li>
                     <?php endforeach; ?>
-                </ul>
-        <?php endif; ?>
-
-        <section class="tk-ms-private is-expanded" aria-label="Tin nhắn riêng">
-        <div class="tk-ms-private-content" id="tk-ms-private-content">
-        <section class="ig-sidebar" aria-label="Nhóm riêng của bạn">
-            <div class="ig-sidebar-head"><strong>Nhóm của bạn</strong><button type="button" data-ig-create>Tạo nhóm</button></div>
-            <p data-ig-list-status role="status">Đang tải nhóm…</p>
-            <ul class="ig-groups" data-ig-list></ul>
-            <button type="button" data-ig-list-more hidden>Xem thêm nhóm</button>
-        </section>
-        <?php if (empty($conversations)): ?>
-            <div class="tk-ms-none" data-private-empty <?= $chat_groups ? 'hidden' : '' ?>>
-                <span class="tk-empty__ic"><?= tk_icon('message') ?></span>
-                <h3>Chưa có cuộc trò chuyện nào</h3>
-                <p>Chọn một hồ sơ và nhắn tin để bắt đầu làm quen.</p>
-                <a class="tk-btn tk-btn--brand tk-btn--sm" href="<?= site_url('swipe-match') ?>"><?= tk_icon('match') ?>Khám phá &amp; ghép đôi</a>
-            </div>
-        <?php else: ?>
-            <ul class="tk-ms-list" id="tk-ms-list">
                 <?php foreach ($conversations as $c): ?>
                     <?php
                     $ten = display_name($c);
@@ -79,7 +67,7 @@ $chat_groups = array_values(array_filter($chat_groups ?? array(), function ($gro
                         : ($c['last_type'] === 'image' ? 'Đã gửi một ảnh' : excerpt($c['last_content'], 60));
                     if ((int) $c['last_sender_id'] === (int) $user['id']) $cuoi = 'Bạn: ' . $cuoi;
                     ?>
-                    <li class="tk-ms-conversation-row" data-name="<?= e(mb_strtolower($ten)) ?>">
+                    <li class="tk-ms-conversation-row" data-last-at="<?= e($c['last_at'] ?? '') ?>" data-name="<?= e(mb_strtolower($ten)) ?>">
                         <a class="tk-ms-item<?= $conversation_id == $c['id'] ? ' is-active' : '' ?>"
                            data-conversation-id="<?= (int) $c['id'] ?>" data-last-message-id="<?= (int) $c['last_message_id'] ?>"
                            href="<?= site_url('messenger/' . $c['id']) ?>"<?= $conversation_id == $c['id'] ? ' aria-current="page"' : '' ?>>
@@ -113,7 +101,14 @@ $chat_groups = array_values(array_filter($chat_groups ?? array(), function ($gro
                     </li>
                 <?php endforeach; ?>
             </ul>
-        <?php endif; ?>
+            <p data-ig-list-status role="status" hidden></p>
+            <button type="button" class="ig-more-groups" data-ig-list-more hidden>Xem thêm nhóm</button>
+            <div class="tk-ms-none" data-private-empty <?= $chat_groups ? 'hidden' : '' ?>>
+                <span class="tk-empty__ic"><?= tk_icon('message') ?></span>
+                <h3>Chưa có cuộc trò chuyện nào</h3>
+                <p>Chọn một hồ sơ và nhắn tin để bắt đầu làm quen.</p>
+                <a class="tk-btn tk-btn--brand tk-btn--sm" href="<?= site_url('swipe-match') ?>"><?= tk_icon('match') ?>Khám phá &amp; ghép đôi</a>
+            </div>
         </div>
         </section>
         <p class="tk-ms-nores" id="tk-ms-nores" hidden>Không tìm thấy cuộc trò chuyện nào.</p>

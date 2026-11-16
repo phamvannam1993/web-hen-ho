@@ -2,6 +2,7 @@
 <section class="ig-chat" data-private-group="<?= (int) $private_group_id ?>" aria-label="Nhóm riêng trong inbox">
     <header class="ig-head">
         <a href="<?= e(site_url('messenger')) ?>" class="ig-button" aria-label="Về danh sách tin nhắn">‹</a>
+        <img class="ig-group-avatar" src="<?= e(base_url('assets/images/group-default.jpg')) ?>" alt="" width="40" height="40">
         <div class="ig-title"><h2 data-ig-name>Đang tải nhóm…</h2><span data-ig-count></span></div>
         <button type="button" class="ig-header-more" data-ig-header-more aria-label="Tùy chọn nhóm" aria-haspopup="true" aria-expanded="false" disabled>⋯</button>
     </header>

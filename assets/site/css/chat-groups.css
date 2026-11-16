@@ -459,8 +459,8 @@ body.is-group-chat-page { height:100dvh; overflow:hidden; overscroll-behavior:no
 .cg-header-more { flex:0 0 auto; margin-left:auto; }
 .cg-chat .cg-group-menu-toggle { width:36px; height:36px; min-height:36px; padding:0; border:0; border-radius:50%; background:var(--cg-soft); color:var(--cg-brand); }
 .cg-group-menu-toggle > span { font-size:26px; line-height:1; }
-.tk-ms-groups__list > li { position:relative; }
-.tk-ms-groups__list .tk-ms-item { padding-right:48px; }
+.tk-ms-groups__list > li,.tk-ms-anonymous-row { position:relative; }
+.tk-ms-groups__list .tk-ms-item,.tk-ms-anonymous-row .tk-ms-item { padding-right:48px; }
 .cg-inbox-more { position:absolute; top:50%; right:12px; transform:translateY(-50%); display:flex; align-items:center; justify-content:center; width:28px; height:28px; padding:0; border:0; border-radius:50%; background:transparent; color:var(--tk-muted-fg,#766773); font:inherit; font-size:21px; cursor:pointer; }
 .cg-inbox-more:hover { background:#fdf0f4; color:#d1273f; }
 .cg-inbox-more:focus-visible { outline:2px solid #d1273f; outline-offset:2px; }

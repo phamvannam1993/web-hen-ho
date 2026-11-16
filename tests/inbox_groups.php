@@ -5,6 +5,7 @@ error_reporting(E_ALL & ~E_DEPRECATED);
 define('BASEPATH', dirname(__DIR__) . '/system/');
 function log_message($l,$m){} function is_php($v){return version_compare(PHP_VERSION,$v,'>=');}
 function display_name($r){return $r['nickname'] ?: $r['display_name'];} function avatar_url($p,$g){return 'avatar:'.($p ?: $g);}
+function time_ago($date){return 'Thời điểm '.$date;}
 function check($ok,$label){if(!$ok)throw new Exception('FAIL: '.$label);}
 require BASEPATH.'database/DB_driver.php';require BASEPATH.'database/DB_query_builder.php';class CI_DB extends CI_DB_query_builder{}
 require BASEPATH.'database/drivers/sqlite3/sqlite3_driver.php';

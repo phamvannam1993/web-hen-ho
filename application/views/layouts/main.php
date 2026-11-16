@@ -478,16 +478,16 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
                     <div class="cw-peer">
                         <a id="cw-profile-link"><b id="cw-name"></b></a>
                         <small id="cw-status"></small>
-                        <?php if ($user && getenv('VOICE_ENABLED') === '1'): ?>
-                        <button type="button" id="cw-voice" data-voice-call
-                                aria-label="Gọi thoại" title="Gọi thoại"
-                                hidden disabled><?= tk_icon('phone') ?></button>
-                        <?php endif; ?>
                         <button type="button" class="cw-online-toggle" id="cw-online-toggle" hidden
                                 aria-expanded="false" aria-controls="cw-online-panel" aria-haspopup="dialog">
                             <span id="cw-online-toggle-count">Người đang online</span> <span aria-hidden="true">▾</span>
                         </button>
                     </div>
+                        <?php if ($user && getenv('VOICE_ENABLED') === '1'): ?>
+                        <button type="button" id="cw-voice" data-voice-call
+                                aria-label="Gọi thoại" title="Gọi thoại"
+                                hidden disabled><?= tk_icon('phone') ?></button>
+                        <?php endif; ?>
                     <button type="button" id="cw-history-search" class="message-history-trigger message-history-trigger--icon"
                             aria-label="Tìm tin nhắn cũ" title="Tìm tin nhắn cũ" hidden><?= tk_icon('search') ?></button>
                 </header>

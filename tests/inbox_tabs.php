@@ -17,7 +17,7 @@ $partner = null; $message_action_token = str_repeat('a',64); $conversation_id = 
 $chat_groups = array(); $conversations = array();
 if ($case !== 'empty') {
     $group = array('id'=>5,'name'=>'Nhóm ẩn danh','mode'=>'guest','url'=>'#anonymous-group',
-        'avatar'=>'','last'=>'Xin chào','last_sender'=>'Khách','unread'=>2);
+        'avatar'=>'','last'=>'Xin chào','last_sender'=>'Khách','unread'=>2,'last_at'=>'2026-11-10 09:00:00');
     $chat_groups[] = $group;
     $group['id']=6; $group['name']='Nhóm công khai'; $group['mode']='public'; $chat_groups[]=$group;
 }
@@ -45,6 +45,16 @@ window.addEventListener('load',async function () {
   check(visible('[data-inbox-group]').length===(hasGroups?1:0),'Priority includes anonymous groups');
   check(visible('.tk-ms-conversation-row').length===(hasPrivate?1:0),'Priority includes inboxes');
   check(!document.querySelector('.tk-ms-private-title,details.tk-ms-groups'),'Old collapsible headings removed');
+  check(!document.querySelector('.ig-sidebar-head'),'Separate group heading removed');
+  if(hasGroups && hasPrivate) {
+   var shared=panel.querySelector('#tk-ms-list'),anon=shared.querySelector('.tk-ms-anonymous-row'),direct=shared.querySelector('.tk-ms-conversation-row');
+   check(shared.firstElementChild===direct,'Newer direct message appears before anonymous group');
+   var personal=document.createElement('li');personal.className='ig-group-row';personal.dataset.name='nhóm riêng';personal.dataset.lastAt='2026-11-10 11:00:00';personal.textContent='Nhóm riêng';shared.append(personal);await tick();
+   check(shared.firstElementChild===personal,'Newer private group appears first in shared list');
+   anon.dataset.lastAt='2026-11-10 12:00:00';await tick();check(shared.firstElementChild===anon,'New anonymous message moves group first');
+   direct.dataset.lastAt='2026-11-10 13:00:00';await tick();check(shared.firstElementChild===direct,'New direct message moves conversation first');
+   personal.remove();await tick();
+  }
   clubs.click();
   check(visible('.tk-ms-conversation-row').length===0,'Clubs excludes private inbox');
   check(visible('[data-inbox-group]').length===(hasGroups?1:0),'Clubs includes anonymous groups');
@@ -62,9 +72,10 @@ window.addEventListener('load',async function () {
   if(hasPrivate){panel.querySelector('.tk-ms-conversation-row').remove();await tick();check(visible('[data-inbox-group]').length===1 && document.getElementById('tk-ms-nores').hidden,'Deleting last inbox preserves visible group list');}
   if(hasGroups){var group=panel.querySelector('[data-inbox-group]');check(group.dataset.panelUrl.includes('/ajax/nhom-panel/5'),'Group panel route preserved');}
   if(!hasGroups && !hasPrivate)check(visible('[data-private-empty]').length===1,'Empty priority shows introduction');
-  var extra=document.createElement('ul');
-  for(var i=0;i<25;i++){var li=document.createElement('li');li.textContent='scroll '+i;li.style.height='40px';extra.append(li);}
-  panel.append(extra);panel.scrollTop=100;
+  var extra=document.createElement('li');extra.style.listStyle='none';
+  for(var i=0;i<25;i++){var li=document.createElement('div');li.textContent='scroll '+i;li.style.height='40px';extra.append(li);}
+  panel.querySelector('#tk-ms-list').append(extra);panel.scrollTop=100;
+  check(getComputedStyle(panel.querySelector('.tk-ms-private-content')).overflowY==='visible','Nested list wrapper does not capture scrolling');
   check(panel.scrollTop>0,'Shared list scrolls');
   var target=extra.firstElementChild;
   function touch(type,y){var event=new Event(type,{bubbles:true,cancelable:true});Object.defineProperty(event,'touches',{value:[{clientY:y}]});target.dispatchEvent(event);return event;}
@@ -76,6 +87,6 @@ window.addEventListener('load',async function () {
 JS;
 $html = '<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="'.base_url('assets/site/css/account/messages.css').'">'
     . '<style>:root{--tk-border:#eee;--tk-primary:#d1273f;--tk-muted-fg:#777}.tk-ms{height:600px!important;display:flex!important}.tk-ms-side{width:340px;height:600px}.tk-ms-pane{display:none!important}</style>'
-    . $view . '<pre id="test-result" data-status="running">RUNNING</pre>' . $assertions;
+    . '<body class="is-messages-page">' . $view . '<pre id="test-result" data-status="running">RUNNING</pre>' . $assertions;
 file_put_contents($argv[1],$html);
 echo "Rendered browser fixture ($case).\n";
