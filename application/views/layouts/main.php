@@ -600,6 +600,8 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 <script defer src="<?= base_url('assets/site/js/conversation-delete.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/conversation-delete.js') ?>"></script>
 <link rel="stylesheet" href="<?= base_url('assets/site/css/private-message-menu.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/private-message-menu.css') ?>">
 <script defer src="<?= base_url('assets/site/js/private-message-menu.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/private-message-menu.js') ?>"></script>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/call-messages.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/call-messages.css') ?>">
+<script defer src="<?= base_url('assets/site/js/call-messages.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/call-messages.js') ?>" data-calls-enabled="<?= getenv('VOICE_ENABLED') === '1' ? '1' : '0' ?>"></script>
 <link rel="stylesheet" href="<?= base_url('assets/site/css/inbox-private-groups.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/inbox-private-groups.css') ?>">
 <script defer src="<?= base_url('assets/site/js/inbox-private-groups.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/inbox-private-groups.js') ?>"></script>
 <?php endif; ?>

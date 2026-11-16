@@ -96,6 +96,8 @@ Tài liệu này không tự thay đổi server, firewall hoặc triển khai pr
 
 ## Tin nhắn lịch sử cuộc gọi
 
+Giao diện lịch sử dùng thẻ cuộc gọi ở cả chat chính và sticky: biểu tượng thoại/video, trạng thái hoặc thời lượng và nút **Gọi lại**. Tin cũ tự hiển thị bằng thẻ; nội dung lưu trong database giữ nguyên để sao chép/trả lời. Nút gọi lại dùng đúng hội thoại và loại cuộc gọi ban đầu, bị vô hiệu khi WebSocket chưa kết nối hoặc chức năng gọi chưa bật. Khi triển khai phần giao diện, cập nhật `assets/site/js/call-messages.js`, `assets/site/css/call-messages.css` và `application/views/layouts/main.php`, rồi tải lại trình duyệt. Riêng thay đổi giao diện này không cần migration hay restart Node.
+
 - Khi kết thúc, Node gửi kết quả tới `POST /internal/voice/completed`, xác thực bằng `X-Realtime-Secret`. PHP kiểm tra đúng hai thành viên và lưu một tin `type: system` vào `messages`; tin xuất hiện ở chat chính, chat sticky và API đọc tin.
 - Ví dụ: `Cuộc gọi thoại · 10 phút 0 giây`, `Cuộc gọi video nhỡ`. Thời lượng do Node tính từ thông báo WebRTC đã kết nối `voice.connected {callId}`, không tính thời gian đổ chuông. Client phải gửi sự kiện này một lần khi `connectionState` thành `connected`; client cũ chưa gửi sẽ không có thời lượng kết nối.
 - Không thể sửa/thu hồi tin lịch sử; không ảnh hưởng việc xóa lịch sử hội thoại riêng của từng người. Không lưu âm thanh hoặc video.

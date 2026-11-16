@@ -152,7 +152,10 @@
         return 'Không đổi được loa hoặc tai nghe. Âm thanh vẫn dùng thiết bị hiện tại; hãy kiểm tra cài đặt âm thanh của máy.';
     }
     var reasons = {
-        busy: 'Người dùng đang bận hoặc bạn gọi quá nhanh.',
+        busy: 'Người nhận đang có cuộc gọi khác. Hãy gọi lại sau.',
+        caller_busy: 'Bạn đang có một cuộc gọi khác, có thể ở tab khác. Hãy kết thúc cuộc gọi đó trước.',
+        server_busy: 'Máy chủ gọi đang bận. Hãy thử lại sau ít phút.',
+        cooldown: 'Bạn vừa gọi. Hãy chờ 10 giây rồi thử lại.',
         offline: 'Người dùng hiện chưa kết nối.',
         permission: 'Hiện không thể gọi người dùng này.',
         unanswered: 'Không có người trả lời.',
@@ -745,7 +748,9 @@
             if (current && current.id === m.callId) {
                 finish(current, type === 'dismiss'
                     ? 'Cuộc gọi được nhận ở tab khác.'
-                    : (reasons[m.reason] || reasons.ended), false, type === 'dismiss', 'server-' + (m.reason || type));
+                    : (m.reason === 'cooldown' && Number.isInteger(m.retryAfter) && m.retryAfter > 0 && m.retryAfter <= 10
+                        ? 'Bạn vừa gọi. Hãy chờ ' + m.retryAfter + ' giây rồi thử lại.'
+                        : (reasons[m.reason] || reasons.ended)), false, type === 'dismiss', 'server-' + (m.reason || type));
             }
         });
     });

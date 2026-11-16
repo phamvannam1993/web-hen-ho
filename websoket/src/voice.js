@@ -98,9 +98,10 @@ function createVoice({ config, clients, send, log = () => {} }) {
 
   async function message(ws, m) {
     if (typeof m.callId !== 'string' || !uuid.test(m.callId)) return;
-    const fail = reason => send(ws, {
-      t: 'voice.error', callId: m.callId, reason,
-    });
+    const fail = (reason, extra = {}) => {
+      log({event:'voice.rejected',callId:m.callId,reason,...extra});
+      send(ws, {t:'voice.error',callId:m.callId,reason,...extra});
+    };
     let c = calls.get(m.callId);
     if (m.t === 'voice.end') {
       if (c && (c.a === ws || c.b === ws
@@ -115,9 +116,10 @@ function createVoice({ config, clients, send, log = () => {} }) {
       const now = Date.now();
       if (!Number.isSafeInteger(m.conversationId)
         || m.conversationId <= 0) return fail('permission');
-      if (c || busy.has(ws.uid) || calls.size >= 200
-        || (cooldown.get(ws.uid) || 0) > now
-        || cooldown.size >= 10000) return fail('busy');
+      if (c || busy.has(ws.uid)) return fail('caller_busy');
+      if (calls.size >= 200 || cooldown.size >= 10000) return fail('server_busy');
+      const remaining = (cooldown.get(ws.uid) || 0) - now;
+      if (remaining > 0) return fail('cooldown', {retryAfter:Math.ceil(remaining/1000)});
       cooldown.set(ws.uid, now + 10000);
       c = {
         id: m.callId, cid: m.conversationId, uid: ws.uid,
