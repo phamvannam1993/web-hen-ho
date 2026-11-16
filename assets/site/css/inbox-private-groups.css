@@ -5,16 +5,16 @@
 .ig-sidebar-head,.ig-head { display:flex; align-items:center; gap:8px; }
 .ig-sidebar-head { justify-content:space-between; }
 .ig-sidebar p,.ig-sidebar a small { font-size:12px; color:#756872; }
-.ig-sidebar button,.ig-head button,.ig-button,.ig-older,.ig-form button,.ig-dialog button { padding:8px 10px; border:1px solid #eadce1; border-radius:8px; background:#fff0f5; color:var(--pink,#d1273f); font:inherit; font-size:12px; cursor:pointer; text-decoration:none; }
+.ig-sidebar button,.ig-more-groups,.ig-head button,.ig-button,.ig-older,.ig-form button,.ig-dialog button { padding:8px 10px; border:1px solid #eadce1; border-radius:8px; background:#fff0f5; color:var(--pink,#d1273f); font:inherit; font-size:12px; cursor:pointer; text-decoration:none; }
 .ig-sidebar [hidden],.ig-chat [hidden],.ig-dialog [hidden] { display:none; }
 .ig-groups { padding:0; margin:8px 0; list-style:none; }
-.ig-groups li { position:relative; }
-.ig-groups li a { display:flex; align-items:center; gap:8px; padding:10px 40px 10px 8px; border-radius:8px; color:inherit; text-decoration:none; }
-.ig-groups strong { font-weight:500; }
-.ig-groups li a.is-active { background:var(--tk-accent,#ffe5ee); box-shadow:inset 3px 0 var(--pink,#d1273f); }
-.ig-groups li a.is-active strong { font-weight:700; color:var(--tk-fg,#382d38); }
-.ig-sidebar .ig-row-more { position:absolute; top:50%; right:4px; transform:translateY(-50%); width:28px; height:28px; padding:0; border:0; border-radius:50%; background:transparent; font-size:21px; }
-.ig-sidebar .ig-row-more:hover { background:#fff0f5; }
+.ig-group-row { position:relative; }
+.ig-group-row a { display:flex; align-items:center; gap:8px; padding:10px 40px 10px 8px; border-radius:8px; color:inherit; text-decoration:none; }
+.ig-group-row strong { font-weight:500; }
+.ig-group-row a.is-active { background:var(--tk-accent,#ffe5ee); box-shadow:inset 3px 0 var(--pink,#d1273f); }
+.ig-group-row a.is-active strong { font-weight:700; color:var(--tk-fg,#382d38); }
+.ig-group-row .ig-row-more { position:absolute; top:50%; right:4px; transform:translateY(-50%); width:28px; height:28px; padding:0; border:0; border-radius:50%; background:transparent; color:var(--pink,#d1273f); font-size:21px; cursor:pointer; }
+.ig-group-row .ig-row-more:hover { background:#fff0f5; }
 .ig-row-menu { display:none; position:fixed; inset:auto; z-index:10000; box-sizing:border-box; width:230px; max-width:calc(100vw - 16px); overflow:auto; margin:0; padding:7px; border:1px solid #eadce1; border-radius:14px; background:#fff; color:#382d38; box-shadow:0 8px 30px #382d3833; }
 .ig-row-menu:popover-open,.ig-row-menu.is-open { display:block; }
 .ig-row-menu button { display:block; width:100%; min-height:42px; padding:9px 12px; border:0; border-radius:8px; background:transparent; color:inherit; font:inherit; font-size:13px; text-align:left; cursor:pointer; }
@@ -24,8 +24,11 @@
 .ig-row-menu button:focus-visible,.ig-row-more:focus-visible { outline:2px solid #d1273f; outline-offset:2px; }
 .ig-flash { position:fixed; z-index:10000; left:50%; top:calc(env(safe-area-inset-top,0px) + 24px); transform:translateX(-50%); max-width:calc(100vw - 32px); padding:12px 20px; border-radius:12px; background:#263b30; color:#fff; box-shadow:0 6px 24px #0003; font-size:14px; text-align:center; pointer-events:none; }
 .ig-flash[hidden] { display:none; }
-.ig-groups li a>span:first-child { flex:1; min-width:0; }
-.ig-groups strong,.ig-groups small { display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.ig-group-row .ig-group-text { flex:1; min-width:0; }
+.ig-group-avatar { flex-shrink:0; width:40px; height:40px; border-radius:50%; object-fit:cover; }
+.ig-group-row strong,.ig-group-row small { display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.ig-group-row .tk-ms-preview-line { display:flex; align-items:baseline; gap:4px; }
+.ig-preview-content { flex:0 1 auto; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
 .ig-count { padding:2px 7px; border-radius:12px; background:#d1273f; color:#fff; font-size:11px; }
 .ig-chat { display:flex; flex:1; min-height:0; flex-direction:column; overflow:hidden; background:#fff; }
 .ig-head { flex-shrink:0; padding:10px; border-bottom:1px solid #eadce1; flex-wrap:wrap; }

@@ -505,6 +505,11 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
                             <span id="cw-online-toggle-count">Người đang online</span> <span aria-hidden="true">▾</span>
                         </button>
                     </div>
+                        <?php if ($user && getenv('VOICE_ENABLED') === '1'): ?>
+                        <button type="button" id="cw-voice" data-voice-call
+                                aria-label="Gọi thoại" title="Gọi thoại"
+                                hidden disabled><?= tk_icon('phone') ?></button>
+                        <?php endif; ?>
                     <button type="button" id="cw-history-search" class="message-history-trigger message-history-trigger--icon"
                             aria-label="Tìm tin nhắn cũ" title="Tìm tin nhắn cũ" hidden><?= tk_icon('search') ?></button>
                     <?php if ($user): ?>

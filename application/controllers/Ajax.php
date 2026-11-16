@@ -449,6 +449,7 @@ class Ajax extends MY_Controller
                 'last'    => !$r['last_message_id'] ? 'Bắt đầu trò chuyện' : $this->tom_tat_tin($r['last_type'], $r['last_content'],
                                                (int) $r['last_sender_id'] === (int) $me),
                 'time'    => $r['last_at'] ? time_ago($r['last_at']) : '',
+                'last_at' => $r['last_at'],
                 'unread'  => (int) $r['unread'],
                 'notifications_enabled' => !isset($r['notifications_enabled']) || (bool)$r['notifications_enabled'],
                 'calls_notifications_enabled' => !isset($r['calls_notifications_enabled']) || (bool)$r['calls_notifications_enabled'],

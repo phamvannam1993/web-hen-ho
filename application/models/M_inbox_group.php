@@ -152,6 +152,7 @@ class M_inbox_group extends CI_Model
             $unread = $this->visible($row['id'], $user_id, 'COUNT(*) AS total', ' AND x.id>? AND x.sender_id<>?', array((int) $member['last_read_message_id'], $user_id))->row_array();
             $row['last_content'] = $last ? ($last['type'] === 'image' ? '[Hình ảnh]' : $last['content']) : '';
             $row['last_at'] = $last ? $last['created_at'] : null;
+            $row['time'] = $last ? time_ago($last['created_at']) : '';
             $row['unread'] = (int) $unread['total'];
         }
         unset($row);
