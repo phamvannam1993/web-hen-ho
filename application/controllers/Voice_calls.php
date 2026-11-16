@@ -6,6 +6,8 @@ class Voice_calls extends CI_Controller
     public function __construct()
     {
         parent::__construct();
+        // This controller bypasses MY_Controller, which normally sets the DB timezone.
+        dong_bo_mui_gio_db($this);
         $this->load->library(array('realtime', 'voice'));
         $this->load->model('m_interaction');
         $this->output->set_content_type('application/json')
@@ -26,7 +28,7 @@ class Voice_calls extends CI_Controller
         if (!$this->realtime->enabled() || !$config['enabled']) {
             return $this->reply(array('ok' => false), 503);
         }
-        $peer = $this->peer($conversation_id, $uid);
+        $peer = $this->voice->peer($conversation_id, $uid);
         if (!$peer) {
             return $this->reply(array('ok' => false), 403);
         }
@@ -59,7 +61,7 @@ class Voice_calls extends CI_Controller
         if (!$this->realtime->enabled() || !$config['enabled']) {
             return $this->reply(array('ok' => false), 503);
         }
-        $peer = $this->peer($cid, $uid);
+        $peer = $this->voice->peer($cid, $uid);
         if (!$peer) {
             return $this->reply(array('ok' => false), 403);
         }
@@ -71,53 +73,35 @@ class Voice_calls extends CI_Controller
         return $this->reply(array('ok'=>true,'peer'=>$peer,'calls_notifications_enabled'=>$calls_enabled));
     }
 
+    /** Kết thúc cuộc gọi: Node ký bằng secret nội bộ; client không được ghi lịch sử. */
+    public function completed()
+    {
+        if ($this->input->method() !== 'post') return $this->reply(array('ok'=>false), 405);
+        if (!$this->realtime->la_may_chu($this->input->get_request_header('X-Realtime-Secret', false))) {
+            return $this->reply(array('ok'=>false), 403);
+        }
+        $body = json_decode($this->input->raw_input_stream, true);
+        if (!is_array($body)) return $this->reply(array('ok'=>false), 400);
+        try {
+            $this->load->model('m_call_message');
+            $result = $this->m_call_message->save_result($body);
+            if ($result['created']) {
+                $this->realtime->tin_rieng($body['conversationId'], $result['row'], $body['uid'], $body['peerId']);
+            }
+            return $this->reply(array('ok'=>true, 'messageId'=>(int) $result['row']['id']));
+        } catch (Throwable $e) {
+            log_message('error', 'Call history: ' . $e->getMessage());
+            $status = in_array($e->getCode(), array(403,409,422), true) ? $e->getCode() : 503;
+            return $this->reply(array('ok'=>false), $status);
+        }
+    }
+
     private function positive_id($value)
     {
         if (!is_int($value) && !is_string($value)) return 0;
         return (int) filter_var($value, FILTER_VALIDATE_INT, array(
             'options' => array('min_range' => 1),
         ));
-    }
-
-    private function peer($conversation_id, $uid)
-    {
-        $cid = $this->positive_id($conversation_id);
-        if (!$cid || !$uid) return null;
-        $conv = $this->db->where('id', $cid)
-            ->get('conversations')->row_array();
-        if (!$conv) return null;
-        $ids = array((int) $conv['user_low_id'],
-            (int) $conv['user_high_id']);
-        if (!in_array($uid, $ids, true) || $ids[0] === $ids[1]) {
-            return null;
-        }
-        $peer_id = $ids[0] === $uid ? $ids[1] : $ids[0];
-        $users = array();
-        foreach (array($uid, $peer_id) as $id) {
-            $user = $this->db->where('id', $id)
-                ->where('deleted_at', null)->where('status', 'active')
-                ->get('users')->row_array();
-            if (!$user || !$this->verified($user)) return null;
-            $users[$id] = $user;
-        }
-        if ($this->m_interaction->is_blocked($uid, $peer_id)) return null;
-        foreach (array($uid => $peer_id, $peer_id => $uid) as $from => $to) {
-            $pref = $this->db->where('user_id', $to)
-                ->get('user_preferences')->row_array();
-            if (($pref['allow_message'] ?? 'all') === 'vip'
-                && !member_has_vip($users[$from])) return null;
-        }
-        return array('id' => $peer_id,
-            'name' => display_name($users[$peer_id]));
-    }
-
-    private function verified($user)
-    {
-        return setting('otp_register', '1') !== '1'
-            || !empty($user['email_verified_at'])
-            || empty($user['email'])
-            || in_array($user['role'],
-                array('super_admin', 'admin', 'moderator'), true);
     }
 
     private function reply($data, $status = 200)

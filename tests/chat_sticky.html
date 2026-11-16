@@ -1,0 +1,115 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Sticky chat feature tests</title>
+<link rel="stylesheet" href="../assets/site/css/private-message-menu.css">
+<link rel="stylesheet" href="../assets/site/css/conversation-delete.css">
+<link rel="stylesheet" href="../assets/site/css/inbox-private-groups.css">
+<style>#cw-body{min-height:40px}.cw-msg{padding:8px}.cw-convo[hidden]{display:none}.cw-private-group-pane[hidden]{display:none}</style>
+<div id="chat-widget" data-base="https://example.test/" data-guest="0" data-conversation-token="fixture-token"
+     data-private-groups-api="https://example.test/ajax/nhom-inbox" data-private-user="1" data-inbox-url="https://example.test/messenger">
+ <button id="cw-bubble">Chat</button><span id="cw-badge"></span>
+ <div id="cw-panel" hidden><div id="cw-side"><input id="cw-search"><button id="cw-row-room">Room</button>
+  <section class="ig-sidebar"><button data-ig-create>Tạo nhóm</button><p data-ig-list-status></p><ul data-ig-list></ul><button data-ig-list-more hidden>More</button></section>
+  <div id="cw-list"></div></div>
+  <section id="cw-main"><div id="cw-idle">Choose chat</div>
+   <div class="cw-private-group-pane" hidden><section data-private-group="0">
+    <button data-ig-back>Back</button><b data-ig-name></b><span data-ig-count></span><button data-ig-header-more disabled>⋯</button>
+    <button data-ig-older hidden>Older</button><div data-ig-feed></div><p data-ig-status></p>
+    <form data-ig-send><textarea name="content" disabled></textarea><button type="submit" disabled>Send</button></form>
+   </section></div>
+   <div class="cw-convo" id="cw-convo" hidden><header><button id="cw-back">Back</button><a id="cw-avatar-link"><img id="cw-avatar"></a><span id="cw-avatar-room"></span><a id="cw-profile-link"><b id="cw-name"></b></a><small id="cw-status"></small><button id="cw-history-search">Search</button>
+    <button id="cw-conversation-more" data-cw-conversation-more hidden>⋯</button></header>
+    <div class="cw-body-wrap"><div id="cw-body"></div></div>
+    <form class="cw-form" id="cw-form"><input id="cw-receiver" name="receiver_id"><input id="cw-input" name="content"><input id="cw-file" type="file" name="image"></form>
+   </div>
+  </section>
+ </div>
+</div>
+<pre id="result" data-status="running">RUNNING</pre>
+<script>
+var errors=[],requests=[],modal,pinned=null,muted=false,blocked=false,deleted=false,groupText='',holdPin=false,pendingPin;
+window.addEventListener('error',e=>errors.push(e.message));
+window.setInterval=()=>1;window.clearInterval=()=>{};
+window.appModal=options=>{modal=options};
+window.Realtime={connected:true,on:()=>{},send:()=>{}};
+var messages=[{id:1,mine:true,type:'text',content:'Hello',time:'12:00'},{id:2,mine:false,type:'text',content:'Reply',time:'12:01'}];
+function response(data){return Promise.resolve({ok:true,json:()=>Promise.resolve(Object.assign({ok:true},data))})}
+window.fetch=function(url,options){options=options||{};var u=new URL(url),p=u.pathname,post=options.method==='POST';requests.push({p,post,body:options.body});
+ if(post&&options.body.get('action_token')!=='fixture-token')throw Error('Missing action token');
+ if(p.endsWith('/hoi-thoai'))return response({items:deleted?[]:[{id:9,user_id:2,name:'Peer',avatar:'',profile_url:'#profile',last:'Reply',online:true,unread:0,blocked_by_me:blocked}],unread:0});
+ if(p.endsWith('/chan')){blocked=options.body.get('action')==='block';return response({id:9,blocked_by_me:blocked})}
+ if(p.endsWith('/ghim')){if(post)pinned=options.body.get('action')==='pin'?{id:1,type:'text',content:'Hello'}:null;var state={pins_available:true,pinned,action_token:'fixture-token'};if(holdPin&&!post){holdPin=false;return new Promise(r=>{pendingPin=()=>response(state).then(r)})}return response(state)}
+ if(p.endsWith('/thu-hoi')){if(post){messages[0].recalled=true;messages[0].content='Tin nhắn đã được thu hồi';pinned=null;return response({id:1})}return response({action_token:'fixture-token',recalled_ids:messages[0].recalled?[1]:[],deleted_through_message_id:0})}
+ if(p.endsWith('/thong-bao')){if(post)muted=options.body.get('notifications_enabled')==='0';return response({id:9,action_token:'fixture-token',notifications_available:true,notifications_enabled:!muted,calls_notifications_enabled:!muted,muted})}
+ if(p.endsWith('/xoa-hoi-thoai')){deleted=true;return response({id:9,deleted_through_message_id:2})}
+ if(p.includes('/nhom-inbox')){
+  if(p.endsWith('/chi-tiet'))return response({group:{id:7,name:'Private group',members:[{id:1,name:'Me'},{id:2,name:'Peer'}],owner_id:1,can_manage:true}});
+  if(p.endsWith('/tin-nhan'))return response({messages:[{id:4,mine:false,type:'text',content:'Group hello',sender_name:'Peer',created_at:'12:00'}],has_more:false});
+  if(p.endsWith('/gui')){groupText=options.body.get('content');return response({message:{id:5,mine:true,type:'text',content:groupText,created_at:'12:01'}})}
+  if(p.endsWith('/da-doc'))return response({});
+  return response({action_token:'fixture-token',groups:[{id:7,name:'Private group',member_count:2,unread:0}],has_more:false});
+ }
+ if(p.includes('/tin-nhan/'))return response({messages:messages.filter(m=>m.id>Number(u.searchParams.get('after')||0)),latest_seen_id:0,online:true});
+ return response({messages:[],online:0});
+};
+</script>
+<script src="../assets/site/js/message-recall.js"></script>
+<script src="../assets/site/js/message-reply.js"></script>
+<script src="../assets/site/js/chat-widget.js"></script>
+<script src="../assets/site/js/conversation-delete.js"></script>
+<script src="../assets/site/js/private-message-menu.js"></script>
+<script src="../assets/site/js/inbox-private-groups.js"></script>
+<script>
+(async()=>{
+ let count=0,result=document.getElementById('result');
+ function check(ok,text){if(!ok)throw Error(text);count++}
+ const tick=()=>new Promise(r=>setTimeout(r,15));
+ async function until(fn){for(let i=0;i<100;i++){if(fn())return;await tick()}throw Error('Timed out: '+fn)}
+ function messageMenu(){document.querySelector('#cw-body [data-message-id="1"] .pm-message-more').click()}
+ function messageAction(text){Array.from(document.querySelectorAll('.pm-message-menu button')).find(b=>b.textContent===text).click()}
+ const header=()=>document.getElementById('cw-conversation-more');
+ try{
+  document.getElementById('cw-bubble').click();
+  await until(()=>document.querySelector('#cw-list [data-conv="9"]'));
+  check(!!document.querySelector('#cw-list [data-cw-conversation-more]'),'Conversation list has options');
+  document.querySelector('#cw-list [data-conv="9"]').click();
+  await until(()=>document.querySelector('#cw-body .pm-message-more'));
+  await until(()=>!document.querySelector('.pm-message-menu button:nth-child(2)').disabled);
+  check(!header().hidden,'Header options visible in private chat');
+  messageMenu();check(document.querySelectorAll('.pm-message-menu button').length===4,'Reply, pin, copy and recall share menu');
+  messageAction('Trả lời');check(document.querySelector('#cw-form [name="reply_to_id"]').value==='1','Reply drafts work');
+  await tick();messageMenu();messageAction('Ghim');await until(()=>!document.querySelector('.pm-pin-strip').hidden);
+  check(document.querySelector('.pm-pin-strip').textContent.includes('Hello'),'Pinned message appears');
+  messageMenu();messageAction('Thu hồi');await until(()=>document.querySelector('#cw-body [data-message-id="1"]').classList.contains('is-recalled'));
+  check(document.querySelector('.pm-pin-strip').hidden,'Recall clears pin');
+  header().click();await tick();check(!!document.querySelector('.conversation-delete-menu [data-ig-add-peer="2"]'),'Add peer to group available');
+  document.querySelector('.conversation-delete-menu [data-ig-common]').click();await until(()=>document.querySelector('.ig-dialog a'));
+  document.querySelector('.ig-dialog a').click();await until(()=>document.querySelector('[data-ig-feed] .ig-message'));
+  check(!document.querySelector('.cw-private-group-pane').hidden&&document.getElementById('cw-convo').hidden,'Private group opens inside sticky');
+  const form=document.querySelector('[data-ig-send]');await until(()=>!form.querySelector('button').disabled);
+  form.elements.content.value='Sticky group message';form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
+  await until(()=>groupText==='Sticky group message');check(true,'Group sends with action token');
+  document.querySelector('[data-ig-back]').click();check(document.querySelector('.cw-private-group-pane').hidden,'Group back closes group');
+  document.querySelector('#cw-list [data-conv="9"]').click();await tick();
+  header().click();await tick();window.InboxMuteDialog={choose:async()=>({scope:'both',duration:'3600'})};
+  document.querySelector('.conversation-delete-menu [data-action="notifications"]').click();await until(()=>muted);check(true,'Mute works in sticky');
+  await tick();header().click();await tick();document.querySelector('.conversation-delete-menu [data-action="notifications"]').click();await until(()=>!muted);check(true,'Unmute works in sticky');
+  await tick();header().click();await tick();document.querySelector('.conversation-delete-menu [data-action="block"]').click();check(modal&&modal.confirmText==='Chặn','Block asks confirmation');
+  modal.onConfirm();await until(()=>blocked);await tick();check(document.getElementById('cw-convo').hidden,'Blocking stays in sticky and closes conversation');
+  document.querySelector('#cw-list [data-conv="9"]').click();await tick();check(document.getElementById('cw-input').disabled,'Blocked conversation cannot send');
+  header().click();await tick();document.querySelector('.conversation-delete-menu [data-action="block"]').click();check(modal.confirmText==='Bỏ chặn','Unblock reflects current state');
+  modal.onConfirm();await until(()=>!blocked);await tick();document.querySelector('#cw-list [data-conv="9"]').click();await tick();
+  check(!document.getElementById('cw-input').disabled,'Unblocking restores composer');
+  document.getElementById('cw-back').click();holdPin=true;pinned={id:1,type:'text',content:'Stale pin'};
+  document.querySelector('#cw-list [data-conv="9"]').click();await until(()=>pendingPin);
+  document.getElementById('cw-row-room').click();await tick();pendingPin();await tick();
+  check(document.querySelector('.pm-pin-strip').hidden,'Late private pin cannot appear in room');
+  pinned=null;document.querySelector('#cw-list [data-conv="9"]').click();await tick();
+  modal=null;header().click();await tick();document.querySelector('.conversation-delete-menu [data-action="delete"]').click();check(!!modal,'Deletion asks confirmation');modal.onConfirm();await until(()=>deleted);await tick();
+  check(!document.querySelector('#cw-list [data-conv="9"]'),'Deletion removes sticky row');
+  document.getElementById('cw-row-room').click();await tick();check(header().hidden&&!document.getElementById('cw-body').dataset.pinUrl,'Room hides private actions');
+  check(errors.length===0,'No browser errors: '+errors.join(';'));
+  result.dataset.status='pass';result.textContent='PASS: '+count+' sticky assertions; message menus, pin/recall/reply, mute/unmute, deletion/block confirmation, private groups and room isolation.';
+ }catch(error){result.dataset.status='fail';result.textContent='FAIL after '+count+' assertions: '+error.stack+'; errors='+errors.join(';')}
+})();
+</script>

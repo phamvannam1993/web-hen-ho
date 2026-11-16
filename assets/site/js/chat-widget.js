@@ -394,7 +394,13 @@
 
             row.dataset.conv = it.id;
             row.addEventListener('click', function () { moChat(it); });
-            listEl.appendChild(row);
+            var holder = document.createElement('div'); holder.className = 'cw-conversation-row';
+            holder.dataset.conversationRow = '';
+            var more = document.createElement('button'); more.type = 'button'; more.className = 'cw-conversation-more';
+            more.textContent = '⋯'; more.dataset.cwConversationMore = '';
+            more.setAttribute('aria-label', 'Tùy chọn cuộc trò chuyện với ' + it.name);
+            more.setAttribute('aria-haspopup','true'); more.setAttribute('aria-expanded','false');
+            conversationActions(more,it); holder.append(row,more); listEl.appendChild(holder);
         });
     }
 
@@ -660,14 +666,21 @@
 
     /** Mở phòng chat chung. */
     function moPhong() {
+        formEl.querySelectorAll('input:not([type="hidden"]), button').forEach(function (field) { field.disabled = isGuest; });
+        delete bodyEl.dataset.pinUrl; delete bodyEl.dataset.recallUrl; delete bodyEl.dataset.conversation;
+        var conversationMore = document.getElementById('cw-conversation-more');
+        if (conversationMore) conversationMore.hidden = true;
+        root.dispatchEvent(new CustomEvent('cw:conversation-change'));
         if (window.MessageReply) window.MessageReply.clear(formEl);
         chatVersion++; bodyEl.dataset.deletedThrough = '0';
         if (historySearch) { historySearch.hidden = true; delete historySearch.dataset.messageHistory; }
-        var voiceButton = document.getElementById('cw-voice');
-        if (voiceButton) {
-            voiceButton.hidden = true;
-            delete voiceButton.dataset.voiceCall;
-        }
+        ['cw-voice', 'cw-video'].forEach(function (id) {
+            var callButton = document.getElementById(id);
+            if (callButton) {
+                callButton.hidden = true;
+                delete callButton.dataset.voiceCall;
+            }
+        });
         document.getElementById('cw-avatar-link').hidden = true;
         document.getElementById('cw-avatar-link').removeAttribute('href');
         document.getElementById('cw-profile-link').removeAttribute('href');
@@ -695,6 +708,18 @@
     }
 
     /** Mở một hội thoại riêng. */
+    function conversationActions(button, info) {
+        if (!button) return;
+        var endpoint = base + 'ajax/tin-nhan/' + Number(info.id);
+        button.dataset.conversationId = String(info.id);
+        button.dataset.blockUrl = endpoint + '/chan'; button.dataset.deleteUrl = endpoint + '/xoa-hoi-thoai';
+        button.dataset.notificationUrl = endpoint + '/thong-bao';
+        button.dataset.blockedByMe = info.blocked_by_me ? '1' : '0';
+        button.dataset.notificationsEnabled = info.notifications_enabled === false ? '0' : '1';
+        button.dataset.notificationsMuted = info.notifications_enabled === false || info.calls_notifications_enabled === false ? '1' : '0';
+        button.dataset.peerId = String(info.user_id || ''); button.dataset.peerName = info.name || '';
+        button.dataset.profileUrl = info.profile_url || ''; button.hidden = false;
+    }
     function moChat(info) {
         if (window.MessageReply) window.MessageReply.clear(formEl);
         chatVersion++; bodyEl.dataset.deletedThrough = String(deletedThrough[info.id] || 0);
@@ -702,11 +727,13 @@
             historySearch.dataset.messageHistory = base + 'ajax/tin-nhan/' + Number(info.id) + '/tim-kiem';
             historySearch.hidden = false;
         }
-        var voiceButton = document.getElementById('cw-voice');
-        if (voiceButton) {
-            voiceButton.dataset.voiceCall = String(info.id);
-            voiceButton.hidden = false;
-        }
+        ['cw-voice', 'cw-video'].forEach(function (id) {
+            var callButton = document.getElementById(id);
+            if (callButton) {
+                callButton.dataset.voiceCall = String(info.id);
+                callButton.hidden = !!info.blocked_by_me;
+            }
+        });
         var profileUrl = info.profile_url || '';
         var avatarLink = document.getElementById('cw-avatar-link');
         var profileLink = document.getElementById('cw-profile-link');
@@ -732,9 +759,15 @@
         nameEl.textContent = info.name || '';
         setPeerActivity(info);
         if (receiver) { receiver.value = info.user_id || ''; }
-        if (inputEl) { inputEl.placeholder = 'Vui lòng nhập tin nhắn'; }
+        formEl.querySelectorAll('input:not([type="hidden"]), button').forEach(function (field) { field.disabled = isGuest || !!info.blocked_by_me; });
+        if (inputEl) { inputEl.placeholder = info.blocked_by_me ? 'Bạn đã chặn người này. Hãy bỏ chặn để nhắn tin.' : 'Vui lòng nhập tin nhắn'; }
 
         moKhung();
+        bodyEl.dataset.conversation = String(info.id);
+        bodyEl.dataset.pinUrl = base + 'ajax/tin-nhan/' + Number(info.id) + '/ghim';
+        bodyEl.dataset.recallUrl = base + 'ajax/tin-nhan/' + Number(info.id) + '/thu-hoi';
+        conversationActions(document.getElementById('cw-conversation-more'),info);
+        root.dispatchEvent(new CustomEvent('cw:conversation-change'));
         danhDauDangMo();
         bodyEl.textContent = '';
 
@@ -1028,6 +1061,7 @@
         // Fallback chat menus are moved to document.body.
         var menu = e.target.closest('.cg-popover-open');
         if (menu && menu.cgTrigger && root.contains(menu.cgTrigger)) return;
+        if (e.target.closest('.pm-message-menu, .conversation-delete-menu, .ig-row-menu')) return;
 
         if (!panel.hidden && !root.contains(e.target)) { dongChat(); }
     });
@@ -1106,6 +1140,11 @@
     });
 
     /* ------------------------- Realtime ------------------------- */
+    document.addEventListener('private-conversation-blocked',function (event) {
+        duLieuList.forEach(function (item) { if (Number(item.id) === Number(event.detail.id)) item.blocked_by_me = event.detail.blocked_by_me; });
+        veList();
+        if (dang_mo && Number(dang_mo.id) === Number(event.detail.id)) veDanhSach();
+    });
 
     if (RT) {
         RT.on('chat.notification-preference',function (msg) {

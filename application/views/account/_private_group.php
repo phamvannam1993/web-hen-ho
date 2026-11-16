@@ -10,8 +10,8 @@
     <div class="ig-feed" data-ig-feed role="log" aria-label="Tin nhắn trong nhóm" tabindex="0"></div>
     <p class="ig-status" data-ig-status role="status" aria-live="polite"></p>
     <form class="ig-form" data-ig-send>
-        <label class="sr-only" for="ig-content">Tin nhắn nhóm</label>
-        <textarea id="ig-content" name="content" rows="1" maxlength="2000" required placeholder="Nhập tin nhắn…" disabled></textarea>
+        <label class="sr-only" for="<?= !empty($sticky_group) ? 'cw-ig-content' : 'ig-content' ?>">Tin nhắn nhóm</label>
+        <textarea id="<?= !empty($sticky_group) ? 'cw-ig-content' : 'ig-content' ?>" name="content" rows="1" maxlength="2000" required placeholder="Nhập tin nhắn…" disabled></textarea>
         <button type="submit" disabled>Gửi</button>
     </form>
 </section>

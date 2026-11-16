@@ -22,6 +22,15 @@ class MY_Controller extends CI_Controller
         $this->data['title']      = $this->data['settings']['site_name'] ?? 'Saigon Cupid';
         $this->data['meta_desc']  = $this->data['settings']['site_desc'] ?? '';
         $this->data['user']       = $this->auth->user();
+        $this->data['message_action_token'] = '';
+        if ($this->auth->check()) {
+            $action_token = $this->session->userdata('private_message_action_token');
+            if (!is_string($action_token) || !preg_match('/^[a-f0-9]{64}$/D', $action_token)) {
+                $action_token = bin2hex(random_bytes(32));
+                $this->session->set_userdata('private_message_action_token', $action_token);
+            }
+            $this->data['message_action_token'] = $action_token;
+        }
         // Thông tin kết nối WebSocket cho khung chat thời gian thực
         $this->data['ws_url']     = $this->realtime->enabled() ? $this->realtime->url() : '';
         $this->data['ws_token']   = $this->auth->check() && $this->realtime->enabled()

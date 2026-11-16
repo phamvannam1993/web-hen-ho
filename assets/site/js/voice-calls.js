@@ -8,6 +8,64 @@
         && window.crypto && window.crypto.randomUUID
         && window.HTMLDialogElement;
     var base = root.dataset.base.replace(/\/?$/, '/');
+    function createCallSounds(soundBase) {
+        if (!window.Audio) return {play:function () {},stop:function () {},unlock:function () {}};
+        var sounds = {}, active = null, revision = 0, unlocked = false;
+        var files = {incoming:'goi-den.mp3',outgoing:'goi-di.mp3',ended:'end-call.mp3'};
+        Object.keys(files).forEach(function (kind) {
+            var sound = new window.Audio(soundBase + files[kind]);
+            sound.preload = 'auto'; sound.loop = kind !== 'ended'; sound.volume = .65;
+            sound.onended = function () { if (active === kind) active = null; };
+            sounds[kind] = sound;
+        });
+        function stop() {
+            revision++; active = null;
+            Object.keys(sounds).forEach(function (kind) {
+                sounds[kind].pause();
+                try { sounds[kind].currentTime = 0; } catch (_) {}
+            });
+        }
+        function attempt(kind) {
+            var version = revision;
+            try {
+                sounds[kind].muted = false;
+                var result = sounds[kind].play();
+                if (result && result.catch) result.catch(function () {
+                    // Chỉ thử lại chuông đang đổ ở lần tương tác tiếp theo.
+                    if (revision === version && kind === 'ended') active = null;
+                });
+            } catch (_) { if (kind === 'ended') active = null; }
+        }
+        function play(kind) {
+            stop();
+            if (!sounds[kind]) return;
+            active = kind; attempt(kind);
+        }
+        function unlock() {
+            if (active) { if (sounds[active].paused) attempt(active); return; }
+            if (unlocked) return;
+            unlocked = true;
+            var version = revision;
+            Object.keys(sounds).forEach(function (kind) {
+                var sound = sounds[kind]; sound.muted = true;
+                try {
+                    Promise.resolve(sound.play()).then(function () {
+                        // Không để lần mở khóa đến muộn dừng chuông cuộc gọi mới.
+                        if (revision === version && !active) {
+                            sound.pause();
+                            try { sound.currentTime = 0; } catch (_) {}
+                        }
+                        sound.muted = false;
+                    }).catch(function () { sound.muted = false; unlocked = false; });
+                } catch (_) { sound.muted = false; unlocked = false; }
+            });
+        }
+        return {play:play,stop:stop,unlock:unlock};
+    }
+    var callSounds = createCallSounds(document.currentScript && document.currentScript.src
+        ? new URL('../audio/', document.currentScript.src).href : base + 'assets/site/audio/');
+    document.addEventListener('pointerdown', callSounds.unlock, {passive:true});
+    document.addEventListener('keydown', callSounds.unlock);
     var current = null, incomingGeneration = 0, pendingIncoming = null;
     var dialog = document.createElement('dialog');
     dialog.className = 'voice-dialog';
@@ -25,6 +83,13 @@
         + '<button type="button" data-end>' + phoneIcon + '<span>Đóng</span></button></div>'
         + '<audio autoplay playsinline></audio>'
         + '<button type="button" data-play hidden>Bật âm thanh</button>';
+    var outputPanel = document.createElement('div'); outputPanel.className = 'voice-output';
+    outputPanel.id = 'voice-output-panel'; outputPanel.hidden = true;
+    var outputLabel = document.createElement('label'); outputLabel.htmlFor = 'voice-output-select'; outputLabel.textContent = 'Chọn loa hoặc tai nghe';
+    var outputSelect = document.createElement('select'); outputSelect.id = 'voice-output-select';
+    outputPanel.append(outputLabel,outputSelect); dialog.appendChild(outputPanel);
+    var feedback = document.createElement('p'); feedback.className = 'voice-feedback'; feedback.setAttribute('role','status'); feedback.hidden = true;
+    dialog.appendChild(feedback);
     document.body.appendChild(dialog);
     var name = dialog.querySelector('.voice-name');
     var status = dialog.querySelector('.voice-status');
@@ -43,7 +108,10 @@
     function phase(value, text) { dialog.dataset.state = value; status.textContent = text; }
 
     var reasons = {
-        busy: 'Người dùng đang bận hoặc bạn gọi quá nhanh.',
+        busy: 'Người nhận đang có cuộc gọi khác. Hãy gọi lại sau.',
+        caller_busy: 'Bạn đang có một cuộc gọi khác, có thể ở tab khác. Hãy kết thúc cuộc gọi đó trước.',
+        server_busy: 'Máy chủ gọi đang bận. Hãy thử lại sau ít phút.',
+        cooldown: 'Bạn vừa gọi. Hãy chờ 10 giây rồi thử lại.',
         offline: 'Người dùng hiện chưa kết nối.',
         permission: 'Hiện không thể gọi người dùng này.',
         unanswered: 'Không có người trả lời.',
@@ -56,7 +124,8 @@
         document.querySelectorAll('[data-voice-call]').forEach(function (b) {
             b.disabled = !supported || !rt.connected;
             b.title = !supported ? 'Cần HTTPS hoặc localhost và trình duyệt hỗ trợ gọi thoại'
-                : (!rt.connected ? 'Chưa kết nối máy chủ gọi thoại' : 'Gọi thoại');
+                : (!rt.connected ? 'Chưa kết nối máy chủ gọi thoại'
+                : (b.dataset.video === '1' ? 'Gọi video' : 'Gọi thoại'));
         });
     }
     function send(s, type, extra) {
@@ -64,9 +133,17 @@
             t: type, callId: s.id,
         }, extra || {}))) throw new Error('Mất kết nối máy chủ.');
     }
-    function finish(s, text, notify) {
+    function finish(s, text, notify, silent, endReason) {
         if (current !== s) return;
+        console.info('[voice] call ended', {
+            callId:s.id, reason:endReason || (notify ? 'local-end' : 'remote-end'),
+            elapsedSeconds:s.startedAt ? Math.floor((Date.now()-s.startedAt)/1000) : null,
+            connectionState:s.pc ? s.pc.connectionState : null,
+            iceConnectionState:s.pc ? s.pc.iceConnectionState : null,
+        });
         current = null;
+        callSounds.stop();
+        if (!silent) callSounds.play('ended');
         if (notify) {
             try { send(s, 'voice.end'); } catch (e) {}
         }
@@ -77,6 +154,7 @@
         if (s.pc) {
             s.pc.onconnectionstatechange = null;
             s.pc.ontrack = null;
+            s.pc.onicecandidate = null;
             s.pc.close();
         }
         if (s.stream) s.stream.getTracks().forEach(function (t) { t.stop(); });
@@ -87,13 +165,129 @@
         dialog.querySelector('#voice-title').textContent = 'Cuộc gọi kết thúc';
         refresh();
     }
+    function mediaErrorMessage(error, device) {
+        if (error.name === 'NotAllowedError' || error.name === 'SecurityError') {
+            return 'Chưa được phép sử dụng ' + device + '. Hãy mở quyền của trang web cạnh thanh địa chỉ, cho phép dùng '
+                + device + ' rồi gọi lại. Nếu vẫn bị chặn, hãy kiểm tra quyền riêng tư trên thiết bị.';
+        }
+        if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+            return 'Không tìm thấy ' + device + '. Hãy kết nối hoặc bật ' + device
+                + ' trên thiết bị rồi gọi lại.' + (device === 'camera' ? ' Bạn vẫn có thể gọi thoại.' : '');
+        }
+        if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+            return 'Không mở được ' + device + '. Thiết bị có thể đang được ứng dụng khác sử dụng hoặc gặp lỗi. '
+                + 'Hãy đóng ứng dụng đang dùng ' + device + ' và kiểm tra thiết bị rồi gọi lại.';
+        }
+        if (error.name === 'OverconstrainedError') {
+            return device === 'camera'
+                ? 'Camera hiện tại không đáp ứng chế độ quay được yêu cầu. Hãy chọn camera khác trong cài đặt trình duyệt rồi gọi lại.'
+                : 'Micro hiện tại không đáp ứng chế độ thu âm được yêu cầu. Hãy chọn micro khác trong cài đặt trình duyệt rồi gọi lại.';
+        }
+        if (error.name === 'AbortError') {
+            return 'Việc mở ' + device + ' bị gián đoạn. Hãy kiểm tra kết nối thiết bị rồi gọi lại.';
+        }
+        return null;
+    }
+    async function callMedia(video) {
+        var stream;
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                audio: { echoCancellation: true, noiseSuppression: true }, video: false,
+            });
+        } catch (error) {
+            throw new Error(mediaErrorMessage(error, 'micro') || 'Không thể mở micro. Hãy kiểm tra thiết bị rồi gọi lại.');
+        }
+        if (!video) return stream;
+        try {
+            // Mở riêng từng thiết bị để biết chính xác camera hay micro gặp lỗi.
+            var cameraStream = await navigator.mediaDevices.getUserMedia({
+                audio: false,
+                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+            });
+            cameraStream.getVideoTracks().forEach(function (track) { stream.addTrack(track); });
+        } catch (error) {
+            stream.getTracks().forEach(function (track) { track.stop(); });
+            throw new Error(mediaErrorMessage(error, 'camera') || 'Không thể mở camera. Hãy kiểm tra thiết bị rồi gọi lại.');
+        }
+        return stream;
+    }
     function fail(s, error) {
-        finish(s, error.name === 'NotAllowedError'
-            ? 'Hãy cho phép dùng microphone để gọi thoại.'
-            : (error.message || reasons.connection), true);
+        finish(s, error.message || reasons.connection, true);
+    }
+    function videoRequested(message) {
+        return message.video === true || message.video === 1
+            || message.video === '1' || message.video === 'true';
+    }
+    function showVideo(s) {
+        s.video = true;
+        title.textContent = 'Gọi video';
+        dialog.classList.add('is-video');
+        videoBox.hidden = false;
+        localVideo.srcObject = s.stream;
+        localVideo.classList.remove('is-off');
+        s.facing = 'user';
+        s.cameraEnabled = true;
+        camera.hidden = false;
+        setControl(camera, 'Tắt camera', 'camera', false);
+        navigator.mediaDevices.enumerateDevices().then(function (list) {
+            if (current !== s) return;
+            s.cameraCount = list.filter(function (d) { return d.kind === 'videoinput'; }).length;
+            flip.hidden = !s.cameraEnabled || s.cameraCount < 2;
+        }).catch(function () {});
+    }
+    /** Recover a video call if an older incoming notification omitted its type. */
+    function ensureVideo(s) {
+        if (s.videoSender) return Promise.resolve(true);
+        if (s.videoSetup) return s.videoSetup;
+        s.videoSetup = (async function () {
+            var fresh = null, adopted = false;
+            s.video = true;
+            title.textContent = 'Gọi video';
+            dialog.classList.add('is-video');
+            status.textContent = 'Đang chuẩn bị camera…';
+            try {
+                fresh = await navigator.mediaDevices.getUserMedia({audio:false,
+                    video:{facingMode:'user',width:{ideal:640},height:{ideal:480}}});
+                if (current !== s) return false;
+                var track = fresh.getVideoTracks()[0];
+                if (!track) throw new Error('Không tìm thấy camera. Hãy kiểm tra thiết bị rồi gọi lại.');
+                s.videoSender = s.pc.addTrack(track, s.stream);
+                s.stream.addTrack(track);
+                adopted = true;
+                showVideo(s);
+                // Stop the audio-only player when the same remote stream moves to video.
+                if (s.remoteStream) {
+                    audio.pause(); audio.srcObject = null;
+                    remoteVideo.srcObject = s.remoteStream;
+                    remoteVideo.play().catch(function () { if (current === s) play.hidden = false; });
+                }
+                status.textContent = 'Đang kết nối video…';
+                return true;
+            } catch (error) {
+                throw new Error(mediaErrorMessage(error,'camera') || error.message);
+            } finally {
+                if (fresh && !adopted) fresh.getTracks().forEach(function (track) { track.stop(); });
+            }
+        })();
+        return s.videoSetup;
     }
     function show(s, text) {
+        callSounds.stop();
         current = s;
+        output.hidden = outputPanel.hidden = true;
+        output.disabled = camera.disabled = flip.disabled = outputSelect.disabled = false;
+        output.setAttribute('aria-expanded','false'); inform('');
+        setControl(output, 'Loa / tai nghe', 'sound');
+        var player = s.video ? remoteVideo : audio;
+        if (typeof player.setSinkId === 'function') routeOutput(s,'').catch(function () {});
+        title.textContent = s.video ? 'Gọi video' : 'Gọi thoại';
+        dialog.classList.toggle('is-video', !!s.video);
+        name.textContent = s.name || (s.video ? 'Cuộc gọi video' : 'Cuộc gọi thoại');
+        status.textContent = text;
+        accept.hidden = !s.incoming;
+        mute.hidden = play.hidden = true;
+        setControl(mute, 'Tắt mic', 'mic', false);
+        setControl(end, s.incoming ? 'Từ chối' : 'Hủy gọi', 'end');
         peer(s.name);
         phase(s.incoming ? 'incoming' : 'preparing', text);
         dialog.querySelector('#voice-title').textContent = s.incoming ? 'Cuộc gọi đến' : 'Gọi thoại';
@@ -104,6 +298,7 @@
         mute.setAttribute('aria-pressed', 'false');
         label(end, s.incoming ? 'Từ chối' : 'Huỷ gọi');
         if (!dialog.open) dialog.showModal();
+        if (s.incoming) callSounds.play('incoming');
         s.timer = setTimeout(function () {
             finish(s, reasons.unanswered, true);
         }, 45000);
@@ -130,24 +325,49 @@
             throw new Error('Cấu hình gọi thoại chưa sẵn sàng.');
         }
         s.name = data.peer.name;
+        name.textContent = s.name;
+        // Lấy sẵn relay trong lúc người dùng cấp quyền/mở thiết bị.
+        s.pc = new RTCPeerConnection({
+            iceServers: data.rtc.iceServers, iceTransportPolicy: 'relay',
+            iceCandidatePoolSize: 1, bundlePolicy: 'max-bundle',
         peer(s.name);
         var stream = await navigator.mediaDevices.getUserMedia({
             audio: { echoCancellation: true, noiseSuppression: true },
             video: false,
         });
+        s.pc.onicecandidate = function (event) {
+            if (current !== s) return;
+            var candidate = event.candidate;
+            // Chỉ chuyển relay; không gửi địa chỉ host hoặc server-reflexive.
+            if (candidate && !/^candidate:.* typ relay(?: |$)/.test(candidate.candidate)) return;
+            var value = candidate ? {candidate:candidate.candidate,sdpMid:candidate.sdpMid,sdpMLineIndex:candidate.sdpMLineIndex} : null;
+            if (s.sdpSent && s.trickle) {
+                try { send(s,'voice.ice',{candidate:value}); } catch (error) { fail(s,error); }
+            } else {
+                s.localIce = s.localIce || [];
+                if (s.localIce.length < 128) s.localIce.push(value);
+            }
+        };
+        var stream = await callMedia(s.video);
         if (current !== s) {
             stream.getTracks().forEach(function (t) { t.stop(); });
             return false;
         }
         s.stream = stream;
-        s.pc = new RTCPeerConnection({
-            iceServers: data.rtc.iceServers, iceTransportPolicy: 'relay',
+        if (s.video) showVideo(s);
+        stream.getTracks().forEach(function (t) {
+            var sender = s.pc.addTrack(t, stream);
+            if (t.kind === 'video') s.videoSender = sender;
         });
-        stream.getTracks().forEach(function (t) { s.pc.addTrack(t, stream); });
         s.pc.ontrack = function (event) {
             if (current !== s) return;
-            audio.srcObject = event.streams[0] || new MediaStream([event.track]);
-            audio.play().catch(function () {
+            var remote = s.remoteStream || event.streams[0] || new MediaStream();
+            if (remote.getTracks().indexOf(event.track) === -1) remote.addTrack(event.track);
+            s.remoteStream = remote;
+            // Gọi video: thẻ video phát cả tiếng; thoại: thẻ audio như cũ
+            var player = s.video ? remoteVideo : audio;
+            if (player.srcObject !== remote) player.srcObject = remote;
+            player.play().catch(function () {
                 if (current === s) play.hidden = false;
             });
         };
@@ -155,12 +375,17 @@
             if (current !== s) return;
             var value = s.pc.connectionState;
             if (value === 'connected') {
+                callSounds.stop();
                 clearTimeout(s.timer);
                 clearTimeout(s.disconnect);
                 s.disconnect = null;
+                setControl(end, 'Kết thúc', 'end');
                 label(end, 'Kết thúc');
                 duration.hidden = false;
                 if (!s.clock) {
+                    send(s, 'voice.connected');
+                    console.info('[voice] connected', {callId:s.id,trickle:!!s.trickle,
+                        afterAcceptedMs:s.acceptedAt ? Date.now()-s.acceptedAt : null,gatherMs:s.gatherMs});
                     s.startedAt = Date.now();
                     s.clock = setInterval(function () {
                         var seconds = Math.floor((Date.now() - s.startedAt) / 1000);
@@ -170,46 +395,88 @@
                 }
                 phase('connected', 'Đang trong cuộc gọi');
             } else if (value === 'failed' || value === 'closed') {
-                finish(s, reasons.connection, true);
+                finish(s, reasons.connection, true, false, 'webrtc-' + value);
             } else if (value === 'disconnected' && !s.disconnect) {
                 phase('connecting', 'Kết nối gián đoạn, đang thử lại…');
                 s.disconnect = setTimeout(function () {
-                    finish(s, reasons.connection, true);
+                    finish(s, reasons.connection, true, false, 'webrtc-disconnected');
                 }, 5000);
             }
         };
         mute.hidden = false;
+        output.hidden = false;
         return true;
     }
-    async function description(s, type) {
+    async function gatherDescription(s, type) {
         var pc = s.pc;
+        var gatherStartedAt = Date.now();
         var value = type === 'offer' ? await pc.createOffer() : await pc.createAnswer();
         if (current !== s) return;
         await pc.setLocalDescription(value);
         await new Promise(function (resolve, reject) {
-            var timer;
+            var timer, settled = false;
             function done(error) {
+                if (settled) return;
+                settled = true;
                 clearTimeout(timer);
                 pc.removeEventListener('icegatheringstatechange', changed);
+                pc.removeEventListener('icecandidate', changed);
                 s.cancelGather = null;
+                s.resumeGather = null;
                 if (error) reject(error); else resolve();
             }
             function changed() {
-                if (pc.iceGatheringState === 'complete') done();
+                if (pc.iceGatheringState === 'complete' || s.trickle && pc.localDescription
+                    && /^a=candidate:.* typ relay(?: |$)/m.test(pc.localDescription.sdp)) done();
             }
             s.cancelGather = function () { done(new Error('Cuộc gọi đã hủy.')); };
+            s.resumeGather = changed;
             pc.addEventListener('icegatheringstatechange', changed);
+            pc.addEventListener('icecandidate', changed);
             timer = setTimeout(function () {
-                done(new Error('Không kết nối được TURN. Hãy thử lại.'));
+                // Một giao diện mạng có thể còn chờ dù giao diện khác đã lấy được relay.
+                var hasRelay = pc.localDescription
+                    && /^a=candidate:.* typ relay(?: |$)/m.test(pc.localDescription.sdp);
+                done(hasRelay ? null : new Error('Không lấy được kết nối TURN. Hãy kiểm tra máy chủ TURN và mạng.'));
             }, 15000);
             changed();
         });
         if (current !== s) return;
         var sdp = pc.localDescription.sdp;
         if (!/^a=candidate:.* typ relay(?: |$)/m.test(sdp)) {
-            throw new Error('TURN chưa cung cấp được kết nối thoại.');
+            throw new Error('TURN chưa cung cấp được kết nối ' + (s.video ? 'video.' : 'thoại.'));
         }
+        s.gatherMs = Date.now() - gatherStartedAt;
+        return sdp;
+    }
+    function warmOffer(s) {
+        // Chuẩn bị khi đổ chuông; chỉ gửi SDP sau khi bên kia nhận cuộc gọi.
+        if (!s.offerReady) {
+            s.offerReady = gatherDescription(s, 'offer');
+            s.offerReady.catch(function (error) { if (current === s) fail(s, error); });
+        }
+        return s.offerReady;
+    }
+    async function description(s, type) {
+        var sdp = await (type === 'offer' ? warmOffer(s) : gatherDescription(s, type));
+        if (current !== s || !sdp) return;
         send(s, 'voice.' + type, { sdp: sdp });
+        s.sdpSent = true;
+        if (s.trickle) (s.localIce || []).forEach(function (candidate) {
+            if (!candidate || !sdp.includes('a=' + candidate.candidate)) send(s,'voice.ice',{candidate:candidate});
+        });
+        s.localIce = [];
+    }
+    function addRemoteIce(s, candidate) {
+        if (current !== s || !s.trickle) return;
+        if (!s.remoteReady) {
+            s.remoteIce = s.remoteIce || [];
+            if (s.remoteIce.length < 128) s.remoteIce.push(candidate);
+            return;
+        }
+        s.remoteIceTask = (s.remoteIceTask || Promise.resolve()).then(function () {
+            if (current === s) return s.pc.addIceCandidate(candidate);
+        }).catch(function (error) { if (current === s) fail(s,error); });
     }
     document.addEventListener('click', function (event) {
         var button = event.target.closest('[data-voice-call]');
@@ -220,11 +487,15 @@
         }
         var s = {
             id: crypto.randomUUID(), cid: Number(button.dataset.voiceCall),
-            incoming: false,
+            incoming: false, video: button.dataset.video === '1',
         };
-        show(s, 'Đang chuẩn bị microphone…');
+        show(s, s.video ? 'Đang chuẩn bị camera và microphone…' : 'Đang chuẩn bị microphone…');
         prepare(s).then(function (ready) {
             if (!ready || current !== s) return;
+            status.textContent = 'Đang gọi…';
+            warmOffer(s);
+            send(s, 'voice.invite', { conversationId: s.cid, video: !!s.video, trickle:true });
+            callSounds.play('outgoing');
             phase('ringing', 'Đang gọi…');
             send(s, 'voice.invite', { conversationId: s.cid });
         }).catch(function (error) { fail(s, error); });
@@ -233,11 +504,14 @@
         var s = current;
         if (!s || !s.incoming || s.accepting) return;
         s.accepting = true;
+        callSounds.stop();
         accept.hidden = true;
+        setControl(end, 'Hủy gọi', 'end');
+        status.textContent = s.video ? 'Đang chuẩn bị camera và microphone…' : 'Đang chuẩn bị microphone…';
         label(end, 'Huỷ gọi');
         phase('preparing', 'Đang chuẩn bị microphone…');
         prepare(s).then(function (ready) {
-            if (ready && current === s) send(s, 'voice.accept');
+            if (ready && current === s) send(s, 'voice.accept', {trickle:true});
         }).catch(function (error) { fail(s, error); });
     };
     end.onclick = function () {
@@ -251,12 +525,135 @@
     mute.onclick = function () {
         if (!current || !current.stream) return;
         current.stream.getAudioTracks().forEach(function (t) { t.enabled = !t.enabled; });
+        var enabled = current.stream.getAudioTracks()[0].enabled;
+        setControl(mute, enabled ? 'Tắt mic' : 'Bật mic', enabled ? 'mic' : 'micOff', !enabled);
         var muted = !current.stream.getAudioTracks()[0].enabled;
         label(mute, muted ? 'Bật mic' : 'Tắt mic');
         mute.setAttribute('aria-pressed', muted ? 'true' : 'false');
     };
     play.onclick = function () {
-        audio.play().then(function () { play.hidden = true; }).catch(function () {});
+        (current && current.video ? remoteVideo : audio).play()
+            .then(function () { play.hidden = true; }).catch(function () {});
+    };
+    output.onclick = async function () {
+        var s = current;
+        if (!s || !s.stream || s.outputBusy) return;
+        inform('');
+        if (!outputPanel.hidden) {
+            outputPanel.hidden = true; output.setAttribute('aria-expanded','false'); return;
+        }
+        var player = s.video ? remoteVideo : audio;
+        if (typeof player.setSinkId !== 'function') {
+            inform('Trình duyệt này không hỗ trợ chuyển loa ngoài trong trang web. Hãy chọn loa ngoài, loa thoại hoặc tai nghe trong bảng điều khiển âm thanh của thiết bị.');
+            return;
+        }
+        s.outputBusy = true; output.disabled = true;
+        try {
+            if (typeof navigator.mediaDevices.selectAudioOutput === 'function') {
+                var selected = await navigator.mediaDevices.selectAudioOutput();
+                if (current !== s) return;
+                if (await routeOutput(s,selected.deviceId)) {
+                    setControl(output,'Đầu ra: ' + (selected.label || 'Thiết bị đã chọn'),'sound');
+                    inform('Đang phát qua: ' + (selected.label || 'thiết bị đã chọn') + '.');
+                }
+            } else {
+                var devices = await navigator.mediaDevices.enumerateDevices();
+                if (current !== s) return;
+                outputSelect.replaceChildren();
+                var initial = document.createElement('option'); initial.value = ''; initial.textContent = 'Theo cài đặt âm thanh của thiết bị'; outputSelect.append(initial);
+                devices.filter(function (d) { return d.kind === 'audiooutput' && d.deviceId; }).forEach(function (device, index) {
+                    var option = document.createElement('option'); option.value = device.deviceId;
+                    option.textContent = device.label || 'Thiết bị âm thanh ' + (index + 1); outputSelect.append(option);
+                });
+                if (outputSelect.options.length === 1) {
+                    inform('Trình duyệt chưa cung cấp danh sách loa hoặc tai nghe. Hãy chọn đầu ra trong cài đặt âm thanh của thiết bị.');
+                    return;
+                }
+                outputSelect.value = player.sinkId || '';
+                outputPanel.hidden = false; output.setAttribute('aria-expanded','true'); outputSelect.focus();
+            }
+        } catch (error) { if (current === s) inform(outputError(error)); }
+        finally { s.outputBusy = false; if (current === s) output.disabled = false; }
+    };
+    outputSelect.onchange = async function () {
+        var s = current;
+        if (!s || s.outputBusy) return;
+        s.outputBusy = true; outputSelect.disabled = output.disabled = true; inform('');
+        try {
+            var selected = outputSelect.options[outputSelect.selectedIndex];
+            if (await routeOutput(s,outputSelect.value)) {
+                setControl(output,'Đầu ra: ' + selected.textContent,'sound');
+                inform('Đang phát qua: ' + selected.textContent + '.');
+                outputPanel.hidden = true; output.setAttribute('aria-expanded','false'); output.focus();
+            }
+        } catch (error) { if (current === s) inform(outputError(error)); }
+        finally { s.outputBusy = false; if (current === s) outputSelect.disabled = output.disabled = false; }
+    };
+    async function changeCamera(s, enabled) {
+        var sender = s.videoSender;
+        if (!sender) throw new Error('Camera chưa sẵn sàng. Hãy thử lại sau khi cuộc gọi kết nối.');
+        var fresh = null, adopted = false;
+        try {
+            if (enabled) {
+                fresh = await navigator.mediaDevices.getUserMedia({audio:false,
+                    video:{facingMode:s.facing || 'user',width:{ideal:640},height:{ideal:480}}});
+                if (current !== s) return false;
+                await sender.replaceTrack(fresh.getVideoTracks()[0]);
+            } else await sender.replaceTrack(null);
+            if (current !== s) return false;
+            s.stream.getVideoTracks().forEach(function (track) { s.stream.removeTrack(track); track.stop(); });
+            if (fresh) fresh.getVideoTracks().forEach(function (track) { s.stream.addTrack(track); });
+            adopted = true; s.cameraEnabled = enabled;
+            return true;
+        } finally {
+            if (fresh && !adopted) fresh.getTracks().forEach(function (track) { track.stop(); });
+        }
+    }
+    camera.onclick = async function () {
+        var s = current;
+        if (!s || !s.video || !s.stream || s.cameraBusy || s.flipping) return;
+        s.cameraBusy = true; camera.disabled = flip.disabled = true; inform('');
+        try {
+            if (await changeCamera(s,!s.cameraEnabled)) {
+                var on = s.cameraEnabled;
+                setControl(camera,on ? 'Tắt camera' : 'Bật camera',on ? 'camera' : 'cameraOff',!on);
+                localVideo.srcObject = s.stream; localVideo.classList.toggle('is-off',!on);
+                flip.hidden = !on || (s.cameraCount || 0) < 2;
+                inform(on ? 'Đã bật camera.' : 'Đã tắt camera. Bạn vẫn có thể nói chuyện.');
+            }
+        } catch (error) {
+            if (current === s) inform(mediaErrorMessage(error,'camera') || error.message);
+        } finally { s.cameraBusy = false; if (current === s) camera.disabled = flip.disabled = false; }
+    };
+    /** Đổi camera trước/sau: lấy track mới rồi thay trên kết nối, không cần thương lượng lại. */
+    flip.onclick = async function () {
+        var s = current;
+        if (!s || !s.stream || !s.pc || s.flipping || s.cameraBusy || !s.cameraEnabled) return;
+        s.flipping = true;
+        var fresh, adopted = false;
+        try {
+            var facing = s.facing === 'user' ? 'environment' : 'user';
+            fresh = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing, width: { ideal: 640 }, height: { ideal: 480 } } });
+            var track = fresh.getVideoTracks()[0];
+            if (current !== s) { track.stop(); return; }
+            var old = s.stream.getVideoTracks()[0];
+            track.enabled = !old || old.enabled;
+            var sender = s.videoSender;
+            if (!sender) throw new Error('Camera chưa sẵn sàng.');
+            await sender.replaceTrack(track);
+            if (current !== s) return;
+            if (old) { s.stream.removeTrack(old); old.stop(); }
+            s.stream.addTrack(track);
+            adopted = true;
+            s.facing = facing;
+            localVideo.srcObject = s.stream;
+        } catch (e) {
+            if (current === s) inform(mediaErrorMessage(e, 'camera')
+                || 'Không đổi được camera. Hãy kiểm tra camera còn lại rồi thử lại.');
+        } finally {
+            if (fresh && !adopted) fresh.getTracks().forEach(function (t) { t.stop(); });
+            s.flipping = false;
+        }
     };
     rt.on('voice.incoming', async function (m) {
         if (!supported || current) return;
@@ -271,8 +668,8 @@
         pendingIncoming=null;
         show({
             id: m.callId, cid: m.conversationId,
-            name: m.name, incoming: true,
-        }, 'Cuộc gọi thoại đến');
+            name: m.name, incoming: true, video: videoRequested(m),
+        }, videoRequested(m) ? 'Cuộc gọi video đến' : 'Cuộc gọi thoại đến');
     });
     rt.on('voice.ringing', function (m) {
         if (current && current.id === m.callId) phase('ringing', 'Đang đổ chuông…');
@@ -281,44 +678,68 @@
         var s = current;
         if (!s || s.id !== m.callId || s.accepted) return;
         s.accepted = true;
+        s.acceptedAt = Date.now();
+        s.trickle = m.trickle === true;
+        if (s.incoming && videoRequested(m)) {
+            ensureVideo(s).catch(function (error) { if (current === s) fail(s,error); });
+        }
+        if (s.resumeGather) s.resumeGather();
+        callSounds.stop();
         clearTimeout(s.timer);
         s.timer = setTimeout(function () {
-            finish(s, reasons.connection, true);
+            finish(s, reasons.connection, true, false, 'setup-timeout');
         }, 60000);
+        status.textContent = s.video ? 'Đang kết nối video…' : 'Đang kết nối thoại…';
         phase('connecting', 'Đang kết nối thoại…');
         if (!s.incoming) description(s, 'offer').catch(function (e) { fail(s, e); });
     });
     ['offer', 'answer'].forEach(function (type) {
-        rt.on('voice.' + type, function (m) {
+        rt.on('voice.' + type, async function (m) {
             if (pendingIncoming === m.callId) { incomingGeneration++; pendingIncoming=null; }
             var s = current;
             if (!s || s.id !== m.callId || !s.accepted || !s.pc
                 || s.remoteSet || (type === 'offer') !== s.incoming) return;
             s.remoteSet = true;
-            s.pc.setRemoteDescription({ type: type, sdp: m.sdp })
-                .then(function () {
-                    if (current === s && type === 'offer') return description(s, 'answer');
-                }).catch(function (e) { fail(s, e); });
+            try {
+                // The answer must include our camera even if the first notification lost video=true.
+                var offeredVideo = type === 'offer' && typeof m.sdp === 'string'
+                    && /^m=video [1-9][0-9]* /m.test(m.sdp);
+                if (s.incoming && (videoRequested(m) || offeredVideo || s.videoSetup)) await ensureVideo(s);
+                if (current !== s) return;
+                await s.pc.setRemoteDescription({ type: type, sdp: m.sdp });
+                if (current !== s) return;
+                s.remoteReady = true;
+                (s.remoteIce || []).forEach(function (candidate) { addRemoteIce(s,candidate); });
+                s.remoteIce = [];
+                if (type === 'offer') await description(s, 'answer');
+            } catch (error) { if (current === s) fail(s,error); }
         });
+    });
+    rt.on('voice.ice', function (m) {
+        var s = current;
+        if (s && s.id === m.callId && s.accepted && s.pc) addRemoteIce(s,m.candidate);
     });
     ['ended', 'error', 'dismiss'].forEach(function (type) {
         rt.on('voice.' + type, function (m) {
             if (current && current.id === m.callId) {
                 finish(current, type === 'dismiss'
                     ? 'Cuộc gọi được nhận ở tab khác.'
-                    : (reasons[m.reason] || reasons.ended), false);
+                    : (m.reason === 'cooldown' && Number.isInteger(m.retryAfter) && m.retryAfter > 0 && m.retryAfter <= 10
+                        ? 'Bạn vừa gọi. Hãy chờ ' + m.retryAfter + ' giây rồi thử lại.'
+                        : (reasons[m.reason] || reasons.ended)), false, type === 'dismiss', 'server-' + (m.reason || type));
             }
         });
     });
     rt.on('open', refresh);
     rt.on('close', function () {
         incomingGeneration++; pendingIncoming=null;
-        if (current) finish(current, reasons.connection, false);
+        if (current) finish(current, 'Mất kết nối với máy chủ chat. Hãy kiểm tra mạng rồi gọi lại.', false, false, 'websocket-closed');
         refresh();
     });
     window.addEventListener('pagehide', function () {
         incomingGeneration++; pendingIncoming=null;
-        if (current) finish(current, reasons.ended, true);
+        callSounds.stop();
+        if (current) finish(current, reasons.ended, true, true, 'page-hidden');
     });
     refresh();
 })();

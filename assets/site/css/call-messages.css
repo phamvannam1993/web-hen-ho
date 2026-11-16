@@ -1,0 +1,46 @@
+.chat-msg.is-call-message,
+.tk-ms .chat-msg.is-call-message { padding:0; background:transparent; box-shadow:none; }
+.chat-msg.is-call-message { width:236px; }
+.is-call-message .call-message-original { display:none !important; }
+.is-call-message .pm-message-more { display:none !important; }
+.is-call-message .call-message-card {
+    box-sizing:border-box; width:236px; max-width:100%; padding:14px; border-radius:19px;
+    background:#fff0f4; color:#743b53; border:1px solid #f5dbe5;
+    font-size:13px; line-height:1.4;
+}
+.is-call-message.mine .call-message-card {
+    background:var(--tk-grad-brand,linear-gradient(135deg,#e2596c,var(--pink,#d1273f)));
+    color:#fff; border-color:transparent;
+}
+.call-message-heading { display:flex; align-items:center; gap:10px; }
+.call-message-text { flex:1; min-width:0; }
+.call-message-title { display:block; font-size:14px; font-weight:650; line-height:1.35; overflow-wrap:anywhere; }
+.call-message-detail { display:block; margin-top:3px; font-size:12px; opacity:.78; }
+.call-message-heading > .call-message-symbol {
+    display:flex; align-items:center; justify-content:center; position:relative;
+    flex:0 0 37px; width:37px; height:37px; border-radius:50%; background:#f9dbe6; color:#bc345e;
+}
+.call-message-symbol svg { width:20px; height:20px; }
+.mine .call-message-heading > .call-message-symbol { background:#ffffff30; color:#fff; }
+.is-unanswered .call-message-heading > .call-message-symbol { background:#e94369; color:#fff; }
+.call-message-cross { position:absolute; right:2px; top:0; display:flex; align-items:center; justify-content:center; width:13px; height:13px; border-radius:50%; background:#e94369; font-size:14px; font-weight:700; line-height:1; }
+.is-call-message .call-message-callback {
+    display:block; box-sizing:border-box; width:100%; min-height:34px; margin-top:12px; padding:7px 12px;
+    border:0; border-radius:10px; background:#f7d6e3; color:#9e2d56;
+    font:inherit; font-weight:650; text-align:center; cursor:pointer;
+}
+.is-call-message.mine .call-message-callback { background:#ffffff30; color:#fff; }
+.is-call-message .call-message-callback:hover:not(:disabled) { background:#f2c5d7; }
+.is-call-message.mine .call-message-callback:hover:not(:disabled) { background:#ffffff45; }
+.is-call-message .call-message-callback:focus-visible { outline:2px solid #ac2854; outline-offset:3px; }
+.is-call-message .call-message-callback:disabled { opacity:.6; cursor:default; }
+.chat-msg.is-call-message > small,
+.tk-ms .chat-msg.is-call-message > small { color:#987482; opacity:1; padding:2px 6px; }
+.cw-msg.is-call-message .cw-msg-col { align-items:stretch; min-width:0; }
+.cw-msg.is-call-message .call-message-card { width:224px; }
+.cw-msg.is-call-message .cw-msg-time { color:#987482; }
+@media (max-width:380px) {
+    .is-call-message .call-message-card { padding:12px; }
+    .call-message-heading { gap:8px; }
+    .call-message-title { font-size:13px; }
+}

@@ -95,12 +95,19 @@ class Chat extends Api_Controller
 
         $cutoff = $this->m_interaction->conversation_cutoff($conv['id'], $me);
         $after = (int) $this->input->get('after');
+        // ?before=<id>: trang tin cũ hơn (kéo lên xem lịch sử / nhảy tới kết quả tìm kiếm)
+        $before = (int) $this->input->get('before');
+        $has_more = false;
         $this->db->select('*')
             ->from('messages')->where('conversation_id', $conv['id'])->where('id >', $cutoff);
         if ($after > 0) {
             $rows = $this->db->where('id >', $after)->order_by('id', 'ASC')->limit(50)->get()->result_array();
         } else {
-            $rows = array_reverse($this->db->order_by('id', 'DESC')->limit(50)->get()->result_array());
+            if ($before > 0) $this->db->where('id <', $before);
+            $rows = $this->db->order_by('id', 'DESC')->limit(51)->get()->result_array();
+            $has_more = count($rows) > 50;
+            if ($has_more) array_pop($rows);
+            $rows = array_reverse($rows);
         }
 
         // đánh dấu đã đọc phần của đối phương
@@ -119,12 +126,16 @@ class Chat extends Api_Controller
             ->where('sender_id', $me)->where('read_at', null)->count_all_results() === 0;
 
         $ra = array('messages' => $ds, 'seen' => $seen, 'deleted_through_message_id' => $cutoff);
-        if ($after <= 0) {
+        if ($after <= 0) $ra['has_more'] = $has_more;
+        if ($after <= 0 && $before <= 0) {
             $other = $this->m_user->find($other_id);
             $ra['partner']  = $other ? $this->ho_so($other) + array('activity' => $this->hoat_dong($other['last_active_at'])) : null;
             $loi = $this->m_interaction->message_permission($me, $other_id);
             $ra['can_send']   = $loi === null;
             $ra['send_error'] = $loi;
+            // Tôi đã chặn người này chưa (menu hiện "Bỏ chặn" khi mở lại hội thoại)
+            $ra['blocked_by_me'] = (bool) $this->db->where('user_id', $me)->where('blocked_id', $other_id)
+                ->count_all_results('blocks');
         }
         return $this->ok($ra);
     }
@@ -500,6 +511,25 @@ class Chat extends Api_Controller
             if (!$ok) throw new RuntimeException('Chưa lưu được thay đổi. Vui lòng thử lại.', 503);
             return array('blocked' => $action === 'block', 'user_id' => $other);
         });
+    }
+
+    /**
+     * GET /api/conversations/{id}/call-config — cấu hình WebRTC (TURN tạm 1 giờ) để gọi thoại/video
+     * người kia, như ajax/voice-config của web. 503: chưa bật gọi; 403: không được gọi người này.
+     */
+    public function call_config($conversation_id = 0)
+    {
+        $this->output->set_header('Cache-Control: private, no-store');
+        if (!$this->can_auth()) return;
+        $this->load->library('voice');
+        $uid = (int) $this->me['id'];
+        $config = $this->voice->config($uid);
+        if (!$this->realtime->enabled() || !$config['enabled']) {
+            return $this->loi('Tính năng gọi chưa được bật.', 503);
+        }
+        $peer = $this->voice->peer($conversation_id, $uid);
+        if (!$peer) return $this->loi('Hiện không thể gọi người dùng này.', 403);
+        return $this->ok(array('conversation_id' => (int) $conversation_id, 'peer' => $peer, 'rtc' => $config));
     }
 
     /** GET /api/conversations/{id}/search?q=&before= — tìm tin chữ trong hội thoại (20 tin/lần, mới trước). */

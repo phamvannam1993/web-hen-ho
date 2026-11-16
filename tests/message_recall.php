@@ -51,7 +51,7 @@ class RecallDb {
             if (strpos($sql, 'FOR UPDATE') !== false && $this->queries !== 1) throw new Exception('Lock conversation first');
             return new RecallResult($params[0] === 9 && in_array($params[1], array(1, 2), true) ? array(array('id' => 9)) : array());
         }
-        if (strpos($sql, 'SELECT id, sender_id, deleted_at FROM messages') === 0) {
+        if (strpos($sql, 'SELECT id, sender_id, deleted_at, type FROM messages') === 0) {
             if (strpos($sql, 'FOR UPDATE') === false || $this->queries !== 2) throw new Exception('Lock message second');
             $row = $this->rows[$params[1]] ?? null;
             return new RecallResult($row && $row['conversation_id'] === $params[0] ? array($row) : array());

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SaigonCupid — Thẻ cuộc gọi</title>
+<link rel="stylesheet" href="../assets/site/css/style.css">
+<link rel="stylesheet" href="../assets/site/css/account.css">
+<link rel="stylesheet" href="../assets/site/css/account/messages.css">
+<link rel="stylesheet" href="../assets/site/css/private-message-menu.css">
+<link rel="stylesheet" href="../assets/site/css/call-messages.css">
+<style>
+body {margin:0;padding:28px;background:#fff8fb;font-family:Arial,sans-serif;color:#543344}
+h1 {margin:0 0 7px;font-size:23px;color:#bc345e} .intro {margin:0 0 24px;color:#987482;font-size:13px}
+.preview {display:grid;grid-template-columns:minmax(0,440px) minmax(0,340px);gap:28px;align-items:start}
+.preview section {min-width:0;border:1px solid #f1dbe4;border-radius:20px;overflow:hidden;box-shadow:0 12px 35px #ac426011;background:white}
+.preview h2 {padding:18px;margin:0;border-bottom:1px solid #f5e1e9;font-size:15px}.preview h2 span{float:right;font-size:12px;color:#b37e92;font-weight:normal}
+#chat-body,#cw-body {height:auto;min-height:0;max-height:none;padding:22px;gap:16px;background:#fff7fa}
+.day {align-self:center;font-size:11px;color:#a88b98}.chat-peer-avatar,.cw-msg-avatar {background:#ecc2d2}
+#result {font-size:12px;white-space:pre-wrap;color:#987482}
+@media(max-width:650px){body{padding:16px}.preview{grid-template-columns:minmax(0,1fr)}#chat-body,#cw-body{padding:16px}}
+</style>
+<h1>SaigonCupid</h1><p class="intro">Lịch sử cuộc gọi · Chat chính &amp; chat sticky</p>
+<div class="preview tk-layout">
+<section class="tk-ms"><h2>Thanh <span>Chat chính</span></h2>
+<div id="chat-body" class="tk-ms-body" data-conversation="9">
+<span class="day">Hôm nay · 19:32</span>
+<div class="chat-msg" data-message-type="system" data-message-id="1"><p>Cuộc gọi thoại nhỡ</p><small>19:32</small></div>
+<div class="chat-msg mine" data-message-type="system" data-message-id="2"><p>Cuộc gọi thoại · 10 phút 0 giây</p><small>19:48 · Đã xem</small></div>
+<div class="chat-msg" data-message-type="system" data-message-id="3"><p>Cuộc gọi video · 0 phút 24 giây</p><small>20:05</small></div>
+</div></section>
+<section><h2>Thanh <span>Chat sticky</span></h2>
+<div id="cw-body" class="cw-body" data-conversation="17">
+<span class="day">Hôm nay</span>
+<div class="cw-msg mine" data-message-type="system" data-message-id="4"><div class="cw-msg-col"><p>Cuộc gọi video nhỡ</p><small class="cw-msg-time">10:34</small></div></div>
+<div class="cw-msg" data-message-type="system" data-message-id="5"><div class="cw-msg-col"><p>Cuộc gọi thoại · 0 phút 24 giây</p><small class="cw-msg-time">10:42</small></div></div>
+<div class="cw-msg mine" data-message-type="system" data-message-id="6"><div class="cw-msg-col"><p>Cuộc gọi thoại không thành công · Máy bận</p><small class="cw-msg-time">11:00</small></div></div>
+</div></section></div>
+<pre id="result">RUNNING</pre>
+<script>
+const events={};window.Realtime={connected:true,on:(event,fn)=>events[event]=fn};
+const errors=[];window.addEventListener('error',e=>errors.push(e.message));
+</script>
+<script src="../assets/site/js/call-messages.js" data-calls-enabled="1"></script>
+<script>
+(async()=>{
+ let n=0;function check(ok,label){if(!ok)throw Error(label);n++}
+ const tick=()=>new Promise(r=>setTimeout(r,20)),feed=document.querySelector('#chat-body');
+ function row(type,text,attrs=''){const item=document.createElement('div');item.className='chat-msg';item.dataset.messageType=type;item.innerHTML='<p></p><small>11:03</small>';item.querySelector('p').textContent=text;if(attrs)item.dataset.recalled='1';return item}
+ try{
+  check(document.querySelectorAll('.call-message-card').length===6,'Initial full/sticky history decorated');
+  check(document.querySelector('[data-message-id="1"] .call-message-title').textContent==='Đã nhỡ cuộc gọi thoại','Incoming missed label');
+  check(document.querySelector('[data-message-id="2"] .call-message-detail').textContent==='10 phút','Duration formatted');
+  check(document.querySelector('[data-message-id="3"] .call-message-detail').textContent==='24 giây','Seconds formatted');
+  check(document.querySelector('[data-message-id="4"] button').dataset.voiceCall==='17'&&document.querySelector('[data-message-id="4"] button').dataset.video==='1','Video callback targets sticky conversation');
+  check(document.querySelector('[data-message-id="1"] button').dataset.voiceCall==='9'&&document.querySelector('[data-message-id="1"] button').dataset.video==='0','Audio callback targets main conversation');
+  check(document.querySelector('[data-message-id="2"] p').textContent==='Cuộc gọi thoại · 10 phút 0 giây'&&getComputedStyle(document.querySelector('[data-message-id="2"] p')).display==='none','Original copy/reply text unchanged and hidden');
+  const plain=row('text','Cuộc gọi thoại nhỡ'),recalled=row('system','Cuộc gọi thoại nhỡ','recalled');feed.append(plain,recalled);
+  const live=row('system','Cuộc gọi video · 1 phút 12 giây');feed.append(live);await tick();
+  check(!plain.querySelector('.call-message-card')&&!recalled.querySelector('.call-message-card'),'Text and recalled messages stay untouched');
+  check(live.querySelector('.call-message-detail').textContent==='1 phút 12 giây','Live message decorated');
+  const before=document.querySelectorAll('.call-message-card').length;feed.append(document.createElement('span'));await tick();
+  check(document.querySelectorAll('.call-message-card').length===before,'No duplicated cards');
+  window.Realtime.connected=false;events.close();check(Array.from(document.querySelectorAll('.call-message-callback')).every(b=>b.disabled),'Offline callback disabled');
+  window.Realtime.connected=true;events.open();check(Array.from(document.querySelectorAll('.call-message-callback')).every(b=>!b.disabled),'Connected callback enabled');
+  // Remove temporary rows so screenshot contains only the visual examples above.
+  plain.remove();recalled.remove();live.remove();
+  check(errors.length===0,'No browser errors');
+  document.querySelector('#result').textContent='PASS: '+n+' call-card assertions';
+ }catch(error){document.querySelector('#result').textContent='FAIL after '+n+': '+error.stack}
+})();
+</script></html>

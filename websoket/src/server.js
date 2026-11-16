@@ -128,7 +128,8 @@ const server = http.createServer((req, res) => {
 
 /* ───────────── WebSocket ───────────── */
 
-const voice = createVoice({ config, clients, send: gui });
+const voice = createVoice({ config, clients, send: gui,
+  log: event => console.info('[voice]', JSON.stringify(event)) });
 const wss = new WebSocketServer({ noServer: true, maxPayload: 16 * 1024 });
 
 server.on('upgrade', (req, socket, head) => {

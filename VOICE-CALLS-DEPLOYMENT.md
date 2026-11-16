@@ -1,8 +1,8 @@
-# Gọi thoại 1–1
+# Gọi thoại và gọi video 1–1
 
 ## Điều kiện
 
-- Web HTTPS, microphone được cấp quyền, WebSocket WSS hoạt động.
+- Web HTTPS, microphone (và camera khi gọi video) được cấp quyền, WebSocket WSS hoạt động.
 - Node >=18; PHP và Node dùng cùng REALTIME_SECRET.
 - REALTIME_APP_URL trỏ đúng ứng dụng PHP để Node gọi endpoint nội bộ.
 - TURN hỗ trợ credential tạm thời theo shared secret, ví dụ coturn
@@ -21,6 +21,21 @@ Chỉ bật tính năng sau khi cấu hình TURN và kiểm tra hai mạng khác
 Mở listener và dải relay port phù hợp trong firewall theo cấu hình TURN.
 Giới hạn bandwidth/allocation của TURN để kiểm soát tài nguyên.
 
+## Gọi video
+
+- Nút “Loa / tai nghe” chọn đầu ra cho tiếng cuộc gọi (cả thoại và video), dùng `selectAudioOutput`/`setSinkId` khi trình duyệt hỗ trợ. Nếu không có API, hướng dẫn chọn đầu ra qua hệ thống; web không giả lập bật loa ngoài bằng việc tăng âm lượng.
+- Tắt camera sẽ ngừng gửi track video và dừng camera trên máy; bật lại xin mở camera rồi `replaceTrack`, không tạo cuộc gọi mới. Micro tiếp tục hoạt động. Nếu mở lại thất bại, cuộc gọi vẫn giữ âm thanh và hiển thị lỗi cụ thể.
+
+- Dùng chung luồng báo hiệu `voice.*`; lời mời có thêm `video: true`, Node chuyển cờ này
+  trong `voice.ringing`, `voice.incoming`, `voice.accepted`. SDP có video được tới 40000 ký tự
+  (thoại giữ 12000).
+- Nút "Gọi video" (`data-voice-call` + `data-video="1"`) cạnh nút gọi thoại; trong cuộc gọi có
+  Tắt/Bật camera và Đổi camera (khi máy có từ hai camera, thay track không cần thương lượng lại).
+- Video đi qua TURN như âm thanh → tốn băng thông relay hơn nhiều (khoảng 0,5–1,5 Mbit/s mỗi chiều
+  ở 640×480); xem lại giới hạn bandwidth/allocation của TURN trước khi bật.
+- Ứng dụng di động gọi được với web: `GET /api/conversations/{id}/call-config` cấp TURN tạm bằng token,
+  cùng luật quyền gọi (`Voice::peer`) với web.
+
 ## Hành vi
 
 - Chỉ gọi từ hội thoại riêng; kiểm quyền cả hai người.
@@ -32,14 +47,30 @@ Giới hạn bandwidth/allocation của TURN để kiểm soát tài nguyên.
 - Đổ chuông tối đa 35 giây; thiết lập kết nối tối đa 60 giây.
 - Quyền gọi được kiểm tra lại khi thiết lập và định kỳ khoảng 30 giây.
 - Mất WebSocket hoặc rời trang sẽ kết thúc cuộc gọi.
-- Non-trickle ICE: chờ gathering hoàn tất tối đa 15 giây mỗi bên.
-- Chưa ghi âm, lưu lịch sử, gọi nhóm hay nhận cuộc gọi khi đóng web.
+- Web mới gửi `trickle:true` trong `voice.invite` và `voice.accept`. Node chỉ bật chế độ nhanh khi cả hai bên hỗ trợ, báo lại qua `voice.accepted.trickle`.
+- Với chế độ nhanh, gửi SDP ngay khi có relay đầu tiên, không chờ toàn bộ giao diện mạng. Các relay còn lại được chuyển tiếp bằng `voice.ice {callId,candidate}`; phía nhận xếp hàng nếu SDP chưa áp dụng xong. Chỉ chấp nhận relay, tối đa 128 gói mỗi phía/cuộc gọi.
+- Nếu một phía là client cũ hoặc Node cũ không xác nhận `trickle:true`, giữ luồng non-trickle: chờ gathering hoàn tất tối đa 15 giây mỗi bên.
+- Sau khi xác định người tham gia, Node kiểm tra quyền hai phía song song cho bước nhận/offer/answer và kiểm tra định kỳ; không bỏ kiểm tra chặn, trạng thái tài khoản hoặc quyền gọi.
+- Web lấy sẵn một bộ ICE candidate sau khi xác thực quyền gọi, song song với việc mở micro/camera; audio và video dùng chung transport (`max-bundle`).
+- Bên gọi chuẩn bị SDP/relay ngay lúc đổ chuông, chỉ gửi offer khi người nhận đồng ý; tái sử dụng kết quả đã chuẩn bị để giảm thời gian chờ sau khi nhận. Không tự mở micro/camera của người nhận trước khi họ bấm nhận cuộc gọi.
+- Lưu lịch sử gọi vào hội thoại bằng tin nhắn hệ thống không thể sửa/thu hồi. Chưa ghi âm/ghi hình, gọi nhóm hay nhận cuộc gọi khi đóng web/ứng dụng.
 - Trình duyệt có thể chặn phát âm thanh tự động; dùng nút Bật âm thanh.
+- Âm báo gọi nằm trong `assets/site/audio/`: `goi-den.mp3` (chuông đến), `goi-di.mp3` (chuông đi) và `end-call.mp3` (kết thúc). Đẩy cả ba file cùng `voice-calls.js` khi triển khai.
+- Chuông lặp trong lúc chờ nhận, dừng khi nhận/hủy/kết thúc. Trình duyệt có thể cần người dùng tương tác với trang trước khi cho phép phát chuông đến.
 - Một tiến trình Node quản lý cuộc gọi; chưa hỗ trợ nhiều instance độc lập.
 - Restart Node sẽ kết thúc các cuộc gọi đang diễn ra.
 - Nếu bật CSRF sau này, cần cấu hình riêng endpoint nội bộ dùng shared secret.
 
 ## Kiểm tra trước khi bật
+
+### Khi cuộc gọi tự ngắt sau vài phút
+
+- Mã không đặt giới hạn 5 phút. Token realtime lấy khi tải trang có hạn 1 giờ; nếu trang đã mở lâu, cuộc gọi mới có thể chỉ còn vài phút trước khi token hết hạn. Tải lại cả hai trang rồi thử để loại trừ trường hợp này.
+- Node ghi một dòng `[voice]` khi kết thúc: `reason`, `phase`, `elapsedSeconds`, `callId`. Trình duyệt ghi `[voice] call ended` cùng trạng thái WebRTC/ICE. Log không chứa token, TURN secret hoặc SDP.
+- `expired`: hết token hoặc đạt giới hạn cuộc gọi; `permission`: kiểm tra quyền định kỳ không thành công; `connection`: WebSocket đóng hoặc tiến trình Node dừng.
+- Nếu Node ghi `ended`, xem thêm log trình duyệt: có thể người dùng chủ động kết thúc hoặc WebRTC bị lỗi rồi trình duyệt gửi yêu cầu kết thúc. `webrtc-failed`/`webrtc-disconnected` khác với `websocket-closed`.
+- Khi cần chẩn đoán production, cập nhật `websoket/src/voice.js`, `websoket/src/server.js`, `assets/site/js/voice-calls.js`, rồi restart tiến trình realtime. Lấy log Node và coturn ở cùng thời điểm xảy ra lỗi; không tự tăng TURN permission lifetime hoặc bỏ kiểm tra quyền.
+- Kiểm thử thời hạn bằng đồng hồ giả: `node tests/voice_duration.js` (vượt 6 phút, thu hồi quyền, giới hạn 50 phút, token cũ chỉ còn 5 phút). Đây không thay thế kiểm thử cuộc gọi thật trên mạng production.
 
 1. Hai tài khoản trên hai thiết bị/mạng khác nhau: gọi, nhận, nghe hai chiều.
 2. Thử tắt/bật mic, từ chối, hủy trước khi nhận và hết thời gian đổ chuông.
@@ -49,5 +80,42 @@ Giới hạn bandwidth/allocation của TURN để kiểm soát tài nguyên.
 6. Ngắt mạng, đóng tab, hết token; đối phương phải nhận trạng thái kết thúc.
 7. Sai TURN secret/port: báo lỗi và giải phóng microphone.
 8. DevTools WebRTC: đường truyền dùng relay, không kết nối trực tiếp.
+9. Gọi video hai chiều web ↔ web và web ↔ ứng dụng; tắt/bật camera, đổi camera trên điện thoại.
+
+Kiểm tra tự động phần báo hiệu: `node tests/voice_mute.js`, `node tests/voice_history.js` và `node tests/voice_duration.js`.
+
+Khi bên gọi chọn video, Node chuyển cùng cờ `video` ở `voice.incoming`, `voice.accepted`, `voice.offer` và `voice.answer`. Web bên nhận đối chiếu lại ở bước accepted/offer; nếu thông báo đầu thiếu cờ nhưng SDP có video đang hoạt động, web mở camera và thêm track trước khi trả lời SDP. Camera chỉ được mở sau khi người nhận bấm nhận cuộc gọi. Khi sửa lỗi bên nhận hiện giao diện thoại, cần cập nhật **cả** `assets/site/js/voice-calls.js` và `websoket/src/voice.js`, restart realtime rồi tải lại trang ở hai phía. Kiểm thử bằng `node tests/voice_video.js` và `tests/voice_controls.html` (có trường hợp thiếu cờ video và remote track không kèm stream).
+
+Kiểm tra tối ưu kết nối: `node tests/voice_trickle.js`, `node tests/voice_ice.js`; kiểm thử trình duyệt `tests/voice_controls.html` mô phỏng relay đến sớm nhưng gathering hoàn tất muộn để xác nhận kết nối bắt đầu trước khi hết chờ.
+
+Triển khai tối ưu này cần cập nhật **cả** `assets/site/js/voice-calls.js` và `websoket/src/voice.js`, rồi restart tiến trình realtime. Chỉ cập nhật JS trên web sẽ vẫn dùng luồng cũ nếu Node chưa hỗ trợ thương lượng trickle.
+
+Đo trên trình duyệt thật bằng dòng Console `[voice] connected`: `trickle:true` xác nhận hai bên/Node đã bật luồng nhanh; `afterAcceptedMs` là thời gian từ khi nhận xác nhận của Node đến khi WebRTC kết nối, `gatherMs` là thời gian chuẩn bị SDP/relay cục bộ. Không suy ra tốc độ production chỉ từ kiểm thử mô phỏng.
 
 Tài liệu này không tự thay đổi server, firewall hoặc triển khai production.
+
+## Tin nhắn lịch sử cuộc gọi
+
+### Giờ hiển thị lịch sử cuộc gọi
+
+PHP của web đặt `Asia/Ho_Chi_Minh` (UTC+7). `Voice_calls` phải gọi `dong_bo_mui_gio_db()` vì controller này không đi qua `MY_Controller`. Khi lưu kết quả, `M_call_message` ghi rõ `messages.created_at` và `conversations.last_message_at` bằng cùng giờ PHP, tránh lấy giờ mặc định UTC của database. Nếu tin cuộc gọi mới hiện 03:59 thay vì 10:59, cập nhật `application/controllers/Voice_calls.php` và `application/models/M_call_message.php`, rồi thử cuộc gọi mới. Thay đổi này không cần migration hay restart Node.
+
+Tin cũ đã lưu sai trong cột DATETIME không tự đổi khi sửa múi giờ. Cần kiểm tra một cuộc gọi có giờ thực đã biết để xác nhận độ lệch, rồi mới sửa đúng các bản ghi bị ảnh hưởng trên production. Không cộng 7 giờ cho toàn bộ bảng tin nhắn: tin thường hoặc dữ liệu local có thể đã đúng giờ.
+
+Giao diện lịch sử dùng thẻ cuộc gọi ở cả chat chính và sticky: biểu tượng thoại/video, trạng thái hoặc thời lượng và nút **Gọi lại**. Tin cũ tự hiển thị bằng thẻ; nội dung lưu trong database giữ nguyên để sao chép/trả lời. Nút gọi lại dùng đúng hội thoại và loại cuộc gọi ban đầu, bị vô hiệu khi WebSocket chưa kết nối hoặc chức năng gọi chưa bật. Khi triển khai phần giao diện, cập nhật `assets/site/js/call-messages.js`, `assets/site/css/call-messages.css` và `application/views/layouts/main.php`, rồi tải lại trình duyệt. Riêng thay đổi giao diện này không cần migration hay restart Node.
+
+- Khi kết thúc, Node gửi kết quả tới `POST /internal/voice/completed`, xác thực bằng `X-Realtime-Secret`. PHP kiểm tra đúng hai thành viên và lưu một tin `type: system` vào `messages`; tin xuất hiện ở chat chính, chat sticky và API đọc tin.
+- Ví dụ: `Cuộc gọi thoại · 10 phút 0 giây`, `Cuộc gọi video nhỡ`. Thời lượng do Node tính từ thông báo WebRTC đã kết nối `voice.connected {callId}`, không tính thời gian đổ chuông. Client phải gửi sự kiện này một lần khi `connectionState` thành `connected`; client cũ chưa gửi sẽ không có thời lượng kết nối.
+- Không thể sửa/thu hồi tin lịch sử; không ảnh hưởng việc xóa lịch sử hội thoại riêng của từng người. Không lưu âm thanh hoặc video.
+- `messages.call_id` có unique index để không ghi trùng khi hai phía cùng ngắt hoặc callback HTTP gửi lại. Node thử tối đa 5 lần khi lỗi tạm thời; nếu thất bại ghi log `voice.history_failed` cùng mã cuộc gọi. Hàng đợi vẫn nằm trong bộ nhớ: tiến trình bị dừng đột ngột có thể mất kết quả chưa lưu. Chưa hồi phục lịch sử cuộc gọi cũ.
+
+Triển khai PHP/model/routes, JS web và `websoket/src/voice.js` cùng nhau. Trước khi restart realtime, chạy từ thư mục web:
+
+```bash
+php database/update.php
+pm2 restart saigoncupid-realtime
+```
+
+Migration `database/migrate_call_messages.php` được `update.php` gọi tự động và có thể chạy lại. Không import lại `schema.sql` trên database production. Tải lại cả hai trang để dùng client mới, gọi thử rồi kiểm tra tin vẫn còn sau khi tải lại.
+
+Kiểm thử: `php -d extension=sqlite3 tests/call_messages.php`, `node tests/voice_history.js` và fixture trình duyệt `tests/voice_controls.html`.

@@ -115,13 +115,35 @@ class Inbox_groups extends Api_Controller
         });
     }
 
-    /** POST /api/inbox-groups/{id}/send {content, client_message_id} — client_message_id 16–64 ký tự [A-Za-z0-9_-]. */
+    /**
+     * POST /api/inbox-groups/{id}/send {content, client_message_id} — client_message_id 16–62 ký tự [A-Za-z0-9_-].
+     * Gửi ảnh: multipart với tệp `image` (≤ 10 MB), có thể kèm `content`; ảnh lưu thành một tin riêng
+     * (mã gửi lại của ảnh = client_message_id + "-i"). Trả `messages` (theo thứ tự) và `message` (tin cuối).
+     */
     public function send($id = 0)
     {
         return $this->chay('post', function ($uid) use ($id) {
             if (!$this->auth->da_xac_thuc()) throw new RuntimeException('Xác thực tài khoản trước khi nhắn tin.', 403);
-            return array('message' => $this->m_inbox_group->send((string) $id, $uid,
-                $this->body('content'), $this->body('client_message_id')));
+            $cid = $this->body('client_message_id');
+            $content = $this->body('content');
+            $out = array();
+            $path = $this->tai_anh('image', 'inbox', 10240);
+            if ($this->loi_anh) throw new InvalidArgumentException($this->loi_anh);
+            if ($path) {
+                $out[] = $this->m_inbox_group->send_image((string) $id, $uid, $path, is_string($cid) ? $cid . '-i' : $cid);
+            }
+            if (!$path || (is_string($content) && trim($content) !== '')) {
+                $out[] = $this->m_inbox_group->send((string) $id, $uid, $content, $cid);
+            }
+            return array('messages' => $out, 'message' => end($out));
+        });
+    }
+
+    /** POST /api/inbox-groups/{id}/leave — tự rời nhóm (người tạo rời thì chuyển quyền cho người vào sớm nhất). */
+    public function leave($id = 0)
+    {
+        return $this->chay('post', function ($uid) use ($id) {
+            return $this->m_inbox_group->leave((string) $id, $uid);
         });
     }
 

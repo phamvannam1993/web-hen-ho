@@ -20,3 +20,8 @@
 .pm-action-status { flex-shrink:0; margin:0; padding:6px 12px; color:#756872; font-size:12px; line-height:1.4; }
 .pm-copy-area { position:fixed; left:-9999px; top:0; width:1px; height:1px; font-size:16px; }
 @media(min-width:640px) { .tk-ms .chat-msg { max-width:calc(65% - 32px); } }
+.cw-msg { position:relative; }
+.cw-msg:has(.pm-message-more) { max-width:calc(85% - 34px); }
+.cw-msg .pm-message-more { top:12px; transform:none; }
+.cw-msg.mine .pm-message-more { left:auto; right:calc(100% + 5px); }
+.cw-convo .pm-pin-strip, .cw-convo .pm-action-status { margin:0; }

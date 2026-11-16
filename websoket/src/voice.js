@@ -1,9 +1,10 @@
 'use strict';
 
-function createVoice({ config, clients, send }) {
+function createVoice({ config, clients, send, log = () => {} }) {
   const calls = new Map();
   const busy = new Map();
   const cooldown = new Map();
+  const saving = new Set();
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const open = ws => ws && ws.readyState === 1;
   const fresh = ws => open(ws) && Number.isFinite(ws.authExpiresAt)
@@ -21,8 +22,27 @@ function createVoice({ config, clients, send }) {
       && (!c.b || fresh(c.b)) && c.expires > Date.now();
   }
 
-  function end(c, reason) {
+  async function saveResult(data) {
+    // Same callId for every attempt: PHP's unique key guarantees one message.
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        const response = await fetch(config.appUrl + '/internal/voice/completed', {
+          method:'POST', redirect:'error', signal:AbortSignal.timeout(5000),
+          headers:{'Content-Type':'application/json','X-Realtime-Secret':config.secret},
+          body:JSON.stringify(data),
+        });
+        if (response.ok && (await response.json()).ok) return;
+        if ([400,403,409,422].includes(response.status)) break;
+      } catch { /* A temporary HTTP failure must not lose the result immediately. */ }
+      if (attempt < 4) await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+    }
+    log({event:'voice.history_failed',callId:data.callId});
+  }
+
+  function end(c, reason, declined = false) {
     if (calls.get(c.id) !== c) return;
+    log({event:'voice.ended',callId:c.id,reason,phase:c.state,
+      elapsedSeconds:Math.max(0,Math.floor((Date.now()-c.startedAt)/1000))});
     calls.delete(c.id);
     for (const uid of [c.uid, c.peer]) {
       if (busy.get(uid) === c) busy.delete(uid);
@@ -30,6 +50,17 @@ function createVoice({ config, clients, send }) {
     const event = { t: 'voice.ended', callId: c.id, reason };
     if (open(c.a)) send(c.a, event);
     if (c.peer && !c.suppressed) peers(c.peer, event);
+    // No history for an invite that failed participant authorization.
+    if (c.peer) {
+      const connected = c.connectedAt !== undefined;
+      const outcome = connected ? 'completed' : declined ? 'declined'
+        : reason === 'busy' ? 'busy' : !c.b ? 'missed' : 'failed';
+      const job = saveResult({callId:c.id,conversationId:c.cid,uid:c.uid,peerId:c.peer,
+        video:c.video,outcome,durationSeconds:connected
+          ? Math.min(3000,Math.max(0,Math.floor((Date.now()-c.connectedAt)/1000))) : 0});
+      saving.add(job);
+      job.finally(() => saving.delete(job));
+    }
   }
 
   async function authorize(uid, conversationId) {
@@ -51,24 +82,31 @@ function createVoice({ config, clients, send }) {
   }
 
   async function pair(c) {
-    const peer = await authorize(c.uid, c.cid);
+    let peer, caller;
+    if (c.peer) {
+      [peer, caller] = await Promise.all([authorize(c.uid, c.cid), authorize(c.peer, c.cid)]);
+    } else {
+      peer = await authorize(c.uid, c.cid);
+      if (!live(c) || peer.id === c.uid) throw new Error('permission');
+      caller = await authorize(peer.id, c.cid);
+    }
     if (!live(c) || peer.id === c.uid
       || (c.peer && c.peer !== peer.id)) throw new Error('permission');
-    const caller = await authorize(peer.id, c.cid);
     if (!live(c) || caller.id !== c.uid) throw new Error('permission');
     return { peer, caller };
   }
 
   async function message(ws, m) {
     if (typeof m.callId !== 'string' || !uuid.test(m.callId)) return;
-    const fail = reason => send(ws, {
-      t: 'voice.error', callId: m.callId, reason,
-    });
+    const fail = (reason, extra = {}) => {
+      log({event:'voice.rejected',callId:m.callId,reason,...extra});
+      send(ws, {t:'voice.error',callId:m.callId,reason,...extra});
+    };
     let c = calls.get(m.callId);
     if (m.t === 'voice.end') {
       if (c && (c.a === ws || c.b === ws
         || (!c.suppressed && !c.b && c.state === 'ringing' && c.peer === ws.uid))) {
-        end(c, 'ended');
+        end(c, 'ended', !c.b && ws.uid === c.peer);
       }
       return;
     }
@@ -78,12 +116,17 @@ function createVoice({ config, clients, send }) {
       const now = Date.now();
       if (!Number.isSafeInteger(m.conversationId)
         || m.conversationId <= 0) return fail('permission');
-      if (c || busy.has(ws.uid) || calls.size >= 200
-        || (cooldown.get(ws.uid) || 0) > now
-        || cooldown.size >= 10000) return fail('busy');
+      if (c || busy.has(ws.uid)) return fail('caller_busy');
+      if (calls.size >= 200 || cooldown.size >= 10000) return fail('server_busy');
+      const remaining = (cooldown.get(ws.uid) || 0) - now;
+      if (remaining > 0) return fail('cooldown', {retryAfter:Math.ceil(remaining/1000)});
       cooldown.set(ws.uid, now + 10000);
       c = {
         id: m.callId, cid: m.conversationId, uid: ws.uid,
+        startedAt: now,
+        // Gọi video: cùng luồng báo hiệu, chỉ khác SDP có thêm track camera
+        video: m.video === true || m.video === 1 || m.video === '1' || m.video === 'true',
+        callerTrickle: m.trickle === true, trickle: false, iceA: 0, iceB: 0,
         a: ws, b: null, peer: 0, state: 'pending', stage: 0,
         until: now + 35000,
         expires: Math.min(ws.authExpiresAt, now + 50 * 60000),
@@ -103,10 +146,10 @@ function createVoice({ config, clients, send }) {
         if (!c.suppressed) busy.set(c.peer, c);
         c.state = 'ringing';
         c.until = Date.now() + 35000;
-        send(ws, { t: 'voice.ringing', callId: c.id });
+        send(ws, { t: 'voice.ringing', callId: c.id, video: c.video });
         if (!c.suppressed) peers(c.peer, {
           t: 'voice.incoming', callId: c.id,
-          conversationId: c.cid, name: identities.caller.name,
+          conversationId: c.cid, name: identities.caller.name, video: c.video,
         });
       } catch {
         end(c, 'permission');
@@ -115,6 +158,12 @@ function createVoice({ config, clients, send }) {
     }
 
     if (!c || !live(c)) return;
+    if (m.t === 'voice.connected') {
+      if ((ws === c.a || ws === c.b) && c.b
+        && (c.stage === 2 || c.stage === 'answer-pending')
+        && c.connectedAt === undefined) c.connectedAt = Date.now();
+      return;
+    }
     if (m.t === 'voice.accept') {
       if (c.suppressed || c.state !== 'ringing' || c.b || ws.uid !== c.peer) return;
       c.b = ws;
@@ -125,13 +174,36 @@ function createVoice({ config, clients, send }) {
         await pair(c);
         if (!live(c) || c.state !== 'authorizing') return;
         c.state = 'connecting';
+        c.trickle = c.callerTrickle && m.trickle === true;
         c.until = Date.now() + 60000;
         c.checkAt = Date.now() + 30000;
-        send(c.a, { t: 'voice.accepted', callId: c.id });
-        send(c.b, { t: 'voice.accepted', callId: c.id });
+        send(c.a, { t: 'voice.accepted', callId: c.id, video: c.video, trickle: c.trickle });
+        send(c.b, { t: 'voice.accepted', callId: c.id, video: c.video, trickle: c.trickle });
       } catch {
         end(c, 'permission');
       }
+      return;
+    }
+
+    if (m.t === 'voice.ice') {
+      if (!c.trickle || (c.state !== 'connecting' && c.state !== 'active')) return;
+      const fromCaller = ws === c.a;
+      if (!fromCaller && ws !== c.b) return;
+      if (fromCaller ? c.stage === 0 : c.stage !== 'answer-pending' && c.stage !== 2) return;
+      const count = fromCaller ? 'iceA' : 'iceB';
+      if (c[count] >= 128) return;
+      let candidate = null;
+      if (m.candidate !== null) {
+        const value = m.candidate;
+        if (!value || typeof value.candidate !== 'string' || value.candidate.length > 2048
+          || !/^candidate:[^\r\n]+ typ relay(?: |$)[^\r\n]*$/.test(value.candidate)
+          || !(value.sdpMid == null || typeof value.sdpMid === 'string' && value.sdpMid.length <= 64)
+          || !(value.sdpMLineIndex == null || Number.isInteger(value.sdpMLineIndex) && value.sdpMLineIndex >= 0 && value.sdpMLineIndex <= 16)
+          || value.sdpMid == null && value.sdpMLineIndex == null) return;
+        candidate = {candidate:value.candidate,sdpMid:value.sdpMid ?? null,sdpMLineIndex:value.sdpMLineIndex ?? null};
+      }
+      c[count]++;
+      send(fromCaller ? c.b : c.a, {t:'voice.ice',callId:c.id,candidate});
       return;
     }
 
@@ -141,7 +213,8 @@ function createVoice({ config, clients, send }) {
     if (c.state !== 'connecting'
       || (offer ? c.a !== ws || c.stage !== 0
         : c.b !== ws || c.stage !== 1)) return;
-    if (typeof m.sdp !== 'string' || m.sdp.length > 12000
+    // SDP có video dài hơn nhiều (nhiều codec + relay candidate) so với chỉ âm thanh
+    if (typeof m.sdp !== 'string' || m.sdp.length > (c.video ? 40000 : 12000)
       || !m.sdp.startsWith('v=0')
       || !/^a=candidate:.* typ relay(?: |$)/m.test(m.sdp)) {
       return end(c, 'connection');
@@ -156,7 +229,7 @@ function createVoice({ config, clients, send }) {
         c.until = c.expires;
       }
       send(offer ? c.b : c.a, {
-        t: m.t, callId: c.id, sdp: m.sdp,
+        t: m.t, callId: c.id, sdp: m.sdp, video: c.video,
       });
     } catch {
       end(c, 'permission');
@@ -195,6 +268,7 @@ function createVoice({ config, clients, send }) {
       clearInterval(timer);
       for (const c of calls.values()) end(c, 'connection');
       cooldown.clear();
+      return Promise.allSettled([...saving]);
     },
   };
 }

@@ -432,12 +432,15 @@ class Ajax extends MY_Controller
         }
         $me   = $this->auth->id();
         $rows = $this->m_interaction->conversations($me);
+        $blocked_ids = array_map('intval', array_column($this->db->select('blocked_id')
+            ->where('user_id', (int) $me)->get('blocks')->result_array(), 'blocked_id'));
 
         $items = array();
         foreach ($rows as $r) {
             $items[] = array(
                 'id'      => (int) $r['id'],
                 'user_id' => (int) $r['other_id'],
+                'blocked_by_me' => in_array((int) $r['other_id'], $blocked_ids, true),
                 'profile_url' => site_url('profile/' . $r['user_slug']),
                 'name'    => display_name($r),
                 'avatar'  => avatar_url($r['avatar'], $r['gender']),

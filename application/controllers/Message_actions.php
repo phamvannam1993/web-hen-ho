@@ -260,6 +260,9 @@ class Message_actions extends CI_Controller
             $this->load->model('m_interaction');
             $ok = $action === 'block' ? $this->m_interaction->block($me, $other) : $this->m_interaction->unblock($me, $other);
             if (!$ok) return $this->reply(array('ok' => false, 'message' => 'Chưa lưu được thay đổi. Vui lòng thử lại.'), 503);
+              if ($this->input->is_ajax_request()) {
+                  return $this->reply(array('ok' => true, 'id' => (int) $id, 'blocked_by_me' => $action === 'block'));
+              }
             set_flash('success', $action === 'block' ? 'Đã chặn người này.' : 'Đã bỏ chặn phía bạn.');
             return redirect('messenger/' . $id);
         } catch (Throwable $e) {
