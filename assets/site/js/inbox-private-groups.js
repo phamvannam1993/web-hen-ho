@@ -136,7 +136,9 @@
         var avatar = node('img', 'ig-group-avatar'); avatar.src = root.dataset.privateGroupAvatar; avatar.alt = ''; avatar.width = avatar.height = 40; avatar.loading = 'lazy';
         var text = node('span', 'ig-group-text'), preview = node('small', 'tk-ms-preview-line');
         var time = node('span', 'tk-ms-preview-time', group.time ? '· ' + group.time : ''); time.hidden = !group.last_at; time.title = group.last_at || '';
-        preview.append(node('span', 'ig-preview-content', group.last_content || (group.member_count + ' thành viên')), time);
+        var sender = group.last_mine ? 'Bạn' : group.last_sender_name;
+        var previewText = group.last_content ? (sender ? sender + ': ' : '') + group.last_content : (group.member_count + ' thành viên');
+        preview.append(node('span', 'ig-preview-content', previewText), time);
         text.append(node('strong', '', group.name), preview);
         link.append(avatar, text);
         if (group.unread) link.append(node('span', 'ig-count', group.unread > 99 ? '99+' : group.unread));

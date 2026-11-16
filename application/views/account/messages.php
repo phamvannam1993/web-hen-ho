@@ -39,7 +39,7 @@ $chat_groups = array_values(array_filter($chat_groups ?? array(), function ($gro
             <button type="button" id="tk-ms-tab-priority" role="tab" aria-selected="true"
                     aria-controls="tk-ms-inbox-panel" data-inbox-tab="priority">Ưu tiên</button>
             <button type="button" id="tk-ms-tab-clubs" role="tab" aria-selected="false" tabindex="-1"
-                    aria-controls="tk-ms-inbox-panel" data-inbox-tab="clubs">Clubs Chat's</button>
+                    aria-controls="tk-ms-inbox-panel" data-inbox-tab="clubs">Clubs</button>
         </div>
         <div class="tk-ms-inbox-panel" id="tk-ms-inbox-panel" role="tabpanel"
              aria-labelledby="tk-ms-tab-priority" tabindex="0">
@@ -129,12 +129,9 @@ $chat_groups = array_values(array_filter($chat_groups ?? array(), function ($gro
             <div class="tk-ms-head">
                 <a class="tk-btn tk-btn--ghost tk-btn--icon-sm tk-ms-back" href="<?= site_url('messenger') ?>" aria-label="Quay lại"><?= tk_icon('arrow-left') ?></a>
                 <a class="tk-ms-head__who" href="<?= site_url('profile/' . ($partner['slug'] ?: $partner['id'])) ?>">
-                    <span class="tk-ms-av tk-ms-av--sm">
-                        <img src="<?= e(avatar_url($partner['avatar'], $partner['gender'])) ?>" alt="<?= e(display_name($partner)) ?>">
-                    </span>
                     <span class="tk-ms-item__b">
                         <span class="tk-ms-head__n"><?= e(display_name($partner)) ?></span>
-                        <span class="tk-ms-head__s<?= is_online($partner['last_active_at']) ? ' is-online' : '' ?>"><?= is_online($partner['last_active_at']) ? 'Đang online' : (!empty($partner['last_active_at']) ? 'Hoạt động ' . time_ago($partner['last_active_at']) : 'Chưa có thông tin hoạt động') ?></span>
+                        <span class="tk-ms-head__s" <?= is_online($partner['last_active_at']) ? 'hidden' : '' ?>><?= !is_online($partner['last_active_at']) ? (!empty($partner['last_active_at']) ? 'Hoạt động ' . time_ago($partner['last_active_at']) : 'Chưa có thông tin hoạt động') : '' ?></span>
                     </span>
                 </a>
                 <?php if ($can_send && getenv('VOICE_ENABLED') === '1'): ?>

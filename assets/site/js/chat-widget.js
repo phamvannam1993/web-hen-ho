@@ -776,8 +776,10 @@
     }
 
     function setPeerActivity(info) {
-        statusEl.textContent = info.online ? 'Đang online' : (info.activity || 'Chưa có thông tin hoạt động');
-        statusEl.classList.toggle('is-online', !!info.online);
+        statusEl.textContent = info.online ? '' : (info.activity || 'Chưa có thông tin hoạt động');
+        statusEl.classList.remove('is-online');
+        var onlineDot = document.getElementById('cw-peer-online');
+        if (onlineDot) onlineDot.hidden = !info.online;
     }
 
     /** Quay lại danh sách (màn hẹp). */

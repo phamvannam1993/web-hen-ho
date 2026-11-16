@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const source = fs.readFileSync(require.resolve('../assets/site/js/voice-calls.js'),'utf8');
+new vm.Script(source, {filename:'voice-calls.js'});
 function extract(start,end) {
     const a=source.indexOf(start),b=source.indexOf(end,a);
     assert(a>=0&&b>a);return source.slice(a,b);

@@ -73,6 +73,7 @@
     var phoneIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2A19.8 19.8 0 0 1 3.1 5.2 2 2 0 0 1 5.1 3h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L9 10.7a16 16 0 0 0 4.3 4.3l1.3-1.3a2 2 0 0 1 2.1-.5c.8.3 1.7.6 2.6.7a2 2 0 0 1 1.7 2z"/></svg>';
     var micIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"/><path class="voice-mic-slash" d="m3 3 18 18"/></svg>';
     dialog.innerHTML = '<div class="voice-heading"><span class="voice-brand">Saigon Cupid</span><h2 id="voice-title">Gọi thoại</h2></div>'
+        + '<div class="voice-video" hidden><video class="voice-remote" autoplay playsinline></video><video class="voice-local" autoplay playsinline muted></video></div>'
         + '<div class="voice-avatar" aria-hidden="true"><span>SC</span></div>'
         + '<p class="voice-name"></p>'
         + '<p class="voice-status" role="status" aria-live="polite"></p>'
@@ -80,6 +81,9 @@
         + '<div class="voice-actions">'
         + '<button type="button" data-accept hidden>' + phoneIcon + '<span>Nhận cuộc gọi</span></button>'
         + '<button type="button" data-mute aria-pressed="false" hidden>' + micIcon + '<span>Tắt mic</span></button>'
+        + '<button type="button" data-output hidden aria-expanded="false" aria-controls="voice-output-panel">Loa / tai nghe</button>'
+        + '<button type="button" data-camera hidden>Tắt camera</button>'
+        + '<button type="button" data-flip hidden>Đổi camera</button>'
         + '<button type="button" data-end>' + phoneIcon + '<span>Đóng</span></button></div>'
         + '<audio autoplay playsinline></audio>'
         + '<button type="button" data-play hidden>Bật âm thanh</button>';
@@ -99,7 +103,7 @@
     var play = dialog.querySelector('[data-play]');
     var audio = dialog.querySelector('audio');
     var duration = dialog.querySelector('.voice-duration');
-    function label(button, text) { button.querySelector('span').textContent = text; }
+    function label(button, text) { button.querySelector('span').textContent = text; button.title = text; button.setAttribute('aria-label', text); }
     function peer(value) {
         name.textContent = value || 'Cuộc gọi thoại';
         var words = name.textContent.trim().split(/\s+/);
@@ -107,6 +111,57 @@
     }
     function phase(value, text) { dialog.dataset.state = value; status.textContent = text; }
 
+    var title = dialog.querySelector('#voice-title');
+    var videoBox = dialog.querySelector('.voice-video');
+    var remoteVideo = dialog.querySelector('.voice-remote');
+    var localVideo = dialog.querySelector('.voice-local');
+    var camera = dialog.querySelector('[data-camera]');
+    var flip = dialog.querySelector('[data-flip]');
+    var output = dialog.querySelector('[data-output]');
+    var outputTask = Promise.resolve();
+    var controlIcons = {
+        accept: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2z"/>',
+        end: '<path d="M4 16v-4m16 4v-4M2 12a16 16 0 0 1 20 0l-2 5-5-2v-3a13 13 0 0 0-6 0v3l-5 2z"/>',
+        close: '<path d="m6 6 12 12M6 18 18 6"/>',
+        mic: '<rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8"/>',
+        micOff: '<path d="m3 3 18 18M9 9v3a3 3 0 0 0 5.1 2.1M15 9V5a3 3 0 0 0-5.1-2.1M5 10v2a7 7 0 0 0 12 4.9M19 10v2M12 19v3m-4 0h8"/>',
+        camera: '<rect x="3" y="5" width="12" height="14" rx="2"/><path d="m15 10 6-4v12l-6-4"/>',
+        cameraOff: '<path d="m3 3 18 18M10 5h3a2 2 0 0 1 2 2v3l6-4v12M15 15v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7"/>',
+        flip: '<path d="M3 9a9 9 0 0 1 15-5l3 3M21 3v4h-4M21 15a9 9 0 0 1-15 5l-3-3M3 21v-4h4"/>',
+        sound: '<path d="m11 5-6 4H2v6h3l6 4zM15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14"/>',
+    };
+    function setControl(button, label, icon, pressed) {
+        button.title = label;
+        button.setAttribute('aria-label', label);
+        button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            + controlIcons[icon] + '</svg>';
+        var text = document.createElement('span'); text.className = 'voice-control-label'; text.textContent = label;
+        button.appendChild(text);
+        if (typeof pressed === 'boolean') button.setAttribute('aria-pressed', String(pressed));
+    }
+    setControl(accept, 'Nhận cuộc gọi', 'accept');
+    setControl(mute, 'Tắt mic', 'mic', false);
+    setControl(camera, 'Tắt camera', 'camera', false);
+    setControl(flip, 'Đổi camera', 'flip');
+    setControl(end, 'Đóng', 'close');
+    setControl(play, 'Bật âm thanh', 'sound');
+    setControl(output, 'Loa / tai nghe', 'sound');
+    function inform(text) { feedback.textContent = text; feedback.hidden = !text; }
+    function routeOutput(s, deviceId) {
+        var player = s.video ? remoteVideo : audio;
+        var change = outputTask.then(function () {
+            if (current !== s) return false;
+            return player.setSinkId(deviceId).then(function () { return current === s; });
+        });
+        // Tuần tự hóa để thao tác từ cuộc gọi cũ không đổi loa của cuộc gọi mới.
+        outputTask = change.catch(function () {});
+        return change;
+    }
+    function outputError(error) {
+        if (error.name === 'NotAllowedError') return 'Chưa được phép đổi thiết bị phát âm thanh. Hãy cho phép chọn loa trong cài đặt trình duyệt.';
+        if (error.name === 'NotFoundError') return 'Không tìm thấy loa hoặc tai nghe đã chọn. Hãy kết nối lại thiết bị rồi thử lại.';
+        return 'Không đổi được loa hoặc tai nghe. Âm thanh vẫn dùng thiết bị hiện tại; hãy kiểm tra cài đặt âm thanh của máy.';
+    }
     var reasons = {
         busy: 'Người nhận đang có cuộc gọi khác. Hãy gọi lại sau.',
         caller_busy: 'Bạn đang có một cuộc gọi khác, có thể ở tab khác. Hãy kết thúc cuộc gọi đó trước.',
@@ -159,7 +214,10 @@
         }
         if (s.stream) s.stream.getTracks().forEach(function (t) { t.stop(); });
         audio.srcObject = null;
-        accept.hidden = mute.hidden = play.hidden = true;
+        remoteVideo.srcObject = localVideo.srcObject = null;
+        videoBox.hidden = true; dialog.classList.remove('is-video');
+        accept.hidden = mute.hidden = play.hidden = camera.hidden = flip.hidden = true;
+        output.hidden = outputPanel.hidden = true; output.setAttribute('aria-expanded', 'false'); inform('');
         label(end, 'Đóng');
         phase('ended', text);
         dialog.querySelector('#voice-title').textContent = 'Cuộc gọi kết thúc';
@@ -290,7 +348,8 @@
         setControl(end, s.incoming ? 'Từ chối' : 'Hủy gọi', 'end');
         peer(s.name);
         phase(s.incoming ? 'incoming' : 'preparing', text);
-        dialog.querySelector('#voice-title').textContent = s.incoming ? 'Cuộc gọi đến' : 'Gọi thoại';
+        title.textContent = s.incoming ? (s.video ? 'Cuộc gọi video đến' : 'Cuộc gọi đến') : (s.video ? 'Gọi video' : 'Gọi thoại');
+        videoBox.hidden = !s.video; camera.hidden = flip.hidden = true;
         duration.hidden = true; duration.textContent = '00:00';
         accept.hidden = !s.incoming;
         mute.hidden = play.hidden = true;
@@ -325,15 +384,11 @@
             throw new Error('Cấu hình gọi thoại chưa sẵn sàng.');
         }
         s.name = data.peer.name;
-        name.textContent = s.name;
+        peer(s.name);
         // Lấy sẵn relay trong lúc người dùng cấp quyền/mở thiết bị.
         s.pc = new RTCPeerConnection({
             iceServers: data.rtc.iceServers, iceTransportPolicy: 'relay',
             iceCandidatePoolSize: 1, bundlePolicy: 'max-bundle',
-        peer(s.name);
-        var stream = await navigator.mediaDevices.getUserMedia({
-            audio: { echoCancellation: true, noiseSuppression: true },
-            video: false,
         });
         s.pc.onicecandidate = function (event) {
             if (current !== s) return;
@@ -504,6 +559,7 @@
         var s = current;
         if (!s || !s.incoming || s.accepting) return;
         s.accepting = true;
+        title.textContent = s.video ? 'Gọi video' : 'Gọi thoại';
         callSounds.stop();
         accept.hidden = true;
         setControl(end, 'Hủy gọi', 'end');
@@ -528,8 +584,7 @@
         var enabled = current.stream.getAudioTracks()[0].enabled;
         setControl(mute, enabled ? 'Tắt mic' : 'Bật mic', enabled ? 'mic' : 'micOff', !enabled);
         var muted = !current.stream.getAudioTracks()[0].enabled;
-        label(mute, muted ? 'Bật mic' : 'Tắt mic');
-        mute.setAttribute('aria-pressed', muted ? 'true' : 'false');
+        setControl(mute, muted ? 'Bật mic' : 'Tắt mic', muted ? 'micOff' : 'mic', muted);
     };
     play.onclick = function () {
         (current && current.video ? remoteVideo : audio).play()

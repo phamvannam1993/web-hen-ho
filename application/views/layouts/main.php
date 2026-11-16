@@ -41,7 +41,7 @@ $this->load->view('layouts/seo', array('seo_path' => $seo_path, 'can_index' => $
 <link rel="stylesheet" href="<?= base_url('assets/site/css/style.css') ?>?v=<?= @md5_file(FCPATH.'assets/site/css/style.css') ?>">
 <link rel="icon" type="image/x-icon" href="<?= base_url('assets/site/img/favicon.ico') . '?v=' . md5_file(FCPATH . 'assets/site/img/favicon.ico') ?>">
 <link rel="manifest" href="<?= base_url('manifest.webmanifest') . '?v=' . md5_file(FCPATH . 'manifest.webmanifest') ?>">
-<meta name="theme-color" content="#ffeaed">
+<meta name="theme-color" content="<?= $content_view === 'account/messages' ? '#ffeaed' : '#d1273f' ?>">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Saigon Cupid">
 <meta name="mobile-web-app-capable" content="yes">
@@ -485,7 +485,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
             <div class="cw-convo" id="cw-convo" hidden>
                 <header class="cw-head">
                     <button type="button" class="cw-back" id="cw-back" aria-label="Về danh sách">‹</button>
-                    <a id="cw-avatar-link" class="cw-profile-avatar" hidden aria-label="Xem trang cá nhân"><img class="cw-avatar" id="cw-avatar" alt="" hidden></a>
+                    <a id="cw-avatar-link" class="cw-profile-avatar" hidden aria-label="Xem trang cá nhân"><img class="cw-avatar" id="cw-avatar" alt="" hidden><span id="cw-peer-online" class="cw-peer-online" role="img" aria-label="Đang online" hidden></span></a>
                     <span class="cw-avatar cw-row-room-ic" id="cw-avatar-room" hidden aria-hidden="true">
                         <svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><path d="M16.2 5.8a3.2 3.2 0 0 1 0 5.4M17.5 19a6 6 0 0 0-1.6-4"/></svg>
                     </span>

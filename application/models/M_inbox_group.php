@@ -148,9 +148,11 @@ class M_inbox_group extends CI_Model
         foreach ($rows as &$row) {
             $row['id'] = (int) $row['id']; $row['owner_id'] = (int) $row['owner_id']; $row['member_count'] = (int) $row['member_count'];
             $member = $this->run('SELECT last_read_message_id FROM inbox_group_members WHERE group_id=? AND user_id=?', array($row['id'], $user_id))->row_array();
-            $last = $this->visible($row['id'], $user_id, 'x.id, x.type, x.content, x.created_at', ' ORDER BY x.id DESC LIMIT 1')->row_array();
+            $last = $this->visible($row['id'], $user_id, 'x.id, x.type, x.content, x.created_at, x.sender_id, u.display_name, u.nickname', ' ORDER BY x.id DESC LIMIT 1')->row_array();
             $unread = $this->visible($row['id'], $user_id, 'COUNT(*) AS total', ' AND x.id>? AND x.sender_id<>?', array((int) $member['last_read_message_id'], $user_id))->row_array();
             $row['last_content'] = $last ? ($last['type'] === 'image' ? '[Hình ảnh]' : $last['content']) : '';
+            $row['last_sender_name'] = $last ? display_name($last) : '';
+            $row['last_mine'] = $last && (int) $last['sender_id'] === $user_id;
             $row['last_at'] = $last ? $last['created_at'] : null;
             $row['time'] = $last ? time_ago($last['created_at']) : '';
             $row['unread'] = (int) $unread['total'];

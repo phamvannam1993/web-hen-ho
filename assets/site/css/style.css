@@ -3671,7 +3671,7 @@ html.cw-page-locked .site-mobile-nav { bottom: var(--cw-keyboard-inset, 0px); }
 .cw-row-name, .cw-row-top b > span {
     min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.cw-row-top small { flex: 0 0 auto; font-size: 11.5px; color: #9aa0a6; }
+.cw-row-top small, #cw-room-time { display:none; }
 .cw-row-last {
     display: block; margin-top: 2px; font-size: 13px; color: var(--muted);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -3764,7 +3764,9 @@ html.cw-page-locked .site-mobile-nav { bottom: var(--cw-keyboard-inset, 0px); }
     display: block; font-size: 15.5px; font-weight: 700; color: var(--ink);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.cw-profile-avatar { flex: 0 0 40px; line-height: 0; }
+.cw-profile-avatar { display:none; }
+.cw-peer-online { position:absolute; right:0; bottom:0; width:12px; height:12px; border:2px solid #fff; border-radius:50%; background:#31c05a; }
+.cw-peer-online[hidden] { display:none; }
 .cw-profile-avatar[hidden] { display: none; }
 #cw-profile-link { color: inherit; }
 #cw-profile-link[href]:hover b { color: var(--pink); }

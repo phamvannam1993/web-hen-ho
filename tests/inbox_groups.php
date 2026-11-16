@@ -58,6 +58,8 @@ check((int)$db->where('group_id',$groupId)->where('user_id',1)->get('inbox_group
 $db->insert('blocks',array('user_id'=>1,'blocked_id'=>3));
 check(array_column($model->messages($groupId,1)['messages'],'id')===array($m1['id'],$m2['id']),'history filters both-way block');
 $listed=$model->listing(1,'0',2)['groups'][0];check($listed['last_content']==='Tin trả lời'&&$listed['unread']===0,'preview/unread use same visibility');
+check($listed['last_sender_name']==='Thành viên 2'&&$listed['last_mine']===false,'preview sender follows visible message');
+check($model->listing(3,'0',1)['groups'][0]['last_mine']===true,'own preview sender flag');
 denied(fn()=>$model->send($groupId,1,'Không vượt chặn',str_repeat('d',32)),403);
 denied(fn()=>$model->read($groupId,1,(string)$m3['id']),422);$db->where('user_id',1)->where('blocked_id',3)->delete('blocks');
 $db->where('group_id',$groupId)->where('user_id',1)->update('inbox_group_members',array('left_at'=>'2026-11-10'));

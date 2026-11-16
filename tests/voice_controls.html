@@ -1,7 +1,7 @@
 <!doctype html><meta charset="utf-8"><title>Call controls browser tests</title>
 <link rel="stylesheet" href="../assets/site/css/voice-calls.css">
 <div id="chat-widget" data-base="https://example.test/" data-guest="0"></div>
-<button data-voice-call="9" data-video="1">Video call</button>
+<button data-voice-call="9" data-video="1" disabled>Video call</button>
 <pre id="result" data-status="running">RUNNING</pre>
 <script>
 const tracks=[],errors=[],iceApplied=[],sent=[],requests=[];let cameraMissing=false,lastPc,offerBeforeComplete=false;
@@ -71,9 +71,10 @@ window.fetch=async()=>({ok:true,json:async()=>({ok:true,peer:{name:'Peer'},rtc:{
  function check(ok,text){if(!ok)throw Error(text);n++}
  async function until(fn){for(let i=0;i<100;i++){if(fn())return;await tick()}throw Error('Timed out '+fn)}
  try{
+  check(!document.querySelector('[data-voice-call]').disabled,'Call initialization enables buttons when supported and realtime connected');
   document.querySelector('[data-voice-call]').click();
   const camera=document.querySelector('[data-camera]'),output=document.querySelector('[data-output]');
-  await until(()=>!camera.hidden&&!output.hidden&&document.querySelector('.voice-status').textContent==='Đã kết nối');
+  await until(()=>!camera.hidden&&!output.hidden&&document.querySelector('.voice-status').textContent==='Đang trong cuộc gọi');
   check(offerBeforeComplete,'Connection starts before ICE gathering completes');
   check(sent.filter(m=>m.t==='voice.connected').length===1,'Connected media reports duration start to server');
   lastPc.onconnectionstatechange();
@@ -105,7 +106,7 @@ window.fetch=async()=>({ok:true,json:async()=>({ok:true,peer:{name:'Peer'},rtc:{
    acceptedVideo=serverVideo;incomingSdp=sdp+(hasVideo?'m=video 9 UDP/TLS/RTP/SAVPF 96\r\n':'');
    await listeners['voice.incoming']({callId,conversationId:9,name:'Caller A',video});
    check(requests.length===before,'Incoming notification never opens camera before acceptance');
-   if(video===true||video==='1')check(document.querySelector('#voice-title').textContent==='Gọi video','Incoming video uses video UI');
+   if(video===true||video==='1')check(document.querySelector('#voice-title').textContent==='Cuộc gọi video đến','Incoming video uses video UI');
    document.querySelector('[data-accept]').click();
    await until(()=>sent.some(m=>m.callId===callId&&m.t==='voice.answer'));
    return callId;
