@@ -62,6 +62,7 @@
         // Keep the immutable stored text for copy/reply; only its presentation changes.
         original.classList.add('call-message-original'); original.hidden = true;
         message.classList.add('is-call-message'); original.after(card);
+        message.querySelectorAll('.pm-message-more').forEach(function (button) { button.remove(); });
         if (stick) feed.scrollTop = feed.scrollHeight;
     }
     function scan(root) {

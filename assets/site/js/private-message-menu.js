@@ -89,7 +89,7 @@
         menu.style.top = Math.max(top + 8, y) + 'px';
     }
     function decorate(message) {
-            if (!feed.dataset.pinUrl || !message.matches || !message.matches('.chat-msg[data-message-id], .cw-msg[data-message-id]') || message.dataset.recalled === '1' || message.querySelector('.pm-message-more')) return;
+            if (!feed.dataset.pinUrl || !message.matches || !message.matches('.chat-msg[data-message-id], .cw-msg[data-message-id]') || message.classList.contains('is-call-message') || message.dataset.recalled === '1' || message.querySelector('.pm-message-more')) return;
             var button = node('button', 'pm-message-more', '⋯'); button.type = 'button';
             button.setAttribute('aria-label', 'Thao tác tin nhắn'); button.setAttribute('title', 'Thao tác tin nhắn');
             button.setAttribute('aria-haspopup', 'true'); button.setAttribute('aria-expanded', 'false');

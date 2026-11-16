@@ -2,6 +2,7 @@
 .tk-ms .chat-msg.is-call-message { padding:0; background:transparent; box-shadow:none; }
 .chat-msg.is-call-message { width:236px; }
 .is-call-message .call-message-original { display:none !important; }
+.is-call-message .pm-message-more { display:none !important; }
 .is-call-message .call-message-card {
     box-sizing:border-box; width:236px; max-width:100%; padding:14px; border-radius:19px;
     background:#fff0f4; color:#743b53; border:1px solid #f5dbe5;
