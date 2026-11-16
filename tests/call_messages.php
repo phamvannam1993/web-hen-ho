@@ -2,6 +2,7 @@
 // php -d extension=sqlite3 tests/call_messages.php — isolated database, no .env.
 if (!class_exists('SQLite3')) { fwrite(STDERR, "Requires SQLite3.\n"); exit(1); }
 error_reporting(E_ALL & ~E_DEPRECATED);
+date_default_timezone_set('Asia/Ho_Chi_Minh');
 define('BASEPATH', dirname(__DIR__) . '/system/');
 define('APPPATH', dirname(__DIR__) . '/application/');
 function log_message($level,$message) {}
@@ -31,11 +32,17 @@ $db->insert('conversations',array('id'=>10,'user_low_id'=>1,'user_high_id'=>3));
 $model = new M_call_message(); $model->db = $db;
 $data = array('callId'=>'10000000-0000-4000-8000-000000000001','conversationId'=>9,
     'uid'=>1,'peerId'=>2,'video'=>false,'outcome'=>'completed','durationSeconds'=>600);
+$localBefore = date('Y-m-d H:i:s');
 $saved = $model->save_result($data);
+check($saved['row']['created_at'] >= $localBefore && $saved['row']['created_at'] <= date('Y-m-d H:i:s'),
+    'Call message uses Vietnam time even when database CURRENT_TIMESTAMP is UTC');
+check($db->where('id',9)->get('conversations')->row('last_message_at') === $saved['row']['created_at'],
+    'Conversation and message share the same local timestamp');
 check($saved['created'] && $saved['row']['type']==='system' && $saved['row']['content']==='Cuộc gọi thoại · 10 phút 0 giây','ten-minute duration');
 check((int)$db->get('conversations')->row('last_message_id')===(int)$saved['row']['id'],'conversation preview updated');
 $retry = $data; $retry['durationSeconds']=700;
 check(!$model->save_result($retry)['created'],'retry does not create a second row');
+check($db->get('messages')->row('created_at') === $saved['row']['created_at'],'retry does not change timestamp');
 check($db->get('messages')->num_rows()===1 && $db->get('messages')->row('content')===$saved['row']['content'],'retry cannot edit result');
 function rejected($fn,$status) {
     try { $fn(); throw new Exception('Expected rejection'); }

@@ -96,6 +96,12 @@ Tài liệu này không tự thay đổi server, firewall hoặc triển khai pr
 
 ## Tin nhắn lịch sử cuộc gọi
 
+### Giờ hiển thị lịch sử cuộc gọi
+
+PHP của web đặt `Asia/Ho_Chi_Minh` (UTC+7). `Voice_calls` phải gọi `dong_bo_mui_gio_db()` vì controller này không đi qua `MY_Controller`. Khi lưu kết quả, `M_call_message` ghi rõ `messages.created_at` và `conversations.last_message_at` bằng cùng giờ PHP, tránh lấy giờ mặc định UTC của database. Nếu tin cuộc gọi mới hiện 03:59 thay vì 10:59, cập nhật `application/controllers/Voice_calls.php` và `application/models/M_call_message.php`, rồi thử cuộc gọi mới. Thay đổi này không cần migration hay restart Node.
+
+Tin cũ đã lưu sai trong cột DATETIME không tự đổi khi sửa múi giờ. Cần kiểm tra một cuộc gọi có giờ thực đã biết để xác nhận độ lệch, rồi mới sửa đúng các bản ghi bị ảnh hưởng trên production. Không cộng 7 giờ cho toàn bộ bảng tin nhắn: tin thường hoặc dữ liệu local có thể đã đúng giờ.
+
 Giao diện lịch sử dùng thẻ cuộc gọi ở cả chat chính và sticky: biểu tượng thoại/video, trạng thái hoặc thời lượng và nút **Gọi lại**. Tin cũ tự hiển thị bằng thẻ; nội dung lưu trong database giữ nguyên để sao chép/trả lời. Nút gọi lại dùng đúng hội thoại và loại cuộc gọi ban đầu, bị vô hiệu khi WebSocket chưa kết nối hoặc chức năng gọi chưa bật. Khi triển khai phần giao diện, cập nhật `assets/site/js/call-messages.js`, `assets/site/css/call-messages.css` và `application/views/layouts/main.php`, rồi tải lại trình duyệt. Riêng thay đổi giao diện này không cần migration hay restart Node.
 
 - Khi kết thúc, Node gửi kết quả tới `POST /internal/voice/completed`, xác thực bằng `X-Realtime-Secret`. PHP kiểm tra đúng hai thành viên và lưu một tin `type: system` vào `messages`; tin xuất hiện ở chat chính, chat sticky và API đọc tin.

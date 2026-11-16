@@ -6,6 +6,8 @@ class Voice_calls extends CI_Controller
     public function __construct()
     {
         parent::__construct();
+        // This controller bypasses MY_Controller, which normally sets the DB timezone.
+        dong_bo_mui_gio_db($this);
         $this->load->library(array('realtime', 'voice'));
         $this->load->model('m_interaction');
         $this->output->set_content_type('application/json')

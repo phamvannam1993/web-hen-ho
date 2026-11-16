@@ -46,15 +46,18 @@ class M_call_message extends CI_Model
             }
             $row = $existing;
             if (!$existing) {
+                // Match the application's PHP timezone, even when the DB defaults to UTC.
+                $created_at = date('Y-m-d H:i:s');
                 if (!$this->db->insert('messages', array('conversation_id'=>$cid, 'sender_id'=>$uid,
-                    'call_id'=>strtolower($call_id), 'type'=>'system', 'content'=>$content))) {
+                    'call_id'=>strtolower($call_id), 'type'=>'system', 'content'=>$content,
+                    'created_at'=>$created_at))) {
                     throw new RuntimeException('Không lưu được cuộc gọi.', 503);
                 }
                 $id = (int) $this->db->insert_id();
                 $run('UPDATE conversations SET
-                    last_message_at = CASE WHEN COALESCE(last_message_id, 0) <= ? THEN CURRENT_TIMESTAMP ELSE last_message_at END,
+                    last_message_at = CASE WHEN COALESCE(last_message_id, 0) <= ? THEN ? ELSE last_message_at END,
                     last_message_id = CASE WHEN COALESCE(last_message_id, 0) <= ? THEN ? ELSE last_message_id END WHERE id = ?',
-                    array($id, $id, $id, $cid));
+                    array($id, $created_at, $id, $id, $cid));
                 $row = $run('SELECT * FROM messages WHERE id = ?', array($id))->row_array();
             }
             if (!$this->db->trans_status() || !$this->db->trans_commit()) {
