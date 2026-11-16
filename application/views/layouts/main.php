@@ -74,6 +74,7 @@ $guest_banner = !$user && empty($bare) && strpos($content_view, 'auth/') !== 0 &
 <!-- Dải mạng xã hội trên cùng -->
 <?php /* Chế độ toàn màn hình (trang Khám phá): bỏ thanh trên, menu và chân trang */ ?>
 <?php if (empty($bare)): ?>
+<?php if ($content_view !== 'account/messages'): ?>
 <?php
 /* Thanh trên cùng chỉ hiển thị mạng xã hội.
    Mục nào chưa khai trong Quản trị -> Cấu hình thì tự ẩn đi. */
@@ -251,6 +252,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
         <div class="nav-overlay" id="nav-overlay" hidden></div>
     </div>
 </header>
+<?php endif; ?>
 <?php if ($user): $this->load->view('layouts/_vip_benefits'); endif; ?>
 <?php $this->load->view('layouts/_signup_vip_gift', array('user'=>$user)); ?>
 <?php $this->load->view('layouts/_nudge'); ?>
@@ -582,6 +584,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 <!-- Chat nạp cho cả khách: xem được phòng chung, muốn gửi thì phải đăng nhập -->
 <script defer src="<?= base_url('assets/site/js/realtime.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/realtime.js') ?>"></script>
 <script defer src="<?= base_url('assets/site/js/chat-widget.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/chat-widget.js') ?>"></script>
+<script defer src="<?= base_url('assets/site/js/chat-composer-focus.js') ?>?v=<?= filemtime(FCPATH.'assets/site/js/chat-composer-focus.js') ?>"></script>
 <?php if ($user && getenv('VOICE_ENABLED') === '1'): ?>
 <link rel="stylesheet" href="<?= base_url('assets/site/css/voice-calls.css') ?>?v=<?= filemtime(FCPATH.'assets/site/css/voice-calls.css') ?>">
 <script defer src="<?= base_url('assets/site/js/voice-calls.js') ?>?v=<?= filemtime(FCPATH.'assets/site/js/voice-calls.js') ?>"></script>

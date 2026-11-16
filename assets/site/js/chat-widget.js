@@ -556,6 +556,7 @@
         if (m.type === 'image') {
             var a = document.createElement('a');
             a.href = m.content; a.target = '_blank'; a.rel = 'noopener';
+            a.setAttribute('data-chat-image', '');
             var img = document.createElement('img');
             img.src = m.content; img.alt = 'Ảnh'; img.className = 'cw-msg-image';
             img.loading = 'lazy';

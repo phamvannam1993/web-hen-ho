@@ -189,6 +189,19 @@ class M_chat_group extends CI_Model
         return array_map(function ($r) use ($actor) { return $this->serialize($r, $actor); }, $rows);
     }
 
+    public function message_context($group, $actor, $id)
+    {
+        $this->access($group, $actor);
+        $id = is_string($id) ? filter_var($id,FILTER_VALIDATE_INT,array('options'=>array('min_range'=>1))) : false;
+        if ($id === false) throw new InvalidArgumentException('ID tin nhắn không hợp lệ.');
+        if (!$this->visible_message($group,$actor,$id)) throw new RuntimeException('Tin nhắn không còn khả dụng.',404);
+        $this->rows($group['id'],$actor);
+        $before = $this->db->where('r.id <',$id)->order_by('r.id','DESC')->limit(15)->get()->result_array();
+        $this->rows($group['id'],$actor);
+        $after = $this->db->where('r.id >=',$id)->order_by('r.id','ASC')->limit(16)->get()->result_array();
+        return array('messages'=>array_map(function ($r) use ($actor) { return $this->serialize($r,$actor); },array_merge(array_reverse($before),$after)), 'target_id'=>$id);
+    }
+
     public function search_messages($group, $actor, $q, $cursor = null)
     {
         $this->access($group, $actor);

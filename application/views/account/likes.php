@@ -154,7 +154,7 @@ $cho_tra_loi = function ($m, $o) {
                     <p class="tk-card__d">Bạn đã gửi lời quan tâm. Có thể nhắn tin ngay từ hồ sơ để làm quen.</p>
                 </div>
             </div>
-            <?php $luoi($my_likes, array('action' => 'view', 'label' => 'Xem hồ sơ', 'pass' => false)); ?>
+            <?php $luoi($my_likes, array('action' => 'none', 'pass' => false)); ?>
         </section>
     <?php endif; ?>
 </div>

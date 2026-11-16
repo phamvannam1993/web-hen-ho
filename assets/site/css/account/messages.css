@@ -157,7 +157,7 @@ body.is-messages-page .tk-ms-inbox-panel .tk-ms-private-content { overflow:visib
 .tk-ms .chat-msg.mine small { color: #fff; opacity: .8; }
 .tk-ms .chat-msg .emoji-only { font-size: 30px; line-height: 1.25; }
 .tk-ms .chat-msg.is-image { background: none; box-shadow: none; padding: 0; max-width: 260px; }
-.tk-ms .chat-msg.is-image img { display: block; width: 100%; border-radius: var(--tk-r-md); }
+.tk-ms .chat-msg.is-image img { display:block; width:240px; max-width:100%; height:180px; object-fit:contain; background:#f8f4f5; border:1px solid #eadfe5; border-radius:var(--tk-r-md); box-sizing:border-box; }
 .tk-ms .chat-msg.is-image small { padding: 4px 6px 0; color: var(--tk-muted-fg); opacity: 1; }
 
 .tk-ms-seen { margin: 0; padding: 4px 16px 0; text-align: right; font-size: 11px; line-height: 16px; color: var(--tk-muted-fg); }

@@ -200,7 +200,7 @@ $chat_groups = array_values(array_filter($chat_groups ?? array(), function ($gro
                             </button>
                         <?php endif; ?>
                         <?php if ($m['type'] === 'image'): ?>
-                            <a href="<?= base_url(ltrim($m['content'], '/')) ?>" target="_blank">
+                            <a href="<?= base_url(ltrim($m['content'], '/')) ?>" data-chat-image aria-label="Xem ảnh lớn">
                                 <img src="<?= base_url(ltrim($m['content'], '/')) ?>" alt="Ảnh" loading="lazy">
                             </a>
                         <?php else: ?>

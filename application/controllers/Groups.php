@@ -100,6 +100,7 @@ class Groups extends MY_Controller
             }
             if ($action === 'search') {
                 if ($this->input->method() !== 'get') throw new RuntimeException('Yêu cầu GET.', 405);
+                if ($this->input->get('around') !== null) return $this->m_chat_group->message_context($group,$actor,$this->input->get('around'));
                 return $this->m_chat_group->search_messages($group, $actor,
                     $this->input->get('q'), $this->input->get('before_id'));
             }

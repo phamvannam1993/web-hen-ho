@@ -536,6 +536,24 @@ class Ajax extends MY_Controller
         if (!$conv || !in_array($me, array((int) $conv['user_low_id'], (int) $conv['user_high_id']), true)) {
             return $this->json(array('ok' => false, 'message' => 'Không có quyền xem hội thoại này.'), 403);
         }
+        $around = $this->input->get('around');
+        if ($around !== null) {
+            $target = is_string($around) ? filter_var($around, FILTER_VALIDATE_INT, array('options'=>array('min_range'=>1))) : false;
+            if ($target === false) return $this->json(array('ok'=>false,'message'=>'ID tin nhắn không hợp lệ.'),422);
+            $cutoff = $this->m_interaction->conversation_cutoff($conversation_id, $me);
+            $visible = function () use ($conversation_id, $cutoff) {
+                return $this->db->select('id,sender_id,type,content,created_at')->from('messages')
+                    ->where('conversation_id',(int)$conversation_id)->where('id >',$cutoff)->where('deleted_at',null);
+            };
+            if (!$visible()->where('id',$target)->get()->row_array()) return $this->json(array('ok'=>false,'message'=>'Tin nhắn không còn khả dụng.'),404);
+            $before = $visible()->where('id <',$target)->order_by('id','DESC')->limit(15)->get()->result_array();
+            $after = $visible()->where('id >=',$target)->order_by('id','ASC')->limit(16)->get()->result_array();
+            $messages = array_map(function ($r) use ($me) {
+                return array('id'=>(int)$r['id'],'mine'=>(int)$r['sender_id']===$me,'type'=>$r['type'],
+                    'content'=>$r['type']==='image'?base_url(ltrim($r['content'],'/')):$r['content'],'created_at'=>$r['created_at']);
+            }, array_merge(array_reverse($before),$after));
+            return $this->json(array('ok'=>true,'messages'=>$messages,'target_id'=>$target));
+        }
         $q = $this->input->get('q');
         $q = is_string($q) ? trim($q) : '';
         $cursor = $this->input->get('before');

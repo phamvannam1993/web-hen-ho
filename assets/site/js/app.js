@@ -36,9 +36,9 @@ document.addEventListener('DOMContentLoaded', function () {
     var base = scriptBase || (document.querySelector('base') ? document.querySelector('base').href : '/');
 
     /* View profile photos and comment attachments in a shared dialog. */
-    var commentImageViewer;
+    var commentImageViewer, imageReturnFocus;
     document.addEventListener('click', function (event) {
-        var trigger = event.target.closest('[data-comment-image], [data-profile-image]');
+        var trigger = event.target.closest('[data-comment-image], [data-profile-image], [data-chat-image]');
         if (!trigger) { return; }
         var thumbnail = trigger.querySelector('img');
         if (!thumbnail && !trigger.getAttribute('href')) { return; }
@@ -67,6 +67,7 @@ document.addEventListener('DOMContentLoaded', function () {
             commentImageViewer.addEventListener('close', function () {
                 document.body.style.overflow = previousOverflow;
                 commentImageViewer.querySelector('img').removeAttribute('src');
+                if (imageReturnFocus && imageReturnFocus.isConnected) imageReturnFocus.focus({preventScroll:true});
             });
             commentImageViewer.lockScroll = function () {
                 previousOverflow = document.body.style.overflow;
@@ -75,6 +76,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.body.appendChild(commentImageViewer);
         }
         var fullImage = commentImageViewer.querySelector('img');
+        imageReturnFocus = trigger;
         fullImage.src = thumbnail ? (thumbnail.currentSrc || thumbnail.src) : trigger.href;
         fullImage.alt = thumbnail ? thumbnail.alt : 'Ảnh trong album';
         commentImageViewer.showModal();
@@ -1464,6 +1466,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (m.type === 'image') {
             var a = document.createElement('a');
             a.href = m.content; a.target = '_blank';
+            a.setAttribute('data-chat-image', '');
             var img = document.createElement('img');
             img.src = m.content; img.alt = 'Ảnh'; img.loading = 'lazy';
             img.onload = function () { if (atBottom()) { scrollDown(); } };

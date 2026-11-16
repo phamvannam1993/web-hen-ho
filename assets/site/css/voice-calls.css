@@ -59,4 +59,6 @@
     border:0; border-radius:9px; background:transparent; box-shadow:none; color:var(--pink,#d1273f);
 }
 .tk-ms-head [data-voice-call] .tk-ic,.cw-head #cw-voice svg,.cw-head #cw-video svg { width:20px; height:20px; }
+.tk-ms-head [data-voice-call]:not([data-video]) .tk-ic,.cw-head #cw-voice svg { width:18px; height:18px; }
+.tk-ms-head [data-voice-call][data-video] .tk-ic,.cw-head #cw-video svg { width:22px; height:22px; }
 .cw-head #cw-voice[hidden],.cw-head #cw-video[hidden],.cw-head .cw-conversation-more[hidden] { display:none; }

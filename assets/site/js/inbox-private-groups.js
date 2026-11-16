@@ -366,6 +366,7 @@
             var body = node('p', '', message.type === 'image' ? undefined : message.content);
             if (message.type === 'image') {
                 var link = node('a'); link.href = message.content; link.target = '_blank'; link.rel = 'noopener';
+                link.setAttribute('data-chat-image', '');
                 var img = node('img', 'ig-message-image'); img.src = message.content; img.alt = 'Hình ảnh'; img.loading = 'lazy';
                 link.append(img); body.append(link);
             }
