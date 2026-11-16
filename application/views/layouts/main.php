@@ -74,7 +74,6 @@ $guest_banner = !$user && empty($bare) && strpos($content_view, 'auth/') !== 0 &
 <!-- Dải mạng xã hội trên cùng -->
 <?php /* Chế độ toàn màn hình (trang Khám phá): bỏ thanh trên, menu và chân trang */ ?>
 <?php if (empty($bare)): ?>
-<?php if ($content_view !== 'account/messages'): ?>
 <?php
 /* Thanh trên cùng chỉ hiển thị mạng xã hội.
    Mục nào chưa khai trong Quản trị -> Cấu hình thì tự ẩn đi. */
@@ -252,7 +251,6 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
         <div class="nav-overlay" id="nav-overlay" hidden></div>
     </div>
 </header>
-<?php endif; ?>
 <?php if ($user): $this->load->view('layouts/_vip_benefits'); endif; ?>
 <?php $this->load->view('layouts/_signup_vip_gift', array('user'=>$user)); ?>
 <?php $this->load->view('layouts/_nudge'); ?>

@@ -66,4 +66,4 @@
 .ig-choice { display:block; width:100%; margin:6px 0; text-align:left; }
 
 /* Ảnh trong nhóm riêng (gửi từ ứng dụng) */
-.ig-message-image{display:block;box-sizing:border-box;width:240px;max-width:100%;height:180px;border:1px solid #eadfe5;border-radius:12px;background:#f8f4f5;object-fit:contain}
+.ig-message-image{display:block;box-sizing:border-box;width:auto;max-width:min(280px,100%);height:auto;max-height:320px;border:1px solid #eadfe5;border-radius:12px;background:#f8f4f5;object-fit:contain}
