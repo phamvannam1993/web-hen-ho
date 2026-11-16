@@ -63,7 +63,12 @@ class Voice_calls extends CI_Controller
         if (!$peer) {
             return $this->reply(array('ok' => false), 403);
         }
-        return $this->reply(array('ok' => true, 'peer' => $peer));
+        $calls_enabled=false;
+        try {
+            $this->load->model('m_conversation_notification');
+            $calls_enabled=$this->m_conversation_notification->enabled($cid,$uid,'calls');
+        } catch (Throwable $e) { /* Không báo cuộc gọi khi chưa đọc được tùy chọn. */ }
+        return $this->reply(array('ok'=>true,'peer'=>$peer,'calls_notifications_enabled'=>$calls_enabled));
     }
 
     private function positive_id($value)

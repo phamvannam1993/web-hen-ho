@@ -57,6 +57,7 @@ function base_url($p='') { return '/'.$p; }
 function site_url($p='') { return '/'.$p; }
 function display_name($r) { return $r['display_name'] ?: $r['nickname']; }
 function avatar_url($a,$g) { return '/avatar/' . ($a ?: 'default'); }
+function time_ago($date) { return 'Thời điểm ' . $date; }
 require APPPATH . 'helpers/chat_group_helper.php';
 require APPPATH . 'models/M_chat_group.php';
 $m = new M_chat_group(); $m->db = $db; $m->auth = new ChatTestAuth(); $m->input = new ChatTestInput(); $m->config = new ChatTestConfig();

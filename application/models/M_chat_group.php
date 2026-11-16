@@ -189,6 +189,38 @@ class M_chat_group extends CI_Model
         return array_map(function ($r) use ($actor) { return $this->serialize($r, $actor); }, $rows);
     }
 
+    public function search_messages($group, $actor, $q, $cursor = null)
+    {
+        $this->access($group, $actor);
+        $q = is_string($q) ? trim($q) : '';
+        $before = $cursor === null ? 0 : (is_string($cursor)
+            ? filter_var($cursor, FILTER_VALIDATE_INT, array('options' => array('min_range' => 0))) : false);
+        if (mb_strlen($q) < 2 || mb_strlen($q) > 100 || $before === false) {
+            throw new InvalidArgumentException('Nhập từ 2 đến 100 ký tự và mốc tìm kiếm hợp lệ.');
+        }
+        $has_caption = $this->db->field_exists('caption', 'room_messages');
+        $this->rows($group['id'], $actor);
+        $this->db->group_start()
+            ->group_start()->where('r.type', 'text')->like('r.content', $q)->group_end();
+        if ($has_caption) {
+            $this->db->or_group_start()->where('r.type', 'image')
+                ->like('r.caption', $q)->group_end();
+        }
+        $this->db->group_end();
+        if ($before) $this->db->where('r.id <', $before);
+        $rows = $this->db->order_by('r.id', 'DESC')->limit(21)->get()->result_array();
+        $has_more = count($rows) > 20;
+        if ($has_more) array_pop($rows);
+        $next_before = $rows ? (int) $rows[count($rows) - 1]['id'] : 0;
+        return array(
+            'messages' => array_map(function ($r) use ($actor) {
+                return $this->serialize($r, $actor);
+            }, $rows),
+            'has_more' => $has_more,
+            'next_before' => $next_before,
+        );
+    }
+
     public function visible_message($group, $actor, $id)
     {
         $this->access($group, $actor);
@@ -242,6 +274,8 @@ class M_chat_group extends CI_Model
                 ->where('last_active_at >', date('Y-m-d H:i:s', time() - 45))->count_all_results('chat_group_people'),
             'following' => $p && (bool) $p['is_following'] && !$p['is_hidden'], 'notifications' => !$p || (bool) $p['notifications_enabled'],
             'unread' => $unread, 'last' => $last ? ($last['type'] === 'image' ? 'Hình ảnh' : mb_substr($last['content'], 0, 100)) : '',
+            'last_at' => $last ? $last['created_at'] : null,
+            'time' => $last ? time_ago($last['created_at']) : '',
             'last_sender' => $last ? (!empty($last['user_id']) && $last['identity_mode'] !== 'guest'
                 ? display_name($last) : ($last['guest_name'] ?: 'Khách ẩn danh')) : '',
             'pinned' => $group['pinned_message_id'] && ($pin = $this->visible_message($group, $actor, $group['pinned_message_id'])) ? $this->serialize($pin, $actor) : null,
@@ -287,6 +321,39 @@ class M_chat_group extends CI_Model
     {
         $quote=$this->profile_quote($group,$actor,$public_id);
         return $this->m_profile_access->purchase($quote['id'],$actor['user']['id'],$version);
+    }
+
+    public function members($group, $actor, $q = null, $before = null)
+    {
+        $this->access($group, $actor);
+        if ($group['identity_mode'] !== 'guest') throw new RuntimeException('Không tìm thấy nhóm ẩn danh.', 404);
+        if (($q !== null && !is_string($q)) || ($before !== null && !is_string($before))) throw new InvalidArgumentException('Bộ lọc không hợp lệ.');
+        $q = trim($q ?? '');
+        if (mb_strlen($q) > 40 || ($before !== null && (!preg_match('/^(0|[1-9][0-9]*)$/D', $before) || strlen($before) > strlen((string) PHP_INT_MAX) || (strlen($before) === strlen((string) PHP_INT_MAX) && strcmp($before, (string) PHP_INT_MAX) > 0)))) {
+            throw new InvalidArgumentException('Bộ lọc không hợp lệ.');
+        }
+        $keys = $this->blocked_keys($actor);
+        $this->db->select('p.id,p.public_id,p.nickname,p.user_id,u.role,m.user_id AS moderator_id')
+            ->from('chat_group_people p')->join('users u', 'u.id = p.user_id', 'left')
+            ->join('chat_group_moderators m', 'm.group_id = p.group_id AND m.user_id = p.user_id', 'left')
+            ->where('p.group_id', $group['id'])->where('p.is_banned', 0)
+            ->group_start()->where('p.user_id', null)
+                ->or_group_start()->where('u.status', 'active')->where('u.deleted_at', null)->group_end()->group_end();
+        if ($keys) $this->db->where_not_in('p.actor_key', $keys);
+        if ($q !== '') $this->db->like('p.nickname', $q);
+        if ((int) $before > 0) $this->db->where('p.id <', (int) $before);
+        $rows = $this->db->order_by('p.id', 'DESC')->limit(31)->get()->result_array();
+        $more = count($rows) > 30;
+        $rows = array_slice($rows, 0, 30);
+        $members = array_map(function ($p) {
+            $role = $p['role'] === 'super_admin' || ($p['role'] === 'admin' && $p['moderator_id']) ? 'Admin'
+                : ($p['role'] === 'moderator' && $p['moderator_id'] ? 'Kiểm duyệt viên' : null);
+            // Explicit anonymous-only payload: never expose user IDs, real names or contact fields.
+            return array('id' => $p['public_id'], 'name' => $p['nickname'],
+                'avatar' => chat_group_guest_avatar_url($p['public_id']), 'role' => $role,
+                'can_open_profile' => !empty($p['user_id']));
+        }, $rows);
+        return array('members' => $members, 'has_more' => $more, 'next_before' => $more ? (string) end($rows)['id'] : null);
     }
 
     public function online($group, $actor)

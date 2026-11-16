@@ -8,17 +8,21 @@
         && window.crypto && window.crypto.randomUUID
         && window.HTMLDialogElement;
     var base = root.dataset.base.replace(/\/?$/, '/');
-    var current = null;
+    var current = null, incomingGeneration = 0, pendingIncoming = null;
     var dialog = document.createElement('dialog');
     dialog.className = 'voice-dialog';
     dialog.setAttribute('aria-labelledby', 'voice-title');
-    dialog.innerHTML = '<h2 id="voice-title">Gọi thoại</h2>'
+    var phoneIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2A19.8 19.8 0 0 1 3.1 5.2 2 2 0 0 1 5.1 3h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L9 10.7a16 16 0 0 0 4.3 4.3l1.3-1.3a2 2 0 0 1 2.1-.5c.8.3 1.7.6 2.6.7a2 2 0 0 1 1.7 2z"/></svg>';
+    var micIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"/><path class="voice-mic-slash" d="m3 3 18 18"/></svg>';
+    dialog.innerHTML = '<div class="voice-heading"><span class="voice-brand">Saigon Cupid</span><h2 id="voice-title">Gọi thoại</h2></div>'
+        + '<div class="voice-avatar" aria-hidden="true"><span>SC</span></div>'
         + '<p class="voice-name"></p>'
-        + '<p class="voice-status" role="status"></p>'
+        + '<p class="voice-status" role="status" aria-live="polite"></p>'
+        + '<p class="voice-duration" aria-label="Thời lượng cuộc gọi" aria-live="off" hidden>00:00</p>'
         + '<div class="voice-actions">'
-        + '<button type="button" data-accept hidden>Nhận cuộc gọi</button>'
-        + '<button type="button" data-mute hidden>Tắt mic</button>'
-        + '<button type="button" data-end>Đóng</button></div>'
+        + '<button type="button" data-accept hidden>' + phoneIcon + '<span>Nhận cuộc gọi</span></button>'
+        + '<button type="button" data-mute aria-pressed="false" hidden>' + micIcon + '<span>Tắt mic</span></button>'
+        + '<button type="button" data-end>' + phoneIcon + '<span>Đóng</span></button></div>'
         + '<audio autoplay playsinline></audio>'
         + '<button type="button" data-play hidden>Bật âm thanh</button>';
     document.body.appendChild(dialog);
@@ -29,6 +33,15 @@
     var end = dialog.querySelector('[data-end]');
     var play = dialog.querySelector('[data-play]');
     var audio = dialog.querySelector('audio');
+    var duration = dialog.querySelector('.voice-duration');
+    function label(button, text) { button.querySelector('span').textContent = text; }
+    function peer(value) {
+        name.textContent = value || 'Cuộc gọi thoại';
+        var words = name.textContent.trim().split(/\s+/);
+        dialog.querySelector('.voice-avatar span').textContent = words.slice(-2).map(function (word) { return Array.from(word)[0] || ''; }).join('').toLocaleUpperCase('vi');
+    }
+    function phase(value, text) { dialog.dataset.state = value; status.textContent = text; }
+
     var reasons = {
         busy: 'Người dùng đang bận hoặc bạn gọi quá nhanh.',
         offline: 'Người dùng hiện chưa kết nối.',
@@ -69,8 +82,9 @@
         if (s.stream) s.stream.getTracks().forEach(function (t) { t.stop(); });
         audio.srcObject = null;
         accept.hidden = mute.hidden = play.hidden = true;
-        end.textContent = 'Đóng';
-        status.textContent = text;
+        label(end, 'Đóng');
+        phase('ended', text);
+        dialog.querySelector('#voice-title').textContent = 'Cuộc gọi kết thúc';
         refresh();
     }
     function fail(s, error) {
@@ -80,12 +94,15 @@
     }
     function show(s, text) {
         current = s;
-        name.textContent = s.name || 'Cuộc gọi thoại';
-        status.textContent = text;
+        peer(s.name);
+        phase(s.incoming ? 'incoming' : 'preparing', text);
+        dialog.querySelector('#voice-title').textContent = s.incoming ? 'Cuộc gọi đến' : 'Gọi thoại';
+        duration.hidden = true; duration.textContent = '00:00';
         accept.hidden = !s.incoming;
         mute.hidden = play.hidden = true;
-        mute.textContent = 'Tắt mic';
-        end.textContent = s.incoming ? 'Từ chối' : 'Hủy gọi';
+        label(mute, 'Tắt mic');
+        mute.setAttribute('aria-pressed', 'false');
+        label(end, s.incoming ? 'Từ chối' : 'Huỷ gọi');
         if (!dialog.open) dialog.showModal();
         s.timer = setTimeout(function () {
             finish(s, reasons.unanswered, true);
@@ -113,7 +130,7 @@
             throw new Error('Cấu hình gọi thoại chưa sẵn sàng.');
         }
         s.name = data.peer.name;
-        name.textContent = s.name;
+        peer(s.name);
         var stream = await navigator.mediaDevices.getUserMedia({
             audio: { echoCancellation: true, noiseSuppression: true },
             video: false,
@@ -141,20 +158,21 @@
                 clearTimeout(s.timer);
                 clearTimeout(s.disconnect);
                 s.disconnect = null;
-                end.textContent = 'Kết thúc';
+                label(end, 'Kết thúc');
+                duration.hidden = false;
                 if (!s.clock) {
                     s.startedAt = Date.now();
                     s.clock = setInterval(function () {
                         var seconds = Math.floor((Date.now() - s.startedAt) / 1000);
-                        status.textContent = 'Đang gọi · '
-                            + Math.floor(seconds / 60) + ':'
+                        duration.textContent = String(Math.floor(seconds / 60)).padStart(2, '0') + ':'
                             + String(seconds % 60).padStart(2, '0');
                     }, 1000);
                 }
-                status.textContent = 'Đã kết nối';
+                phase('connected', 'Đang trong cuộc gọi');
             } else if (value === 'failed' || value === 'closed') {
                 finish(s, reasons.connection, true);
             } else if (value === 'disconnected' && !s.disconnect) {
+                phase('connecting', 'Kết nối gián đoạn, đang thử lại…');
                 s.disconnect = setTimeout(function () {
                     finish(s, reasons.connection, true);
                 }, 5000);
@@ -207,7 +225,7 @@
         show(s, 'Đang chuẩn bị microphone…');
         prepare(s).then(function (ready) {
             if (!ready || current !== s) return;
-            status.textContent = 'Đang gọi…';
+            phase('ringing', 'Đang gọi…');
             send(s, 'voice.invite', { conversationId: s.cid });
         }).catch(function (error) { fail(s, error); });
     });
@@ -216,8 +234,8 @@
         if (!s || !s.incoming || s.accepting) return;
         s.accepting = true;
         accept.hidden = true;
-        end.textContent = 'Hủy gọi';
-        status.textContent = 'Đang chuẩn bị microphone…';
+        label(end, 'Huỷ gọi');
+        phase('preparing', 'Đang chuẩn bị microphone…');
         prepare(s).then(function (ready) {
             if (ready && current === s) send(s, 'voice.accept');
         }).catch(function (error) { fail(s, error); });
@@ -233,20 +251,31 @@
     mute.onclick = function () {
         if (!current || !current.stream) return;
         current.stream.getAudioTracks().forEach(function (t) { t.enabled = !t.enabled; });
-        mute.textContent = current.stream.getAudioTracks()[0].enabled ? 'Tắt mic' : 'Bật mic';
+        var muted = !current.stream.getAudioTracks()[0].enabled;
+        label(mute, muted ? 'Bật mic' : 'Tắt mic');
+        mute.setAttribute('aria-pressed', muted ? 'true' : 'false');
     };
     play.onclick = function () {
         audio.play().then(function () { play.hidden = true; }).catch(function () {});
     };
-    rt.on('voice.incoming', function (m) {
+    rt.on('voice.incoming', async function (m) {
         if (!supported || current) return;
+        var generation=++incomingGeneration; pendingIncoming=m.callId;
+        try {
+            var response=await fetch(base+'ajax/tin-nhan/'+Number(m.conversationId)+'/thong-bao',{credentials:'same-origin',cache:'no-store'});
+            if (!response.ok) return;
+            var state=await response.json();
+            if (!state.ok || state.calls_notifications_enabled === false || current || generation !== incomingGeneration) return;
+        } catch (_) { return; }
+        if (generation !== incomingGeneration) return;
+        pendingIncoming=null;
         show({
             id: m.callId, cid: m.conversationId,
             name: m.name, incoming: true,
         }, 'Cuộc gọi thoại đến');
     });
     rt.on('voice.ringing', function (m) {
-        if (current && current.id === m.callId) status.textContent = 'Đang đổ chuông…';
+        if (current && current.id === m.callId) phase('ringing', 'Đang đổ chuông…');
     });
     rt.on('voice.accepted', function (m) {
         var s = current;
@@ -256,11 +285,12 @@
         s.timer = setTimeout(function () {
             finish(s, reasons.connection, true);
         }, 60000);
-        status.textContent = 'Đang kết nối thoại…';
+        phase('connecting', 'Đang kết nối thoại…');
         if (!s.incoming) description(s, 'offer').catch(function (e) { fail(s, e); });
     });
     ['offer', 'answer'].forEach(function (type) {
         rt.on('voice.' + type, function (m) {
+            if (pendingIncoming === m.callId) { incomingGeneration++; pendingIncoming=null; }
             var s = current;
             if (!s || s.id !== m.callId || !s.accepted || !s.pc
                 || s.remoteSet || (type === 'offer') !== s.incoming) return;
@@ -282,10 +312,12 @@
     });
     rt.on('open', refresh);
     rt.on('close', function () {
+        incomingGeneration++; pendingIncoming=null;
         if (current) finish(current, reasons.connection, false);
         refresh();
     });
     window.addEventListener('pagehide', function () {
+        incomingGeneration++; pendingIncoming=null;
         if (current) finish(current, reasons.ended, true);
     });
     refresh();

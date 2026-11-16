@@ -51,7 +51,7 @@ $this->load->view('layouts/seo', array('seo_path' => $seo_path, 'can_index' => $
 /* Khu Tài khoản bọc nội dung trong khung riêng (cột trái + thanh dưới trên điện
    thoại) theo bản thiết kế SaigonCupid, nằm giữa đầu trang và chân trang của site. */
 $tk_app = !empty($tk) && !empty($content_view) && strpos($content_view, 'account/') === 0;
-$tk_inbox_open = $tk_app && $content_view === 'account/messages' && !empty($partner);
+$tk_inbox_open = $tk_app && $content_view === 'account/messages' && (!empty($partner) || !empty($private_group_id));
 $guest_banner = !$user && empty($bare) && strpos($content_view, 'auth/') !== 0 && $content_view !== 'groups/detail';
 ?>
 <?php if ($tk_app || $content_view === 'members/profile'): ?>
@@ -478,17 +478,18 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
                     <div class="cw-peer">
                         <a id="cw-profile-link"><b id="cw-name"></b></a>
                         <small id="cw-status"></small>
-                        <?php if ($user && getenv('VOICE_ENABLED') === '1'): ?>
-                        <button type="button" id="cw-voice" data-voice-call
-                                aria-label="Gọi thoại" title="Gọi thoại"
-                                hidden disabled><?= tk_icon('phone') ?></button>
-                        <?php endif; ?>
                         <button type="button" class="cw-online-toggle" id="cw-online-toggle" hidden
                                 aria-expanded="false" aria-controls="cw-online-panel" aria-haspopup="dialog">
                             <span id="cw-online-toggle-count">Người đang online</span> <span aria-hidden="true">▾</span>
                         </button>
                     </div>
-                    <button type="button" class="cw-close" data-close aria-label="Đóng">&times;</button>
+                        <?php if ($user && getenv('VOICE_ENABLED') === '1'): ?>
+                        <button type="button" id="cw-voice" data-voice-call
+                                aria-label="Gọi thoại" title="Gọi thoại"
+                                hidden disabled><?= tk_icon('phone') ?></button>
+                        <?php endif; ?>
+                    <button type="button" id="cw-history-search" class="message-history-trigger message-history-trigger--icon"
+                            aria-label="Tìm tin nhắn cũ" title="Tìm tin nhắn cũ" hidden><?= tk_icon('search') ?></button>
                 </header>
 
                 <div class="cw-body-wrap">
@@ -548,6 +549,10 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 </div>
 
 <script defer src="<?= base_url('assets/site/js/password-toggle.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/password-toggle.js') ?>"></script>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/message-recall.css') ?>?v=<?= filemtime(FCPATH.'assets/site/css/message-recall.css') ?>">
+<script defer src="<?= base_url('assets/site/js/message-recall.js') ?>?v=<?= filemtime(FCPATH.'assets/site/js/message-recall.js') ?>"></script>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/message-reply.css') ?>?v=<?= filemtime(FCPATH.'assets/site/css/message-reply.css') ?>">
+<script defer src="<?= base_url('assets/site/js/message-reply.js') ?>?v=<?= filemtime(FCPATH.'assets/site/js/message-reply.js') ?>"></script>
 <script defer src="<?= base_url('assets/site/js/app.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/app.js') ?>" data-base="<?= e(rtrim(site_url(), '/') . '/') ?>"></script>
 <script defer src="<?= base_url('assets/site/js/member-feed.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/member-feed.js') ?>"></script>
 <script defer src="<?= base_url('assets/site/js/date-select.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/date-select.js') ?>"></script>
@@ -565,6 +570,18 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 <script defer src="<?= base_url('assets/site/js/chat-groups.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/chat-groups.js') ?>"></script>
 <?php endif; ?>
 
+<link rel="stylesheet" href="<?= base_url('assets/site/css/message-history.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/message-history.css') ?>">
+<script defer src="<?= base_url('assets/site/js/message-history.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/message-history.js') ?>"></script>
+<?php if ($content_view === 'account/messages'): ?>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/inbox-mute-dialog.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/inbox-mute-dialog.css') ?>">
+<script defer src="<?= base_url('assets/site/js/inbox-mute-dialog.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/inbox-mute-dialog.js') ?>"></script>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/conversation-delete.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/conversation-delete.css') ?>">
+<script defer src="<?= base_url('assets/site/js/conversation-delete.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/conversation-delete.js') ?>"></script>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/private-message-menu.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/private-message-menu.css') ?>">
+<script defer src="<?= base_url('assets/site/js/private-message-menu.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/private-message-menu.js') ?>"></script>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/inbox-private-groups.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/inbox-private-groups.css') ?>">
+<script defer src="<?= base_url('assets/site/js/inbox-private-groups.js') ?>?v=<?= filemtime(FCPATH . 'assets/site/js/inbox-private-groups.js') ?>"></script>
+<?php endif; ?>
 <?php $this->load->view('layouts/_mobile_nav'); ?>
 <?php if ($guest_banner): ?>
 <aside class="guest-banner" aria-label="Tham gia Saigon Cupid">

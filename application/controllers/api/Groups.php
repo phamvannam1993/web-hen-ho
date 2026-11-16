@@ -127,6 +127,9 @@ class Groups extends Api_Controller
             }
             if ($action === 'profile') return array('profile' => $m->anonymous_profile($group, $actor, (string) $this->input->get('person')));
             if ($action === 'profile-quote') return $m->profile_quote($group, $actor, (string) $this->input->get('person'));
+            // Thành viên nhóm ẩn danh và tìm tin trong nhóm (như Groups::api của web)
+            if ($action === 'members') return $m->members($group, $actor, $this->input->get('q'), $this->input->get('before_id'));
+            if ($action === 'search') return $m->search_messages($group, $actor, $this->input->get('q'), $this->input->get('before_id'));
 
             $this->phai_post();
             if ($action === 'open') {

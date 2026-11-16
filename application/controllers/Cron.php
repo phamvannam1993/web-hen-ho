@@ -147,6 +147,12 @@ class Cron extends CI_Controller
             || !in_array($recipient['status'], array('active', 'pending'), true)
             || !filter_var($recipient['email'] ?? '', FILTER_VALIDATE_EMAIL)) return 'Recipient unavailable';
         if ($recipient['email'] !== $thu['to_email']) return 'Recipient email changed';
+        if ($thu['type'] === 'new_message' && !empty($thu['related_id'])) {
+            try {
+                $this->load->model('m_conversation_notification');
+                if (!$this->m_conversation_notification->enabled($thu['related_id'],$thu['user_id'])) return 'Conversation notifications disabled';
+            } catch (Throwable $e) { return 'Conversation notification preferences unavailable'; }
+        }
         if ($thu['type'] === 'match_suggest'
             && (!$this->tim_nguoi_hop($recipient, $thu['related_id'])
                 || empty($recipient['email_verified_at']) || $this->m_user->thieu_thong_tin($recipient['id']))) {

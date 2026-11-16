@@ -28,7 +28,7 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
     <section class="home-intro-hero" aria-labelledby="home-heading">
         <div class="home-intro-copy">
             <p class="home-intro-eyebrow">SAIGON CUPID – KẾT NỐI TRÁI TIM VIỆT</p>
-            <h1 id="home-heading">Gặp đúng người,<br><span>đúng nhịp trái tim.</span></h1>
+            <h1 id="home-heading">Gặp đúng người cùng<br><span>nhịp tim của bạn.</span></h1>
             <p class="home-intro-description">Khám phá những người phù hợp, kết nối chân thành và bắt đầu câu chuyện của riêng bạn.</p>
             <form class="home-intro-search" method="get" action="<?= site_url('tim-kiem') ?>" role="search">
                 <span aria-hidden="true"><?= $ic($ic_search) ?></span>
@@ -43,7 +43,7 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
             </div>
         </div>
         <div class="home-intro-photo">
-            <img src="<?= base_url('assets/images/banner.webp') ?>"
+            <img src="<?= e(base_url(setting('home_banner_image') ?: 'assets/images/banner.webp')) ?>"
                  alt="Saigon Cupid – Kết nối trái tim Việt"
                  fetchpriority="high">
             <span class="home-intro-caption"><?= $ic($ic_heart) ?> Một kết nối. Một khởi đầu mới.</span>
@@ -62,7 +62,7 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
     <?php if (!empty($suggestions)): ?>
     <section class="hm-mobile-discovery" aria-labelledby="home-mobile-suggestions-heading">
         <div class="hm-mobile-discovery-head">
-            <h2 id="home-mobile-suggestions-heading">Gợi ý ghép đôi cho bạn</h2>
+            <h2 id="home-mobile-suggestions-heading">Cùng phong cách của bạn</h2>
             <a href="<?= site_url('thanh-vien') ?>">Tất cả →</a>
         </div>
         <div class="hm-sugs hm-home-carousel" data-account-suggestions="home">

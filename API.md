@@ -169,6 +169,44 @@ thoại là đánh dấu đã đọc phần của đối phương, như web — 
 
 `POST /api/realtime/read` chỉ dành cho máy chủ Node (header `X-Realtime-Secret`).
 
+### Thao tác trên hội thoại riêng
+
+Bản API của `Message_actions` (web), cùng model nên cùng luật. Thân POST là JSON.
+
+| Phương thức | Đường dẫn | Việc |
+|---|---|---|
+| POST | `/api/messages` | Thêm `reply_to_id` để trả lời một tin. Mỗi tin trả về có `recalled` và `reply` `{id, available, mine, recalled, type, content}` |
+| GET/POST | `/api/conversations/{id}/pin` | GET → `{pinned: {id, mine, type, content} \| null}`. POST `{action: "pin"\|"unpin", message_id}` (mỗi hội thoại ghim 1 tin) |
+| POST | `/api/conversations/{id}/recall` | `{message_id}` — chỉ thu hồi tin của mình. Phát `chat.recalled {conversationId, messageId}` cho cả hai bên |
+| GET  | `/api/conversations/{id}/recall?ids=1,2` | `{recalled_ids}` — kiểm tra tin đang hiện đã bị thu hồi chưa (tối đa 100 id) |
+| GET/POST | `/api/conversations/{id}/notifications` | GET → `{notifications_enabled, calls_notifications_enabled, muted, message_muted_until, calls_muted_until, server_time}`. POST `{enabled, scope?: "messages"\|"calls"\|"both", duration?: 0\|900\|3600\|28800\|86400}` (giây; 0 = đến khi bật lại) |
+| POST | `/api/conversations/{id}/delete` | Xoá lịch sử phía mình (người kia vẫn còn). Trả `deleted_through_message_id` |
+| POST | `/api/conversations/{id}/block` | `{action: "block"\|"unblock"}` — chặn người đang chat |
+| GET  | `/api/conversations/{id}/search?q=&before=` | Tìm tin chữ (2–100 ký tự), 20 tin/lần mới trước; `has_more`, `next_before` |
+
+`GET /api/conversations` có thêm `notifications_enabled`, `calls_notifications_enabled` cho mỗi hội thoại.
+
+### Nhóm chat riêng trong hộp thư
+
+Bản API của `Inbox_groups` (web), model `M_inbox_group` — tách khỏi Clubs. Cần chạy
+`php database/migrate_inbox_groups.php` (thiếu bảng → **503**).
+
+| Phương thức | Đường dẫn | Việc |
+|---|---|---|
+| GET  | `/api/inbox-groups?before=` | Nhóm của tôi: `{groups: [{id, name, owner_id, member_count, last_content, last_at, unread}], has_more, next_before}` |
+| POST | `/api/inbox-groups/create` | `{name, user_ids: [..]}` (tên 2–120 ký tự, tối đa 50 người) |
+| GET  | `/api/inbox-groups/users?q=&after=&group_id=` | Tìm người theo tên/biệt danh (≥ 2 ký tự); có `group_id` thì bỏ người đã trong nhóm |
+| GET  | `/api/inbox-groups/common/{user_id}` | Nhóm chung với một người |
+| GET  | `/api/inbox-groups/{id}` | `{group: {id, name, owner_id, can_manage, members: [{id, name, avatar}]}}` |
+| POST | `/api/inbox-groups/{id}/add` | `{user_ids}` — mọi thành viên đều thêm được |
+| POST | `/api/inbox-groups/{id}/rename` | `{name}` — chỉ người tạo |
+| POST | `/api/inbox-groups/{id}/remove-member` | `{user_id}` — chỉ người tạo, không gỡ được chính mình |
+| GET  | `/api/inbox-groups/{id}/messages?before=` \| `?after=` | 30 tin/lần: `{messages: [{id, mine, sender_id, sender_name, content, created_at}], has_more, next_before}` |
+| POST | `/api/inbox-groups/{id}/send` | `{content, client_message_id}` (16–64 ký tự `[A-Za-z0-9_-]`; gửi lại cùng mã không bị trùng) |
+| POST | `/api/inbox-groups/{id}/read` | `{message_id}` — đánh dấu đã đọc tới tin này |
+
+Chỉ có tin chữ; tin mới hỏi định kỳ bằng `?after=` (web: 4 giây).
+
 ## Clubs Chat's (nhóm chat)
 
 Cùng luật với `/clubs` của web (`M_chat_group`), xác thực bằng token thay cho session + CSRF
@@ -200,6 +238,9 @@ cùng mã không tạo tin trùng. Tin mới: WebSocket `ws_url` đổi đuôi `
 không có WebSocket thì hỏi mỗi 4 giây.
 
 ---
+
+Thêm (như web): `GET /api/groups/{id}/search?q=&before_id=` tìm tin trong nhóm;
+`GET /api/groups/{id}/members?q=&before_id=` danh sách thành viên (chỉ nhóm ẩn danh).
 
 ## Mã lỗi
 

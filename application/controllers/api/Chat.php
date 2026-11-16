@@ -39,6 +39,8 @@ class Chat extends Api_Controller
                 'empty'   => !$r['last_message_id'],
                 'time'    => $r['last_at'] ? time_ago($r['last_at']) : '',
                 'unread'  => (int) $r['unread'],
+                'notifications_enabled' => !isset($r['notifications_enabled']) || (bool)$r['notifications_enabled'],
+                'calls_notifications_enabled' => !isset($r['calls_notifications_enabled']) || (bool)$r['calls_notifications_enabled'],
             );
         }
 
@@ -80,6 +82,7 @@ class Chat extends Api_Controller
      */
     public function messages($conversation_id = 0)
     {
+        $this->output->set_header('Cache-Control: private, no-store');
         if (!$this->can_auth()) {
             return;
         }
@@ -90,9 +93,10 @@ class Chat extends Api_Controller
         }
         $other_id = (int) $conv['user_low_id'] === $me ? (int) $conv['user_high_id'] : (int) $conv['user_low_id'];
 
+        $cutoff = $this->m_interaction->conversation_cutoff($conv['id'], $me);
         $after = (int) $this->input->get('after');
-        $this->db->select('id, sender_id, type, content, created_at, read_at')
-            ->from('messages')->where('conversation_id', $conv['id'])->where('deleted_at', null);
+        $this->db->select('*')
+            ->from('messages')->where('conversation_id', $conv['id'])->where('id >', $cutoff);
         if ($after > 0) {
             $rows = $this->db->where('id >', $after)->order_by('id', 'ASC')->limit(50)->get()->result_array();
         } else {
@@ -100,6 +104,7 @@ class Chat extends Api_Controller
         }
 
         // đánh dấu đã đọc phần của đối phương
+        $rows = $this->m_interaction->with_replies($rows, $conv['id'], $me);
         $this->m_interaction->mark_read($conv['id'], $me);
 
         $ds = array();
@@ -110,9 +115,10 @@ class Chat extends Api_Controller
 
         // đối phương đã đọc hết tin của tôi chưa
         $seen = (int) $this->db->from('messages')->where('conversation_id', $conv['id'])
+            ->where('id >', $cutoff)
             ->where('sender_id', $me)->where('read_at', null)->count_all_results() === 0;
 
-        $ra = array('messages' => $ds, 'seen' => $seen);
+        $ra = array('messages' => $ds, 'seen' => $seen, 'deleted_through_message_id' => $cutoff);
         if ($after <= 0) {
             $other = $this->m_user->find($other_id);
             $ra['partner']  = $other ? $this->ho_so($other) + array('activity' => $this->hoat_dong($other['last_active_at'])) : null;
@@ -131,6 +137,7 @@ class Chat extends Api_Controller
         }
         $nhan    = (int) $this->body('receiver_id');
         $content = trim(strip_tags((string) $this->body('content')));
+        $reply_to_id = $this->body('reply_to_id');
         $image   = $this->tai_anh('image', 'chat', 10240);
 
         if ($content === '' && !$image) {
@@ -140,21 +147,25 @@ class Chat extends Api_Controller
         $gui = array();
         // Ảnh gửi kèm được lưu thành một tin riêng loại "image", như web
         if ($image) {
-            $kq = $this->m_interaction->send_message($this->me['id'], $nhan, $image, 'image');
+            $kq = $this->m_interaction->send_message($this->me['id'], $nhan, $image, 'image', $reply_to_id);
             if (!$kq['ok']) {
-                return $this->loi($kq['message'], 403);
+                return $this->loi($kq['message'], $kq['status'] ?? 403);
             }
             $gui[] = $kq['message_id'];
+            $image_conversation_id = (int) $kq['conversation_id'];
         }
         if ($content !== '') {
-            $kq = $this->m_interaction->send_message($this->me['id'], $nhan, mb_substr($content, 0, 2000));
+            $kq = $this->m_interaction->send_message($this->me['id'], $nhan, mb_substr($content, 0, 2000), 'text', $reply_to_id);
             if (!$kq['ok']) {
-                return $this->loi($kq['message'], 403);
+                if ($gui) return $this->loi('Ảnh đã gửi. Phần chữ chưa gửi: '.$kq['message'],
+                    $kq['status'] ?? 403, array('image_sent'=>true,'message_ids'=>$gui,'conversation_id'=>$image_conversation_id));
+                return $this->loi($kq['message'], $kq['status'] ?? 403);
             }
             $gui[] = $kq['message_id'];
         }
 
         $rows = $this->db->where_in('id', $gui)->order_by('id')->get('messages')->result_array();
+        $rows = $this->m_interaction->with_replies($rows, $kq['conversation_id'], $this->me['id']);
         return $this->ok(array(
             'conversation_id' => (int) $kq['conversation_id'],
             'messages'        => array_map(function ($r) {
@@ -314,14 +325,212 @@ class Chat extends Api_Controller
 
     private function tin(array $r, $cua_toi)
     {
+        $r = $this->m_interaction->message_for_display($r);
         return array(
             'id'      => (int) $r['id'],
             'mine'    => (bool) $cua_toi,
+            'recalled' => $r['recalled'],
+            'reply' => $r['reply'] ?? null,
             'type'    => $r['type'],
             'content' => $r['type'] === 'image' ? (function_exists('chat_group_image_url') ? chat_group_image_url($r) : base_url(ltrim($r['content'], '/'))) : $r['content'],
             'time'    => date('H:i', strtotime($r['created_at'])),
             'day'     => $this->nhan_ngay($r['created_at']),
         );
+    }
+
+    /* ───── Thao tác trên hội thoại riêng (bản API của controllers/Message_actions.php) ───── */
+
+    /** Lỗi của model → {ok:false, message} cùng mã như web. */
+    private function xu_ly($fn)
+    {
+        try {
+            return $this->ok($fn());
+        } catch (InvalidArgumentException $e) {
+            return $this->loi($e->getMessage(), 422);
+        } catch (RuntimeException $e) {
+            $code = in_array($e->getCode(), array(403, 404, 409, 422, 503), true) ? $e->getCode() : 500;
+            return $this->loi($code === 500 ? 'Chưa xử lý được thao tác. Vui lòng thử lại.' : $e->getMessage(), $code);
+        } catch (Throwable $e) {
+            return $this->loi('Chưa xử lý được thao tác. Vui lòng thử lại.', 500);
+        }
+    }
+
+    /** Hội thoại của tôi → id người kia; không phải của tôi thì báo 403. */
+    private function nguoi_kia($conversation_id)
+    {
+        $me = (int) $this->me['id'];
+        $conv = $this->db->select('id, user_low_id, user_high_id')->where('id', (int) $conversation_id)
+            ->get('conversations')->row_array();
+        if (!$conv || !in_array($me, array((int) $conv['user_low_id'], (int) $conv['user_high_id']), true)) {
+            throw new RuntimeException('Không có quyền xem hội thoại này.', 403);
+        }
+        return (int) $conv['user_low_id'] === $me ? (int) $conv['user_high_id'] : (int) $conv['user_low_id'];
+    }
+
+    /**
+     * GET  /api/conversations/{id}/pin → {pinned: tin đang ghim | null}
+     * POST /api/conversations/{id}/pin {action: pin|unpin, message_id}
+     */
+    public function pin($conversation_id = 0)
+    {
+        $this->output->set_header('Cache-Control: private, no-store');
+        if (!$this->can_auth()) return;
+        $this->load->model('m_conversation_pin');
+        return $this->xu_ly(function () use ($conversation_id) {
+            $me = (int) $this->me['id'];
+            if ($this->input->method() === 'post') {
+                $action = $this->body('action');
+                if (!in_array($action, array('pin', 'unpin'), true)) throw new InvalidArgumentException('Thao tác không hợp lệ.');
+                $state = $this->m_conversation_pin->save($conversation_id, $me, (string) $this->body('message_id'), $action === 'pin');
+            } else {
+                $state = $this->m_conversation_pin->state($conversation_id, $me);
+            }
+            return $this->tin_ghim($state);
+        });
+    }
+
+    private function tin_ghim(array $state)
+    {
+        $p = $state['pinned'] ?? null;
+        $state['pinned'] = $p ? array(
+            'id' => (int) $p['id'],
+            'mine' => (int) $p['sender_id'] === (int) $this->me['id'],
+            'type' => $p['type'],
+            'content' => $p['type'] === 'image' ? '[Hình ảnh]' : mb_substr((string) $p['content'], 0, 200),
+        ) : null;
+        return $state;
+    }
+
+    /**
+     * POST /api/conversations/{id}/recall {message_id} — thu hồi tin của mình.
+     * GET  /api/conversations/{id}/recall?ids=1,2,3 → {recalled_ids} để máy đối phương cập nhật tin đã hiện.
+     */
+    public function recall($conversation_id = 0)
+    {
+        $this->output->set_header('Cache-Control: private, no-store');
+        if (!$this->can_auth()) return;
+        return $this->xu_ly(function () use ($conversation_id) {
+            $me = (int) $this->me['id'];
+            $other = $this->nguoi_kia($conversation_id);
+            if ($this->input->method() === 'post') {
+                $kq = $this->m_interaction->recall_message($conversation_id, $me, (string) $this->body('message_id'));
+                try {
+                    foreach (array($me, $other) as $uid) {
+                        $this->realtime->publish($uid, array('t' => 'chat.recalled',
+                            'conversationId' => (int) $conversation_id, 'messageId' => $kq['id']));
+                    }
+                } catch (Throwable $e) { /* đã lưu; máy kia tự đồng bộ qua GET */ }
+                return $kq;
+            }
+            $raw = (string) $this->input->get('ids');
+            $ids = array_slice(array_values(array_filter(array_map('intval', explode(',', $raw)))), 0, 100);
+            $cutoff = $this->m_interaction->conversation_cutoff($conversation_id, $me);
+            $recalled = array();
+            if ($ids) {
+                $rows = $this->db->select('id')->where('conversation_id', (int) $conversation_id)->where('id >', $cutoff)
+                    ->where_in('id', $ids)->where('deleted_at IS NOT NULL', null, false)->get('messages')->result_array();
+                foreach ($rows as $r) $recalled[] = (int) $r['id'];
+            }
+            return array('recalled_ids' => $recalled, 'deleted_through_message_id' => $cutoff);
+        });
+    }
+
+    /**
+     * GET  /api/conversations/{id}/notifications → trạng thái tắt thông báo
+     * POST /api/conversations/{id}/notifications {enabled: bool, scope?: messages|calls|both, duration?: 0|900|3600|28800|86400}
+     */
+    public function notifications($conversation_id = 0)
+    {
+        $this->output->set_header('Cache-Control: private, no-store');
+        if (!$this->can_auth()) return;
+        $this->load->model('m_conversation_notification');
+        return $this->xu_ly(function () use ($conversation_id) {
+            $me = (int) $this->me['id'];
+            $m = $this->m_conversation_notification;
+            if ($this->input->method() !== 'post') return $m->state($conversation_id, $me);
+            $enabled = $this->body('enabled');
+            if (!is_bool($enabled) && !in_array($enabled, array('0', '1', 0, 1), true)) {
+                throw new InvalidArgumentException('Trạng thái thông báo không hợp lệ.');
+            }
+            $enabled = (bool) $enabled;
+            $scope = $this->body('scope');
+            $duration = $this->body('duration');
+            if ($scope !== null || $duration !== null) {
+                $duration = (int) $duration;
+                $state = $m->configure($conversation_id, $me, $scope ?? 'messages', $duration, $enabled);
+            } else {
+                $state = $m->save($conversation_id, $me, $enabled);
+            }
+            try {
+                $this->realtime->publish($me, array('t' => 'chat.notification-preference', 'conversationId' => $state['id'],
+                    'notifications_enabled' => $state['notifications_enabled'])
+                    + array_intersect_key($state, array_flip(array('calls_notifications_enabled', 'muted', 'message_muted_until', 'calls_muted_until', 'server_time'))));
+            } catch (Throwable $e) { /* đã lưu */ }
+            return $state;
+        });
+    }
+
+    /** POST /api/conversations/{id}/delete — xoá lịch sử phía tôi (người kia vẫn còn). */
+    public function delete_conversation($conversation_id = 0)
+    {
+        if (!$this->can_auth()) return;
+        if ($this->input->method() !== 'post') return $this->loi('Yêu cầu POST.', 405);
+        return $this->xu_ly(function () use ($conversation_id) {
+            $kq = $this->m_interaction->delete_conversation($conversation_id, (int) $this->me['id']);
+            try {
+                $this->realtime->publish((int) $this->me['id'], array('t' => 'chat.deleted',
+                    'conversationId' => $kq['id'], 'deleted_through_message_id' => $kq['deleted_through_message_id']));
+            } catch (Throwable $e) { /* đã lưu */ }
+            return $kq;
+        });
+    }
+
+    /** POST /api/conversations/{id}/block {action: block|unblock} — chặn người đang chat. */
+    public function block($conversation_id = 0)
+    {
+        if (!$this->can_auth()) return;
+        if ($this->input->method() !== 'post') return $this->loi('Yêu cầu POST.', 405);
+        return $this->xu_ly(function () use ($conversation_id) {
+            $action = $this->body('action', 'block');
+            if (!in_array($action, array('block', 'unblock'), true)) throw new InvalidArgumentException('Thao tác không hợp lệ.');
+            $me = (int) $this->me['id'];
+            $other = $this->nguoi_kia($conversation_id);
+            if ($other <= 0 || $other === $me) throw new InvalidArgumentException('Thao tác không hợp lệ.');
+            $ok = $action === 'block' ? $this->m_interaction->block($me, $other) : $this->m_interaction->unblock($me, $other);
+            if (!$ok) throw new RuntimeException('Chưa lưu được thay đổi. Vui lòng thử lại.', 503);
+            return array('blocked' => $action === 'block', 'user_id' => $other);
+        });
+    }
+
+    /** GET /api/conversations/{id}/search?q=&before= — tìm tin chữ trong hội thoại (20 tin/lần, mới trước). */
+    public function search($conversation_id = 0)
+    {
+        $this->output->set_header('Cache-Control: private, no-store');
+        if (!$this->can_auth()) return;
+        return $this->xu_ly(function () use ($conversation_id) {
+            $me = (int) $this->me['id'];
+            $this->nguoi_kia($conversation_id);
+            $q = trim((string) $this->input->get('q'));
+            $before = max(0, (int) $this->input->get('before'));
+            if (mb_strlen($q) < 2 || mb_strlen($q) > 100) throw new InvalidArgumentException('Nhập từ 2 đến 100 ký tự.');
+            $cutoff = $this->m_interaction->conversation_cutoff($conversation_id, $me);
+            $this->db->select('id, sender_id, type, content, created_at')->from('messages')
+                ->where('conversation_id', (int) $conversation_id)->where('id >', $cutoff)
+                ->where('deleted_at', null)->where('type', 'text')->like('content', $q);
+            if ($before) $this->db->where('id <', $before);
+            $rows = $this->db->order_by('id', 'DESC')->limit(21)->get()->result_array();
+            $has_more = count($rows) > 20;
+            if ($has_more) array_pop($rows);
+            return array(
+                'messages' => array_map(function ($r) use ($me) {
+                    return array('id' => (int) $r['id'], 'mine' => (int) $r['sender_id'] === $me,
+                        'content' => $r['content'], 'time' => date('H:i', strtotime($r['created_at'])),
+                        'day' => $this->nhan_ngay($r['created_at']));
+                }, $rows),
+                'has_more' => $has_more,
+                'next_before' => $rows ? (int) $rows[count($rows) - 1]['id'] : 0,
+            );
+        });
     }
 
     /** Nhãn ngày để chèn vạch ngăn khi cuộn qua ngày khác. */

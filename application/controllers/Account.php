@@ -422,6 +422,9 @@ class Account extends Member_Controller
         $messages = array();
         $partner  = null;
         $can_send = false;
+        $blocked_by_me = false;
+        $message_action_token = '';
+        $private_group_id = filter_var($this->input->get('nhom'), FILTER_VALIDATE_INT, array('options' => array('min_range' => 1))) ?: 0;
 
         // Bấm "Nhắn tin" ở trang cá nhân sẽ tới đây kèm ?to=ID:
         // mở sẵn (hoặc tạo mới) hội thoại với người đó.
@@ -445,11 +448,20 @@ class Account extends Member_Controller
             $partner  = $this->m_user->find($other_id);
             $send_error = $this->m_interaction->message_permission($me['id'], $other_id);
             $can_send = $send_error === null;
-            $messages = $this->m_interaction->messages($conversation_id);
+            $messages = $this->m_interaction->messages($conversation_id, 100, $me['id']);
             $this->m_interaction->mark_read($conversation_id, $me['id']);
+            $blocked_by_me = $this->db->where('user_id', (int) $me['id'])->where('blocked_id', (int) $other_id)
+                ->count_all_results('blocks') > 0;
         }
 
+        $message_action_token = $this->session->userdata('private_message_action_token');
+        if (!is_string($message_action_token) || !preg_match('/^[a-f0-9]{64}$/D', $message_action_token)) {
+            $message_action_token = bin2hex(random_bytes(32));
+            $this->session->set_userdata('private_message_action_token', $message_action_token);
+        }
         $conversations = $this->m_interaction->conversations($me['id']);
+        $blocked_user_ids = array_map('intval', array_column($this->db->select('blocked_id')
+            ->where('user_id', (int) $me['id'])->get('blocks')->result_array(), 'blocked_id'));
         $chat_groups = array();
         $this->load->helper('chat_group');
         if (chat_groups_enabled()) {
@@ -465,6 +477,10 @@ class Account extends Member_Controller
             'can_send'      => $can_send,
             'send_error'    => $send_error ?? '',
             'conversation_id' => $conversation_id,
+            'blocked_by_me' => $blocked_by_me,
+            'blocked_user_ids' => $blocked_user_ids,
+            'message_action_token' => $message_action_token,
+            'private_group_id' => $private_group_id,
         ));
     }
 

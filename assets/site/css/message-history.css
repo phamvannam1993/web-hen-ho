@@ -1,0 +1,20 @@
+.message-history-trigger { display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; min-height:34px; margin:6px 12px; padding:6px 10px; border:1px solid #eadce1; border-radius:8px; background:#fff; color:var(--pink,#d1273f); font:inherit; font-size:12px; cursor:pointer; align-self:flex-end; }
+.message-history-trigger--icon { width:36px; height:36px; margin:0; padding:6px; align-self:center; }
+.message-history-trigger[hidden] { display:none; }
+.message-history-trigger svg { width:18px; height:18px; }
+.message-history-dialog { position:fixed; left:0; right:0; bottom:auto; box-sizing:border-box; width:calc(100vw - 24px); max-width:480px; max-height:none; margin:0 auto; padding:16px; border:1px solid #eadce1; border-radius:16px; background:#fff; color:var(--ink,#2c2c2c); font-family:inherit; overflow:hidden; box-shadow:0 18px 60px #382d3840; }
+.message-history-dialog[open] { display:flex; flex-direction:column; gap:10px; }
+.message-history-dialog::backdrop { background:#382d3866; }
+.message-history-dialog header, .message-history-dialog form { display:flex; align-items:center; gap:8px; flex-shrink:0; margin:0; }
+.message-history-dialog header { justify-content:space-between; }
+.message-history-dialog h2 { margin:0; font-size:17px; line-height:1.4; }
+.message-history-dialog input { box-sizing:border-box; flex:1; min-width:0; width:100%; height:42px; padding:8px 10px; border:1px solid #eadce1; border-radius:8px; background:#fffafb; color:inherit; font:inherit; font-size:16px; }
+.message-history-dialog button { flex-shrink:0; min-height:38px; margin:0; padding:8px 12px; border:1px solid #eadce1; border-radius:8px; background:#fff0f5; color:var(--pink,#d1273f); font:inherit; font-size:13px; cursor:pointer; }
+.message-history-dialog button:disabled { opacity:.5; cursor:wait; }
+.message-history-dialog [hidden] { display:none; }
+.message-history-status { flex-shrink:0; margin:0; color:#756872; font-size:12px; line-height:1.5; }
+.message-history-results { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y; -webkit-overflow-scrolling:touch; }
+.message-history-results article { padding:12px 0; border-bottom:1px solid #f1e6eb; }
+.message-history-results small { color:#756872; font-size:11px; }
+.message-history-results p { margin:6px 0 0; white-space:pre-wrap; word-wrap:break-word; overflow-wrap:anywhere; font-size:14px; line-height:1.6; }
+.message-history-dialog :focus-visible { outline:2px solid var(--pink,#d1273f); outline-offset:2px; }

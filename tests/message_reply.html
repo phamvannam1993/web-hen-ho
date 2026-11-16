@@ -1,0 +1,129 @@
+<!doctype html>
+<meta charset="utf-8"><title>Private reply browser tests</title>
+<link rel="stylesheet" href="../assets/site/css/private-message-menu.css">
+<link rel="stylesheet" href="../assets/site/css/message-reply.css">
+<style>body{font:14px sans-serif;padding:20px}.tk-ms-pane{width:380px}#chat-body{display:flex;flex-direction:column;gap:8px}.chat-msg{position:relative;padding:8px;background:#eee;max-width:280px;margin:0 32px}.chat-msg.mine{align-self:flex-end}#cw-body{min-height:20px}.cw-msg{padding:4px}.cw-msg-col{display:flex;flex-direction:column;align-items:flex-start}</style>
+<div class="tk-ms"><div class="tk-ms-pane">
+ <div id="chat-body" data-conversation="9" data-last-id="3" data-pin-url="https://example.test/ajax/tin-nhan/9/ghim" data-recall-url="https://example.test/ajax/tin-nhan/9/thu-hoi">
+  <div class="chat-msg" data-message-id="1" data-message-type="text"><p>parent one</p><small>12:00</small></div>
+  <div class="chat-msg mine" data-message-id="2" data-message-type="text"><p>parent two</p><small>12:01</small></div>
+  <div class="chat-msg is-image" data-message-id="3" data-message-type="image"><a href="#image"><img alt="image"></a><small>12:02</small></div>
+ </div>
+ <form class="chat-form" action="https://example.test/ajax/send-message" method="post"><input name="receiver_id" value="2" type="hidden"><input id="chat-input" name="content"><input name="image" type="file"><button type="submit">Send</button></form>
+</div></div>
+<div id="chat-widget" data-base="https://example.test/" data-guest="0">
+ <button id="cw-bubble">Chat</button><span id="cw-badge"></span><div id="cw-panel" hidden>
+  <div id="cw-side"><input id="cw-search"><div id="cw-list"></div></div><div id="cw-idle">Choose chat</div>
+  <div id="cw-convo" hidden><button id="cw-back">Back</button><a id="cw-avatar-link"><img id="cw-avatar"></a><span id="cw-avatar-room"></span><a id="cw-profile-link"><b id="cw-name"></b></a><small id="cw-status"></small><button id="cw-history-search">Search</button><div id="cw-body"></div><form id="cw-form"><input id="cw-receiver" name="receiver_id"><input id="cw-input" name="content"><input id="cw-file" type="file" name="image"></form></div>
+ </div>
+</div>
+<pre id="result" data-status="running">RUNNING</pre>
+<script>
+'use strict';
+var intervals=[],requests=[],errors=[],modal=null,failSend=false,partialSend=false,holdSend=false,releaseSend=null,nextId=4,recalled=new Set(),copiedText='';
+Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:function(text){copiedText=text;return Promise.resolve();}}});
+var messages=new Map([[9,[{id:1,mine:false,type:'text',content:'parent one'},{id:2,mine:true,type:'text',content:'parent two'},{id:3,mine:false,type:'image',content:'#image'}]],[10,[{id:20,mine:false,type:'text',content:'other parent'}]]]);
+window.addEventListener('error',function(e){errors.push(e.message);});
+window.setInterval=function(fn){intervals.push(fn);return intervals.length;};window.clearInterval=function(){};
+window.Realtime={connected:true,on:function(){},send:function(){}};
+function response(data){return {ok:true,json:function(){return Promise.resolve(data);}};}
+function payload(id){return messages.get(id).map(function(m){var result=Object.assign({time:'12:00',day:'Today',day_key:'2026-11-10'},m);if(m.replyId){var p=messages.get(id).find(function(p){return p.id===m.replyId;});result.reply={id:m.replyId,mine:!!p?.mine,type:p?.type || 'system',available:!!p,content:recalled.has(m.replyId)?'Tin nhắn đã được thu hồi':p?.type==='image'?'[Hình ảnh]':p?.content || 'Tin nhắn không còn hiển thị'};}return result;});}
+window.fetch=function(url,options){options=options || {};var parsed=new URL(url),path=parsed.pathname;requests.push({url:url,body:options.body,method:options.method || 'GET'});
+ if(path.endsWith('/ajax/send-message')){
+  var body=options.body,reply=Number(body.get('reply_to_id') || 0),cid=Number(body.get('receiver_id'))===110?10:9;
+  if(failSend){failSend=false;return Promise.resolve(response({ok:false,message:'Send failed'}));}
+  if(partialSend){partialSend=false;messages.get(cid).push({id:nextId++,mine:true,type:'image',content:'#image',replyId:reply});return Promise.resolve(response({ok:false,image_sent:true,message:'Image sent, text failed'}));}
+  function accept(){var image=body.get('image'),m={id:nextId++,mine:true,type:image && image.size?'image':'text',content:body.get('content') || '#image',replyId:reply};messages.get(cid).push(m);return response({ok:true,conversation_id:cid,message_id:m.id});}
+  if(holdSend){holdSend=false;return new Promise(function(resolve){releaseSend=function(){resolve(accept());};});}
+  return Promise.resolve(accept());
+ }
+ if(path.endsWith('/ajax/hoi-thoai'))return Promise.resolve(response({ok:true,items:[{id:9,user_id:2,name:'Peer',profile_url:'#profile',online:true,last:'latest'},{id:10,user_id:110,name:'Other',profile_url:'#other',online:true,last:'latest'}],unread:0}));
+ if(path.includes('/ajax/tin-nhan/')){var cid=Number(path.match(/tin-nhan\/(\d+)/)[1]);
+  if(path.endsWith('/ghim'))return Promise.resolve(response({ok:true,action_token:'token',pins_available:true,pinned:null}));
+  if(path.endsWith('/thu-hoi')){var ids=(parsed.searchParams.get('ids') || '').split(',').map(Number);return Promise.resolve(response({ok:true,action_token:'token',recalled_ids:ids.filter(function(id){return recalled.has(id);}),deleted_through_message_id:0}));}
+  var after=Number(parsed.searchParams.get('after') || 0);return Promise.resolve(response({ok:true,messages:payload(cid).filter(function(m){return m.id>after;}),latest_seen_id:0,online:true,deleted_through_message_id:0}));
+ }
+ return Promise.resolve(response({ok:true,messages:[],online:0}));
+};
+</script>
+<script src="../assets/site/js/message-recall.js"></script>
+<script src="../assets/site/js/message-reply.js"></script>
+<script src="../assets/site/js/app.js" data-base="https://example.test/"></script>
+<script>window.appModal=function(opts){modal=opts;};</script>
+<script src="../assets/site/js/chat-widget.js"></script>
+<script src="../assets/site/js/private-message-menu.js"></script>
+<script>
+(async function(){
+ var count=0,result=document.getElementById('result'),form=document.querySelector('.chat-form'),feed=document.getElementById('chat-body');
+ function check(ok,label){if(!ok)throw new Error(label);count++;}
+ function tick(){return new Promise(function(resolve){setTimeout(resolve,20);});}
+ async function until(condition){for(var i=0;i<100;i++){if(condition())return;await tick();}throw new Error('Timeout');}
+ function select(id){feed.querySelector('[data-message-id="'+id+'"] .pm-message-more').click();Array.from(document.querySelectorAll('.pm-message-menu button')).find(function(b){return b.textContent==='Trả lời';}).click();}
+ function field(f){return f.querySelector('[name="reply_to_id"]');}
+ function text(f){return f.querySelector('[name="content"]');}
+ function draft(f){return f.previousElementSibling;}
+ try{
+  await tick();check(!errors.length,'Actual app/widget scripts initialize');
+  feed.querySelector('[data-message-id="1"] .pm-message-more').click();
+  check(document.querySelectorAll('.pm-message-menu .pm-action-icon svg').length===4,'All supported actions have SVG icons');
+  Array.from(document.querySelectorAll('.pm-message-menu button')).find(function(b){return b.textContent==='Sao chép';}).click();await tick();
+  check(copiedText==='parent one' && document.querySelector('.pm-action-status').hidden,'Copy succeeds without status message');
+  select(1);check(field(form).value==='1' && !draft(form).hidden && draft(form).textContent.includes('parent one'),'Reply menu sets draft and parent ID');
+  draft(form).querySelector('button').click();check(!field(form).value && draft(form).hidden,'Cancel reply clears draft');
+  select(2);check(draft(form).textContent.includes('Trả lời bạn'),'Can reply to own message');
+  select(1);text(form).value='answer';form.requestSubmit();
+  await until(function(){return !!feed.querySelector('[data-message-id="4"] .pm-reply-quote');});
+  check(requests.some(function(r){return r.method==='POST' && r.body.get('reply_to_id')==='1';}),'Actual form sends reply_to_id');
+  check(feed.querySelector('[data-message-id="4"] .pm-reply-quote span').textContent==='parent one','Actual fullchat renderer shows quote');
+  check(!field(form).value && draft(form).hidden,'Successful reply clears same draft');
+  feed.querySelector('[data-message-id="4"] .pm-reply-quote').click();check(feed.querySelector('[data-message-id="1"]').classList.contains('pm-reply-target'),'Quote navigates to loaded parent');
+  select(3);check(draft(form).textContent.includes('[Hình ảnh]'),'Image parent uses safe label');
+  failSend=true;text(form).value='keep text';form.requestSubmit();await until(function(){return modal && modal.message==='Send failed';});
+  check(field(form).value==='3' && text(form).value==='keep text' && !draft(form).hidden,'Failed send preserves text and reply draft');
+  await tick();select(1);holdSend=true;
+  var file=form.querySelector('[type="file"]'),transfer=new DataTransfer();transfer.items.add(new File(['png'],'reply.png',{type:'image/png'}));file.files=transfer.files;
+  file.dispatchEvent(new Event('change',{bubbles:true}));await until(function(){return !!releaseSend;});
+  select(2);releaseSend();await until(function(){return !!feed.querySelector('[data-message-id="5"] .pm-reply-quote');});
+  check(field(form).value==='2' && !draft(form).hidden,'Late successful image send preserves newly selected draft');
+  check(feed.querySelector('[data-message-id="5"] .pm-reply-quote span').textContent==='parent one','Image reply keeps original captured parent');
+  check(file.files.length===0,'Successful image send clears sent file');
+  var widgetForm=document.getElementById('cw-form'),widgetFeed=document.getElementById('cw-body');
+  document.getElementById('cw-panel').hidden=false;
+  await until(function(){return !!document.querySelector('#cw-list [data-conv="9"]');});document.querySelector('#cw-list [data-conv="9"]').click();
+  await until(function(){return !!widgetFeed.querySelector('[data-message-id="4"] .pm-reply-quote');});
+  check(widgetFeed.querySelector('[data-message-id="4"] .pm-reply-quote span').textContent==='parent one','Actual widget renders same reply');
+  widgetFeed.querySelector('[data-message-id="1"] .pm-widget-reply').click();
+  check(field(widgetForm).value==='1' && !draft(widgetForm).hidden,'Widget reply action sets draft');
+  failSend=true;text(widgetForm).value='widget retained';modal=null;widgetForm.requestSubmit();await until(function(){return modal && modal.message==='Send failed';});
+  check(text(widgetForm).value==='widget retained' && field(widgetForm).value==='1','Widget failure preserves text and draft');
+  await tick();holdSend=true;releaseSend=null;widgetForm.requestSubmit();await until(function(){return !!releaseSend;});
+  document.querySelector('#cw-list [data-conv="10"]').click();await until(function(){return !!widgetFeed.querySelector('[data-message-id="20"]');});
+  widgetFeed.querySelector('[data-message-id="20"] .pm-widget-reply').click();releaseSend();await tick();
+  check(field(widgetForm).value==='20' && draft(widgetForm).textContent.includes('other parent'),'Old send response cannot clear draft in another conversation');
+  select(1);feed.querySelector('[data-message-id="1"]').remove();recalled.add(1);
+  intervals.forEach(function(fn){fn();});
+  await until(function(){return Array.from(feed.querySelectorAll('[data-reply-to-id="1"] span')).every(function(span){return span.textContent==='Tin nhắn đã được thu hồi';});});
+  check(!field(form).value && draft(form).hidden,'Recalled parent cancels draft even when parent not rendered');
+  var targetRequests=requests.filter(function(r){return r.url.includes('/9/thu-hoi?ids=');});
+  check(targetRequests.some(function(r){var ids=new URL(r.url).searchParams.get('ids').split(',');return ids.includes('1') && new Set(ids).size===ids.length;}),'Watcher includes and deduplicates quote target IDs');
+  MessageRecall.clearBefore(feed,2);
+  check(Array.from(feed.querySelectorAll('[data-reply-to-id="1"]')).every(function(q){return q.disabled && q.querySelector('span').textContent==='Tin nhắn không còn hiển thị';}),'Clear-history cutoff hides old quote content');
+  var delayed=document.createElement('div');MessageReply.render(delayed,{id:1,available:true,mine:false,content:'old hidden secret'},feed);
+  check(!delayed.textContent.includes('old hidden secret') && delayed.querySelector('button').disabled,'Delayed payload quote sanitized before DOM insertion');
+  var same=document.createElement('div');MessageReply.render(same,{id:1,available:true,content:'old recalled secret'},widgetFeed);
+  MessageReply.invalidate(widgetFeed,[20],0);
+  var remembered=document.createElement('div');MessageReply.render(remembered,{id:20,available:true,content:'recalled secret'},widgetFeed);
+  check(remembered.textContent.includes('Tin nhắn đã được thu hồi') && !remembered.textContent.includes('recalled secret'),'Remembered recall sanitizes delayed quote');
+  await tick();partialSend=true;modal=null;text(widgetForm).value='keep partial text';
+  var partialFile=document.getElementById('cw-file'),partialTransfer=new DataTransfer();partialTransfer.items.add(new File(['png'],'partial.png',{type:'image/png'}));partialFile.files=partialTransfer.files;
+  partialFile.dispatchEvent(new Event('change',{bubbles:true}));await until(function(){return modal && modal.message==='Image sent, text failed';});
+  check(partialFile.files.length===0 && text(widgetForm).value==='keep partial text','Partial image send consumes file and preserves unsent text');
+  await tick();partialSend=true;modal=null;text(form).value='fullchat partial text';
+  var fullTransfer=new DataTransfer();fullTransfer.items.add(new File(['png'],'full-partial.png',{type:'image/png'}));file.files=fullTransfer.files;
+  file.dispatchEvent(new Event('change',{bubbles:true}));await until(function(){return modal && modal.message==='Image sent, text failed';});
+  check(file.files.length===0 && text(form).value==='fullchat partial text','Fullchat partial image send preserves unsent text without resending file');
+  check(!errors.length,'No uncaught browser errors');
+  result.dataset.status='pass';result.textContent='PASS: '+count+' browser assertions; actual fullchat/widget, replies, text/image, failures, draft generations, recall and cutoff privacy.';
+ }catch(error){result.dataset.status='fail';result.textContent='FAIL after '+count+' assertions: '+error.stack+' ERRORS='+errors.join(';');}
+})();
+</script>

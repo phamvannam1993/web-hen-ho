@@ -1,0 +1,155 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Message recall browser tests</title>
+<link rel="stylesheet" href="../assets/site/css/private-message-menu.css">
+<link rel="stylesheet" href="../assets/site/css/message-recall.css">
+<style>
+body { font:14px sans-serif; padding:40px; }
+.tk-ms-pane { width:420px; }
+.chat-msg { width:200px; min-height:65px; margin:10px 40px; padding:8px; background:#eee; }
+.chat-msg.mine { background:#ffdbe6; }
+.chat-peer-avatar,.cw-msg-avatar { width:24px; height:24px; }
+.cw-msg { min-height:24px; }
+</style>
+<div class="tk-ms">
+  <a class="tk-ms-item" data-conversation-id="9" data-last-message-id="5"><span class="tk-ms-item__l">original mine</span></a>
+  <div class="tk-ms-pane">
+    <div id="chat-body" data-conversation="9" data-pin-url="https://example.test/ajax/tin-nhan/9/ghim" data-recall-url="https://example.test/ajax/tin-nhan/9/thu-hoi">
+      <div class="chat-msg mine" data-message-id="5"><p>original mine</p><small>12:00</small></div>
+      <div class="chat-msg" data-message-id="6"><img class="chat-peer-avatar" alt="peer"><p>original peer</p><small>12:01</small></div>
+      <div class="chat-msg mine is-image" data-message-id="8"><a href="https://example.test/original-image"><img alt="original image"></a><small>12:02</small></div>
+      <div class="chat-msg is-recalled" data-recalled="1" data-message-id="11"><p>Tin nhắn đã được thu hồi</p><small>12:03</small></div>
+    </div>
+  </div>
+</div>
+<pre id="result" data-status="running">RUNNING</pre>
+<script>
+'use strict';
+var intervals = [], requests = [], recalls = new Map([[9, new Set([11])]]), deferred = null;
+var pinId = 5, failNext = false, postCount = 0;
+window.Realtime = {available:true};
+window.setInterval = function (fn) { intervals.push(fn); return intervals.length; };
+window.fetch = function (url, options) {
+    var parsed = new URL(url), conversation = Number(parsed.pathname.match(/tin-nhan\/(\d+)/)[1]);
+    options = options || {};
+    var ids = (parsed.searchParams.get('ids') || '').split(',').filter(Boolean).map(Number);
+    requests.push({conversation:conversation, ids:ids, method:options.method || 'GET', url:url});
+    if (failNext) { failNext = false; return Promise.reject(new Error('offline')); }
+    if (conversation === 30 && !deferred) return new Promise(function (resolve) { deferred = resolve; });
+    var data;
+    if (parsed.pathname.endsWith('/ghim')) {
+        var active = pinId && !(recalls.get(9) || new Set()).has(pinId);
+        data = {ok:true, action_token:'test-token', pins_available:true,
+            pinned:active ? {id:pinId, type:'text', content:'original mine'} : null};
+    } else if (options.method === 'POST') {
+        if (options.body.get('action_token') !== 'test-token') throw new Error('Missing token preflight');
+        var id = Number(options.body.get('message_id'));
+        if (!recalls.has(conversation)) recalls.set(conversation, new Set());
+        recalls.get(conversation).add(id); postCount++;
+        data = {ok:true, id:id, recalled:true};
+    } else {
+        data = {ok:true, action_token:'test-token', recalled_ids:ids.filter(function (id) {
+            return (recalls.get(conversation) || new Set()).has(id);
+        })};
+    }
+    return Promise.resolve({ok:true, json:function () { return Promise.resolve(data); }});
+};
+</script>
+<script src="../assets/site/js/message-recall.js"></script>
+<script src="../assets/site/js/private-message-menu.js"></script>
+<script>
+(async function () {
+    var count = 0, result = document.getElementById('result');
+    function check(ok, message) { if (!ok) throw new Error(message); count++; }
+    function tick() { return new Promise(function (resolve) { setTimeout(resolve, 20); }); }
+    async function until(condition) {
+        for (var i=0; i<100; i++) { if (condition()) return; await tick(); }
+        throw new Error('Timed out waiting for browser state');
+    }
+    function message(id) { return document.querySelector('#chat-body [data-message-id="'+id+'"]'); }
+    function menuButton(text) { return Array.from(document.querySelectorAll('.pm-message-menu button')).find(function (b) { return b.textContent === text; }); }
+    function menuOpen() {
+        var menu = document.querySelector('.pm-message-menu');
+        return menu.matches(':popover-open') || menu.classList.contains('is-open');
+    }
+    function feedMessage(feed, id, kind) {
+        var item = document.createElement('div'); item.className = kind === 'widget' ? 'cw-msg mine' : 'chat-msg mine';
+        item.dataset.messageId = String(id);
+        item.innerHTML = kind === 'widget' ? '<img class="cw-msg-avatar" alt="peer"><div class="cw-msg-col"><a class="cw-msg-name" href="#profile">Peer</a><a href="#old-image"><img class="cw-msg-image" alt="old"></a><small class="cw-msg-time">12:00</small></div>' : '<p>old content</p><small>12:00</small>';
+        feed.appendChild(item); return item;
+    }
+    try {
+        await until(function () { return !document.querySelector('.pm-pin-strip').hidden; });
+        check(!message(11).querySelector('.pm-message-more'), 'Reloaded tombstone has no action menu');
+        var button = message(5).querySelector('.pm-message-more');
+        var bounds = button.getBoundingClientRect(), bubble = message(5).getBoundingClientRect();
+        check(Math.abs(bounds.top + bounds.height/2 - bubble.top - bubble.height/2) < 1, 'Dots centered vertically');
+        message(6).querySelector('.pm-message-more').click();
+        check(menuButton('Thu hồi').hidden && getComputedStyle(menuButton('Thu hồi')).display === 'none', 'Peer recall hidden');
+        menuButton('Thu hồi').onclick();
+        check(postCount === 0, 'Peer recall handler refuses forged click');
+        message(5).querySelector('.pm-message-more').click();
+        check(!menuButton('Thu hồi').hidden, 'Own message offers recall');
+        var meta = message(5).querySelector('small');
+        menuButton('Thu hồi').click();
+        await until(function () { return message(5).dataset.recalled === '1'; });
+        check(postCount === 1 && message(5).querySelector('p').textContent === 'Tin nhắn đã được thu hồi', 'Own text recalled');
+        check(message(5).querySelector('small') === meta, 'Original time element preserved');
+        check(!message(5).querySelector('.pm-message-more') && !menuOpen(), 'Menu removed and closed');
+        check(document.querySelector('.pm-pin-strip').hidden, 'Recalled pin removed immediately');
+        check(document.querySelector('.tk-ms-item__l').textContent === 'Tin nhắn đã được thu hồi', 'Sidebar preview replaced');
+        check(document.querySelector('.pm-action-status').hidden, 'No success toast');
+        await tick();
+        message(8).querySelector('.pm-message-more').click(); menuButton('Thu hồi').click();
+        await until(function () { return message(8).dataset.recalled === '1'; });
+        check(!message(8).querySelector('a,img') && !message(8).classList.contains('is-image'), 'Recalled image link and image removed');
+        check(message(8).querySelector('small').textContent === '12:02', 'Image time preserved');
+        await tick();
+        message(6).querySelector('.pm-message-more').click();
+        var avatar = message(6).querySelector('.chat-peer-avatar');
+        recalls.get(9).add(6); intervals.forEach(function (fn) { fn(); });
+        await until(function () { return message(6).dataset.recalled === '1'; });
+        check(!menuOpen() && message(6).querySelector('.chat-peer-avatar') === avatar, 'Remote recall closes selection and preserves avatar');
+        check(MessageRecall.apply(message(6)) === false, 'Tombstone application idempotent');
+
+        var feed = document.createElement('div'); document.body.appendChild(feed);
+        for (var id=1000; id<1205; id++) feedMessage(feed,id,'widget');
+        recalls.set(20,new Set([1000,1100,1204]));
+        MessageRecall.watch(feed,function () { return 'https://example.test/ajax/tin-nhan/20/thu-hoi'; });
+        await until(function () { return feed.lastElementChild.dataset.recalled === '1'; });
+        var batches = requests.filter(function (r) { return r.conversation === 20; });
+        check(batches.length === 3 && batches[0].ids.length === 100 && batches[1].ids.length === 100 && batches[2].ids.length === 5, 'All 205 visible IDs checked in bounded batches');
+        var widget = feed.firstElementChild;
+        check(widget.dataset.recalled === '1' && !widget.querySelector('.cw-msg-image'), 'Widget tombstone updated with realtime live');
+        check(widget.querySelector('.cw-msg-avatar') && widget.querySelector('.cw-msg-name') && widget.querySelector('.cw-msg-time'), 'Widget avatar, name and time retained');
+
+        var raceFeed = document.createElement('div'); document.body.appendChild(raceFeed);
+        feedMessage(raceFeed,30);
+        var current = 'https://example.test/ajax/tin-nhan/30/thu-hoi';
+        MessageRecall.watch(raceFeed,function () { return current; });
+        await until(function () { return !!deferred; });
+        current = 'https://example.test/ajax/tin-nhan/31/thu-hoi';
+        raceFeed.textContent=''; var next = feedMessage(raceFeed,30);
+        deferred({ok:true,json:function () { return Promise.resolve({ok:true,recalled_ids:[30]}); }});
+        await tick();
+        check(next.dataset.recalled !== '1' && next.querySelector('p').textContent === 'old content', 'Stale response ignored after conversation switch');
+
+        var retryFeed = document.createElement('div'); document.body.appendChild(retryFeed);
+        var retryMessage = feedMessage(retryFeed,41); recalls.set(40,new Set([41])); failNext = true;
+        var retry = MessageRecall.watch(retryFeed,function () { return 'https://example.test/ajax/tin-nhan/40/thu-hoi'; });
+        await tick(); check(retryMessage.dataset.recalled !== '1', 'Network failure leaves existing DOM intact');
+        await retry(); check(retryMessage.dataset.recalled === '1', 'Recall reconciles after reconnection');
+        var visibleMessage = feedMessage(retryFeed,42); recalls.get(40).add(42);
+        Object.defineProperty(document,'hidden',{value:true,configurable:true});
+        var before = requests.length; await retry();
+        check(requests.length === before, 'Hidden document skips polling');
+        Object.defineProperty(document,'hidden',{value:false,configurable:true});
+        document.dispatchEvent(new Event('visibilitychange'));
+        await until(function () { return visibleMessage.dataset.recalled === '1'; });
+        check(visibleMessage.querySelector('p').textContent === 'Tin nhắn đã được thu hồi', 'Returning to tab reconciles recall');
+        result.dataset.status = 'pass'; result.textContent = 'PASS: '+count+' browser assertions; own/peer menus, text/image, pin, preview, widget, batching, stale responses and reconnect.';
+    } catch (error) {
+        result.dataset.status = 'fail'; result.textContent = 'FAIL after '+count+' assertions: '+error.stack;
+    }
+})();
+</script>

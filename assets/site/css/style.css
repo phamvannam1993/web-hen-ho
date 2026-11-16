@@ -2606,10 +2606,11 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
 .topic-row a:hover { background: #eceef1; color: var(--ink); text-decoration: none; }
 .topic-row a.on { background: #fdeef6; border-color: #f6c8de; color: var(--pink); }
 
-.confide-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.confide-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 1fr; gap: 16px; }
 
 .ccard {
     display: flex; flex-direction: column;
+    border: 1px solid transparent;
     background: var(--card); border-radius: 16px; overflow: hidden;
     box-shadow: 0 3px 14px rgba(17, 24, 39, .08);
     transition: box-shadow .2s ease, opacity .28s ease, transform .28s ease;
@@ -3161,10 +3162,11 @@ body.is-bare main { padding-top: 0; height: 100vh; height: 100dvh; }
 /* ------------------- Thẻ hồ sơ dùng chung (trang chủ, tìm kiếm, khu vực) -------------------
    Hai chế độ: lưới (mặc định) và danh sách khi lưới cha có thêm lớp .is-list. */
 
-.member-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.member-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); grid-auto-rows: 1fr; gap: 12px; }
 
 .pcard {
     display: flex; flex-direction: column;
+    border: 1px solid transparent;
     background: #fff; border-radius: 7px; overflow: hidden;
     box-shadow: 0 3px 16px rgba(17, 24, 39, .09);
     transition: box-shadow .2s ease, opacity .28s ease, transform .28s ease;

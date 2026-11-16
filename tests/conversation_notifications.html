@@ -1,0 +1,87 @@
+<!doctype html><meta charset="utf-8"><title>Inbox notification preferences</title>
+<link rel="stylesheet" href="../assets/site/css/conversation-delete.css">
+<link rel="stylesheet" href="../assets/site/css/inbox-mute-dialog.css">
+<style>body{font:14px sans-serif;padding:20px}.tk-ms{width:340px}.tk-ms-conversation-row{height:64px}.tk-ms-item__b{width:230px}.inbox-muted-indicator{right:20px}</style>
+<div class="tk-ms" data-conversation-token="fixture-token" data-current-conversation="0" data-inbox-url="#inbox">
+ <ul id="tk-ms-list">
+  <li class="tk-ms-conversation-row"><span class="tk-ms-item__b"><span class="tk-ms-item__n">User A</span><span class="inbox-muted-indicator" hidden>Muted</span></span><button class="tk-ms-conversation-more" data-conversation-id="9" data-delete-url="https://example.test/9/delete" data-notification-url="https://example.test/9/notifications" data-notifications-enabled="1">⋯</button></li>
+  <li class="tk-ms-conversation-row"><span class="tk-ms-item__b"><span class="tk-ms-item__n">User B</span><span class="inbox-muted-indicator" hidden>Muted</span></span><button class="tk-ms-conversation-more" data-conversation-id="10" data-delete-url="https://example.test/10/delete" data-notification-url="https://example.test/10/notifications" data-notifications-enabled="1">⋯</button></li>
+ </ul>
+ <p id="tk-ms-nores" hidden></p><div class="tk-ms-pane"></div>
+</div>
+<pre id="result" data-status="running">RUNNING</pre>
+<script>
+'use strict';
+var server=new Map([[9,true],[10,true]]),requests=[],errors=[],modal=null,failPost=false,holdGet=false,releaseGet=null,holdPost=false,releasePost=null;
+window.appModal=function(opts){modal=opts;};window.addEventListener('error',function(e){errors.push(e.message);});
+window.fetch=function(url,options){
+ options=options || {};var id=Number(new URL(url).pathname.split('/')[1]);
+ requests.push({id:id,method:options.method || 'GET',body:options.body});
+ function response(data,ok){return {ok:ok!==false,json:function(){return Promise.resolve(data);}};}
+ if(options.method==='POST'){
+  if(options.body.get('action_token')!=='fresh-token')throw new Error('Token not read from GET');
+  if(failPost){failPost=false;return Promise.resolve(response({ok:false,message:'Could not save'},false));}
+  function save(){server.set(id,options.body.get('notifications_enabled')==='1');return response({ok:true,id:id,notifications_enabled:server.get(id),notifications_available:true});}
+  if(holdPost){holdPost=false;return new Promise(function(resolve){releasePost=function(){resolve(save());};});}
+  return Promise.resolve(save());
+ }
+ var state={ok:true,id:id,notifications_enabled:server.get(id),notifications_available:true,action_token:'fresh-token'};
+ if(holdGet){holdGet=false;return new Promise(function(resolve){releaseGet=function(){resolve(response(state));};});}
+ return Promise.resolve(response(state));
+};
+</script>
+<script src="../assets/site/js/inbox-mute-dialog.js"></script>
+<script src="../assets/site/js/conversation-delete.js"></script>
+<script>
+(async function(){
+ var n=0,result=document.getElementById('result'),toggle=document.querySelector('[data-action="notifications"]');
+ function check(ok,message){if(!ok)throw new Error(message);n++;}
+ function tick(){return new Promise(function(resolve){setTimeout(resolve,20);});}
+ async function until(condition){for(var i=0;i<100;i++){if(condition())return;await tick();}throw new Error('Timeout');}
+ function row(id){return document.querySelector('[data-conversation-id="'+id+'"]');}
+ function indicator(id){return row(id).closest('li').querySelector('.inbox-muted-indicator');}
+ async function open(id){row(id).click();await until(function(){return !toggle.disabled;});}
+ async function submitToggle(){toggle.click();await tick();var dialog=document.querySelector('.inbox-mute-dialog');if(dialog){dialog.querySelector('[data-next]').click();}}
+ try{
+  row(9).click();check(toggle.disabled,'Toggle disabled until current state loaded');await until(function(){return !toggle.disabled;});
+  check(toggle.textContent==='Tắt thông báo' && !!toggle.querySelector('svg'),'Enabled inbox offers mute with bell icon');
+  var beforeMute=requests.filter(function(r){return r.method==='POST';}).length;
+  toggle.click();await tick();var firstDialog=document.querySelector('.inbox-mute-dialog');
+  check(!!firstDialog && firstDialog.querySelectorAll('input[type="radio"]').length===5,'Single window offers five durations');
+  check(firstDialog.querySelector('h2').textContent==='Tắt thông báo về cuộc trò chuyện','Conversation mute title');
+  check(firstDialog.querySelector('input[value="900"]').checked,'Defaults to 15 minutes');
+  check(!firstDialog.querySelector('[data-back]'),'No scope selection step');
+  firstDialog.querySelector('[data-cancel]').click();await tick();
+  check(requests.filter(function(r){return r.method==='POST';}).length===beforeMute,'Cancel writes nothing');
+  await open(9);await submitToggle();await until(function(){return row(9).dataset.notificationsEnabled==='0';});
+  var firstPost=requests.find(function(r){return r.method==='POST';});
+  check(firstPost.body.get('mute_scope')==='both' && firstPost.body.get('mute_duration')==='900','Confirmation mutes messages and calls for 15 minutes');
+  check(!server.get(9) && server.get(10),'Server setting only changes selected inbox');
+  check(!indicator(9).hidden && indicator(10).hidden,'Mute indicator belongs to correct row');
+  await open(9);check(toggle.textContent==='Bật thông báo','Reopened muted inbox offers enable');
+  await submitToggle();await until(function(){return row(9).dataset.notificationsEnabled==='1';});
+  check(server.get(9) && indicator(9).hidden,'Enable removes mute indicator');
+  await open(9);failPost=true;await submitToggle();await until(function(){return modal && modal.message==='Could not save';});await tick();
+  check(row(9).dataset.notificationsEnabled==='1' && indicator(9).hidden && !toggle.disabled,'Failed save preserves setting and allows retry');
+  holdGet=true;row(9).click();await until(function(){return !!releaseGet;});
+  row(10).click();await until(function(){return !toggle.disabled;});server.set(9,false);releaseGet();await tick();
+  check(toggle.textContent==='Tắt thông báo' && row(10).dataset.notificationsEnabled==='1','Late GET for A cannot update B');
+  await submitToggle();await until(function(){return row(10).dataset.notificationsEnabled==='0';});
+  check(!server.get(10),'B toggles using its own loaded state');
+  await open(9);check(toggle.textContent==='Bật thông báo','Opening A reads server state changed elsewhere');
+  holdPost=true;releasePost=null;await submitToggle();await until(function(){return !!releasePost;});
+  row(10).click();await until(function(){return !toggle.disabled;});releasePost();await tick();
+  check(row(9).dataset.notificationsEnabled==='1' && toggle.textContent==='Bật thông báo','Late POST updates A without changing B label');
+  var menu=document.querySelector('.conversation-delete-menu');
+  check(menu.matches(':popover-open') || menu.classList.contains('is-open'),'Late POST for A keeps B menu open');
+  var before=requests.filter(function(r){return r.method==='POST';}).length;
+  document.dispatchEvent(new CustomEvent('private-conversation-notifications',{detail:{id:10,notifications_enabled:true}}));
+  check(indicator(10).hidden && row(10).dataset.notificationsEnabled==='1','Cross-device event updates own displayed setting');
+  check(!(menu.matches(':popover-open') || menu.classList.contains('is-open')),'Changed preference closes stale menu');
+  check(requests.filter(function(r){return r.method==='POST';}).length===before,'Receiving event does not write setting again');
+  check(document.querySelectorAll('.tk-ms-conversation-row').length===2,'Toggle never deletes conversation');
+  check(!errors.length,'No uncaught errors');
+  result.dataset.status='pass';result.textContent='PASS: '+n+' browser assertions; mute/unmute, icons, independent rows, failures, stale GET/POST and cross-device state.';
+ }catch(error){result.dataset.status='fail';result.textContent='FAIL after '+n+' assertions: '+error.stack+' ERRORS='+errors.join(';');}
+})();
+</script>

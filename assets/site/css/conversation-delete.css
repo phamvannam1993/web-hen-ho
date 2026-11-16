@@ -1,0 +1,25 @@
+.tk-ms-conversation-row { position:relative; }
+.tk-ms-conversation-row .tk-ms-item { grid-template-columns:40px minmax(0,1fr) 28px; }
+.tk-ms-conversation-row .tk-ms-item__n { padding-right:30px; }
+.tk-ms-conversation-row .tk-ms-item__b { position:relative; }
+.tk-ms-conversation-row:has(.inbox-muted-indicator:not([hidden])) .tk-ms-item__n { padding-right:24px; }
+.inbox-muted-indicator { display:inline-flex; position:absolute; top:2px; right:0; color:var(--tk-muted-fg,#766773); }
+.inbox-muted-indicator[hidden] { display:none; }
+.inbox-muted-indicator svg,.cw-inbox-muted svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+.cw-inbox-muted { display:inline-flex; align-items:center; margin-left:5px; color:#8d7e87; }
+.conversation-delete-menu button[data-action="notifications"] { color:#65434d; }
+.conversation-delete-menu button:disabled { opacity:.5; cursor:wait; }
+.tk-ms-conversation-more { position:absolute; top:50%; transform:translateY(-50%); right:12px; display:flex; align-items:center; justify-content:center; width:28px; height:28px; padding:0; border:0; border-radius:50%; background:transparent; color:var(--tk-muted-fg,#766773); font:inherit; font-size:21px; cursor:pointer; }
+.tk-ms-preview-line { display:flex; align-items:baseline; gap:4px; min-width:0; }
+.tk-ms-preview-line .tk-ms-item__l { flex:0 1 auto; min-width:0; }
+.tk-ms-preview-time { flex-shrink:0; color:var(--tk-muted-fg,#766773); font-size:12px; white-space:nowrap; }
+.tk-ms-conversation-row .tk-ms-item__r { align-self:end; min-height:16px; }
+.tk-ms-conversation-more:hover { background:var(--tk-secondary,#fff0f5); color:var(--tk-primary,#d1273f); }
+.tk-ms-conversation-more:focus-visible,.conversation-delete-menu button:focus-visible { outline:2px solid var(--tk-primary,#d1273f); outline-offset:2px; }
+.conversation-delete-menu { display:none; position:fixed; inset:auto; z-index:100; width:210px; max-width:calc(100vw - 16px); box-sizing:border-box; margin:0; padding:5px; border:1px solid #eadce1; border-radius:10px; background:#fff; box-shadow:0 8px 24px #382d3833; }
+.conversation-delete-menu:popover-open,.conversation-delete-menu.is-open { display:block; }
+.conversation-delete-menu button { display:flex; align-items:center; gap:10px; width:100%; padding:8px; border:0; border-radius:6px; background:transparent; color:#bf2541; text-align:left; font:inherit; font-size:13px; cursor:pointer; }
+.conversation-delete-icon { display:flex; align-items:center; justify-content:center; flex:0 0 28px; width:28px; height:28px; border-radius:9px; background:#fff0f5; color:#ed315e; }
+.conversation-delete-icon svg { width:18px; height:18px; }
+.conversation-delete-menu button:hover { background:#fff0f5; }
+.tk-ms-conversation-more:disabled { opacity:.5; cursor:wait; }
