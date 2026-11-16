@@ -41,7 +41,7 @@ $this->load->view('layouts/seo', array('seo_path' => $seo_path, 'can_index' => $
 <link rel="stylesheet" href="<?= base_url('assets/site/css/style.css') ?>?v=<?= @md5_file(FCPATH.'assets/site/css/style.css') ?>">
 <link rel="icon" type="image/x-icon" href="<?= base_url('assets/site/img/favicon.ico') . '?v=' . md5_file(FCPATH . 'assets/site/img/favicon.ico') ?>">
 <link rel="manifest" href="<?= base_url('manifest.webmanifest') . '?v=' . md5_file(FCPATH . 'manifest.webmanifest') ?>">
-<meta name="theme-color" content="<?= $content_view === 'account/messages' ? '#ffeaed' : '#d1273f' ?>">
+<meta name="theme-color" content="<?= $content_view === 'account/messages' && empty($partner) && empty($private_group_id) ? '#ffeaed' : '#d1273f' ?>">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Saigon Cupid">
 <meta name="mobile-web-app-capable" content="yes">
@@ -492,14 +492,6 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
                     <div class="cw-peer">
                         <a id="cw-profile-link"><b id="cw-name"></b></a>
                         <small id="cw-status"></small>
-                        <?php if ($user && getenv('VOICE_ENABLED') === '1'): ?>
-                        <button type="button" id="cw-voice" data-voice-call
-                                aria-label="Gọi thoại" title="Gọi thoại"
-                                hidden disabled><?= tk_icon('phone') ?></button>
-                        <button type="button" id="cw-video" data-voice-call data-video="1"
-                                aria-label="Gọi video" title="Gọi video"
-                                hidden disabled><?= tk_icon('video') ?></button>
-                        <?php endif; ?>
                         <button type="button" class="cw-online-toggle" id="cw-online-toggle" hidden
                                 aria-expanded="false" aria-controls="cw-online-panel" aria-haspopup="dialog">
                             <span id="cw-online-toggle-count">Người đang online</span> <span aria-hidden="true">▾</span>
@@ -509,6 +501,9 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
                         <button type="button" id="cw-voice" data-voice-call
                                 aria-label="Gọi thoại" title="Gọi thoại"
                                 hidden disabled><?= tk_icon('phone') ?></button>
+                        <button type="button" id="cw-video" data-voice-call data-video="1"
+                                aria-label="Gọi video" title="Gọi video"
+                                hidden disabled><?= tk_icon('video') ?></button>
                         <?php endif; ?>
                     <button type="button" id="cw-history-search" class="message-history-trigger message-history-trigger--icon"
                             aria-label="Tìm tin nhắn cũ" title="Tìm tin nhắn cũ" hidden><?= tk_icon('search') ?></button>

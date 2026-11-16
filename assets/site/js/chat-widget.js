@@ -776,7 +776,7 @@
     }
 
     function setPeerActivity(info) {
-        statusEl.textContent = info.online ? '' : (info.activity || 'Chưa có thông tin hoạt động');
+        statusEl.textContent = '';
         statusEl.classList.remove('is-online');
         var onlineDot = document.getElementById('cw-peer-online');
         if (onlineDot) onlineDot.hidden = !info.online;

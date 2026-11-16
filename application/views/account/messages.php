@@ -131,7 +131,6 @@ $chat_groups = array_values(array_filter($chat_groups ?? array(), function ($gro
                 <a class="tk-ms-head__who" href="<?= site_url('profile/' . ($partner['slug'] ?: $partner['id'])) ?>">
                     <span class="tk-ms-item__b">
                         <span class="tk-ms-head__n"><?= e(display_name($partner)) ?></span>
-                        <span class="tk-ms-head__s" <?= is_online($partner['last_active_at']) ? 'hidden' : '' ?>><?= !is_online($partner['last_active_at']) ? (!empty($partner['last_active_at']) ? 'Hoạt động ' . time_ago($partner['last_active_at']) : 'Chưa có thông tin hoạt động') : '' ?></span>
                     </span>
                 </a>
                 <?php if ($can_send && getenv('VOICE_ENABLED') === '1'): ?>

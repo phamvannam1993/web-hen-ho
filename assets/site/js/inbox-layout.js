@@ -9,6 +9,11 @@
     document.documentElement.classList.toggle('tk-inbox-open', isOpen);
     function fitInbox() {
         isOpen = card.classList.contains('is-open');
+        var theme = document.querySelector('meta[name="theme-color"]');
+        if (theme) {
+            var color = isOpen ? '#d1273f' : '#ffeaed';
+            if (theme.content !== color) theme.content = color;
+        }
         document.documentElement.classList.toggle('tk-inbox-open', isOpen);
         document.body.classList.toggle('is-inbox-open', isOpen);
         document.documentElement.classList.toggle('tk-inbox-list', !isOpen && mobile.matches);

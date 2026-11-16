@@ -218,6 +218,11 @@ body.is-messages-page .tk-ms-inbox-panel .tk-ms-private-content { overflow:visib
   body.is-messages-page .tk-mhead { display: none; }
   .tk-ms-inbox-panel .tk-ms-item,
   .tk-ms-inbox-panel .ig-group-row a { padding-top:16px; padding-bottom:16px; }
+  .tk-ms-inbox-panel .tk-ms-item .tk-ms-av img,
+  .tk-ms-inbox-panel .ig-group-avatar { width:52px; height:52px; }
+  .tk-ms-inbox-panel .tk-ms-conversation-row .tk-ms-item { grid-template-columns:52px minmax(0,1fr) 28px; }
+  .tk-ms-inbox-panel .tk-ms-item,
+  .tk-ms-inbox-panel .ig-group-row a { gap:12px; }
   body.is-messages-page .site-header { display: none; }
   html.tk-inbox-list { height: 100%; overflow: hidden; overscroll-behavior: none; }
   html.tk-inbox-list body {
