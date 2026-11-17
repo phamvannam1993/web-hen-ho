@@ -139,64 +139,52 @@ body.has-guest-banner .site-footer { padding-bottom: 115px; margin-bottom: 0 !im
         transform: translateX(-50%);
     }
 }
-.mobile-explore {
-    position: fixed; z-index: 1000;
-    top: var(--explore-top, 0px); left: 0; right: 0; bottom: auto;
-    box-sizing: border-box; width: 100%; max-width: none;
-    height: var(--explore-height, calc(100dvh - 60px));
-    max-height: none; overflow-y: auto; overscroll-behavior: contain;
-    margin: 0; padding: 0; border: 0; border-radius: 0;
+.site-mobile-nav--explore { display: block; }
+html:has(body.is-explore-page),
+body.is-bare.is-explore-page { background: var(--bg, #fdf0f4); }
+body.is-bare.is-explore-page {
+    height: auto; min-height: 100vh; min-height: 100dvh;
+    overflow-y: auto; padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+}
+body.is-bare.is-explore-page main { height: auto; }
+.explore-page {
+    min-height: calc(100vh - 60px - env(safe-area-inset-bottom, 0px));
+    min-height: calc(100dvh - 60px - env(safe-area-inset-bottom, 0px));
     background: var(--bg, #fdf0f4); color: var(--ink, #2c2c2c);
-    box-shadow: none;
 }
-.mobile-explore[open] {
-    animation: mobile-explore-enter 280ms cubic-bezier(.22, 1, .36, 1);
-}
-@keyframes mobile-explore-enter {
-    from { transform: translateX(100%); }
-    to { transform: translateX(0); }
-}
-@media (prefers-reduced-motion: reduce) {
-    .mobile-explore[open] { animation: none; }
-}
-html.mobile-explore-open { overflow: hidden; }
-html.mobile-explore-open .site-mobile-nav { z-index: 1001; }
-html.mobile-explore-open .site-mobile-nav a.is-active {
-    color: var(--tk-muted-fg, #797181);
-}
-.mobile-explore__header {
+.explore-page__header {
     display: flex; align-items: center; justify-content: space-between;
     gap: 16px; padding: 8px 20px;
+    padding-top: calc(8px + env(safe-area-inset-top, 0px));
     border-bottom: 1px solid var(--pink-dark, #b21f35);
     background: var(--pink, #d1273f); color: #fff;
 }
-.mobile-explore__header h2 { margin: 0; font-size: 20px; }
-.mobile-explore__header form { margin: 0; }
-.mobile-explore__header button {
+.explore-page__header h1 { margin: 0; font-size: 20px; }
+.explore-page__header a {
     display: inline-flex; align-items: center; justify-content: center; min-height: 28px;
     padding: 4px 10px; border: .5px solid rgb(255 255 255 / 65%); border-radius: 6px;
-    background: rgb(255 255 255 / 18%); color: inherit; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+    background: rgb(255 255 255 / 18%); color: inherit; font-size: 12px; font-weight: 600; text-decoration: none;
 }
-.mobile-explore__header button:hover { background: rgb(255 255 255 / 28%); }
+.explore-page__header a:hover { background: rgb(255 255 255 / 28%); }
 .mobile-explore__item {
-    display: flex; align-items: center; gap: 14px;
-    padding: 20px; background: var(--card, #fff); color: inherit; text-decoration: none;
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; background: var(--card, #fff); color: inherit; text-decoration: none;
 }
 .mobile-explore__item + .mobile-explore__item { border-top: 1px solid var(--line, #e2e2e2); }
 .mobile-explore__item:hover { background: var(--bg, #fdf0f4); text-decoration: none; }
 .mobile-explore__icon {
-    display: grid; place-items: center; flex: 0 0 44px; height: 44px;
-    border-radius: 12px; background: var(--bg, #fdf0f4); color: var(--pink, #d1273f);
+    display: grid; place-items: center; flex: 0 0 36px; height: 36px;
+    border-radius: 10px; background: var(--bg, #fdf0f4); color: var(--pink, #d1273f);
 }
-.mobile-explore__icon .tk-ic { width: 24px; height: 24px; }
+.mobile-explore__icon .tk-ic { width: 20px; height: 20px; }
 .mobile-explore__item > span:nth-child(2) { flex: 1; min-width: 0; }
 .mobile-explore__item strong { display: block; font-size: 16px; }
 .mobile-explore__item small {
-    display: block; margin-top: 4px;
+    display: block; margin-top: 2px;
     color: var(--muted, #6d6d6d); font-size: 13px; line-height: 1.5;
 }
 .mobile-explore__item > span:last-child { color: var(--pink, #d1273f); font-size: 24px; }
-.mobile-explore a:focus-visible, .mobile-explore button:focus-visible {
+.explore-page a:focus-visible {
     outline: 2px solid var(--pink, #d1273f); outline-offset: -3px;
 }
-.mobile-explore__header button:focus-visible { outline-color: #fff; }
+.explore-page__header a:focus-visible { outline-color: #fff; }

@@ -45,7 +45,7 @@ $this->load->view('layouts/seo', array('seo_path' => $seo_path, 'can_index' => $
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Saigon Cupid">
 <meta name="mobile-web-app-capable" content="yes">
-<link rel="apple-touch-icon" sizes="180x180" href="<?= base_url('assets/site/img/apple-touch-icon.png') . '?v=' . md5_file(FCPATH . 'assets/site/img/apple-touch-icon.png') ?>">
+<link rel="apple-touch-icon" sizes="180x180" href="<?= base_url('assets/site/img/apple-touch-icon-opaque.png') . '?v=' . md5_file(FCPATH . 'assets/site/img/apple-touch-icon-opaque.png') ?>">
 
 <?php
 /* Khu Tài khoản bọc nội dung trong khung riêng (cột trái + thanh dưới trên điện
@@ -69,7 +69,7 @@ $guest_banner = !$user && empty($bare) && strpos($content_view, 'auth/') !== 0 &
 <?php endif; ?>
 <link rel="stylesheet" href="<?= base_url('assets/site/css/mobile-nav.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/mobile-nav.css') ?>">
 </head>
-<body class="<?= !empty($bare) ? 'is-bare' : '' ?><?= $tk_app ? 'tk-app' : '' ?><?= $content_view === 'account/messages' ? ' is-messages-page' : '' ?><?= $content_view === 'groups/detail' ? ' is-group-chat-page' : '' ?><?= $tk_inbox_open ? ' is-inbox-open' : '' ?><?= $guest_banner ? ' has-guest-banner' : '' ?>">
+<body class="<?= !empty($bare) ? 'is-bare' : '' ?><?= $content_view === 'home/explore' ? ' is-explore-page' : '' ?><?= $tk_app ? 'tk-app' : '' ?><?= $content_view === 'account/messages' ? ' is-messages-page' : '' ?><?= $content_view === 'groups/detail' ? ' is-group-chat-page' : '' ?><?= $tk_inbox_open ? ' is-inbox-open' : '' ?><?= $guest_banner ? ' has-guest-banner' : '' ?>">
 
 <!-- Dải mạng xã hội trên cùng -->
 <?php /* Chế độ toàn màn hình (trang Khám phá): bỏ thanh trên, menu và chân trang */ ?>

@@ -136,7 +136,8 @@ class M_interaction extends CI_Model
      */
     public function my_likes($user_id, $limit = 30)
     {
-        return $this->db->select('u.*')->from('likes l')->join('users u', 'u.id = l.target_id')
+        return $this->db->select('u.*, p.name AS province_name')->from('likes l')->join('users u', 'u.id = l.target_id')
+            ->join('provinces p', 'p.id = u.province_id', 'left')
             ->where('l.target_type', 'user')->where('l.user_id', $user_id)
             ->where('l.status !=', 'matched')
             ->where('u.deleted_at', null)
@@ -272,8 +273,9 @@ class M_interaction extends CI_Model
     public function matches($user_id, $limit = 50)
     {
         return $this->db->query(
-            "SELECT u.* FROM matches m
+            "SELECT u.*, p.name AS province_name FROM matches m
                JOIN users u ON u.id = IF(m.user_low_id = ?, m.user_high_id, m.user_low_id)
+               LEFT JOIN provinces p ON p.id = u.province_id
               WHERE ? IN (m.user_low_id, m.user_high_id) AND u.deleted_at IS NULL
               ORDER BY m.matched_at DESC LIMIT ?",
             array($user_id, $user_id, (int) $limit)

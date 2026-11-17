@@ -1,5 +1,7 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
-/** @var array $m một hồ sơ thành viên */
+/** @var array $m một hồ sơ thành viên
+ *  @var bool $hide_profile_price Ẩn nhãn xu/khóa, vẫn giữ viền hồ sơ có phí.
+ */
 $age     = age_from($m['birthday']);
 $marital = array('doc_than' => 'Độc thân', 'ly_hon' => 'Ly hôn', 'goa' => 'Goá', 'phuc_tap' => 'Phức tạp');
 $online  = is_online($m['last_active_at']);
@@ -19,8 +21,8 @@ $ic_female = '<svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="9" r="5.2"
 $ic_gender = $m['gender'] === 'female' ? $ic_female : $ic_male;
 $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
 ?>
-<article class="pcard<?= $access['charge'] ? ' is-profile-paid' : '' ?>" data-user="<?= (int) $m['id'] ?>" tabindex="0" aria-label="Xem hồ sơ" data-profile-preview-card="<?= e($m['slug']) ?>">
-    <?php if ($access['label']): ?><a class="profile-price-label<?= !empty($access['purchased']) ? ' is-open' : '' ?>" href="<?= site_url('user/'.$m['slug']) ?>"><?= e($access['label']) ?></a><?php endif; ?>
+<article class="pcard<?= $access['charge'] ? ' is-profile-paid' : '' ?>" data-user="<?= (int) $m['id'] ?>"<?= ($interest_card_type ?? '') === 'request' ? ' data-like-request="' . (int) $m['id'] . '"' : '' ?> tabindex="0" aria-label="Xem hồ sơ" data-profile-preview-card="<?= e($m['slug']) ?>">
+    <?php if ($access['label'] && empty($hide_profile_price)): ?><a class="profile-price-label<?= !empty($access['purchased']) ? ' is-open' : '' ?>" href="<?= site_url('user/'.$m['slug']) ?>"><?= e($access['label']) ?></a><?php endif; ?>
     <a class="pcard-photo" href="<?= site_url('profile/' . $m['slug']) ?>">
         <img src="<?= avatar_url($m['avatar'], $m['gender']) ?>" alt="<?= e(display_name($m)) ?>" loading="lazy">
         <span class="pcard-tags">
@@ -92,8 +94,15 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
             <?php foreach ($tags as $t): ?><span><?= e($t) ?></span><?php endforeach; ?>
         </p>
 
-        <?php /* Thẻ trong danh sách "Người thích bạn" dùng hai nút riêng bên dưới,
-                 nên bỏ cặp nút Bỏ qua / Thích mặc định đi cho khỏi lẫn */ ?>
+        <?php if (!empty($interest_card_type)): ?>
+            <?php if ($interest_card_type === 'request' && !empty($m['liked_at'])): ?>
+                <p class="pcard-meta">Thích bạn <?= e(time_ago($m['liked_at'])) ?></p>
+            <?php elseif ($interest_card_type === 'viewed' && !empty($m['viewed_at'])): ?>
+                <p class="pcard-meta">Đã xem <?= e(time_ago($m['viewed_at'])) ?></p>
+            <?php endif; ?>
+        <?php endif; ?>
+
+        <?php if (empty($interest_card_type)): ?>
         <div class="pcard-actions">
             <?php if (!empty($hide_actions)): ?>
                 <a class="btn-swipe btn-swipe-pass" href="<?= site_url('profile/' . $m['slug']) ?>">Xem hồ sơ</a>
@@ -106,5 +115,6 @@ $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
                 <a class="btn-swipe btn-swipe-like" href="<?= site_url($me ? 'profile/' . $m['slug'] : 'dang-nhap') ?>"><?= $ic_heart ?>Thích</a>
             <?php endif; ?>
     </div>
+        <?php endif; ?>
     </div>
 </article>

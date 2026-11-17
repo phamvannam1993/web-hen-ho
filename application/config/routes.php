@@ -9,6 +9,7 @@ $route['translate_uri_dashes'] = FALSE;
  | FRONTEND
  * ---------------------------------------------------------------- */
 $route['robots.txt']              = 'robots/index';
+$route['kham-pha']                = 'home/explore';
 $route['dang-ky']                 = 'auth/register';
 $route['dang-nhap']               = 'auth/login';
 $route['dang-xuat']               = 'auth/logout';

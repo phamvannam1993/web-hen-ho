@@ -2,48 +2,37 @@
 /**
  * Quan tâm & ghép đôi — dựng theo `src/routes/tai-khoan.quan-tam.tsx`.
  *
- * Hai bên cùng thích nhau thì thành ghép đôi; nhắn tin không yêu cầu ghép đôi,
- * nên thẻ "Người thích bạn" có hai nút quyết định: Thích lại hoặc Bỏ qua
- * (`[data-like-reply]`, app.js gửi tới ajax/tra-loi-thich).
+ * Các thẻ chỉ hiển thị thông tin; chạm vào thẻ để mở hồ sơ và tương tác.
  *
  * Bốn danh sách chia thành bốn thẻ. Cả bốn đều in sẵn từ máy chủ, thẻ đang mở
  * lấy từ ?tab= nên dán link hay tải lại vẫn đúng thẻ; JS bên dưới chỉ đổi
  * thẻ tại chỗ cho khỏi tải lại trang.
  */
 $tabs = array(
-    'ban-thich' => array('Bạn đã thích',    $interest_totals['ban-thich']),
-    'thich-ban' => array('Người thích bạn', $interest_totals['thich-ban']),
-    'ghep-doi'  => array('Đã ghép đôi',     $interest_totals['ghep-doi']),
-    'da-xem'    => array('Đã xem hồ sơ',    $interest_totals['da-xem']),
+    'ban-thich' => array('Bạn đã thích',    $interest_totals['ban-thich'], 'Bạn thích'),
+    'thich-ban' => array('Người thích bạn', $interest_totals['thich-ban'], 'Thích bạn'),
+    'ghep-doi'  => array('Đã ghép đôi',     $interest_totals['ghep-doi'],  'Ghép đôi'),
+    'da-xem'    => array('Đã xem hồ sơ',    $interest_totals['da-xem'],    'Đã xem'),
 );
 $tab = (string) $this->input->get('tab');
 if (!isset($tabs[$tab])) { $tab = 'ban-thich'; }
 
-// Dùng danh sách thẻ ngang trên cả PC và điện thoại
-$luoi = function ($list, $o, $ve = null) {
-    $ve = $ve ?: function ($m, $o) { $this->load->view('account/_person', array('p' => $m, 'o' => $o)); };
-    echo '<div class="tk-stack tk-stack--sm">';
-    foreach ($list as $m) { $ve($m, $o + array('compact' => true)); }
-    echo '</div>';
+// Render all interest lists with the shared dating card.
+$luoi = function ($list, $type) {
+    echo '<div class="dating-page tk-lk-dating"><div class="member-grid">';
+    foreach ($list as $member) {
+        $this->load->view('members/_card', array(
+            'm' => $member,
+            'dating_card' => true,
+            'hide_profile_price' => true,
+            'hide_actions' => true,
+            'interest_card_type' => $type,
+        ));
+    }
+    echo '</div></div>';
 };
-
-// Thẻ người đang chờ trả lời: thẻ hồ sơ + hai nút Thích lại / Bỏ qua
-$cho_tra_loi = function ($m, $o) {
-    $id = (int) $m['id']; ?>
-    <div class="tk-lk-req<?= !empty($o['compact']) ? ' tk-lk-req--compact' : '' ?>" data-like-request="<?= $id ?>">
-        <?php $this->load->view('account/_person', array('p' => $m, 'o' => $o + array(
-            'action' => 'none',
-            'meta'   => !empty($m['liked_at']) ? 'Thích bạn ' . e(time_ago($m['liked_at'])) : '',
-        ))); ?>
-        <div class="tk-lk-req__act">
-            <button type="button" class="tk-btn tk-btn--brand tk-btn--sm"
-                    data-like-reply="accept" data-user="<?= $id ?>"><?= tk_icon('heart') ?>Thích lại</button>
-            <button type="button" class="tk-btn tk-btn--outline tk-btn--icon-sm"
-                    data-like-reply="skip" data-user="<?= $id ?>" aria-label="Bỏ qua" title="Bỏ qua"><?= tk_icon('x') ?></button>
-        </div>
-    </div>
-<?php };
 ?>
+<link rel="stylesheet" href="<?= base_url('assets/site/css/dating-discovery.css') ?>?v=<?= filemtime(FCPATH.'assets/site/css/dating-discovery.css') ?>">
 <header class="tk-ph">
     <div class="tk-ph__b">
         <h1>Quan tâm &amp; ghép đôi</h1>
@@ -54,12 +43,13 @@ $cho_tra_loi = function ($m, $o) {
     </div>
 </header>
 
-<nav class="tk-tabs" role="tablist" data-lk-tabs>
+<nav class="tk-tabs tk-lk-tabs" role="tablist" aria-label="Danh sách quan tâm và ghép đôi" data-lk-tabs>
     <?php foreach ($tabs as $k => $t): ?>
         <?php $unread = (int) ($tk['interest_tabs'][$k] ?? 0); ?>
         <a href="?tab=<?= $k ?>" role="tab" id="tk-lk-tab-<?= $k ?>" data-tab="<?= $k ?>"
            aria-controls="tk-lk-<?= $k ?>" aria-selected="<?= $k === $tab ? 'true' : 'false' ?>"
-           class="<?= $k === $tab ? 'is-active' : '' ?><?= $unread ? ' has-unread' : '' ?>"><?= e($t[0]) ?><span class="tk-tabs__n" title="Tổng số hồ sơ"><?= $t[1] ?></span><span class="tk-tab-unread" data-interest-tab-count="<?= $k ?>" <?= $unread ? '' : 'hidden' ?> aria-label="<?= $unread ?> mục mới chưa xem" title="<?= $unread ?> mục mới chưa xem"><?= $unread > 99 ? '99+' : $unread ?> mới</span></a>
+           title="<?= e($t[0]) ?>"
+           class="<?= $k === $tab ? 'is-active' : '' ?><?= $unread ? ' has-unread' : '' ?>"><span class="tk-lk-tab-label"><?= e($t[0]) ?></span><span class="tk-lk-tab-short"><?= e($t[2]) ?></span><span class="tk-tabs__n" title="Tổng số hồ sơ"><?= $t[1] ?></span><span class="tk-tab-unread" data-interest-tab-count="<?= $k ?>" <?= $unread ? '' : 'hidden' ?> aria-label="<?= $unread ?> mục mới chưa xem" title="<?= $unread ?> mục mới chưa xem"><?= $unread > 99 ? '99+' : $unread ?> mới</span></a>
     <?php endforeach; ?>
 </nav>
 
@@ -73,15 +63,7 @@ $cho_tra_loi = function ($m, $o) {
             <div class="tk-empty__act"><a class="tk-btn tk-btn--brand" href="<?= site_url('tai-khoan/ho-so') ?>">Hoàn thiện hồ sơ</a></div>
         </div>
     <?php else: ?>
-        <section class="tk-card">
-            <div class="tk-card__h">
-                <div>
-                    <h2 class="tk-card__t"><?= count($liked_me) ?> người đang chờ bạn thích lại</h2>
-                    <p class="tk-card__d">Thích lại để thể hiện sự quan tâm, hoặc mở hồ sơ để nhắn tin. Nếu bỏ qua, người kia sẽ không được báo gì cả.</p>
-                </div>
-            </div>
-            <?php $luoi($liked_me, array(), $cho_tra_loi); ?>
-        </section>
+        <?php $luoi($liked_me, 'request'); ?>
     <?php endif; ?>
 </div>
 
@@ -95,19 +77,7 @@ $cho_tra_loi = function ($m, $o) {
             <div class="tk-empty__act"><a class="tk-btn tk-btn--brand" href="<?= site_url('swipe-match') ?>"><?= tk_icon('match') ?>Khám phá ngay</a></div>
         </div>
     <?php else: ?>
-        <section class="tk-card">
-            <div class="tk-card__h">
-                <div>
-                    <h2 class="tk-card__t">Đã ghép đôi</h2>
-                    <p class="tk-card__d">Hai bạn đã thích nhau — hãy mở lời trước nhé</p>
-                </div>
-            </div>
-            <?php $luoi($matches, array('matched' => true), function ($m, $o) {
-                $this->load->view('account/_person', array('p' => $m, 'o' => $o + array(
-                    'chat_url' => site_url('messenger') . '?to=' . (int) $m['id'],
-                )));
-            }); ?>
-        </section>
+        <?php $luoi($matches, 'matched'); ?>
     <?php endif; ?>
 </div>
 
@@ -120,20 +90,7 @@ $cho_tra_loi = function ($m, $o) {
             <p>Cập nhật ảnh đại diện và lời giới thiệu để hồ sơ nổi bật hơn.</p>
         </div>
     <?php else: ?>
-        <section class="tk-card">
-            <div class="tk-card__h">
-                <div>
-                    <h2 class="tk-card__t">Đã xem hồ sơ của bạn</h2>
-                    <p class="tk-card__d">Những người ghé qua hồ sơ của bạn trong 7 ngày gần nhất</p>
-                </div>
-                <a class="tk-btn tk-btn--soft tk-btn--sm tk-card__act" href="<?= site_url('tai-khoan/ai-xem-ho-so') ?>"><?= tk_icon('eye') ?>Xem chi tiết</a>
-            </div>
-            <?php $luoi($viewers, array('label' => 'Thả tim'), function ($m, $o) {
-                $this->load->view('account/_person', array('p' => $m, 'o' => $o + array(
-                    'meta' => !empty($m['viewed_at']) ? 'Đã xem ' . e(time_ago($m['viewed_at'])) : '',
-                )));
-            }); ?>
-        </section>
+        <?php $luoi($viewers, 'viewed'); ?>
     <?php endif; ?>
 </div>
 
@@ -147,15 +104,7 @@ $cho_tra_loi = function ($m, $o) {
             <div class="tk-empty__act"><a class="tk-btn tk-btn--brand tk-btn--lg" href="<?= site_url('swipe-match') ?>"><?= tk_icon('match') ?>Khám phá ngay</a></div>
         </div>
     <?php else: ?>
-        <section class="tk-card">
-            <div class="tk-card__h">
-                <div>
-                    <h2 class="tk-card__t">Bạn đã thích</h2>
-                    <p class="tk-card__d">Bạn đã gửi lời quan tâm. Có thể nhắn tin ngay từ hồ sơ để làm quen.</p>
-                </div>
-            </div>
-            <?php $luoi($my_likes, array('action' => 'none', 'pass' => false)); ?>
-        </section>
+        <?php $luoi($my_likes, 'liked'); ?>
     <?php endif; ?>
 </div>
 

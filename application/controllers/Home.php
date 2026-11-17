@@ -48,6 +48,15 @@ class Home extends MY_Controller
         $this->render('home/index', $data);
     }
 
+    public function explore()
+    {
+        $this->render('home/explore', array(
+            'title' => 'Khám phá',
+            'meta_desc' => 'Khám phá ghép đôi, trò chuyện ẩn danh và những người thích bạn trên Saigon Cupid.',
+            'bare' => true,
+        ));
+    }
+
     public function not_found()
     {
         $this->output->set_status_header(404);
