@@ -1,6 +1,31 @@
 /* Quan tâm & ghép đôi (account/likes.php) */
 
 .tk-lk-panel[hidden] { display: none; }
+.dating-page.tk-lk-dating .member-grid { padding-top: 0; row-gap: 10px; }
+.tk-lk-dating .pcard.card-gone { opacity: 0; transform: scale(.96); transition: opacity .28s, transform .28s; }
+
+.tk-lk-tab-short { display: none; }
+@media (max-width: 720px) {
+  .tk-lk-panel {
+    width: 100%; max-width: none; min-width: 0; margin-inline: 0;
+  }
+  .tk-lk-dating,
+  .tk-lk-dating .member-grid,
+  .tk-lk-dating .pcard { width: 100%; min-width: 0; }
+  .tk-tabs.tk-lk-tabs {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px; margin-inline: 0; padding-inline: 0; overflow: visible;
+  }
+  .tk-tabs.tk-lk-tabs > a {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+    gap: 4px 6px; min-width: 0; min-height: 44px; padding: 8px 10px;
+    border-radius: 14px; text-align: center; overflow-wrap: anywhere;
+  }
+  .tk-lk-tabs .tk-lk-tab-label { display: none; }
+  .tk-lk-tabs .tk-lk-tab-short { display: inline; white-space: nowrap; }
+  .tk-lk-tabs .tk-tabs__n,
+  .tk-lk-tabs .tk-tab-unread { margin-left: 0; }
+}
 
 /* Thẻ người đang chờ trả lời: thẻ hồ sơ + hàng nút Thích lại / Bỏ qua
    gói chung một khung để app.js gỡ cả khối sau khi trả lời */

@@ -33,7 +33,7 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
             <form class="home-intro-search" method="get" action="<?= site_url('tim-kiem') ?>" role="search">
                 <span aria-hidden="true"><?= $ic($ic_search) ?></span>
                 <input type="search" name="q" value="<?= e($this->input->get('q')) ?>"
-                       placeholder="Nhập số điện thoại cần tìm..." inputmode="tel" aria-label="Tìm thành viên theo số điện thoại">
+                       placeholder="Nhập tên hoặc số điện thoại..." aria-label="Tìm thành viên theo tên hoặc số điện thoại">
                 <button type="submit">Tìm kiếm</button>
             </form>
             <div class="home-intro-actions">
