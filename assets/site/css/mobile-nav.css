@@ -140,7 +140,7 @@ body.has-guest-banner .site-footer { padding-bottom: 115px; margin-bottom: 0 !im
     }
 }
 .site-mobile-nav--explore { display: block; }
-html:has(body.is-explore-page),
+html:has(body.is-explore-page) { background: var(--pink, #d1273f); }
 body.is-bare.is-explore-page { background: var(--bg, #fdf0f4); }
 body.is-bare.is-explore-page {
     height: auto; min-height: 100vh; min-height: 100dvh;
