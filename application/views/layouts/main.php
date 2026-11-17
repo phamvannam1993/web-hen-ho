@@ -68,6 +68,7 @@ $guest_banner = !$user && empty($bare) && strpos($content_view, 'auth/') !== 0 &
 <?php endif; ?>
 <?php endif; ?>
 <link rel="stylesheet" href="<?= base_url('assets/site/css/mobile-nav.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/mobile-nav.css') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/site/css/mobile-drawer.css') ?>?v=<?= filemtime(FCPATH.'assets/site/css/mobile-drawer.css') ?>">
 </head>
 <body class="<?= !empty($bare) ? 'is-bare' : '' ?><?= $content_view === 'home/explore' ? ' is-explore-page' : '' ?><?= $tk_app ? 'tk-app' : '' ?><?= $content_view === 'account/messages' ? ' is-messages-page' : '' ?><?= $content_view === 'groups/detail' ? ' is-group-chat-page' : '' ?><?= $tk_inbox_open ? ' is-inbox-open' : '' ?><?= $guest_banner ? ' has-guest-banner' : '' ?>">
 
@@ -122,11 +123,16 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
         <?php /* Ô tìm kiếm gọn ở giữa hàng trên, lấp khoảng trống giữa logo và nhóm nút.
                  Chỉ hiện trên màn rộng; màn hẹp dùng bộ lọc trong trang Thành viên. */ ?>
         <form id="header-search" class="header-search" method="get" action="<?= site_url('tim-kiem') ?>" role="search">
+            <button class="header-search-close" type="button" aria-label="Đóng tìm kiếm">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <div class="header-search-field">
             <svg viewBox="0 0 24 24" class="ic" aria-hidden="true">
                 <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/>
             </svg>
-            <input type="search" name="q" value="<?= e($this->input->get('q')) ?>" inputmode="tel"
-                   placeholder="Nhập số điện thoại cần tìm..." aria-label="Tìm thành viên theo số điện thoại">
+            <input type="search" name="q" value="<?= e($this->input->get('q')) ?>"
+                   placeholder="Nhập tên hoặc số điện thoại..." aria-label="Tìm thành viên theo tên hoặc số điện thoại">
+            </div>
             <button class="header-search-submit" type="submit">Tìm</button>
         </form>
 
@@ -188,7 +194,7 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 
         <div class="nav-drawer" id="nav-drawer">
         <div class="drawer-head">
-            <span class="drawer-title">Menu</span>
+            <div class="drawer-heading"><span class="drawer-eyebrow">SAIGON CUPID</span><span class="drawer-title">Cùng khám phá</span><span class="drawer-subtitle">Kết nối và tìm người hợp gu</span></div>
             <button type="button" class="drawer-close" id="drawer-close" aria-label="Đóng menu">&times;</button>
         </div>
 
@@ -211,6 +217,9 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
             array('url' => 'noi-quy',       'label' => 'Thông báo',    'match' => array('noi-quy', 'trang')),
         );
         $seg1 = (string) $this->uri->segment(1);
+        $nav_icons = array('' => 'home', 'hen-ho' => 'match', 'tam-su' => 'heart',
+            'clubs' => 'message', 'swipe-match' => 'sparkles', 'khu-vuc' => 'pin',
+            'tin-tuc' => 'dashboard', 'noi-quy' => 'bell');
         // Trang tỉnh nay nằm ở gốc (/ha-noi) nên phải đối chiếu với danh mục tỉnh
         // để mục "Khu vực" vẫn sáng khi đang xem một tỉnh.
         if ($seg1 !== '' && in_array($seg1, array_column($provinces, 'slug'), true)) {
@@ -220,10 +229,12 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
         <ul class="nav-list">
             <?php foreach ($nav_items as $item): ?>
                 <?php $is_active = in_array($seg1, $item['match'], true); ?>
-                <li><a<?= $is_active ? ' class="active" aria-current="page"' : '' ?>
-                       href="<?= site_url($item['url']) ?>"><?= $item['label'] ?></a></li>
+                <li>
+                    <?php if ($item['url'] === 'tin-tuc'): ?><span class="drawer-group-title">Thông tin &amp; tiện ích</span><?php endif; ?>
+                    <a<?= $is_active ? ' class="active" aria-current="page"' : '' ?>
+                       href="<?= site_url($item['url']) ?>"><span class="drawer-nav-icon" aria-hidden="true"><?= tk_icon($nav_icons[$item['url']]) ?></span><span><?= $item['label'] ?></span><span class="drawer-nav-arrow" aria-hidden="true">›</span></a></li>
             <?php endforeach; ?>
-            <li><button type="button" class="install-menu-trigger" data-install-app>Download Apps</button></li>
+            <li><button type="button" class="install-menu-trigger" data-install-app><span class="drawer-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-4-4 4 4 4-4M5 16v4h14v-4"/></svg></span><span>Download Apps</span><span class="drawer-nav-arrow" aria-hidden="true">›</span></button></li>
         </ul>
 
         <div class="header-actions">

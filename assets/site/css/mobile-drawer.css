@@ -1,0 +1,55 @@
+.drawer-nav-icon, .drawer-nav-arrow, .drawer-group-title { display: none; }
+@media (max-width: 900px) {
+    .site-header .nav-drawer {
+        width: min(360px, 90vw);
+        background: linear-gradient(180deg, #fff7f9 0, #fff 260px);
+        box-shadow: -12px 0 48px #4c172629;
+    }
+    .nav-drawer .drawer-head {
+        padding: calc(22px + env(safe-area-inset-top, 0px)) 20px 18px;
+        align-items: flex-start; gap: 12px;
+        background: linear-gradient(125deg, #fff1f5, #ffe2e9);
+        border-bottom: 1px solid #f5dce4;
+    }
+    .drawer-heading { display: flex; flex-direction: column; gap: 4px; }
+    .drawer-eyebrow { color: var(--pink); font-size: 10px; font-weight: 800; letter-spacing: 2px; }
+    .nav-drawer .drawer-title { color: #492634; font-size: 23px; font-weight: 750; line-height: 1.3; }
+    .drawer-subtitle { color: #94717d; font-size: 12px; }
+    .nav-drawer .drawer-close { background: #ffffffb3; color: #a44760; border: 1px solid #f1ced9; }
+    .nav-drawer .hd-streak--drawer { margin: 14px 16px 4px; border-radius: 12px; }
+    .site-header .nav-drawer .nav-list { gap: 5px; margin: 0; padding: 12px 14px 20px; }
+    .site-header .nav-drawer .nav-list > li > :is(a, .install-menu-trigger) {
+        display: flex; align-items: center; justify-content: flex-start; gap: 12px;
+        width: 100%; min-height: 52px; padding: 8px 12px;
+        border: 1px solid transparent; border-radius: 14px;
+        background: transparent; color: #5b4750; font-size: 14px; font-weight: 600;
+        text-decoration: none; transition: background .15s, border-color .15s;
+    }
+    .nav-drawer .drawer-nav-icon {
+        display: grid; place-items: center; flex: 0 0 34px; height: 34px;
+        border: 1px solid #f3e1e7; border-radius: 11px;
+        background: #fff4f7; color: #c75171;
+    }
+    .drawer-nav-icon svg { width: 19px; height: 19px; }
+    .nav-drawer .drawer-nav-arrow { display: block; margin-left: auto; color: #c9a7b2; font-size: 22px; font-weight: 400; line-height: 1; }
+    .site-header .nav-drawer .nav-list > li > a.active {
+        background: linear-gradient(110deg, #d1273f, #e55479); color: #fff;
+        border-color: #d1273f; box-shadow: 0 4px 12px #d1273f20;
+    }
+    .nav-drawer a.active .drawer-nav-icon { color: #fff; background: #ffffff26; border-color: #ffffff38; }
+    .nav-drawer a.active .drawer-nav-arrow { color: #ffffffb3; }
+    .site-header .nav-drawer .nav-list > li > :is(a, .install-menu-trigger):hover:not(.active) { background: #fff0f5; border-color: #f2dce4; }
+    .site-header .nav-drawer .nav-list > li > :is(a, .install-menu-trigger):focus-visible { outline: 2px solid var(--pink); outline-offset: 2px; }
+    .nav-drawer .drawer-group-title { display: block; margin: 14px 12px 8px; color: #a18490; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+    .nav-drawer .header-actions { margin-top: auto; padding: 16px 18px 20px; background: #fff8fa; border-top: 1px solid #f3e2e8; }
+    .nav-drawer .header-actions :is(.btn-account, .btn-nav-ghost, .btn-nav-solid) {
+        box-sizing: border-box; display: flex; align-items: center; justify-content: center;
+        width: 100%; height: 48px; min-height: 48px; margin: 0; padding: 8px 16px;
+        border-width: 1px; border-style: solid; border-radius: 12px;
+        font-size: 14px; font-weight: 600; line-height: 20px;
+    }
+    .nav-drawer .header-actions .btn-nav-ghost { border-color: #eddce3; background: #fff; color: #856573; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .site-header .nav-drawer .nav-list > li > :is(a, .install-menu-trigger) { transition: none; }
+}

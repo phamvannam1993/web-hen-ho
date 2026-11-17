@@ -229,6 +229,13 @@ document.addEventListener('DOMContentLoaded', function () {
             form.classList.remove('is-open');
             toggle.setAttribute('aria-expanded', 'false');
         }
+        var closeButton = form.querySelector('.header-search-close');
+        if (closeButton) {
+            closeButton.addEventListener('click', function () {
+                close();
+                toggle.focus();
+            });
+        }
         toggle.addEventListener('click', function () {
             var open = !form.classList.contains('is-open');
             form.classList.toggle('is-open', open);

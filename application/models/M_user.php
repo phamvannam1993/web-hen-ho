@@ -241,8 +241,12 @@ class M_user extends CI_Model
         }
 
         if (!empty($f['keyword'])) {
-            // Tìm thành viên chỉ theo số điện thoại.
-            $this->db->like('u.phone', trim($f['keyword']));
+            $keyword = trim($f['keyword']);
+            $this->db->group_start()
+                ->like('u.display_name', $keyword)
+                ->or_like('u.nickname', $keyword)
+                ->or_like('u.phone', $keyword)
+                ->group_end();
         }
     }
 
