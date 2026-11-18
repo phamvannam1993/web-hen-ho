@@ -38,6 +38,7 @@ class Chat extends Api_Controller
                     : $this->tom_tat($r['last_type'], $r['last_content'], (int) $r['last_sender_id'] === $me),
                 'empty'   => !$r['last_message_id'],
                 'time'    => $r['last_at'] ? time_ago($r['last_at']) : '',
+                'last_at' => $r['last_at'] ?: null,
                 'unread'  => (int) $r['unread'],
                 'notifications_enabled' => !isset($r['notifications_enabled']) || (bool)$r['notifications_enabled'],
                 'calls_notifications_enabled' => !isset($r['calls_notifications_enabled']) || (bool)$r['calls_notifications_enabled'],
@@ -540,6 +541,29 @@ class Chat extends Api_Controller
         return $this->xu_ly(function () use ($conversation_id) {
             $me = (int) $this->me['id'];
             $this->nguoi_kia($conversation_id);
+            /* ?around=<id>: đoạn ngữ cảnh quanh một tin (15 tin trước + 16 tin từ tin đích) để nhảy tới kết quả
+             * tìm kiếm — như ajax/tin-nhan/{id}/tim-kiem?around= của web. Bỏ tin đã thu hồi / trước mốc đã xoá. */
+            $around = $this->input->get('around');
+            if ($around !== null) {
+                $target = filter_var($around, FILTER_VALIDATE_INT, array('options' => array('min_range' => 1)));
+                if ($target === false) throw new InvalidArgumentException('ID tin nhắn không hợp lệ.');
+                $cutoff = $this->m_interaction->conversation_cutoff($conversation_id, $me);
+                $visible = function () use ($conversation_id, $cutoff) {
+                    return $this->db->select('*')->from('messages')
+                        ->where('conversation_id', (int) $conversation_id)->where('id >', $cutoff)->where('deleted_at', null);
+                };
+                if (!$visible()->where('id', $target)->get()->row_array()) throw new RuntimeException('Tin nhắn không còn khả dụng.', 404);
+                $truoc = $visible()->where('id <', $target)->order_by('id', 'DESC')->limit(15)->get()->result_array();
+                $sau = $visible()->where('id >=', $target)->order_by('id', 'ASC')->limit(16)->get()->result_array();
+                $rows = $this->m_interaction->with_replies(array_merge(array_reverse($truoc), $sau), (int) $conversation_id, $me);
+                return array(
+                    'messages' => array_map(function ($r) use ($me) {
+                        $cua_toi = (int) $r['sender_id'] === $me;
+                        return $this->tin($r, $cua_toi) + array('seen' => $cua_toi && !empty($r['read_at']));
+                    }, $rows),
+                    'target_id' => $target,
+                );
+            }
             $q = trim((string) $this->input->get('q'));
             $before = max(0, (int) $this->input->get('before'));
             if (mb_strlen($q) < 2 || mb_strlen($q) > 100) throw new InvalidArgumentException('Nhập từ 2 đến 100 ký tự.');

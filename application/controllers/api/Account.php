@@ -386,7 +386,7 @@ class Account extends Api_Controller
     /**
      * GET /api/account/likes?tab=ban-thich|thich-ban|ghep-doi|da-xem
      * Bốn thẻ của trang Quan tâm (web). Mở thẻ nào là đánh dấu đã xem thẻ đó.
-     * "Người thích bạn" và "Đã xem hồ sơ" theo luật che của bản thường.
+     * Hiện đủ cả bốn danh sách cho mọi tài khoản như web (không che theo VIP).
      */
     public function likes()
     {
@@ -398,18 +398,32 @@ class Account extends Api_Controller
         if (!in_array($tab, $this->m_interest_badge->tabs(), true)) {
             $tab = 'ban-thich';
         }
-        $map = function (array $ds) {
-            return array_map(function ($u) { return $this->ho_so($u, true); }, $ds);
+        // Thẻ Quan tâm (members/_card.php với dating_card): ho_so đầy đủ + charge_enabled
+        // (viền vàng: profile_access_card()['charge'], kể cả đã mua) + chip tình trạng hôn nhân /
+        // cân nặng — chỉ khi được xem chi tiết như chiều cao (không detail_locked), không thì null.
+        // Các truy vấn danh sách đã lấy u.* nên không tốn thêm truy vấn; mua quyền xem nạp một lần.
+        $marital = array('doc_than' => 'Độc thân', 'ly_hon' => 'Ly hôn', 'goa' => 'Goá', 'phuc_tap' => 'Phức tạp');
+        $the = function (array $u) use ($id, $marital) {
+            $ra = $this->ho_so($u, true);
+            $chi_tiet = empty($ra['detail_locked']);
+            $ra['charge_enabled'] = (bool) profile_access_card($u, $id)['charge'];
+            // Mã như ho_so_chi_tiet() (doc_than…) + nhãn sẵn để hiện chip
+            $nhan = $chi_tiet ? ($marital[$u['marital_status'] ?? ''] ?? null) : null;
+            $ra['marital_status'] = $nhan ? $u['marital_status'] : null;
+            $ra['marital_label'] = $nhan;
+            $ra['weight_kg'] = $chi_tiet && !empty($u['weight_kg']) ? (int) $u['weight_kg'] : null;
+            return $ra;
+        };
+        $map = function (array $ds) use ($the) {
+            return array_map($the, $ds);
         };
         $vip = $this->la_vip();
-        $che = function (array $ds, $them = null) use ($vip) {
+        // Như web (account/likes.php 17/11): hiện đủ danh sách cho mọi tài khoản, không còn che
+        // từ hồ sơ thứ ba với tài khoản thường. Giữ 'locked' => false để app cũ không vỡ.
+        $che = function (array $ds, $them = null) use ($the) {
             $ra = array();
-            foreach ($ds as $i => $u) {
-                if ($vip || $i < 2) {
-                    $ra[] = array('locked' => false) + $this->ho_so($u, true) + ($them ? $them($u) : array());
-                } else {
-                    $ra[] = array('locked' => true, 'id' => null, 'name' => null);
-                }
+            foreach ($ds as $u) {
+                $ra[] = array('locked' => false) + $the($u) + ($them ? $them($u) : array());
             }
             return $ra;
         };
@@ -427,8 +441,8 @@ class Account extends Api_Controller
                 return array('meta' => !empty($u['liked_at']) ? 'Thích bạn ' . time_ago($u['liked_at']) : null);
             }),
             'matches'  => $map($this->m_interaction->matches($id)),
-            'viewers'  => $che($this->m_interaction->viewers($id, 60), function ($u) use ($vip) {
-                return array('meta' => $vip && !empty($u['viewed_at']) ? 'Đã xem ' . time_ago($u['viewed_at']) : null);
+            'viewers'  => $che($this->m_interaction->viewers($id, 60), function ($u) {
+                return array('meta' => !empty($u['viewed_at']) ? 'Đã xem ' . time_ago($u['viewed_at']) : null);
             }),
         ));
     }
