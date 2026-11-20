@@ -611,6 +611,9 @@ class M_user extends CI_Model
                      + IF(u.last_active_at > NOW() - INTERVAL 5 MINUTE, 10, 0)
                      + ROUND(u.profile_score / 10)
                    ) AS match_score,
+                   (SELECT GROUP_CONCAT(i.name ORDER BY i.name SEPARATOR '|')
+                      FROM user_interests ui JOIN interests i ON i.id = ui.interest_id
+                     WHERE ui.user_id = u.id) AS interest_names,
                    (SELECT COUNT(*) FROM likes l
                      WHERE l.user_id = ? AND l.target_type = 'user' AND l.target_id = u.id) AS liked
               FROM users u
