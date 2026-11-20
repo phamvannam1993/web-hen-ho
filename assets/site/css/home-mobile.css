@@ -5,11 +5,11 @@
     .is-home-page .site-header { background: #fcf1f5; border-bottom: 0; box-shadow: none; }
     .is-home-page .install-banner, .is-home-page .install-banner:not([hidden]) { display: none; }
     .is-home-page .header-inner { box-sizing: border-box; width: 100%; max-width: none; margin-inline: 0; min-height: 56px; padding: 8px 16px; gap: 8px; justify-content: flex-start; }
-    .is-home-page .brand { order: 1; flex: 0 1 auto; gap: 7px; min-width: 0; }
+    .is-home-page .brand { order: 1; flex: 0 1 auto; gap: 7px; min-width: 0; padding-left: 0; }
     .is-home-page .brand-logo { width: 32px; height: 32px; object-fit: contain; }
     .is-home-page .brand-text { display: block; overflow: hidden; text-overflow: ellipsis; font-size: 20px; font-weight: 800; color: #cb365b; white-space: nowrap; }
     .is-home-page .hd-mini { flex-shrink: 0; margin-left: auto; gap: 4px; }
-    .is-home-page .nav-toggle { margin-left: 0; flex-shrink: 0; }
+    .is-home-page .nav-toggle { margin-left: 0; flex-shrink: 0; align-items: flex-end; }
     .is-home-page .hd-mini-btn, .is-home-page .hd-bell { color: #bc2b4d; }
     .home-mobile { display: flex; flex-direction: column; gap: 20px; max-width: 768px; margin: auto; padding: 8px 16px 20px; color: #322e32; }
     .home-mobile *, .home-mobile *::before, .home-mobile *::after { box-sizing: border-box; }

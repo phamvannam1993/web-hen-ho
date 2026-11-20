@@ -22,7 +22,7 @@ $home_groups = array(
     <section class="home-mobile-tasks" aria-label="Hoạt động mỗi ngày">
         <a class="home-mobile-task" href="<?= site_url('clubs') ?>">
             <img src="<?= base_url('assets/site/img/home-mobile/banner-task-long.jpg') ?>" width="1152" height="576" alt="" loading="lazy">
-            <div><h2>Chat's</h2></div>
+            <div><h2>Chat's</h2><p>Trò chuyện ẩn danh, làm quen bạn mới</p></div>
         </a>
         <a class="home-mobile-task" href="<?= site_url('tai-khoan/chuoi') ?>">
             <img src="<?= base_url('assets/site/img/home-mobile/banner-task-short.jpg') ?>" width="992" height="672" alt="" loading="lazy">
