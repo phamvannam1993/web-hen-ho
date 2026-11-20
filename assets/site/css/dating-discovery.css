@@ -44,10 +44,12 @@
 .dating-query input { padding-left: 40px; -webkit-appearance: none; appearance: none; }
 .dating-query input::-webkit-search-decoration { -webkit-appearance: none; display: none; }
 .dating-query svg { position: absolute; left: 13px; top: 13px; width: 18px; height: 18px; fill: none; stroke: #95a0b1; stroke-width: 1.8; pointer-events: none; }
-.dating-distance-row { display: flex; gap: 8px; min-width: 0; }
-.dating-distance-row label { flex: 1; min-width: 0; }
-.dating-locate { display: grid; place-items: center; width: 44px; flex: 0 0 44px; height: 44px; border: 1px solid #eadce1; border-radius: 9px; background: #fff; color: var(--pink); cursor: pointer; }
-.dating-locate svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.dating-distance-row { display: flex; align-items: center; gap: 0; min-width: 0; }
+.dating-distance-row label { flex: 1 1 0%; width: 0; min-width: 0; }
+.dating-distance-row select { box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; }
+/* Explicit spacing and reset avoid native button padding and flex-gap differences on older iOS. */
+.dating-locate { box-sizing: border-box; -webkit-appearance: none; appearance: none; display: flex; align-items: center; justify-content: center; width: 44px; min-width: 0; flex: 0 0 44px; height: 44px; margin: 0 0 0 8px; padding: 0; border: 1px solid #eadce1; border-radius: 9px; background: #fff; color: var(--pink); line-height: 1; cursor: pointer; }
+.dating-locate svg { display: block; flex: 0 0 auto; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; }
 .dating-locate:disabled { opacity: .5; cursor: wait; }
 .dating-reset, .dating-submit { display: flex; align-items: center; justify-content: center; min-height: 44px; border: 1px solid #f0ccd5; border-radius: 9px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 .dating-reset { color: var(--pink); background: var(--bg); }
@@ -129,11 +131,11 @@
     .dating-discovery-form input[name="age_min"]::-webkit-outer-spin-button,
     .dating-discovery-form input[name="age_max"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     .dating-query svg { left: 9px; top: 9px; width: 15px; height: 15px; }
-    .dating-locate { width: 34px; flex-basis: 34px; height: 34px; border-radius: 6px; }
+    .dating-locate { width: 34px; flex-basis: 34px; height: 34px; margin-left: 6px; border-radius: 6px; }
     .dating-locate svg { width: 17px; height: 17px; }
     .dating-reset, .dating-submit { min-height: 34px; padding: 6px 8px; border-radius: 6px; font-size: 11px; line-height: 1.3; }
     .dating-submit { min-height: 36px; margin-top: 2px; font-size: 12px; }
-    .dating-distance-row { gap: 6px; }
+    .dating-distance-row { gap: 0; }
     .dating-discovery-form .ss-toggle { height: 34px; min-height: 34px; padding: 0 24px 0 8px; border-radius: 6px; font-size: 11px; }
     .dating-discovery-form .ss-panel { padding: 4px; border-radius: 7px; }
     .dating-discovery-form .ss-item { padding: 8px; font-size: 11px; }

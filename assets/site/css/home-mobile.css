@@ -1,4 +1,5 @@
 .home-mobile { display: none; }
+.hm-sug-unlock-price { display:none; }
 @media (max-width: 767px) {
     body.is-home-page { background: #fcf1f5; background-image: radial-gradient(ellipse at top left, #f9dce8, transparent 65%); padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
     .is-home-page .home-desktop-content, .is-home-page .topbar, .is-home-page .guest-banner { display: none; }
@@ -100,7 +101,7 @@
 
 @media (max-width:1023.98px) {
     .home-mobile-list--suggestions { margin-top:0; gap:14px; }
-    .home-mobile-list--suggestions .hm-sug { display:grid; grid-template-columns:48px minmax(0,1fr) auto; align-items:center; gap:12px; min-height:108px; margin:0; padding:14px; border:1px solid #eadfe5; border-radius:16px; background:#fff; }
+    .home-mobile-list--suggestions .hm-sug { position:relative; display:grid; grid-template-columns:48px minmax(0,1fr) auto; align-items:center; gap:12px; min-height:108px; margin:0; padding:14px; border:1px solid #eadfe5; border-radius:16px; background:#fff; }
     .home-mobile-list--suggestions .hm-sug.is-profile-paid { border-color:#edc15b; background:#fffaf0; }
     .home-mobile-list--suggestions .hm-sug-photo { width:48px; height:48px; border-radius:50%; overflow:hidden; }
     .home-mobile-list--suggestions .hm-sug-photo img { width:100%; height:100%; object-fit:cover; }
@@ -108,6 +109,7 @@
     .home-mobile-list--suggestions .hm-sug-top { display:block; margin:0 0 10px; }
     .home-mobile-list--suggestions .hm-sug-top h3 { margin:0; font-size:15px; line-height:1.35; overflow-wrap:anywhere; }
     .home-mobile-list--suggestions .hm-sug-age { display:none; }
+    .home-mobile-list--suggestions .hm-sug-unlock-price { position:absolute; top:-10px; right:10px; display:inline-flex; align-items:center; margin:0; padding:2px 6px; border:1px solid #edc15b; border-radius:999px; background:#fff1c9; color:#8a5a00; font-size:11px; font-weight:700; line-height:1.4; }
     .home-mobile-list--suggestions .hm-sug-top .hm-pill { display:inline-block; margin:5px 0 0; padding:3px 6px; font-size:10px; line-height:1.4; }
     .home-mobile-list--suggestions .hm-sug-chips { display:flex; flex-wrap:wrap; gap:4px 6px; margin:0; }
     .home-mobile-list--suggestions .hm-sug-chips span { min-width:0; padding:0; background:transparent; color:#777078; font-size:12px; line-height:1.4; }

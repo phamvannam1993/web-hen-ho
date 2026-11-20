@@ -28,6 +28,9 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
                     <div class="hm-sug-body">
                         <div class="hm-sug-top">
                             <h3><a href="<?= site_url('profile/' . $m['slug']) ?>"><?= e(display_name($m)) ?><?php if ($tuoi): ?><span class="hm-sug-age">, <?= (int) $tuoi ?></span><?php endif; ?></a></h3>
+                            <?php if ($access['charge'] && empty($access['purchased'])): ?>
+                                <span class="hm-sug-unlock-price" aria-label="Mở hồ sơ với <?= (int) profile_unlock_cost() ?> xu"><?= (int) profile_unlock_cost() ?> xu</span>
+                            <?php endif; ?>
                             <?php if (isset($m['match_score'])): ?><span class="hm-pill hm-pill-pink">Tương hợp: <?= $hop ?>%</span><?php endif; ?>
                             <?php if ($da_match): ?>
                                 <span class="hm-pill hm-pill-green">Đã match!</span>
