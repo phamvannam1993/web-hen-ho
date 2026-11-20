@@ -143,11 +143,24 @@ Mỗi lần gọi API có token hợp lệ đều **tự chấm công chuỗi**,
 | POST | `/api/account/photos` | Thêm ảnh — multipart, trường `photo` |
 | POST | `/api/account/photos/{id}/delete` | Xoá ảnh |
 | GET  | `/api/account/likes` | Đã ghép đôi, bạn đã thích, tổng người thích bạn / xem hồ sơ |
+| POST | `/api/account/likes/seen` | `{tab}` — đánh dấu một thẻ đã xem khi đổi thẻ tại chỗ, trả `counts` |
 | GET  | `/api/account/notifications` | 50 thông báo gần nhất — mở là đánh dấu đã đọc hết, như web |
 | POST | `/api/account/notifications/read` | Đánh dấu đã đọc hết |
 | GET  | `/api/account/wallet` | Số dư, gói, đơn nạp, biến động xu, thông tin chuyển khoản |
 | POST | `/api/account/wallet` | `{package_id, method}` — tạo đơn chuyển khoản, trả về `order` |
 | GET/POST | `/api/account/email-prefs` | Cài đặt email; gửi `{"unsubscribe_all": 1}` để huỷ nhận hết |
+
+`GET /api/account/likes?tab=ban-thich|thich-ban|ghep-doi|da-xem` trả `tab, is_vip, totals, unread,
+my_likes, liked_me, matches, viewers` (GET đánh dấu thẻ `tab` đã xem). Mỗi hồ sơ trong bốn danh sách
+là `ho_so` đầy đủ (hoặc `detail_locked`) thêm các trường của thẻ Quan tâm (members/_card.php):
+
+- `charge_enabled` (bool) — chủ hồ sơ bật thu phí xem (`profile_access_card()['charge']`), vẫn `true`
+  khi mình đã mua; dùng để vẽ viền vàng. Không suy ra từ `is_vip`/`locked`/`detail_locked`.
+- `marital_status` (mã `doc_than|ly_hon|goa|phuc_tap`), `marital_label` (nhãn) và `weight_kg` —
+  chỉ khi được xem chi tiết (không `detail_locked`, cùng luật với `height_cm`), không thì `null`.
+- `meta` ở `liked_me` ("Thích bạn …") và `viewers` ("Đã xem …", chỉ VIP).
+
+Không che theo VIP (như web): mọi tài khoản thấy đủ `liked_me`, `viewers` kèm `meta` ("Thích bạn …" / "Đã xem …"); `locked` luôn `false`.
 
 ## Tin nhắn
 
@@ -185,6 +198,7 @@ Bản API của `Message_actions` (web), cùng model nên cùng luật. Thân PO
 | POST | `/api/conversations/{id}/block` | `{action: "block"\|"unblock"}` — chặn người đang chat |
 | GET  | `/api/conversations/{id}/call-config` | Cấu hình gọi thoại/video: `{peer: {id, name}, rtc: {enabled, expiresAt, iceTransportPolicy: "relay", iceServers}}` (TURN tạm 1 giờ). **503** chưa bật gọi, **403** không được gọi người này. Báo hiệu qua WebSocket như web: `voice.invite {callId, conversationId, video}`; gửi `voice.connected {callId}` khi WebRTC đã kết nối để tính thời lượng. Kết thúc/gọi nhỡ tự lưu một tin `type: system` trong hội thoại, không sửa/thu hồi được. Xem `VOICE-CALLS-DEPLOYMENT.md` |
 | GET  | `/api/conversations/{id}/search?q=&before=` | Tìm tin chữ (2–100 ký tự), 20 tin/lần mới trước; `has_more`, `next_before` |
+| GET  | `/api/conversations/{id}/search?around={message_id}` | Đoạn ngữ cảnh quanh một tin (15 trước + 16 từ tin đích), cùng dạng tin như `/api/conversations/{id}`, kèm `target_id`. **404** nếu tin đã thu hồi / đã xoá phía mình |
 
 `GET /api/conversations` có thêm `notifications_enabled`, `calls_notifications_enabled` cho mỗi hội thoại.
 
@@ -242,7 +256,7 @@ không có WebSocket thì hỏi mỗi 4 giây.
 
 ---
 
-Thêm (như web): `GET /api/groups/{id}/search?q=&before_id=` tìm tin trong nhóm;
+Thêm (như web): `GET /api/groups/{id}/search?q=&before_id=` tìm tin trong nhóm (`?around={id}` → đoạn ngữ cảnh 15 + 16 tin, `target_id`);
 `GET /api/groups/{id}/members?q=&before_id=` danh sách thành viên (chỉ nhóm ẩn danh).
 
 ## Mã lỗi

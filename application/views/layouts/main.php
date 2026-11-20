@@ -70,7 +70,7 @@ $guest_banner = !$user && empty($bare) && strpos($content_view, 'auth/') !== 0 &
 <link rel="stylesheet" href="<?= base_url('assets/site/css/mobile-nav.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/mobile-nav.css') ?>">
 <link rel="stylesheet" href="<?= base_url('assets/site/css/mobile-drawer.css') ?>?v=<?= filemtime(FCPATH.'assets/site/css/mobile-drawer.css') ?>">
 </head>
-<body class="<?= !empty($bare) ? 'is-bare' : '' ?><?= $content_view === 'home/explore' ? ' is-explore-page' : '' ?><?= $tk_app ? 'tk-app' : '' ?><?= $content_view === 'account/messages' ? ' is-messages-page' : '' ?><?= $content_view === 'groups/detail' ? ' is-group-chat-page' : '' ?><?= $tk_inbox_open ? ' is-inbox-open' : '' ?><?= $guest_banner ? ' has-guest-banner' : '' ?>">
+<body class="<?= $content_view === 'home/index' ? 'is-home-page ' : '' ?><?= !empty($bare) ? 'is-bare' : '' ?><?= $content_view === 'home/explore' ? ' is-explore-page' : '' ?><?= $tk_app ? 'tk-app' : '' ?><?= $content_view === 'account/messages' ? ' is-messages-page' : '' ?><?= $content_view === 'groups/detail' ? ' is-group-chat-page' : '' ?><?= $tk_inbox_open ? ' is-inbox-open' : '' ?><?= $guest_banner ? ' has-guest-banner' : '' ?>">
 
 <!-- Dải mạng xã hội trên cùng -->
 <?php /* Chế độ toàn màn hình (trang Khám phá): bỏ thanh trên, menu và chân trang */ ?>

@@ -24,6 +24,9 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
 
 <?php /* ===================== Khối mở đầu ===================== */ ?>
 <link rel="stylesheet" href="<?= base_url('assets/site/css/home-intro.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/home-intro.css') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/site/css/home-mobile.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/home-mobile.css') ?>">
+<?php $this->load->view('home/_mobile'); ?>
+<div class="home-desktop-content">
 <div class="home-intro container">
     <section class="home-intro-hero" aria-labelledby="home-heading">
         <div class="home-intro-copy">
@@ -272,6 +275,7 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
 </section>
 
 <?php /* ===== Thanh điều hướng đáy: chỉ hiện ở trang chủ ===== */ ?>
+</div>
 <!--<div class="bottom-nav" id="bottomNav">-->
 <!--    <div class="bottom-nav-inner">-->
 <!--        <a href="<?= site_url('') ?>" class="bottom-nav-item active">-->
