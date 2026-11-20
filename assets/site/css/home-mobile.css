@@ -1,17 +1,15 @@
 .home-mobile { display: none; }
-.home-mobile-gift { display: none; }
 @media (max-width: 767px) {
     body.is-home-page { background: #fcf1f5; background-image: radial-gradient(ellipse at top left, #f9dce8, transparent 65%); padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
     .is-home-page .home-desktop-content, .is-home-page .topbar, .is-home-page .site-footer, .is-home-page .guest-banner { display: none; }
     .is-home-page .site-header { background: #fcf1f5; border-bottom: 0; box-shadow: none; }
     .is-home-page .install-banner, .is-home-page .install-banner:not([hidden]) { display: none; }
-    .is-home-page .header-inner { min-height: 56px; padding: 8px 16px; gap: 10px; }
-    .is-home-page .brand { gap: 7px; min-width: 0; }
+    .is-home-page .header-inner { box-sizing: border-box; width: 100%; max-width: none; margin-inline: 0; min-height: 56px; padding: 8px 16px; gap: 8px; justify-content: flex-start; }
+    .is-home-page .brand { order: 1; flex: 0 1 auto; gap: 7px; min-width: 0; }
     .is-home-page .brand-logo { width: 32px; height: 32px; object-fit: contain; }
-    .is-home-page .brand-text { display: block; font-size: 20px; font-weight: 800; color: #cb365b; white-space: nowrap; }
-    .is-home-page .hd-mini { margin-left: auto; gap: 4px; }
-    .is-home-page .home-mobile-gift { display: grid; place-items: center; width: 30px; height: 36px; color: #c82d50; }
-    .home-mobile-gift svg { width: 23px; height: 23px; }
+    .is-home-page .brand-text { display: block; overflow: hidden; text-overflow: ellipsis; font-size: 20px; font-weight: 800; color: #cb365b; white-space: nowrap; }
+    .is-home-page .hd-mini { flex-shrink: 0; margin-left: auto; gap: 4px; }
+    .is-home-page .nav-toggle { margin-left: 0; flex-shrink: 0; }
     .is-home-page .hd-mini-btn, .is-home-page .hd-bell { color: #bc2b4d; }
     .home-mobile { display: flex; flex-direction: column; gap: 20px; max-width: 768px; margin: auto; padding: 8px 16px 20px; color: #322e32; }
     .home-mobile *, .home-mobile *::before, .home-mobile *::after { box-sizing: border-box; }
@@ -76,6 +74,5 @@
     .home-mobile-person-photo { flex-basis: 88px; width: 88px; }
     .home-mobile-person-title h3 { font-size: 14px; }
     .is-home-page .brand-text { font-size: 17px; }
-    .is-home-page .home-mobile-gift { display: none; }
     .is-home-page .header-inner { padding-inline: 12px; gap: 4px; }
 }

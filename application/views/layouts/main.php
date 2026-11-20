@@ -143,11 +143,6 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
                  Chuyển hẳn chứ không nhân bản: hai khối cùng id (#noti-toggle,
                  #noti-panel) thì JS bắt nhầm phần tử, khay không xổ được. */ ?>
         <div class="hd-mini">
-            <?php if ($content_view === 'home/index'): ?>
-            <a class="home-mobile-gift" href="<?= site_url('tai-khoan/chuoi') ?>" aria-label="Điểm danh và phần thưởng">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v9h14v-9M12 8v13"/><path d="M12 8H7.5A2.5 2.5 0 1 1 10 5.5L12 8Zm0 0h4.5A2.5 2.5 0 1 0 14 5.5L12 8Z"/></svg>
-            </a>
-            <?php endif; ?>
             <button type="button" id="header-search-toggle" class="hd-mini-btn" aria-label="Tìm kiếm" aria-controls="header-search" aria-expanded="false">
                 <svg viewBox="0 0 24 24" class="ic" aria-hidden="true">
                     <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/>
