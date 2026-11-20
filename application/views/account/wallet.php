@@ -39,7 +39,7 @@ $ly_do = array(
 <header class="tk-ph">
     <div class="tk-ph__b">
         <h1>Nạp xu / VIP</h1>
-        <p>Xu đủ điều kiện chuyển dùng để mở hồ sơ chi tiết; xu thưởng khóa dùng cho các tiện ích khác.</p>
+        <p>Toàn bộ số dư xu, bao gồm xu thưởng, đều dùng được để mở hồ sơ và thanh toán các tiện ích.</p>
     </div>
 </header>
 
@@ -50,7 +50,7 @@ $ly_do = array(
         <div class="tk-wl-bal__b">
             <p class="tk-wl-bal__n"><?= super_admin_unlimited($me, 'coins') ? '∞' : number_format((int) $me['coin_balance']) ?> xu</p>
             <?php if (super_admin_unlimited($me, 'coins')): ?><p>Chế độ xu vô hạn đang bật</p><?php else: ?>
-            <p><?= number_format(min((int)$me['coin_balance'],(int)($me['transferable_coin_balance'] ?? 0))) ?> xu đủ điều kiện chuyển · <?= number_format(max(0,(int)$me['coin_balance']-(int)($me['transferable_coin_balance'] ?? 0))) ?> xu thưởng/khóa</p>
+            <p>Toàn bộ số xu hiện có đều có thể thanh toán</p>
             <?php endif; ?>
             <p class="tk-wl-bal__l">Số dư hiện tại</p>
         </div>

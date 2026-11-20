@@ -41,7 +41,7 @@ class M_profile_access extends CI_Model
         return array('id'=>(int)$owner['id'],'slug'=>$owner['slug'],'name'=>display_name($owner),'avatar'=>avatar_url($owner['avatar'],$owner['gender']),
             'age'=>age_from($owner['birthday']),'province'=>$owner['province_name'] ?? '', 'job'=>$owner['job'],'bio'=>mb_substr(strip_tags((string)$owner['bio']),0,180),
             'charge_enabled'=>(bool)$owner['charge_enabled'],'contact_vip_required'=>(bool)$owner['contact_vip_required'],'purchased'=>(bool)$paid,'cost'=>$cost,
-            'logged_in'=>(bool)$viewer,'unlimited_coins'=>$unlimited,'balance'=>$user ? (int)$user['coin_balance'] : 0,'transferable_balance'=>$user ? min((int)$user['coin_balance'],(int)$user['transferable_coin_balance']) : 0,
+            'logged_in'=>(bool)$viewer,'unlimited_coins'=>$unlimited,'balance'=>$user ? (int)$user['coin_balance'] : 0,'spendable_balance'=>$user ? (int)$user['coin_balance'] : 0,'transferable_balance'=>$user ? min((int)$user['coin_balance'],(int)$user['transferable_coin_balance']) : 0,
             'version'=>hash('sha256',$owner['id'].':'.$owner['charge_enabled'].':'.$owner['contact_vip_required'].':'.$cost), 'url'=>site_url('user/'.$owner['slug']));
     }
     public function purchase($owner_id,$viewer,$version)
@@ -55,15 +55,20 @@ class M_profile_access extends CI_Model
             $this->allowed_target($owner,$viewer);
             if (!$buyer || $buyer['status']!=='active' || $buyer['deleted_at']) throw new RuntimeException('Tài khoản không có quyền thực hiện.',403);
             $quote=$this->quote($owner,$viewer);
-            if (!hash_equals($quote['version'],(string)$version)) throw new RuntimeException('Điều kiện hồ sơ đã thay đổi. Vui lòng kiểm tra và xác nhận lại.',409);
+            if (!$quote['purchased'] && !hash_equals($quote['version'],(string)$version)) throw new RuntimeException('Điều kiện hồ sơ đã thay đổi. Vui lòng kiểm tra và xác nhận lại.',409);
             $cost = (int)$quote['cost'];
             if ($cost) {
-                if (min((int)$buyer['coin_balance'],(int)$buyer['transferable_coin_balance'])<$cost) throw new RuntimeException('Bạn cần '.$cost.' xu đủ điều kiện chuyển. Xu thưởng khóa không thể dùng để mở hồ sơ.',422);
-                $this->db->where('id',$viewer)->update('users',array('coin_balance'=>(int)$buyer['coin_balance']-$cost,'transferable_coin_balance'=>min((int)$buyer['coin_balance'],(int)$buyer['transferable_coin_balance'])-$cost));
-                $this->db->where('id',$owner_id)->update('users',array('coin_balance'=>(int)$owner['coin_balance']+$cost,'transferable_coin_balance'=>min((int)$owner['coin_balance'],(int)$owner['transferable_coin_balance'])+$cost));
+                if ((int)$buyer['coin_balance']<$cost) throw new RuntimeException('Bạn cần '.$cost.' xu để mở hồ sơ. Số dư hiện tại chưa đủ.',422);
+                $buyer_after = (int)$buyer['coin_balance']-$cost;
+                // All coins are spendable. Retain the legacy provenance totals in the ledger.
+                $eligible_before = max(0, min((int)$buyer['coin_balance'],(int)$buyer['transferable_coin_balance']));
+                $eligible_after = min($buyer_after, $eligible_before);
+                $eligible_spent = $eligible_before-$eligible_after;
+                $this->db->where('id',$viewer)->update('users',array('coin_balance'=>$buyer_after,'transferable_coin_balance'=>$eligible_after));
+                $this->db->where('id',$owner_id)->update('users',array('coin_balance'=>(int)$owner['coin_balance']+$cost,'transferable_coin_balance'=>max(0,min((int)$owner['coin_balance'],(int)$owner['transferable_coin_balance']))+$eligible_spent));
                 $this->db->insert('profile_purchases',array('buyer_id'=>$viewer,'owner_id'=>$owner_id,'amount'=>$cost));
-                foreach (array(array($viewer,-$cost,(int)$buyer['coin_balance']-$cost,'spend',$owner_id),array($owner_id,$cost,(int)$owner['coin_balance']+$cost,'earn',$viewer)) as $t) {
-                    $this->db->insert('coin_transactions',array('user_id'=>$t[0],'amount'=>$t[1],'transferable_amount'=>$t[1],'balance_after'=>$t[2],'reason'=>$t[3],'ref_type'=>'profile_transfer','ref_id'=>$t[4],'note'=>'Mở hồ sơ chi tiết một lần'));
+                foreach (array(array($viewer,-$cost,$buyer_after,'spend',$owner_id,-$eligible_spent),array($owner_id,$cost,(int)$owner['coin_balance']+$cost,'earn',$viewer,$eligible_spent)) as $t) {
+                    $this->db->insert('coin_transactions',array('user_id'=>$t[0],'amount'=>$t[1],'transferable_amount'=>$t[5],'balance_after'=>$t[2],'reason'=>$t[3],'ref_type'=>'profile_transfer','ref_id'=>$t[4],'note'=>'Mở hồ sơ chi tiết một lần'));
                 }
             }
             if (!$this->db->trans_status()) throw new RuntimeException('Giao dịch chưa thành công, chưa trừ xu.',503);

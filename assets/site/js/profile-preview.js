@@ -36,7 +36,7 @@
                 summary.append(node('span','Số dư hiện tại'),node('strong',(p.unlimited_coins ? '∞' : Number(p.balance).toLocaleString('vi-VN')) + ' xu'));
                 wallet.append(summary);
                 var rows = node('dl',undefined,'profile-preview-wallet-rows');
-                [['Xu đủ điều kiện thanh toán',p.transferable_balance],['Phí mở hồ sơ',p.cost],['Số dư sau khi mở',p.balance - p.cost]].forEach(function (item) {
+                [['Số dư xu',p.balance],['Phí mở hồ sơ',p.cost],['Số dư sau khi mở',p.balance - p.cost]].forEach(function (item) {
                     var row = node('div');
                     row.append(node('dt',item[0]),node('dd',p.unlimited_coins && item[0] !== 'Phí mở hồ sơ' ? '∞ xu' : item[1] < 0 ? 'Chưa đủ xu' : Number(item[1]).toLocaleString('vi-VN') + ' xu'));
                     rows.append(row);
@@ -48,8 +48,8 @@
             status.textContent = message || '';
             buy.textContent = !p.logged_in ? 'Đăng nhập để xem' : p.cost ? 'Xem hồ sơ chi tiết · ' + p.cost + ' xu' : 'Xem hồ sơ chi tiết';
             buy.disabled = false;
-            if (p.logged_in && p.cost && p.transferable_balance < p.cost) {
-                buy.disabled = true; status.textContent = 'Bạn cần ' + p.cost + ' xu đủ điều kiện chuyển. Xu thưởng khóa không được dùng. ';
+            if (p.logged_in && p.cost && p.balance < p.cost) {
+                buy.disabled = true; status.textContent = 'Bạn cần ' + p.cost + ' xu để mở hồ sơ. Số dư hiện tại chưa đủ. ';
                 var topup = node('a','Nạp xu'); topup.href = base + 'tai-khoan/nap-xu'; status.append(topup);
             }
         } catch (error) { if (turn === sequence) status.textContent = error.message; }
@@ -65,7 +65,7 @@
         } catch (error) {
             if (error.code === 409) await load(p.slug,'Điều kiện đã thay đổi. Vui lòng xem lại và xác nhận lần nữa.');
             else status.textContent = error.message;
-        } finally { busy = false; if (current) buy.disabled = !!(current.preview.logged_in && current.preview.cost && current.preview.transferable_balance < current.preview.cost); }
+        } finally { busy = false; if (current) buy.disabled = !!(current.preview.logged_in && current.preview.cost && current.preview.balance < current.preview.cost); }
     };
     function cardSlug(card) {
         if (card.dataset.profilePreviewCard) return card.dataset.profilePreviewCard;

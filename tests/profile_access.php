@@ -39,9 +39,7 @@ $db->where('id',1)->update('users',array('coin_balance'=>100,'transferable_coin_
 $quote=$access->quote(owner(),1);
 check_group($quote['cost']===20 && $quote['contact_vip_required'], 'Default settings charge twenty coins and require VIP for contact');
 check_group(!isset($quote['phone'],$quote['email'],$quote['shared_phone'],$quote['height_cm']) && !str_contains(json_encode($quote),'SECRET'), 'Preview never contains locked contacts or login credentials');
-denied(function () use ($access,$quote) { $access->purchase(2,1,$quote['version']); },422,'Locked bonus cannot pay for profile');
-check_group($db->where('id',1)->get('users')->row_array()['coin_balance']==100 && !$access->purchased(1,2),'Failed purchase leaves balance and rights untouched');
-$db->where('id',1)->update('users',array('transferable_coin_balance'=>100));
+check_group($quote['balance']===100 && $quote['spendable_balance']===100,'All existing coins including bonus are spendable');
 $first=$access->purchase(2,1,$quote['version']);
 check_group($first['charged']===20 && $access->purchased(1,2),'Purchase grants permanent pair permission');
 check_group($db->where('id',1)->get('users')->row_array()['coin_balance']==80 && $db->where('id',2)->get('users')->row_array()['coin_balance']==20,'Exactly twenty coins transfer without a fee');
@@ -88,7 +86,7 @@ check_group($db->where('id',1)->get('users')->row_array()['transferable_coin_bal
 require APPPATH . 'models/M_user.php';
 $wallet=new M_user();$wallet->db=$db;
 $wallet->adjust_coin(1,50,'bonus');
-check_group($db->where('id',1)->get('users')->row_array()['transferable_coin_balance']==$balanceBefore['transferable_coin_balance'],'Bonus credits remain locked');
+check_group($db->where('id',1)->get('users')->row_array()['transferable_coin_balance']==$balanceBefore['transferable_coin_balance'],'Bonus provenance remains tracked without restricting payments');
 $wallet->adjust_coin(1,110,'nap',null,null,'100 paid + 10 bonus',100);
 check_group($db->where('id',1)->get('users')->row_array()['transferable_coin_balance']==$balanceBefore['transferable_coin_balance']+100,'Only paid portion of top-up is transferable');
 echo "PASS profile access, contact privacy, wallet accounting and entitlement persistence. Database: $testName\n";

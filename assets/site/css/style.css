@@ -5430,7 +5430,7 @@ button.cw-close {
 .profile-access-locked { padding-block:36px; max-width:640px; }
 .profile-access-locked > img { border-radius:50%; object-fit:cover; }
 /* Paid profile cards use one frame and a badge straddling its upper edge. */
-body :is(.pcard,.ccard,.hm-sug,.sw-card).is-profile-paid { position:relative; overflow:visible; border:1px solid #edc15b; border-radius:16px; background:#fffaf0; }
+body :is(.pcard,.ccard,.hm-sug,.sw-card).is-profile-paid { position:relative; overflow:visible; border:1px solid #edc15b; border-radius:5px; background:#fffaf0; }
 .profile-price-label { position:absolute; z-index:2; top:-12px; right:14px; display:inline-flex; align-items:center; justify-content:center; max-width:calc(100% - 28px); margin:0; padding:5px 12px; border:1px solid #e3ac27; border-radius:999px; background:#ffe393; color:#694708; font-size:11px; line-height:18px; font-weight:700; text-decoration:none; white-space:nowrap; box-shadow:0 1px 2px #80541412; }
 .profile-price-label:hover { background:#ffda70; color:#694708; text-decoration:none; }
 .profile-price-label.is-open { border-color:#b8d7c4; background:#eaf6ef; color:#287247; }
