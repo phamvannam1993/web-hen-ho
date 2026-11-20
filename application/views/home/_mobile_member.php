@@ -17,9 +17,10 @@ $home_facts = array_filter(array(
         <div>
             <div class="home-mobile-person-title">
                 <h3><a href="<?= site_url('profile/' . $m['slug']) ?>"><?= e(display_name($m)) ?></a></h3>
-                <?php if ($home_age): ?><span class="home-mobile-age"><?= $m['gender'] === 'female' ? '♀' : ($m['gender'] === 'male' ? '♂' : '') ?> <?= (int) $home_age ?></span><?php endif; ?>
+                <?php if ($home_age && empty($home_carousel)): ?><span class="home-mobile-age"><?= $m['gender'] === 'female' ? '♀' : ($m['gender'] === 'male' ? '♂' : '') ?> <?= (int) $home_age ?></span><?php endif; ?>
                 <span class="home-mobile-status<?= $home_online ? ' is-online' : '' ?>" role="img" aria-label="<?= $home_online ? 'Đang online' : 'Ngoại tuyến' ?>" title="<?= $home_online ? 'Đang online' : 'Ngoại tuyến' ?>"></span>
             </div>
+            <?php if (!empty($home_carousel)): ?><p class="home-mobile-person-location"><?= e(($m['province_name'] ?? '') ?: 'Chưa cập nhật khu vực') ?></p><?php endif; ?>
             <?php if ($home_tags): ?><div class="home-mobile-tags"><?php foreach ($home_tags as $tag): ?><span><?= e($tag) ?></span><?php endforeach; ?></div><?php endif; ?>
             <?php if ($home_facts): ?><p class="home-mobile-facts"><?= e(implode(' · ', $home_facts)) ?></p><?php endif; ?>
         </div>

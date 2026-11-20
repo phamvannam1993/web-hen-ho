@@ -1,5 +1,8 @@
 .tk-ms .chat-msg { position:relative; max-width:calc(80% - 32px); }
-.tk-ms .chat-msg.is-image { width:260px; max-width:calc(100% - 35px); }
+.tk-ms .chat-msg.is-image { width:fit-content; max-width:min(280px,calc(100% - 35px)); }
+.tk-ms .chat-msg.is-image > a { display:block; width:fit-content; max-width:100%; }
+.tk-ms .chat-msg.mine.is-image > a { margin-left:auto; }
+.tk-ms .chat-msg.mine.is-image small { text-align:right; }
 .pm-message-more { position:absolute; top:50%; transform:translateY(-50%); left:calc(100% + 5px); display:flex; align-items:center; justify-content:center; width:30px; height:30px; margin:0; padding:0; border:1px solid #eadce1; border-radius:50%; background:#fff; color:#766773; font:inherit; font-size:22px; line-height:1; cursor:pointer; }
 .chat-msg.mine .pm-message-more { left:auto; right:calc(100% + 5px); }
 .pm-message-more:focus-visible, .pm-message-menu button:focus-visible { outline:2px solid var(--pink,#d1273f); outline-offset:2px; }

@@ -28,7 +28,7 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
                     <div class="hm-sug-body">
                         <div class="hm-sug-top">
                             <h3><a href="<?= site_url('profile/' . $m['slug']) ?>"><?= e(display_name($m)) ?><?= $tuoi ? ', ' . $tuoi : '' ?></a></h3>
-                            <span class="hm-pill hm-pill-pink">Tương hợp: <?= $hop ?>%</span>
+                            <?php if (isset($m['match_score'])): ?><span class="hm-pill hm-pill-pink">Tương hợp: <?= $hop ?>%</span><?php endif; ?>
                             <?php if ($da_match): ?>
                                 <span class="hm-pill hm-pill-green">Đã match!</span>
                             <?php endif; ?>

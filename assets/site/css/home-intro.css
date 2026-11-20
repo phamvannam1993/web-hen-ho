@@ -20,8 +20,8 @@
 .home-intro-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin-top: 20px; }
 .home-intro-trust { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--intro-muted); }
 .home-intro-trust .hm-ic { width: 16px; height: 16px; color: var(--intro-primary); }
-.home-intro-photo { position: relative; padding: 6px; border: 1px solid #fff; border-radius: 26px; background: #fff; box-shadow: 0 12px 32px -12px #382d3840; }
-.home-intro-photo > img { display: block; width: 100%; height: 330px; border-radius: 20px; object-fit: cover; object-position: center 36%; }
+.home-intro-photo { position: relative; padding: 6px; border: 1px solid #fff; border-radius: 5px; background: #fff; box-shadow: 0 12px 32px -12px #382d3840; }
+.home-intro-photo > img { display: block; width: 100%; height: 330px; border-radius: 5px; object-fit: cover; object-position: center 36%; }
 .home-intro-caption { position: absolute; bottom: 16px; left: 16px; display: flex; align-items: center; gap: 8px; max-width: calc(100% - 32px); padding: 8px 12px; border-radius: 999px; background: #fffffff2; font-size: 11px; font-weight: 500; box-shadow: 0 1px 4px #382d3810; }
 .home-intro-caption .hm-ic { width: 16px; height: 16px; fill: var(--intro-primary); stroke: var(--intro-primary); }
 .home-intro-features { position: relative; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; margin: -28px 24px 0; padding: 4px 0 28px; }
@@ -91,7 +91,7 @@ a.home-intro-feature:hover { transform: translateY(-5px); color: inherit; text-d
     .home-intro .home-intro-button { min-height: 48px; padding: 0 24px; border-radius: 12px; font-size: 14px; font-weight: 700; background: linear-gradient(135deg, #cf3159, #e47789); box-shadow: 0 10px 24px -8px #cf315970; }
     .home-intro .home-intro-button.home-intro-install { background: #fff; color: #cf3159; box-shadow: none; }
     .home-intro .home-intro-trust { width: 100%; }
-    .home-intro .home-intro-photo { grid-row: 5; padding: 0; overflow: hidden; border: 1px solid #eadfe5; border-radius: 24px; background: #fff; box-shadow: 0 10px 30px -12px #cf315940; }
+    .home-intro .home-intro-photo { grid-row: 5; padding: 0; overflow: hidden; border: 1px solid #eadfe5; border-radius: 5px; background: #fff; box-shadow: 0 10px 30px -12px #cf315940; }
     .home-intro .home-intro-photo > img { height: 224px; border-radius: 0; }
     .home-intro .home-intro-caption { position: static; max-width: none; padding: 20px; border-radius: 0; background: #fff; color: #303030; font-size: 18px; font-weight: 700; box-shadow: none; }
     .home-intro .home-intro-caption .hm-ic { flex-shrink: 0; }
