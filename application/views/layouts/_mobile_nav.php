@@ -38,7 +38,7 @@ $mobile_items = array(
                     <?php endif; ?>
                     <?php if ($item[0] === 'messenger' && $user): ?>
                         <?php $message_count = (int) ($account_menu_counts['msg'] ?? 0); ?>
-                        <span class="tk-dot-count" data-account-menu-count="msg" <?= $message_count ? '' : 'hidden' ?> aria-label="<?= $message_count ?> tin nhắn chưa đọc"><?= $message_count > 99 ? '99+' : $message_count ?></span>
+                        <span class="tk-dot-count" data-account-menu-count="msg" role="status" aria-live="polite" aria-atomic="true" <?= $message_count ? '' : 'hidden' ?> aria-label="<?= $message_count ?> tin nhắn chưa đọc"><?= $message_count > 99 ? '99+' : $message_count ?></span>
                     <?php endif; ?>
                 </a>
                 <?php endif; ?>

@@ -47,8 +47,10 @@ class Home extends MY_Controller
 
         // Khách cũng xem được các hồ sơ công khai qua bộ lọc hiện có.
         $data['mobile_members'] = $this->auth->check()
-            ? $data['suggestions']
-            : $this->m_user->search(array('sort' => 'active'), 10);
+            ? $this->m_user->suggestions($me, 21)
+            : $this->m_user->search(array('sort' => 'active'), 21);
+        $data['mobile_members_has_more'] = count($data['mobile_members']) > 20;
+        $data['mobile_members'] = array_slice($data['mobile_members'], 0, 20);
 
         $this->render('home/index', $data);
     }

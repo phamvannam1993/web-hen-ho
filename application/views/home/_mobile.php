@@ -1,7 +1,7 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
 $home_groups = array(
     array('Cùng phong cách của bạn', $user ? 'Những người có cùng sở thích, phong cách với bạn' : 'Khám phá những kết nối mới trong cộng đồng', 'Cùng gu', array_slice($mobile_members, 0, 5)),
-    array($user ? 'Phù hợp với bạn' : 'Có thể bạn muốn gặp', $user ? 'Những người phù hợp nhất với hồ sơ của bạn' : 'Làm quen và bắt đầu câu chuyện của riêng bạn', $user ? 'Hợp nhau' : 'Khám phá', array_slice($mobile_members, 5, 5)),
+    array($user ? 'Phù hợp với bạn' : 'Có thể bạn muốn gặp', $user ? 'Những người phù hợp nhất với hồ sơ của bạn' : 'Làm quen và bắt đầu câu chuyện của riêng bạn', $user ? 'Hợp nhau' : 'Khám phá', array_slice($mobile_members, 5)),
 );
 ?>
 <div class="home-mobile">
@@ -50,6 +50,9 @@ $home_groups = array(
             <?php endforeach; ?>
             <?php if (!$group[3]): ?><p class="home-mobile-empty">Chưa có hồ sơ phù hợp. Bạn hãy quay lại sau nhé.</p><?php endif; ?>
         </div>
+        <?php if ($group_index === 1 && !empty($mobile_members_has_more)): ?>
+        <button type="button" class="home-mobile-load-more" data-home-load-more data-url="<?= e(site_url('ajax/goi-y-trang-chu')) ?>" data-offset="<?= count($mobile_members) ?>" aria-live="polite">Xem thêm hồ sơ</button>
+        <?php endif; ?>
     </section>
     <?php endforeach; ?>
 </div>

@@ -23,6 +23,36 @@ class Ajax extends MY_Controller
         $ok = $this->m_interest_badge->mark_seen($this->auth->id(), (string) $this->input->post('tab'));
         return $this->json(array('ok' => $ok), $ok ? 200 : 422);
     }
+    /** Hồ sơ trang chủ, dùng cùng bộ lọc với lần tải đầu cho cả khách và thành viên. */
+    public function home_suggestions()
+    {
+        if ($this->input->method() !== 'get') return $this->json(array('ok' => false), 405);
+        $this->output->set_header('Cache-Control: private, no-store');
+        $this->load->model('m_user');
+        $offset = max(0, min(100000, (int) $this->input->get('offset')));
+        $limit = 12;
+        $user = $this->auth->check() ? $this->auth->user() : null;
+        $members = $user
+            ? $this->m_user->suggestions($user, $limit + 1, $offset)
+            : $this->m_user->search(array('sort' => 'active'), $limit + 1, $offset);
+        $has_more = count($members) > $limit;
+        $members = array_slice($members, 0, $limit);
+        $matched_ids = array();
+        if ($user) {
+            foreach ($this->m_interaction->matches($user['id'], 200) as $match) {
+                $matched_ids[] = (int) $match['id'];
+            }
+        }
+        $html = '';
+        foreach ($members as $member) {
+            $html .= $this->load->view('home/_suggestion', array(
+                'm' => $member, 'user' => $user, 'matched_ids' => $matched_ids,
+            ), true);
+        }
+        return $this->json(array('ok' => true, 'html' => $html,
+            'has_more' => $has_more, 'next_offset' => $offset + count($members)));
+    }
+
     public function account_suggestion()
     {
         if (!$this->require_login()) return;

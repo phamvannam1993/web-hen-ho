@@ -379,7 +379,10 @@
     function acknowledge() {
         if (!active() || !loaded || !token || !last || readBusy || last <= readThrough || !atBottom()) return;
         readBusy = true; var through = last, version = chatVersion;
-        request('/' + gid + '/da-doc', {message_id: through}).then(function () { if (version === chatVersion) readThrough = Math.max(readThrough, through); })
+        request('/' + gid + '/da-doc', {message_id: through}).then(function () {
+            if (version === chatVersion) readThrough = Math.max(readThrough, through);
+            document.dispatchEvent(new CustomEvent('account-counts-changed'));
+        })
         .catch(function () {}).then(function () { readBusy = false; });
     }
     function loadMessages(older) {

@@ -628,7 +628,7 @@ class M_user extends CI_Model
                $online_cond
                AND NOT EXISTS (SELECT 1 FROM likes hidden_like WHERE hidden_like.user_id = $me
                    AND hidden_like.target_type = 'user' AND hidden_like.target_id = u.id)
-          ORDER BY match_score DESC, u.last_active_at DESC
+          ORDER BY match_score DESC, u.last_active_at DESC, u.id DESC
              LIMIT ? OFFSET ?";
 
         return $this->db->query($sql, array(

@@ -455,7 +455,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var interestCount = document.querySelector('[data-interest-count]');
     var accountTotalCount = document.querySelector('[data-account-total-count]');
-    var interestRefresh = Promise.resolve();
+    var accountMessageCount = document.querySelector('[data-account-menu-count="msg"]');
+    var interestRefreshBusy = false, interestRefreshPending = false, interestRefreshTimer;
     function applyAccountCounts(res) {
         var interest = Number(res.interest === undefined ? res.count : res.interest) || 0;
         document.querySelectorAll('[data-interest-tab-count]').forEach(function (badge) {
@@ -489,21 +490,34 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
     function refreshInterestCount() {
-        if (!interestCount && !accountTotalCount) return;
-        interestRefresh = interestRefresh.catch(function () {}).then(function () {
-            return fetch(base + 'ajax/so-quan-tam', {credentials: 'same-origin', cache: 'no-store'})
+        if (!interestCount && !accountTotalCount && !accountMessageCount) return;
+        if (interestRefreshBusy) { interestRefreshPending = true; return; }
+        clearTimeout(interestRefreshTimer);
+        interestRefreshTimer = setTimeout(function () {
+            interestRefreshBusy = true;
+            fetch(base + 'ajax/so-quan-tam', {credentials: 'same-origin', cache: 'no-store'})
                 .then(function (response) { return response.json(); })
                 .then(function (res) {
                     if (!res.ok) return;
                     applyAccountCounts(res);
-                }).catch(function () {});
-        });
+                }).catch(function () {}).finally(function () {
+                    interestRefreshBusy = false;
+                    if (interestRefreshPending) { interestRefreshPending = false; refreshInterestCount(); }
+                });
+        }, 250);
     }
 
     document.addEventListener('account-counts-changed', refreshInterestCount);
     window.addEventListener('focus', refreshInterestCount);
-    if (interestCount || accountTotalCount) {
-        setInterval(function () { if (!document.hidden) refreshInterestCount(); }, 30000);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) refreshInterestCount(); });
+    document.addEventListener('DOMContentLoaded', function () {
+        if (!window.Realtime) return;
+        ['chat.message', 'chat.seen', 'chat.deleted', 'room.message'].forEach(function (type) {
+            window.Realtime.on(type, refreshInterestCount);
+        });
+    });
+    if (interestCount || accountTotalCount || accountMessageCount) {
+        setInterval(function () { if (!document.hidden) refreshInterestCount(); }, 12000);
     }
 
     function post(url, data) {

@@ -245,6 +245,7 @@ $route['ajax/online-members']  = 'ajax/online_members';
 $route['ajax/phong-chat/gui']  = 'ajax/room_send';
 $route['ajax/mo-chat/(:num)']  = 'ajax/open_conversation/$1';
 $route['ajax/goi-y-tai-khoan'] = 'ajax/account_suggestion';
+$route['ajax/goi-y-trang-chu'] = 'ajax/home_suggestions';
 $route['ajax/so-quan-tam'] = 'ajax/interest_count';
 $route['ajax/quan-tam/da-xem'] = 'ajax/interest_seen';
 $route['ajax/report']          = 'ajax/report';

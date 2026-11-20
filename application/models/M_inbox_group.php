@@ -127,6 +127,22 @@ class M_inbox_group extends CI_Model
         });
     }
 
+    public function unread_count($user_id)
+    {
+        foreach (array('inbox_groups', 'inbox_group_members', 'inbox_group_messages') as $table) {
+            if (!$this->db->table_exists($table)) return 0;
+        }
+        $user_id = $this->id($user_id);
+        return (int) $this->run("SELECT COUNT(*) AS total FROM inbox_group_messages x
+            JOIN inbox_groups g ON g.id=x.group_id AND g.status='active'
+            JOIN inbox_group_members m ON m.group_id=g.id AND m.user_id=? AND m.left_at IS NULL
+            JOIN users u ON u.id=x.sender_id AND u.status='active' AND u.deleted_at IS NULL
+            WHERE x.id>m.last_read_message_id AND x.sender_id<>? AND x.deleted_at IS NULL
+            AND NOT EXISTS (SELECT 1 FROM blocks b WHERE (b.user_id=? AND b.blocked_id=x.sender_id)
+                OR (b.blocked_id=? AND b.user_id=x.sender_id))",
+            array($user_id, $user_id, $user_id, $user_id))->row('total');
+    }
+
     public function listing($user_id, $cursor = '0', $peer_id = null)
     {
         $user_id = $this->ready($user_id);

@@ -266,6 +266,29 @@ class M_chat_group extends CI_Model
         return array('removed' => array_values(array_unique(array_map('intval', $removed))), 'events_cursor' => $cursor, 'senders' => array_values($senders), 'sender_updates'=>$sender_updates, 'reactions'=>$reactions);
     }
 
+    /** Badge counts only followed, visible groups; never joins or marks a group read. */
+    public function unread_count($actor)
+    {
+        if (!$actor || !$actor['user'] || $actor['user']['status'] !== 'active' || !empty($actor['user']['deleted_at'])) return 0;
+        $blocked = $this->blocked_keys($actor);
+        $this->db->from('room_messages r')
+            ->join('chat_groups g', 'g.id=r.room_id')
+            ->join('chat_group_people p', 'p.group_id=g.id')
+            ->where('p.actor_key', $actor['key'])->where('p.is_following', 1)
+            ->where('p.is_hidden', 0)->where('p.is_banned', 0)
+            ->where_in('g.status', array('active', 'readonly'))
+            ->where('r.id > p.last_read_message_id', null, false)->where('r.deleted_at', null)
+            ->group_start()->where('r.actor_key', null)->or_where('r.actor_key !=', $actor['key'])->group_end()
+            ->group_start()->where('r.user_id', null)->or_where('r.user_id !=', $actor['user']['id'])->group_end();
+        if ($blocked) {
+            $this->db->group_start()->where('r.actor_key', null)->or_where_not_in('r.actor_key', $blocked)->group_end();
+            $ids = array();
+            foreach ($blocked as $key) if (substr($key, 0, 2) === 'u:') $ids[] = (int) substr($key, 2);
+            if ($ids) $this->db->group_start()->where('r.user_id', null)->or_where_not_in('r.user_id', $ids)->group_end();
+        }
+        return (int) $this->db->count_all_results();
+    }
+
     public function summary($group, $actor)
     {
         $this->access($group, $actor);

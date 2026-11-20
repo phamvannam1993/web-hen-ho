@@ -70,15 +70,15 @@ body.has-guest-banner .site-footer { padding-bottom: 115px; margin-bottom: 0 !im
     .guest-banner-actions a { min-height: 30px; padding: 5px 10px; font-size: 11px; border-radius: 6px; }
     body.has-guest-banner .chat-widget { bottom: calc(210px + env(safe-area-inset-bottom, 0px)); }
 }
-.site-mobile-nav .tk-dot-count {
-    position: absolute; top: 3px; left: calc(50% + 5px);
+.site-mobile-nav.tk-bnav .tk-dot-count {
+    position: absolute; top: 3px; right: auto; left: calc(50% + 5px);
     display: inline-flex; align-items: center; justify-content: center;
-    min-width: 18px; padding: 1px 4px; border-radius: 999px;
+    box-sizing: border-box; width: max-content; min-width: 18px; height: auto; padding: 1px 4px; border-radius: 999px;
     background: var(--tk-primary, oklch(0.654 0.203 13.5)); color: #fff;
     font-size: 10px; font-weight: 700; line-height: 16px;
     border: 2px solid #fff; pointer-events: none;
 }
-.site-mobile-nav .tk-dot-count[hidden] { display: none; }
+.site-mobile-nav.tk-bnav .tk-dot-count[hidden] { display: none; }
 @media all {
     body.is-bare main, body.is-bare .discover-page {
         height: calc(100vh - 52px - env(safe-area-inset-bottom, 0px));

@@ -374,7 +374,10 @@
     Chat.prototype.read = function () {
         if (!this.active() || !this.bottom() || !this.last || this.readAt === this.last || !this.identity) return;
         var self = this, id = this.last;
-        this.request('read', {message_id: id}).then(function () { self.readAt = id; refreshSaved(); }).catch(function () {});
+        this.request('read', {message_id: id}).then(function () {
+            self.readAt = id; refreshSaved();
+            document.dispatchEvent(new CustomEvent('account-counts-changed'));
+        }).catch(function () {});
     };
     Chat.prototype.presence = function () {
         if (!this.identity || this.destroyed) return; this.heart = Date.now();

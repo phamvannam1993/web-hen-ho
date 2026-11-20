@@ -85,6 +85,15 @@ class M_interest_badge extends CI_Model
         $tabs = $this->counts($user_id);
         $this->load->model(array('m_interaction', 'm_notification'));
         $messages = $this->m_interaction->unread_count($user_id);
+        $this->load->model('m_inbox_group');
+        $messages += $this->m_inbox_group->unread_count($user_id);
+        if (chat_groups_enabled()) {
+            $this->load->model('m_chat_group');
+            $actor = $this->m_chat_group->actor();
+            if ($actor && (int) ($actor['user']['id'] ?? 0) === (int) $user_id) {
+                $messages += $this->m_chat_group->unread_count($actor);
+            }
+        }
         $other_notifications = (int) $this->db->where('user_id', (int) $user_id)->where('read_at', null)
             ->where_not_in('type', array('like', 'match', 'view', 'message'))->count_all_results('notifications');
         return array('interest' => array_sum($tabs), 'liked' => $tabs['thich-ban'],

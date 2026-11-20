@@ -42,3 +42,37 @@ foreach (array(array(2, true, false, false), array(3, true, false, true), array(
     if (str_contains($html, '5.0') || str_contains($html, 'Đang chat')) throw new Exception('Do not invent ratings or chat presence');
 }
 echo "PASS: mobile home cards preserve permissions, purchased borders, profile preview and real data.\n";
+
+// Render the whole mobile page: the sentinel must follow the list, not the banner.
+class MobileHomeFixture
+{
+    public $load;
+    public function __construct() { $this->load = $this; }
+    public function view($view, $data) {
+        $user = null;
+        extract($data);
+        include FCPATH . 'application/views/' . $view . '.php';
+    }
+    public function render($more) {
+        $user = null;
+        $mobile_members_has_more = $more;
+        $mobile_members = array();
+        for ($id = 1; $id <= 20; $id++) {
+            $mobile_members[] = array('id' => $id, 'slug' => 'member-' . $id,
+                'display_name' => 'Member ' . $id, 'birthday' => null,
+                'last_active_at' => null, 'avatar' => null, 'gender' => 'female',
+                'province_name' => 'Hà Nội', 'charge_enabled' => false);
+        }
+        ob_start();
+        include FCPATH . 'application/views/home/_mobile.php';
+        return ob_get_clean();
+    }
+}
+$page = new MobileHomeFixture();
+$html = $page->render(true);
+if (substr_count($html, 'class="hm-sug"') !== 15) throw new Exception('Render fifteen initial suggestions');
+if (substr_count($html, 'data-home-load-more ') !== 1
+    || strpos($html, 'data-home-load-more ') < strpos($html, 'data-profile-preview-card="member-20"')
+    || !str_contains($html, 'data-offset="20"')) throw new Exception('Pagination sentinel must follow the full suggestion list');
+if (str_contains($page->render(false), 'data-home-load-more ')) throw new Exception('Do not offer loading when exhausted');
+echo "PASS: mobile home renders the full list and only offers pagination after the suggestions when more profiles exist.\n";
