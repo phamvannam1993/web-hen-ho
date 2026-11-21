@@ -76,12 +76,12 @@
     var slides = banner.querySelectorAll('[data-home-slide]');
     var images = banner.querySelectorAll('[data-home-banner-image]');
     var buttons = banner.querySelectorAll('[data-home-slide-to]');
-    var activeSlide = 0, slideTimer;
+    var activeSlide = 0, slideTimer, swipe = null, suppressClickUntil = 0;
     var mobileBanner = window.matchMedia('(max-width: 767px)');
     var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     function scheduleSlide() {
         clearTimeout(slideTimer);
-        if (document.hidden || !mobileBanner.matches || reducedMotion.matches || banner.contains(document.activeElement)) return;
+        if (swipe || document.hidden || !mobileBanner.matches || reducedMotion.matches || banner.contains(document.activeElement)) return;
         slideTimer = setTimeout(function () { showSlide((activeSlide + 1) % slides.length); }, 4000);
     }
     function showSlide(next) {
@@ -100,6 +100,34 @@
             showSlide(Number(button.dataset.homeSlideTo));
         });
     });
+    banner.addEventListener('touchstart', function (event) {
+        swipe = null;
+        if (!mobileBanner.matches || event.touches.length !== 1) { scheduleSlide(); return; }
+        swipe = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+        clearTimeout(slideTimer);
+    }, { passive: true });
+    banner.addEventListener('touchmove', function (event) {
+        if (!swipe) return;
+        if (event.touches.length !== 1) { swipe = null; scheduleSlide(); return; }
+        var dx = Math.abs(event.touches[0].clientX - swipe.x);
+        var dy = Math.abs(event.touches[0].clientY - swipe.y);
+        // A vertical gesture belongs to page scrolling, even if the finger later turns.
+        if (dy > 12 && dy > dx) { swipe = null; scheduleSlide(); }
+    }, { passive: true });
+    banner.addEventListener('touchend', function (event) {
+        var start = swipe; swipe = null;
+        if (!start || event.touches.length || event.changedTouches.length !== 1) { scheduleSlide(); return; }
+        var dx = event.changedTouches[0].clientX - start.x;
+        var dy = event.changedTouches[0].clientY - start.y;
+        if (Math.abs(dx) >= 36 && Math.abs(dx) > Math.abs(dy) * 1.25) {
+            suppressClickUntil = Date.now() + 350;
+            showSlide((activeSlide + (dx < 0 ? 1 : -1) + slides.length) % slides.length);
+        } else scheduleSlide();
+    }, { passive: true });
+    banner.addEventListener('touchcancel', function () { swipe = null; scheduleSlide(); }, { passive: true });
+    banner.addEventListener('click', function (event) {
+        if (Date.now() < suppressClickUntil) { event.preventDefault(); event.stopImmediatePropagation(); }
+    }, true);
     banner.addEventListener('focusin', function () { clearTimeout(slideTimer); });
     banner.addEventListener('focusout', function () { setTimeout(scheduleSlide, 0); });
     document.addEventListener('visibilitychange', scheduleSlide);
