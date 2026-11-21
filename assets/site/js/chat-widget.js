@@ -100,7 +100,7 @@
     }, { passive: true });
     document.addEventListener('touchmove', function (event) {
         if (!pageLocked || event.touches.length !== 1) return;
-        var area = event.target.closest('.message-history-results, .cw-body, .cw-side-list, .cw-online-panel, .cw-emoji-list, .cg-feed, .cg-info, .cg-composer-emoji-grid, .cg-composer textarea');
+        var area = event.target.closest('.conversation-delete-menu, .message-history-results, .cw-body, .cw-side-list, .cw-online-panel, .cw-emoji-list, .cg-feed, .cg-info, .cg-composer-emoji-grid, .cg-composer textarea');
         var delta = event.touches[0].clientY - previousTouchY;
         previousTouchY = event.touches[0].clientY;
         if (!area || !panel.contains(area) || area.scrollHeight <= area.clientHeight ||
@@ -138,7 +138,6 @@
     var bodyEl   = document.getElementById('cw-body');
     var formEl   = document.getElementById('cw-form');
     var inputEl  = document.getElementById('cw-input');
-    var historySearch = document.getElementById('cw-history-search');
     var fileEl   = document.getElementById('cw-file');
     var receiver = document.getElementById('cw-receiver');
 
@@ -674,7 +673,6 @@
         root.dispatchEvent(new CustomEvent('cw:conversation-change'));
         if (window.MessageReply) window.MessageReply.clear(formEl);
         chatVersion++; bodyEl.dataset.deletedThrough = '0';
-        if (historySearch) { historySearch.hidden = true; delete historySearch.dataset.messageHistory; }
         ['cw-voice', 'cw-video'].forEach(function (id) {
             var callButton = document.getElementById(id);
             if (callButton) {
@@ -720,14 +718,11 @@
         button.dataset.notificationsMuted = info.notifications_enabled === false || info.calls_notifications_enabled === false ? '1' : '0';
         button.dataset.peerId = String(info.user_id || ''); button.dataset.peerName = info.name || '';
         button.dataset.profileUrl = info.profile_url || ''; button.hidden = false;
+        button.dataset.messageHistoryUrl = endpoint + '/tim-kiem';
     }
     function moChat(info) {
         if (window.MessageReply) window.MessageReply.clear(formEl);
         chatVersion++; bodyEl.dataset.deletedThrough = String(deletedThrough[info.id] || 0);
-        if (historySearch) {
-            historySearch.dataset.messageHistory = base + 'ajax/tin-nhan/' + Number(info.id) + '/tim-kiem';
-            historySearch.hidden = false;
-        }
         ['cw-voice', 'cw-video'].forEach(function (id) {
             var callButton = document.getElementById(id);
             if (callButton) {

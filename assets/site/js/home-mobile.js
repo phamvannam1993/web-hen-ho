@@ -74,12 +74,38 @@
     var banner = document.querySelector('[data-home-banner]');
     if (!banner) return;
     var slides = banner.querySelectorAll('[data-home-slide]');
+    var images = banner.querySelectorAll('[data-home-banner-image]');
     var buttons = banner.querySelectorAll('[data-home-slide-to]');
+    var activeSlide = 0, slideTimer;
+    var mobileBanner = window.matchMedia('(max-width: 767px)');
+    var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    function scheduleSlide() {
+        clearTimeout(slideTimer);
+        if (document.hidden || !mobileBanner.matches || reducedMotion.matches || banner.contains(document.activeElement)) return;
+        slideTimer = setTimeout(function () { showSlide((activeSlide + 1) % slides.length); }, 4000);
+    }
+    function showSlide(next) {
+        if (next < 0 || next >= slides.length) return;
+        activeSlide = next;
+        slides.forEach(function (slide, index) { slide.hidden = index !== next; });
+        images.forEach(function (img, index) {
+            img.classList.toggle('is-active', index === next);
+            img.setAttribute('aria-hidden', String(index !== next));
+        });
+        buttons.forEach(function (dot, index) { dot.setAttribute('aria-pressed', String(index === next)); });
+        scheduleSlide();
+    }
     buttons.forEach(function (button) {
         button.addEventListener('click', function () {
-            var next = Number(button.dataset.homeSlideTo);
-            slides.forEach(function (slide, index) { slide.hidden = index !== next; });
-            buttons.forEach(function (dot, index) { dot.setAttribute('aria-pressed', String(index === next)); });
+            showSlide(Number(button.dataset.homeSlideTo));
         });
     });
+    banner.addEventListener('focusin', function () { clearTimeout(slideTimer); });
+    banner.addEventListener('focusout', function () { setTimeout(scheduleSlide, 0); });
+    document.addEventListener('visibilitychange', scheduleSlide);
+    [mobileBanner, reducedMotion].forEach(function (query) {
+        if (query.addEventListener) query.addEventListener('change', scheduleSlide);
+        else if (query.addListener) query.addListener(scheduleSlide);
+    });
+    scheduleSlide();
 })();

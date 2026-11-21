@@ -516,8 +516,6 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
                                 aria-label="Gọi video" title="Gọi video"
                                 hidden disabled><?= tk_icon('video') ?></button>
                         <?php endif; ?>
-                    <button type="button" id="cw-history-search" class="message-history-trigger message-history-trigger--icon"
-                            aria-label="Tìm tin nhắn cũ" title="Tìm tin nhắn cũ" hidden><?= tk_icon('search') ?></button>
                     <?php if ($user): ?>
                     <button type="button" id="cw-conversation-more" class="cw-conversation-more" data-cw-conversation-more
                             aria-label="Tùy chọn cuộc trò chuyện" aria-haspopup="true" aria-expanded="false" hidden>⋯</button>

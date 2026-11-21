@@ -24,6 +24,7 @@
         if (existing) { existing.querySelector('input').focus(); return; }
         var menu = trigger.closest('.tk-ms-more');
         var returnFocus = menu ? menu.querySelector('summary') : (trigger.closest('.cg-group-menu') ? host.querySelector('[data-cg-group-menu-toggle]') : trigger);
+        if (trigger.closest('.conversation-delete-menu')) returnFocus = host.querySelector('#cw-conversation-more') || trigger;
         if (menu) menu.open = false;
         var endpoint = trigger.dataset.messageHistory;
         var cursorName = trigger.dataset.messageHistoryCursor || 'before';

@@ -17,7 +17,7 @@
     <button data-ig-older hidden>Older</button><div data-ig-feed></div><p data-ig-status></p>
     <form data-ig-send><textarea name="content" disabled></textarea><button type="submit" disabled>Send</button></form>
    </section></div>
-   <div class="cw-convo" id="cw-convo" hidden><header><button id="cw-back">Back</button><a id="cw-avatar-link"><img id="cw-avatar"></a><span id="cw-avatar-room"></span><a id="cw-profile-link"><b id="cw-name"></b></a><small id="cw-status"></small><button id="cw-history-search">Search</button>
+   <div class="cw-convo" id="cw-convo" hidden><header><button id="cw-back">Back</button><a id="cw-avatar-link"><img id="cw-avatar"></a><span id="cw-avatar-room"></span><a id="cw-profile-link"><b id="cw-name"></b></a><small id="cw-status"></small>
     <button id="cw-conversation-more" data-cw-conversation-more hidden>⋯</button></header>
     <div class="cw-body-wrap"><div id="cw-body"></div></div>
     <form class="cw-form" id="cw-form"><input id="cw-receiver" name="receiver_id"><input id="cw-input" name="content"><input id="cw-file" type="file" name="image"></form>
@@ -28,6 +28,7 @@
 <pre id="result" data-status="running">RUNNING</pre>
 <script>
 var errors=[],requests=[],modal,pinned=null,muted=false,blocked=false,deleted=false,groupText='',holdPin=false,pendingPin;
+if (location.search.includes('fallback')) Object.defineProperty(HTMLElement.prototype,'showPopover',{configurable:true,value:undefined});
 window.addEventListener('error',e=>errors.push(e.message));
 window.setInterval=()=>1;window.clearInterval=()=>{};
 window.appModal=options=>{modal=options};
@@ -57,6 +58,7 @@ window.fetch=function(url,options){options=options||{};var u=new URL(url),p=u.pa
 <script src="../assets/site/js/message-reply.js"></script>
 <script src="../assets/site/js/chat-widget.js"></script>
 <script src="../assets/site/js/conversation-delete.js"></script>
+<script src="../assets/site/js/message-history.js"></script>
 <script src="../assets/site/js/private-message-menu.js"></script>
 <script src="../assets/site/js/inbox-private-groups.js"></script>
 <script>
@@ -76,6 +78,18 @@ window.fetch=function(url,options){options=options||{};var u=new URL(url),p=u.pa
   await until(()=>document.querySelector('#cw-body .pm-message-more'));
   await until(()=>!document.querySelector('.pm-message-menu button:nth-child(2)').disabled);
   check(!header().hidden,'Header options visible in private chat');
+  check(!document.getElementById('cw-history-search'),'No standalone search button');
+  header().click();await tick();
+  check(header().getAttribute('aria-expanded')==='true','Header menu opens');
+  header().click();await tick();
+  check(header().getAttribute('aria-expanded')==='false','Clicking header dots again closes menu');
+  header().click();await tick();
+  var searchAction=document.querySelector('.conversation-delete-menu [data-message-history]');
+  check(searchAction&&!searchAction.hidden&&searchAction.dataset.messageHistory.includes('/9/tim-kiem'),'Search menu uses current conversation');
+  searchAction.click();await tick();
+  check(!!document.querySelector('#cw-convo .message-history-panel')&&!document.getElementById('cw-panel').hidden,'Menu opens inline search inside sticky');
+  document.querySelector('.message-history-back').click();await tick();
+  check(!document.querySelector('.message-history-panel')&&document.activeElement===header(),'Search closes and restores header focus');
   messageMenu();check(document.querySelectorAll('.pm-message-menu button').length===4,'Reply, pin, copy and recall share menu');
   messageAction('Trả lời');check(document.querySelector('#cw-form [name="reply_to_id"]').value==='1','Reply drafts work');
   await tick();messageMenu();messageAction('Ghim');await until(()=>!document.querySelector('.pm-pin-strip').hidden);

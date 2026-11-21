@@ -17,13 +17,20 @@
     .home-mobile a { color: inherit; text-decoration: none; }
     .home-mobile .tk-ic { width: 18px; height: 18px; flex-shrink: 0; }
     .home-mobile-banner { position: relative; overflow: hidden; border-radius: 5px; box-shadow: 0 10px 30px -12px #cf315940; }
-    .home-mobile-banner > img { display: block; width: 100%; height: auto; aspect-ratio: 12/5; object-fit: cover; }
-    .home-mobile-banner-copy { position: absolute; inset: 0 auto 0 0; display: flex; align-items: center; width: 60%; padding: 16px 0 70px 20px; color: #fff; text-shadow: 0 2px 6px #92203e45; }
-    .home-mobile-banner-copy h1, .home-mobile-banner-copy h2 { margin: 0; color: inherit; font-size: clamp(21px, 6vw, 36px); font-weight: 800; line-height: 1.15; }
+    .home-mobile-banner-images { position:relative; width:100%; padding-top:41.666667%; }
+    .home-mobile-banner-images img { position:absolute; top:0; left:0; display:block; width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity .7s ease; }
+    .home-mobile-banner-images img.is-active { opacity:1; }
+    .home-mobile-banner-copy { position: absolute; inset: 0 auto 20px 0; display: flex; align-items: center; width: 60%; padding: 0 0 0 20px; }
+    .home-mobile-slide-copy { color:#ab2444; }
+    .home-mobile-slide-copy.is-light { color:#fff; text-shadow:0 2px 6px #92203e45; }
+    .home-mobile-slide-copy[hidden] { display:none; }
+    .home-mobile-banner-copy h1, .home-mobile-banner-copy h2 { margin: 0; color: inherit; font-size: clamp(20px, 6vw, 24px); font-weight: 800; line-height: 1.25; }
     .home-mobile-banner-copy p { margin: 6px 0 0; font-size: 12px; font-weight: 600; line-height: 1.5; }
-    .home-mobile-dots { position: absolute; bottom: 0; left: 50%; display: flex; transform: translateX(-50%); }
-    .home-mobile-dots button { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; background: transparent; cursor: pointer; }
-    .home-mobile-dots button::after { content: ''; width: 6px; height: 6px; border-radius: 8px; background: #ffffff99; }
+    .home-mobile-dots { position: absolute; bottom: 10px; left: 50%; display: flex; align-items:center; gap:6px; padding:6px 8px; border-radius:999px; background:#322e3226; transform: translateX(-50%); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); }
+    .home-mobile-dots button { display: flex; align-items:center; justify-content:center; width: 6px; height: 6px; padding: 0; border: 0; border-radius:8px; background: transparent; cursor: pointer; transition:width .25s ease; }
+    .home-mobile-dots button[aria-pressed="true"] { width:20px; }
+    .home-mobile-dots button::before { content:''; position:absolute; width:24px; height:24px; }
+    .home-mobile-dots button::after { content: ''; width: 100%; height: 6px; border-radius: 8px; background: #ffffff99; }
     .home-mobile-dots button[aria-pressed="true"]::after { width: 20px; background: #fff; }
     .home-mobile-tasks { display: grid; grid-template-columns: 1.6fr 1fr; gap: 12px; }
     .home-mobile-task { position: relative; min-width: 0; height: 96px; overflow: hidden; border-radius: 5px; box-shadow: 0 10px 30px -12px #cf315940; }
@@ -70,6 +77,16 @@
     .home-mobile-verified { color: #268553; font-size: 12px; }
     .home-mobile-empty { margin: 0; padding: 20px; border-radius: 20px; background: #fff8fb; color: #777078; font-size: 14px; line-height: 1.6; }
     .home-mobile a:focus-visible, .home-mobile button:focus-visible, .home-mobile-person:focus-visible { outline: 2px solid #c82d50; outline-offset: 3px; }
+}
+@media (min-width:640px) and (max-width:767px) {
+    .home-mobile-banner-copy { padding-left:32px; }
+    .home-mobile-banner-copy h1, .home-mobile-banner-copy h2 { font-size:36px; }
+    .home-mobile-banner-copy p { font-size:16px; }
+    .home-mobile-task { height:112px; }
+    .home-mobile-task h2 { font-size:18px; }
+}
+@media (prefers-reduced-motion:reduce) {
+    .home-mobile-banner-images img, .home-mobile-dots button { transition:none; }
 }
 @media (max-width: 359px) {
     .home-mobile { padding-inline: 12px; }

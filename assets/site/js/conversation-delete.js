@@ -19,18 +19,24 @@
     blockIcon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/></svg>';
     var blockLabel = document.createElement('span'); blockLabel.textContent = 'Chặn người này'; block.append(blockIcon,blockLabel);
     menu.append(notifications,block,remove); root.append(menu);
-    var profile, addToGroup, commonGroups;
+    var profile, addToGroup, commonGroups, historySearch;
     if (root.id === 'chat-widget') {
         profile = document.createElement('a'); profile.textContent = 'Xem hồ sơ';
         addToGroup = document.createElement('button'); addToGroup.type = 'button'; addToGroup.textContent = 'Thêm vào nhóm';
         commonGroups = document.createElement('button'); commonGroups.type = 'button'; commonGroups.textContent = 'Xem nhóm chung';
-        menu.prepend(profile,addToGroup,commonGroups);
-        [profile,addToGroup,commonGroups].forEach(function (item) { item.addEventListener('click', function () { close(false); }); });
+        historySearch = document.createElement('button'); historySearch.type = 'button'; historySearch.textContent = 'Tìm tin nhắn cũ';
+        var searchIcon = document.createElement('span'); searchIcon.className = 'conversation-delete-icon'; searchIcon.setAttribute('aria-hidden','true');
+        searchIcon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg>';
+        historySearch.prepend(searchIcon);
+        menu.prepend(profile,historySearch,addToGroup,commonGroups);
+        [profile,historySearch,addToGroup,commonGroups].forEach(function (item) { item.addEventListener('click', function () { close(false); }); });
     }
     var nativePopover = typeof menu.showPopover === 'function', selected = null;
     var generation = 0, states = new Map(), tokens = new Map(), expiryTimers=new Map();
     function label(button) {
         if (profile) {
+            historySearch.hidden = button.id !== 'cw-conversation-more' || !button.dataset.messageHistoryUrl;
+            historySearch.dataset.messageHistory = historySearch.hidden ? '' : button.dataset.messageHistoryUrl;
             profile.href = button.dataset.profileUrl || '#'; profile.hidden = !button.dataset.profileUrl;
             addToGroup.dataset.igAddPeer = button.dataset.peerId || '';
             addToGroup.dataset.igPeerName = button.dataset.peerName || '';
@@ -113,6 +119,9 @@
                 applyState(data); notifications.disabled = !data.notifications_available || button.dataset.notificationBusy === '1';
             }).catch(function (error) { if (current === generation && opened()) { notifications.disabled = true; failure(error); } });
         }
+        // Keep header actions inside the chat so inline search resolves the correct host.
+        var host = root.id === 'chat-widget' && button.closest('.cw-convo');
+        (host || root).append(menu);
         if (nativePopover) menu.showPopover(); else menu.classList.add('is-open');
         selected.setAttribute('aria-expanded','true');
         var bounds = button.getBoundingClientRect(), viewport = window.visualViewport;
@@ -237,7 +246,7 @@
     };
     document.addEventListener('click',function (event) { if (!menu.contains(event.target) && selected && !selected.contains(event.target)) close(false); });
     document.addEventListener('keydown',function (event) { if (event.key === 'Escape' && opened()) { event.preventDefault(); close(true); } });
-    root.addEventListener('scroll',function () { close(false); },true);
+    root.addEventListener('scroll',function (event) { if (!menu.contains(event.target)) close(false); },true);
     root.addEventListener('cw:conversation-change',function () { generation++; close(false); selected = null; });
     document.addEventListener('private-conversation-blocked',function (event) {
         root.querySelectorAll('.tk-ms-conversation-more, [data-cw-conversation-more]').forEach(function (button) {
