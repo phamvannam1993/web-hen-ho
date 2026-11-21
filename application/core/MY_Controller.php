@@ -478,6 +478,8 @@ class Api_Controller extends CI_Controller
             $ra += array(
                 'job'       => $u['job'] ?? null,
                 'height_cm' => !empty($u['height_cm']) ? (int) $u['height_cm'] : null,
+                // tình trạng hôn nhân: app hiện chip "Độc thân" như thẻ gợi ý của web
+                'marital_status' => $u['marital_status'] ?? null,
                 'bio'       => $u['bio'] ?? null,
                 'interests' => !empty($u['interest_names']) ? explode('|', $u['interest_names']) : array(),
             );
