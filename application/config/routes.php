@@ -52,6 +52,7 @@ $route['api/auth/password']               = 'api/auth/password';
 
 $route['api/meta']                        = 'api/meta/index';
 $route['api/home']                        = 'api/home/index';
+$route['api/home/more']                   = 'api/home/more'; // tải thêm hồ sơ trang chủ mobile (ajax/goi-y-trang-chu)
 
 $route['api/discover']                    = 'api/discover/index';
 $route['api/discover/undo']               = 'api/discover/undo';
