@@ -15,8 +15,8 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
                 // con số vừa sát thực vừa không hiện những mức khó tin.
                 $hop = max(60, min(99, (int) round(($m['match_score'] ?? 0) * 100 / 120)));
                 $chips = array_filter(array(
-                    !empty($m['province_name']) ? $m['province_name'] : null,
-                    $access['detail'] && !empty($m['height_cm'])     ? (int) $m['height_cm'] . 'cm' : null,
+                    'province' => !empty($m['province_name']) ? $m['province_name'] : null,
+                    'height' => $access['detail'] && !empty($m['height_cm']) ? (int) $m['height_cm'] . 'cm' : null,
                     $access['detail'] && !empty($m['marital_status']) && $m['marital_status'] === 'doc_than' ? 'Độc thân' : null,
                 ));
             ?>
@@ -39,7 +39,7 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
 
                         <?php if ($chips): ?>
                             <p class="hm-sug-chips">
-                                <?php foreach ($chips as $c): ?><span><?= e($c) ?></span><?php endforeach; ?>
+                                <?php foreach ($chips as $key => $c): ?><span<?= $key === 'height' ? ' class="hm-sug-height"' : ($key === 'province' ? ' class="hm-sug-location"' : '') ?>><?php if ($key === 'province'): ?><?= tk_icon('pin', 'tk-ic hm-sug-location-icon') ?><?php endif; ?><?= e($c) ?></span><?php endforeach; ?>
                             </p>
                         <?php endif; ?>
                         <?php if ($tuoi): ?>
