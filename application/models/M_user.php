@@ -281,6 +281,40 @@ class M_user extends CI_Model
         return $this->db->field_exists($axis, 'provinces') ? "COALESCE(p.$axis, $sql)" : "($sql)";
     }
 
+    /** Enrich a selected homepage batch without changing its ranking or exposing coordinates. */
+    public function home_distances(array $members, $viewer = null, $guest_location = null)
+    {
+        if (!$members) return $members;
+        $origin = null;
+        if ($viewer && !empty($viewer['location_updated_at'])
+            && strtotime($viewer['location_updated_at']) >= time() - 30 * 86400
+            && isset($viewer['lat'], $viewer['lng']) && is_numeric($viewer['lat']) && is_numeric($viewer['lng'])
+            && abs($viewer['lat']) <= 90 && abs($viewer['lng']) <= 180) {
+            $origin = array('lat'=>$viewer['lat'], 'lng'=>$viewer['lng'], 'real'=>true, 'province_id'=>(int)($viewer['province_id'] ?? 0));
+        } elseif (!$viewer && is_array($guest_location) && ($guest_location['updated_at'] ?? 0) >= time() - 86400
+            && isset($guest_location['lat'], $guest_location['lng']) && is_numeric($guest_location['lat']) && is_numeric($guest_location['lng'])
+            && abs($guest_location['lat']) <= 90 && abs($guest_location['lng']) <= 180) {
+            $origin = array('lat'=>$guest_location['lat'], 'lng'=>$guest_location['lng'], 'real'=>true, 'province_id'=>0);
+        } elseif (!empty($viewer['province_id'])) {
+            $province = $this->db->where('id', (int)$viewer['province_id'])->get('provinces')->row_array();
+            $point = $province ? $this->province_coordinates($province) : null;
+            if ($point) $origin = array('lat'=>$point[0], 'lng'=>$point[1], 'real'=>false, 'province_id'=>(int)$viewer['province_id']);
+        }
+        if (!$origin) return $members;
+        $real = !empty($origin['real']) ? $this->real_location_sql() : '0';
+        $province_id = (int)$origin['province_id'];
+        $rows = $this->db->select('u.id, ' . $this->distance_sql($origin) . ' AS distance_km, '
+            . $real . ' AS distance_real, ' . ($province_id ? '(u.province_id = '.$province_id.')' : '0') . ' AS distance_same_province', false)
+            ->from('users u')->join('provinces p', 'p.id=u.province_id', 'left')
+            ->where_in('u.id', array_map('intval', array_column($members, 'id')))->get()->result_array();
+        $distances = array_column($rows, null, 'id');
+        foreach ($members as &$member) {
+            if (isset($distances[$member['id']])) $member = array_merge($member, $distances[$member['id']]);
+        }
+        unset($member);
+        return $members;
+    }
+
     public function distance_sql($origin)
     {
         if (!$origin) return 'NULL';

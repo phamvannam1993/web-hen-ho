@@ -65,3 +65,31 @@ verify_distance(strpos($user->distance_sql($origin), 'u.lat') === false, 'Unmigr
 verify_distance(strpos($user->distance_sql($origin), "WHEN 'hung-yen'") !== false, 'Province estimates work before migration');
 verify_distance($user->province_coordinates(array('slug' => 'ha-noi')) === array(21.028511, 105.804817), 'Origin coordinates fall back by slug');
 echo "PASS: nearest ordering, radius/count consistency, coordinate source, stale locations and missing data.\n";
+
+class HomeDistanceDb extends DistanceDb {
+    public $ids, $rows = array(), $province = array('slug'=>'ha-noi');
+    public function where_in($field, $ids) { $this->ids = $ids; return $this; }
+    public function get($table = null) { return $this; }
+    public function row_array() { return $this->province; }
+    public function result_array() { return $this->rows; }
+}
+$batch = array(array('id'=>9, 'display_name'=>'First'), array('id'=>3, 'display_name'=>'Second'));
+$user->db = new HomeDistanceDb();
+verify_distance($user->home_distances($batch) === $batch && !$user->db->selects, 'No saved location means no invented homepage distance');
+$me = array('province_id'=>1, 'lat'=>10.5, 'lng'=>106.5, 'location_updated_at'=>date('Y-m-d H:i:s'));
+$user->db->rows = array(array('id'=>3, 'distance_km'=>'120.3', 'distance_real'=>1, 'distance_same_province'=>0),
+    array('id'=>9, 'distance_km'=>null, 'distance_real'=>0, 'distance_same_province'=>0));
+$enriched = $user->home_distances($batch, $me);
+verify_distance(array_column($enriched, 'id') === array(9,3) && $enriched[1]['distance_km'] === '120.3', 'Enrichment preserves recommendation order and unknown distances');
+verify_distance($user->db->ids === array(9,3) && count($user->db->selects) === 1, 'One distance query covers exactly the current batch');
+verify_distance(strpos($user->db->selects[0], 'RADIANS(10.5)') !== false, 'Homepage uses fresh saved coordinates');
+$me['location_updated_at'] = date('Y-m-d H:i:s', time()-31*86400);
+$user->db->selects = array(); $user->home_distances($batch, $me);
+verify_distance(strpos($user->db->selects[0], 'RADIANS(21.028511)') !== false
+    && strpos($user->db->selects[0], '0 AS distance_real') !== false, 'Expired location falls back to configured province estimate');
+$user->db->selects = array();
+$user->home_distances($batch, null, array('lat'=>10.5,'lng'=>106.5,'updated_at'=>time()-86401));
+verify_distance(!$user->db->selects, 'Expired guest position never produces a distance');
+$user->home_distances($batch, null, array('lat'=>10.5,'lng'=>106.5,'updated_at'=>time()));
+verify_distance(count($user->db->selects) === 1, 'Fresh guest position also supports homepage lazy-loaded results');
+echo "PASS: homepage distance batches, order, fresh/stale positions, province fallback and missing location.\n";

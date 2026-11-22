@@ -31,7 +31,7 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
                             <?php if ($access['charge'] && empty($access['purchased'])): ?>
                                 <span class="hm-sug-unlock-price" aria-label="Mở hồ sơ với <?= (int) profile_unlock_cost() ?> xu"><span aria-hidden="true">🔒&nbsp;</span><?= (int) profile_unlock_cost() ?> xu</span>
                             <?php endif; ?>
-                            <?php if (isset($m['match_score'])): ?><span class="hm-pill hm-pill-pink">Tương hợp: <?= $hop ?>%</span><?php endif; ?>
+                            <?php if (isset($m['match_score'])): ?><span class="hm-pill hm-pill-pink hm-sug-compatibility">Tương hợp: <?= $hop ?>%</span><?php endif; ?>
                             <?php if ($da_match): ?>
                                 <span class="hm-pill hm-pill-green">Đã match!</span>
                             <?php endif; ?>
@@ -44,6 +44,15 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
                         <?php endif; ?>
                         <?php if ($tuoi): ?>
                             <p class="hm-sug-mobile-age"><?= tk_icon('calendar') ?><span><?= (int) $tuoi ?> tuổi</span></p>
+                        <?php endif; ?>
+                        <?php if (isset($m['distance_km']) && is_numeric($m['distance_km'])): ?>
+                            <p class="hm-sug-mobile-distance">
+                                <?php if (!empty($m['distance_same_province']) && empty($m['distance_real'])): ?>
+                                    Cùng khu vực<?= !empty($m['province_name']) ? ' · ' . e($m['province_name']) : '' ?>
+                                <?php else: ?>
+                                    Ước tính · Cách bạn <?= (float)$m['distance_km'] < 1 ? 'dưới 1' : number_format(round((float)$m['distance_km']), 0, ',', '.') ?> km
+                                <?php endif; ?>
+                            </p>
                         <?php endif; ?>
                     </div>
 

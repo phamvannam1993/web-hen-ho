@@ -37,6 +37,7 @@ class Ajax extends MY_Controller
             : $this->m_user->search(array('sort' => 'active'), $limit + 1, $offset);
         $has_more = count($members) > $limit;
         $members = array_slice($members, 0, $limit);
+        $members = $this->m_user->home_distances($members, $user, $this->session->userdata('dating_guest_location'));
         $matched_ids = array();
         if ($user) {
             foreach ($this->m_interaction->matches($user['id'], 200) as $match) {
@@ -67,6 +68,7 @@ class Ajax extends MY_Controller
         foreach ($candidates as $member) {
             if (in_array((int) $member['id'], $exclude, true)) continue;
             if ($home) {
+                $member = $this->m_user->home_distances(array($member), $this->auth->user())[0];
                 return $this->json(array('ok' => true,
                     'home' => $this->load->view('home/_suggestion', array('m' => $member, 'matched_ids' => array()), true)));
             }
