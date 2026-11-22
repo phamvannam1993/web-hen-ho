@@ -40,3 +40,4 @@ Thumbs.db
 *.swp
 .idea/
 .vscode/
+/server-connect.txt

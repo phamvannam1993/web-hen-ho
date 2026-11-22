@@ -17,10 +17,10 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
                 $chips = array_filter(array(
                     'province' => !empty($m['province_name']) ? $m['province_name'] : null,
                     'height' => $access['detail'] && !empty($m['height_cm']) ? (int) $m['height_cm'] . 'cm' : null,
-                    $access['detail'] && !empty($m['marital_status']) && $m['marital_status'] === 'doc_than' ? 'Độc thân' : null,
+                    'marital' => $access['detail'] && !empty($m['marital_status']) && $m['marital_status'] === 'doc_than' ? 'Độc thân' : null,
                 ));
             ?>
-                <article class="hm-sug<?= $access['charge'] ? ' is-profile-paid' : '' ?>" data-user="<?= (int) $m['id'] ?>" tabindex="0" aria-label="Xem hồ sơ" data-profile-preview-card="<?= e($m['slug']) ?>">
+                <article class="hm-sug<?= $access['charge'] ? ' is-profile-paid' : '' ?><?= !empty($access['purchased']) ? ' is-profile-unlocked' : '' ?>" data-user="<?= (int) $m['id'] ?>" tabindex="0" aria-label="Xem hồ sơ" data-profile-preview-card="<?= e($m['slug']) ?>">
                     <a class="hm-sug-photo" href="<?= site_url('profile/' . $m['slug']) ?>">
                         <img src="<?= avatar_url($m['avatar'], $m['gender']) ?>" alt="<?= e(display_name($m)) ?>" loading="lazy">
                     </a>
@@ -39,7 +39,7 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
 
                         <?php if ($chips): ?>
                             <p class="hm-sug-chips">
-                                <?php foreach ($chips as $key => $c): ?><span<?= $key === 'height' ? ' class="hm-sug-height"' : ($key === 'province' ? ' class="hm-sug-location"' : '') ?>><?php if ($key === 'province'): ?><?= tk_icon('pin', 'tk-ic hm-sug-location-icon') ?><?php endif; ?><?= e($c) ?></span><?php endforeach; ?>
+                                <?php foreach ($chips as $key => $c): ?><span<?= $key === 'height' ? ' class="hm-sug-height"' : ($key === 'province' ? ' class="hm-sug-location"' : ($key === 'marital' ? ' class="hm-sug-marital"' : '')) ?>><?php if ($key === 'province'): ?><?= tk_icon('pin', 'tk-ic hm-sug-location-icon') ?><?php endif; ?><?= e($c) ?></span><?php endforeach; ?>
                             </p>
                         <?php endif; ?>
                         <?php if ($tuoi): ?>

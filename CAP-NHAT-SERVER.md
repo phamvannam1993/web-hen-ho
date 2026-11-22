@@ -281,3 +281,6 @@ Người dùng chỉnh hai công tắc độc lập tại **Tài khoản → H�
 URL chuẩn mới `/user/{slug}`; `/profile/{slug}` vẫn hoạt động với cùng quyền truy cập. API thêm `GET /api/members/{slug}/preview` và `POST /api/members/{slug}/purchase` (token xác thực, gửi `version` từ báo giá). Khi điều kiện thay đổi, trả 409 để người dùng xem lại và xác nhận; không tự thanh toán sau đăng nhập/nạp xu.
 
 Kiểm thử độc lập: `php tests/profile_access_http.php`. Lệnh tạo database test riêng và kiểm tra chuyển xu, hai giao dịch đồng thời, bốn tổ hợp công tắc, VIP hết hạn, CSRF, link trực tiếp và dữ liệu liên hệ.
+
+
+

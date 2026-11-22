@@ -17,11 +17,14 @@
             return;
         }
         var turn = ++sequence; current = null; buy.disabled = true; body.replaceChildren(); status.textContent = 'Đang tải…';
-        if (!dialog.open) dialog.showModal();
+        if (dialog.open) dialog.close();
         try {
             var data = await fetch(base + 'user/' + encodeURIComponent(slug) + '/preview', {credentials:'same-origin',cache:'no-store'}).then(json);
-            if (turn !== sequence || !dialog.open) return;
-            current = data; var p = data.preview, image = node('img', undefined, 'profile-preview-avatar'); image.src = p.avatar; image.alt = '';
+            if (turn !== sequence) return;
+            var p = data.preview;
+            if (p.logged_in && p.purchased) { location.assign(p.url); return; }
+            if (!dialog.open) dialog.showModal();
+            current = data; var image = node('img', undefined, 'profile-preview-avatar'); image.src = p.avatar; image.alt = '';
             var title = node('h2', p.name); title.id = 'profile-preview-title';
             var header = node('div', undefined, 'profile-preview-person'), identity = node('div');
             identity.append(title,node('p',[p.age ? p.age + ' tuổi' : '',p.province].filter(Boolean).join(' · '),'profile-preview-meta'));
@@ -52,7 +55,12 @@
                 buy.disabled = true; status.textContent = 'Bạn cần ' + p.cost + ' xu để mở hồ sơ. Số dư hiện tại chưa đủ. ';
                 var topup = node('a','Nạp xu'); topup.href = base + 'tai-khoan/nap-xu'; status.append(topup);
             }
-        } catch (error) { if (turn === sequence) status.textContent = error.message; }
+        } catch (error) {
+            if (turn === sequence) {
+                if (!dialog.open) dialog.showModal();
+                status.textContent = error.message;
+            }
+        }
     }
     buy.onclick = async function () {
         if (!current || busy) return;
