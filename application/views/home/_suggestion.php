@@ -42,6 +42,9 @@ $ic_close  = '<path d="M6 6l12 12M18 6L6 18"/>';
                                 <?php foreach ($chips as $c): ?><span><?= e($c) ?></span><?php endforeach; ?>
                             </p>
                         <?php endif; ?>
+                        <?php if ($tuoi): ?>
+                            <p class="hm-sug-mobile-age"><?= tk_icon('calendar') ?><span><?= (int) $tuoi ?> tuổi</span></p>
+                        <?php endif; ?>
                     </div>
 
 
