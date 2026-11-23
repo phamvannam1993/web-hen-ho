@@ -60,23 +60,26 @@
 .dating-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 .dating-results-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 20px 0 14px; }
 .dating-results-heading .result-total { margin: 0; font-size: 14px; }
-.dating-page .member-grid { grid-template-columns:minmax(0,1fr); grid-auto-rows:1fr; align-items:stretch; gap:10px; }
-.dating-page .member-grid .pcard { box-sizing:border-box; height:100%; align-items:center; border:1px solid #eadfe5; border-radius:10px; }
+.container.dating-page .member-grid { grid-template-columns:minmax(0,1fr); grid-auto-rows:auto; align-items:stretch; gap:14px; }
+.container.dating-page .member-grid:has(> .pcard.is-profile-paid) { row-gap:14px; }
+.container.dating-page .member-grid .pcard { box-sizing:border-box; min-height:108px; height:auto; align-items:center; gap:12px; padding:8px; border:1px solid #eadfe5; border-radius:10px; box-shadow:none; }
 .dating-page .member-grid .pcard.is-profile-paid { border-color:#edc15b; background:#fffaf0; }
 .dating-page .member-grid .pcard.is-profile-unlocked { border-color:#eadfe5; background:#fff; }
 .dating-page .member-grid .pcard-photo { align-self:center; flex-shrink:0; }
 .dating-page .pcard { flex-direction: row; align-items: center; gap: 16px; padding: 14px; box-shadow: 0 2px 8px #11182705; }
-.dating-page .pcard-photo { flex: 0 0 96px; width: 96px; border-radius: 12px; overflow: hidden; }
-.dating-page .pcard-photo img { width: 100%; height: 96px; aspect-ratio: 1; max-height: none; }
+.container.dating-page .member-grid .pcard-photo { flex:0 0 88px; width:88px; height:88px; border-radius:5px; overflow:hidden; }
+.container.dating-page .member-grid .pcard-photo img { width:100%; height:100%; border-radius:inherit; object-fit:cover; max-height:none; }
 .dating-page .pcard-body { min-width: 0; padding: 0; }
-.dating-page .pcard-name { font-size: 17px; margin-bottom: 6px; }
-.dating-page .pcard-meta { font-size: 12px; line-height: 1.4; }
+.container.dating-page .member-grid .pcard-name { font-size:15px; line-height:1.35; margin-bottom:8px; }
+.container.dating-page .member-grid .pcard-meta { margin:4px 0 0; font-size:12px; line-height:1.4; }
+.container.dating-page .member-grid .pcard-meta .ic { width:14px; height:14px; flex-basis:14px; }
+.container.dating-page .member-grid .pcard-distance { font-size:11px; }
 .dating-page .pcard-meta .mi { white-space: normal; overflow-wrap: anywhere; }
 .dating-page .pcard-gender { width: 22px; height: 22px; right: 4px; bottom: 4px; }
 .dating-page .pcard-gender .ic { width: 14px; height: 14px; }
 .dating-page .pcard-bio, .dating-page .pcard-chips { display: none; }
 .dating-page .pcard-actions { display: none; }
-.dating-page .pcard-facts { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; }
+.container.dating-page .member-grid .pcard-facts { display:none; }
 .dating-page .pcard-facts > span { display: inline-flex; align-items: center; max-width: 100%; padding: 6px 10px; border-radius: 12px; background: #f1f3f5; color: #626973; font-size: 13px; line-height: 1.4; overflow-wrap: anywhere; }
 /* Keep the introduction short so discovery results start above the fold. */
 .container.dating-page { padding-top: 8px; }
@@ -145,6 +148,12 @@
     .dating-discovery-form .ss-search { height: 30px; min-height: 30px; font-size: 11px; }
     .dating-discovery-form #dating-location-status { margin-top: 2px; font-size: 10px; line-height: 1.4; }
     .dating-results-heading { margin-top: 16px; gap: 8px; }
+}
+
+@media (max-width:359px) {
+    .container.dating-page .member-grid .pcard { padding:6px; gap:10px; }
+    .container.dating-page .member-grid .pcard-photo { flex-basis:72px; width:72px; height:72px; }
+    .container.dating-page .member-grid .pcard-name { font-size:14px; }
 }
 
 .dating-page :is(
