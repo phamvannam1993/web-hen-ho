@@ -21,7 +21,7 @@ $ic_female = '<svg viewBox="0 0 24 24" class="ic"><circle cx="12" cy="9" r="5.2"
 $ic_gender = $m['gender'] === 'female' ? $ic_female : $ic_male;
 $gclass    = $m['gender'] === 'female' ? 'is-female' : 'is-male';
 ?>
-<article class="pcard<?= $access['charge'] ? ' is-profile-paid' : '' ?>" data-user="<?= (int) $m['id'] ?>"<?= ($interest_card_type ?? '') === 'request' ? ' data-like-request="' . (int) $m['id'] . '"' : '' ?> tabindex="0" aria-label="Xem hồ sơ" data-profile-preview-card="<?= e($m['slug']) ?>">
+<article class="pcard<?= $access['charge'] ? ' is-profile-paid' : '' ?><?= !empty($access['purchased']) ? ' is-profile-unlocked' : '' ?>" data-user="<?= (int) $m['id'] ?>"<?= ($interest_card_type ?? '') === 'request' ? ' data-like-request="' . (int) $m['id'] . '"' : '' ?> tabindex="0" aria-label="Xem hồ sơ" data-profile-preview-card="<?= e($m['slug']) ?>">
     <?php if ($access['label'] && empty($hide_profile_price)): ?><a class="profile-price-label<?= !empty($access['purchased']) ? ' is-open' : '' ?>" href="<?= site_url('user/'.$m['slug']) ?>"><?= e($access['label']) ?></a><?php endif; ?>
     <a class="pcard-photo" href="<?= site_url('profile/' . $m['slug']) ?>">
         <img src="<?= avatar_url($m['avatar'], $m['gender']) ?>" alt="<?= e(display_name($m)) ?>" loading="lazy">
