@@ -100,11 +100,21 @@ class Home extends Api_Controller
                 $da_ghep[(int) $u['id']] = true;
             }
         }
+        // Khoảng cách như trang chủ web (Home.php: M_user::home_distances) — chỉ số km đã làm tròn, không lộ toạ độ
+        $rows = $this->m_user->home_distances(array_slice($rows, 0, $limit), $this->me);
         $ra = array();
-        foreach (array_slice($rows, 0, $limit) as $u) {
+        foreach ($rows as $u) {
             $p = $this->ho_so($u, true) + array('matched' => isset($da_ghep[(int) $u['id']]));
             if (isset($u['match_score'])) {
                 $p['match_score'] = (int) $u['match_score'];
+            }
+            if (isset($u['distance_km']) && is_numeric($u['distance_km'])) {
+                $km = (float) $u['distance_km'];
+                $p['distance_km'] = (int) round($km);
+                // cùng chữ với home/_suggestion.php (dòng .hm-sug-mobile-distance)
+                $p['distance_text'] = !empty($u['distance_same_province']) && empty($u['distance_real'])
+                    ? 'Cùng khu vực' . (!empty($u['province_name']) ? ' · ' . $u['province_name'] : '')
+                    : 'Ước tính · Cách bạn ' . ($km < 1 ? 'dưới 1' : number_format(round($km), 0, ',', '.')) . ' km';
             }
             $ra[] = $p;
         }

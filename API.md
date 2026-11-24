@@ -42,6 +42,14 @@ trong thư. Đăng ký lỗi kiểm tra dữ liệu trả **422** kèm `errors` 
 |---|---|---|
 | GET | `/api/meta` | Tỉnh thành, sở thích, nghề nghiệp, nhãn các trường chọn, thông tin site |
 | GET | `/api/home` | Thống kê, gợi ý hôm nay, gợi ý ghép đôi, 5 người đã thích bạn, thành viên nổi bật |
+| GET | `/api/home/more?offset=N` | Tải thêm hồ sơ trang chủ mobile (12 người/lần): `members`, `has_more`, `next_offset` |
+
+Trang chủ mobile (web `home/_mobile.php`): `/api/home` trả thêm `members` (20 hồ sơ — 5 đầu cho dải
+"Cùng phong cách của bạn", còn lại "Phù hợp với bạn") và `members_has_more`. Mỗi hồ sơ trong `members`
+có `matched`, `match_score` (điểm gốc thang ~120 — app quy đổi `max(60, min(99, round(score*100/120)))`%
+như web) và, khi tính được (vị trí thật trong 30 ngày hoặc tỉnh trong hồ sơ của người xem),
+`distance_km` (số nguyên, đã làm tròn) cùng `distance_text` ("Ước tính · Cách bạn 12 km" /
+"Cùng khu vực · Hà Nội") — không trả toạ độ. `match_score` của `suggestions` cũng là điểm gốc.
 
 ## Khám phá (vuốt)
 
