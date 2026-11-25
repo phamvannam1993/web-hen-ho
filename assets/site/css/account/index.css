@@ -1,0 +1,121 @@
+/* Account overview only. Other account pages keep their existing shell. */
+.tk-layout--overview { display:block; background:#faf8fb; }
+.tk-layout--overview > .tk-side,
+.tk-layout--overview > .tk-mhead { display:none; }
+.tk-layout--overview > .tk-main { padding:28px 24px 40px; }
+.tk-layout--overview .tk-main__in { max-width:1100px; gap:0; }
+.account-hub { color:#302639; }
+.account-hub .tk-ic { width:20px; height:20px; flex-shrink:0; }
+.account-hub-identity { padding:28px 28px 0; border:1px solid #eee5ee; border-radius:22px; background:radial-gradient(ellipse at top left,#e9d9fa 0,transparent 68%),linear-gradient(135deg,#fbe4ef,#fff 80%); }
+.account-hub-person { display:flex; align-items:center; gap:20px; }
+.account-hub-avatar { position:relative; display:block; flex:0 0 88px; width:88px; height:88px; border:3px solid #fff; border-radius:20px; box-shadow:0 3px 14px #6e35551a; }
+.account-hub-avatar img { display:block; width:100%; height:100%; border-radius:17px; object-fit:cover; }
+.account-hub-avatar > span { position:absolute; right:-5px; bottom:-5px; display:flex; align-items:center; justify-content:center; width:26px; height:26px; border:2px solid #fff; border-radius:50%; background:#d1273f; color:#fff; z-index:2; }
+.account-hub-avatar.has-frame { margin:0; padding:4px; border-radius:50%; }
+.account-hub-avatar.has-frame img { border-radius:50%; }
+.account-hub-avatar.has-frame .account-hub-avatar-edit { font-size:inherit; }
+.account-hub-avatar.has-frame .account-hub-avatar-edit::after { content:none; }
+.account-hub-avatar.has-frame::after { z-index:1; }
+.account-hub-avatar.has-frame { flex-shrink:0; margin:8px 12px 8px 6px; }
+.account-hub-avatar > span .tk-ic { width:12px; height:12px; }
+.account-hub-person-info { min-width:0; flex:1; }
+.account-hub-eyebrow { color:#826c84; font-size:12px; font-weight:600; }
+.account-hub #account-hub-name { margin:3px 0 4px; color:#302639; font-size:28px; line-height:1.3; font-weight:800; overflow-wrap:anywhere; }
+.account-hub-id { color:#8e8295; font-size:12px; }
+.account-hub-status { display:flex; flex-wrap:wrap; align-items:center; gap:7px 12px; margin-top:9px; font-size:12px; }
+.account-hub-status > a,.account-hub-verified { display:inline-flex; align-items:center; gap:5px; color:#327b99; }
+.account-hub-status .tk-ic { width:15px; height:15px; }
+.account-hub-status > .account-hub-verified { color:#288368; }
+.account-hub-vip-pill { display:inline-flex; align-items:center; gap:5px; padding:4px 8px; border:1px solid #edd18a; border-radius:999px; background:#fff1c7; font-size:11px; font-weight:700; cursor:pointer; }
+.account-hub-edit { display:inline-flex; align-items:center; gap:6px; padding:9px 12px; border:1px solid #e7d9e7; border-radius:10px; background:#ffffffba; font-size:12px; font-weight:600; }
+.account-hub-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:25px; padding:19px 0; border-top:1px solid #eee3ef; }
+.account-hub-stats a { display:flex; flex-direction:column; align-items:center; gap:5px; text-align:center; min-width:0; }
+.account-hub-stats strong { color:#302039; font-size:26px; line-height:1.2; font-weight:800; font-variant-numeric:tabular-nums; }
+.account-hub-stats span { color:#887a92; font-size:12px; line-height:1.5; }
+.account-hub-shortcuts { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-top:22px; }
+.account-hub-shortcut { display:flex; flex-wrap:wrap; align-content:center; align-items:center; gap:12px; min-width:0; min-height:122px; padding:17px; border:1px solid #ffffffa8; border-radius:16px; transition:transform .16s ease,box-shadow .16s ease; }
+.account-hub-shortcut:hover { transform:translateY(-2px); box-shadow:0 5px 14px #6e355512; }
+.account-hub-shortcut-icon { display:flex; align-items:center; justify-content:center; width:35px; height:35px; border:1px solid #ffffffa8; border-radius:11px; background:#ffffff6b; }
+.account-hub-shortcut-icon .tk-ic { width:23px; height:23px; }
+.account-hub-shortcut > span:nth-child(2) { flex:1 1 100%; min-width:0; }
+.account-hub-shortcut strong { display:block; font-size:15px; line-height:1.45; font-weight:800; overflow-wrap:anywhere; }
+.account-hub-shortcut small { display:block; margin-top:4px; font-size:11px; line-height:1.5; opacity:.85; }
+.account-hub-shortcut > .account-hub-arrow { display:none; }
+.account-hub-shortcut--vip { background:linear-gradient(125deg,#fff1bd,#ffdf8f); color:#835213; }
+.account-hub-shortcut--wallet { background:linear-gradient(125deg,#ffe5f0,#f4d9f7); color:#a33371; }
+.account-hub-shortcut--streak { background:linear-gradient(125deg,#ffe8db,#ffdfd7); color:#b35939; }
+.account-hub-shortcut--notifications { background:linear-gradient(125deg,#dff0ff,#dcebf9); color:#337ba2; }
+.account-hub-completeness { display:grid; grid-template-columns:1fr 180px; align-items:center; gap:10px 18px; margin-top:20px; padding:16px 18px; border:1px solid #eee5ee; border-radius:14px; background:#fff; }
+.account-hub-completeness > span:first-child { display:flex; align-items:center; gap:9px; font-size:13px; color:#6a526e; }
+.account-hub-progress { display:block; height:6px; overflow:hidden; border-radius:8px; background:#f2eaf2; }
+.account-hub-progress > span { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,#dc678d,#c43d66); }
+.account-hub-completeness > small { display:flex; align-items:center; justify-content:space-between; grid-column:1 / -1; color:#968597; font-size:11px; line-height:1.5; }
+.account-hub-completeness > small .tk-ic { width:15px; height:15px; }
+.account-hub-feature-groups { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:start; gap:18px; margin-top:27px; }
+.account-hub-feature-group { min-width:0; }
+.account-hub-feature-group > h2 { margin:0 0 10px; padding-left:3px; color:#85718a; font-size:12px; font-weight:700; }
+.account-hub-feature-group > ul { border:1px solid #eee5ee; border-radius:16px; overflow:hidden; background:#fff; }
+.account-hub-feature-group li + li { border-top:1px solid #f4eff4; }
+.account-hub-feature { display:flex; align-items:center; gap:11px; min-height:76px; padding:14px; }
+.account-hub-feature:hover { background:#fff8fb; }
+.account-hub-feature-icon { display:flex; align-items:center; justify-content:center; flex:0 0 36px; width:36px; height:36px; border-radius:11px; background:#fff0f5; color:#cc517d; }
+.account-hub-feature-group:nth-child(2) .account-hub-feature-icon { background:#f0ecfc; color:#9474c4; }
+.account-hub-feature-group:nth-child(3) .account-hub-feature-icon { background:#eaf5fb; color:#6798bc; }
+.account-hub-feature-text { flex:1; min-width:0; }
+.account-hub-feature-text strong { display:block; font-size:13px; line-height:1.5; font-weight:600; }
+.account-hub-feature-text small { display:block; margin-top:3px; color:#998c9d; font-size:10px; line-height:1.5; }
+.account-hub .account-hub-arrow { width:16px; height:16px; color:#b5a8bd; }
+.account-hub-count { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 4px; border-radius:999px; background:#e7547c; color:#fff; font-size:10px; font-weight:700; }
+.account-hub-logout { display:flex; align-items:center; justify-content:center; gap:8px; min-height:46px; margin-top:24px; border:1px solid #eee5ee; border-radius:12px; background:#fff; color:#c44564; font-size:13px; font-weight:600; }
+@media (max-width:1000px) {
+    .account-hub-shortcuts { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .account-hub-shortcut { flex-wrap:nowrap; min-height:98px; }
+    .account-hub-shortcut > span:nth-child(2) { flex:1; }
+    .account-hub-feature-groups { grid-template-columns:1fr; gap:24px; }
+    .account-hub-feature { min-height:72px; }
+    .account-hub-feature-text strong { font-size:14px; }
+    .account-hub-feature-text small { font-size:11px; }
+}
+@media (min-width:601px) and (max-width:1023.98px) {
+    .tk-layout--overview > .tk-main { padding-top:0; }
+    .account-hub-identity { border-top:0; border-top-left-radius:0; border-top-right-radius:0; }
+}
+@media (max-width:600px) {
+    .tk-layout--overview > .tk-main { padding:0 16px 28px; }
+    .account-hub-identity { margin:0 -16px; padding:24px 20px 0; border:0; border-radius:0; }
+    .account-hub-person { gap:15px; align-items:center; }
+    .account-hub-avatar { flex-basis:76px; width:76px; height:76px; border-radius:18px; }
+    .account-hub-avatar img { border-radius:15px; }
+    .account-hub #account-hub-name { font-size:23px; }
+    .account-hub-eyebrow { font-size:11px; }
+    .account-hub-edit { padding:6px; border:0; background:transparent; }
+    .account-hub-edit > span { display:none; }
+    .account-hub-status { gap:6px 8px; margin-top:7px; font-size:11px; }
+    .account-hub-stats { gap:4px; margin-top:24px; padding:18px 0; }
+    .account-hub-stats strong { font-size:24px; }
+    .account-hub-stats span { font-size:10px; }
+    .account-hub-shortcuts { gap:10px; margin-top:18px; }
+    .account-hub-shortcut { flex-wrap:wrap; gap:8px; min-height:112px; padding:13px; border-radius:13px; }
+    .account-hub-shortcut > span:nth-child(2) { flex:1 1 100%; }
+    .account-hub-shortcut-icon { width:29px; height:29px; border-radius:9px; }
+    .account-hub-shortcut-icon .tk-ic { width:20px; height:20px; }
+    .account-hub-shortcut strong { font-size:13px; }
+    .account-hub-shortcut small { font-size:10px; }
+    .account-hub-completeness { grid-template-columns:1fr; gap:10px; padding:14px; }
+    .account-hub-feature-groups { margin-top:24px; }
+    .account-hub-feature { padding:13px 12px; }
+}
+@media (max-width:359px) {
+    .tk-layout--overview > .tk-main { padding-inline:12px; }
+    .account-hub-identity { margin-inline:-12px; padding-inline:14px; }
+    .account-hub-person { gap:11px; }
+    .account-hub-avatar { flex-basis:64px; width:64px; height:64px; }
+    .account-hub #account-hub-name { font-size:20px; }
+    .account-hub-edit { display:none; }
+    .account-hub-vip-pill { font-size:10px; }
+    .account-hub-shortcut { padding:11px; }
+}
+@media (prefers-reduced-motion:reduce) {
+    .account-hub-shortcut { transition:none; }
+    .account-hub-shortcut:hover { transform:none; }
+}

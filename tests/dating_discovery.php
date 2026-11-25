@@ -4,6 +4,7 @@ define('BASEPATH', __DIR__);
 class MY_Controller {
     public $data, $input, $session, $m_user, $rendered, $db;
     public function render($view, $data) { $this->rendered = $data; }
+    public function render_member_list($view, $page, $data) { $this->render($view, $data); }
 }
 require __DIR__ . '/../application/controllers/Dating.php';
 class DiscoveryInput {
@@ -37,7 +38,7 @@ check_discovery($filters === $controller->m_user->count_filters, 'Count and resu
 check_discovery($filters['keyword'] === 'Hà Nội' && $filters['gender'] === 'female' && $filters['marital'] === 'ly_hon', 'Text, gender and marital filters reach the model');
 check_discovery($filters['age_min'] === 25 && $filters['age_max'] === 45, 'Reversed age range is normalized');
 check_discovery($filters['distance_origin']['real'] === false && $filters['distance_max'] === 50, 'Selected province supports estimated radius');
-check_discovery($controller->rendered['heading'] === 'Tìm kiếm đối tượng hẹn hò và bạn bè', 'Main heading matches the discovery page');
+check_discovery($controller->rendered['heading'] === 'Cộng đồng tìm kiếm đối tượng hẹn hò và bạn bè', 'Main heading matches the discovery page');
 $controller->input->query = array('gender' => 'invalid', 'marital' => 'invalid', 'age_min' => '2', 'age_max' => '999');
 $controller->index();
 $filters = $controller->m_user->search_filters;
@@ -79,3 +80,22 @@ foreach (array('q', 'gender', 'distance_max', 'province_id', 'age_min', 'age_max
 check_discovery(substr_count($html, '<h1>') === 1, 'Discovery has exactly one H1');
 check_discovery(strpos($html, 'id="dating-location"') !== false, 'Location button is rendered for guests');
 echo "PASS: discovery filters, count consistency, age normalization, province radius, heading and guest location expiry.\n";
+
+$controller->data['user'] = array('id'=>7,'province_id'=>1);
+$controller->input->query = array();
+$controller->members();
+check_discovery($controller->rendered['directory_mode'] && $controller->rendered['base_url'] === 'thanh-vien', 'Directory keeps its own base URL and does not redirect by gender preference');
+$controller->input->query = array('gender'=>'female','q'=>' Trang ','sort'=>'listened','has_children'=>'0','height_min'=>'150','interests'=>array('2','3','0'));
+$controller->members(2);
+$directory = $controller->rendered;
+check_discovery($directory['filters']['keyword'] === 'Trang' && $directory['filters']['gender'] === 'female', 'Directory preserves name and gender filters');
+check_discovery($directory['sort'] === 'listened' && $directory['filters']['has_children'] === '0'
+    && $directory['filters']['height_min'] === '150' && $directory['filters']['interests'] === array(2,3), 'Existing directory filters and sorting remain supported');
+check_discovery($directory['filters'] === $controller->m_user->count_filters, 'Directory count and results share filters');
+$html = $view->render($directory);
+check_discovery(strpos($html,'dating-hero')!==false && strpos($html,'Khám phá các thành viên')!==false, 'Directory retains the top banner');
+check_discovery(strpos($html,'<form')===false && strpos($html,'dating-location.js')===false, 'Directory omits search/filter controls and their script');
+$route = array(); require __DIR__.'/../application/config/routes.php';
+check_discovery($route['thanh-vien']==='dating/members' && $route['thanh-vien/trang/(:num)']==='dating/members/$1'
+    && $route['thanh-vien/(:any)']==='members/legacy_profile/$1','Directory pagination switches together while legacy profile URLs remain intact');
+echo "PASS: member directory uses the shared discovery UI, keeps routes, filters, pagination and location handling.\n";

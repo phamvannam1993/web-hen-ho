@@ -13,11 +13,13 @@ function redirect($path, $method = 'auto', $code = null) {
 $controller->db = new PreferenceDb();
 $controller->data['user'] = array('id' => 17);
 $controller->input->query = array();
+$GLOBALS['preference_redirect'] = null;
 foreach (array('male' => 'nam', 'female' => 'nu') as $gender => $tab) {
     $controller->db->seeking = $gender;
     $controller->index();
-    check_discovery($GLOBALS['preference_redirect'] === array('hen-ho/' . $tab, 302), 'Saved preference opens the matching tab');
-    check_discovery($controller->db->user_id === 17, 'Read preference for the current user');
+    check_discovery($GLOBALS['preference_redirect'] === null && $controller->rendered['base_url'] === 'hen-ho'
+        && !isset($controller->rendered['filters']['gender']), 'Saved preference does not redirect or filter the general page');
+    check_discovery($controller->db->user_id === null, 'General page does not read gender preference');
 }
 $GLOBALS['preference_redirect'] = null;
 $controller->db->seeking = 'all';
@@ -39,4 +41,4 @@ foreach (array('nam', 'nu', 'gay', 'les') as $tab) {
         check_discovery(!isset($filters['seeking']), 'Manual gender selection clears the tab seeking restriction');
     }
 }
-echo "PASS: saved gender redirects, all genders and explicit choices on every tab.\n";
+echo "PASS: no automatic gender redirect; all genders and explicit choices on every tab.\n";

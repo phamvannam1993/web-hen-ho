@@ -72,26 +72,31 @@ class Dating extends MY_Controller
 
     public function index($tab = '', $page = 1)
     {
+        return $this->show_discovery($tab, $page);
+    }
+
+    public function members($page = 1)
+    {
+        return $this->show_discovery('', $page, true);
+    }
+
+    private function show_discovery($tab, $page, $directory_mode = false)
+    {
         $tabs = $this->tabs();
+        if ($directory_mode) {
+            $tabs['']['title'] = 'Thành viên';
+            $tabs['']['heading'] = 'Khám phá các thành viên';
+            $tabs['']['desc'] = 'Tìm kiếm thành viên theo khu vực, độ tuổi và những tiêu chí phù hợp với bạn.';
+        }
         if (!array_key_exists($tab, $tabs)) {
             show_404();
-        }
-        // Only personalize a fresh visit; keep explicit tabs and submitted filters.
-        if ($tab === '' && (int) $page === 1 && !empty($this->data['user']) && !$this->input->get()) {
-            $preference = $this->db->select('seeking_gender')
-                ->where('user_id', (int) $this->data['user']['id'])
-                ->get('user_preferences')->row_array();
-            $preferred_tab = array('male' => 'nam', 'female' => 'nu');
-            if (isset($preferred_tab[$preference['seeking_gender'] ?? ''])) {
-                redirect('hen-ho/' . $preferred_tab[$preference['seeking_gender']], 'location', 302);
-                return;
-            }
         }
         $current = $tabs[$tab];
 
         // Sắp xếp: mới tham gia / vừa online / đã xác thực
         $sort = $this->input->get('sort');
-        if (!in_array($sort, array('nearby', 'new', 'active', 'verified'), true)) {
+        $allowed_sorts = $directory_mode ? array('nearby', 'new', 'active', 'verified', 'vip', 'listened') : array('nearby', 'new', 'active', 'verified');
+        if (!in_array($sort, $allowed_sorts, true)) {
             $sort = 'nearby';
         }
 
@@ -139,6 +144,15 @@ class Dating extends MY_Controller
         }
         $keyword = $this->input->get('q');
         if (is_string($keyword)) $filters['keyword'] = mb_substr(trim($keyword), 0, 100);
+        // Keep existing directory filter links working with the shared presentation.
+        if ($directory_mode) {
+            foreach (array('height_min','height_max','education','smoking','drinking','online','vip','has_children') as $key) {
+                $value = $this->input->get($key);
+                if (is_scalar($value) && (string)$value !== '') $filters[$key] = $value;
+            }
+            $interests = $this->input->get('interests');
+            if (is_array($interests)) $filters['interests'] = array_values(array_filter(array_map('intval', $interests), function ($id) { return $id > 0; }));
+        }
         $token = $this->session->userdata('dating_location_token');
         if (!$token) {
             $token = bin2hex(random_bytes(32));
@@ -150,10 +164,11 @@ class Dating extends MY_Controller
 
         $page  = max(1, (int) $page);
         $total = $this->m_user->count_search($filters);
-        $base  = 'hen-ho' . ($tab ? '/' . $tab : '');
+        $base  = $directory_mode ? 'thanh-vien' : 'hen-ho' . ($tab ? '/' . $tab : '');
 
         $this->render_member_list('dating/index', $page, array(
             'allow_index'    => true,
+            'directory_mode' => $directory_mode,
             'title'      => $current['title'],
             'meta_desc'  => $current['desc'],
             'heading'    => $current['heading'],

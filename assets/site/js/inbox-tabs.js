@@ -45,7 +45,7 @@
         if (empty) empty.hidden = !showEmpty;
         none.hidden = visible > 0 || !!showEmpty;
         var message = query ? 'Không tìm thấy cuộc trò chuyện nào.'
-            : active === 'clubs' ? 'Chưa có nhóm chat ẩn danh.' : 'Chưa có cuộc trò chuyện nào.';
+            : active === 'clubs' ? 'Chưa có nhóm Clubs.' : 'Chưa có cuộc trò chuyện nào.';
         if (none.textContent !== message) none.textContent = message;
     }
     function select(tab, focus) {
@@ -71,6 +71,29 @@
     });
     search.addEventListener('input',filter);
     var root = panel.closest('.tk-ms'), refreshing = false;
+    function createClub(item) {
+        var list = panel.querySelector('#tk-ms-list');
+        if (!list) return null;
+        function element(tag, cls, text) {
+            var node = document.createElement(tag); if (cls) node.className = cls;
+            if (text !== undefined) node.textContent = text; return node;
+        }
+        var row = element('li', 'tk-ms-anonymous-row');
+        var link = element('a', 'tk-ms-item'); link.href = item.url;
+        link.dataset.inboxGroup = String(item.id);
+        var panelUrl = new URL(root.dataset.inboxGroupsUrl, location.href);
+        panelUrl.pathname = panelUrl.pathname.replace(/\/ajax\/nhom\/0\/sticky\/?$/, '/ajax/nhom-panel/' + Number(item.id));
+        panelUrl.search = ''; panelUrl.hash = ''; link.dataset.panelUrl = panelUrl.href;
+        var avatar = element('span', 'tk-ms-av'), image = element('img');
+        image.src = item.avatar; image.alt = ''; image.width = image.height = 40; image.loading = 'lazy'; avatar.append(image);
+        var content = element('span', 'tk-ms-item__b');
+        var preview = element('span', 'tk-ms-preview-line'); preview.append(element('span', 'tk-ms-item__l'));
+        content.append(element('span', 'tk-ms-item__n', item.name), preview);
+        link.append(avatar, content);
+        var more = element('button', 'cg-inbox-more', '⋯'); more.type = 'button'; more.dataset.cgInboxMore = '';
+        more.setAttribute('aria-label', 'Tùy chọn nhóm ' + item.name); more.setAttribute('aria-haspopup', 'true'); more.setAttribute('aria-expanded', 'false');
+        row.append(link, more); list.append(row); return link;
+    }
     function refreshLatest() {
         if (document.hidden || refreshing) return;
         refreshing = true;
@@ -83,10 +106,27 @@
                 return response.json();
             }).then(function (data) {
                 if (!data.ok) return;
+                if (source[1] === 'groups') {
+                    var ids = new Set((data.groups || []).map(function (item) { return String(Number(item.id)); }));
+                    panel.querySelectorAll('a[data-inbox-group]').forEach(function (link) {
+                        if (!ids.has(String(Number(link.dataset.inboxGroup)))) link.closest('li').remove();
+                    });
+                }
                 (data[source[1]] || []).forEach(function (item) {
+                    if (!Number.isSafeInteger(Number(item.id)) || Number(item.id) <= 0) return;
                     var link = panel.querySelector('a[' + source[2] + '="' + Number(item.id) + '"]');
+                    if (!link && source[1] === 'groups') link = createClub(item);
                     if (!link) return;
                     var row = link.closest('li'), lastAt = item.last_at || '';
+                    if (source[1] === 'groups') {
+                        row.dataset.name = (item.name || '').toLocaleLowerCase('vi');
+                        row.dataset.groupMode = item.mode || '';
+                        link.querySelector('.tk-ms-item__n').textContent = item.name || '';
+                        link.querySelector('.tk-ms-av img').src = item.avatar;
+                        var badge = link.querySelector('.tk-count'), unread = Number(item.unread) || 0;
+                        if (unread > 0 && !badge) { badge = document.createElement('span'); badge.className = 'tk-count'; link.append(badge); }
+                        if (badge) { badge.hidden = unread <= 0; badge.textContent = unread > 99 ? '99+' : unread; }
+                    }
                     if (row.dataset.lastAt !== lastAt) row.dataset.lastAt = lastAt;
                     var preview = link.querySelector('.tk-ms-item__l');
                     var text = source[1] === 'groups' ? (item.last ? (item.last_sender ? item.last_sender + ': ' : '') + item.last : 'Chưa có tin nhắn') : item[source[3]];
@@ -97,6 +137,7 @@
                         time.hidden = !item.last_at; time.title = item.last_at || '';
                     }
                 });
+                if (source[1] === 'groups') root.dispatchEvent(new CustomEvent('inbox:clubs-updated'));
                 filter();
             }).catch(function () {});
         });
@@ -108,4 +149,5 @@
         new MutationObserver(filter).observe(list,{childList:true,subtree:true,attributes:true,attributeFilter:['data-last-at','data-name']});
     });
     filter();
+    refreshLatest();
 })();

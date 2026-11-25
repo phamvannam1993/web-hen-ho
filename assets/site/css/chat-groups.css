@@ -614,3 +614,23 @@ body.is-group-chat-page { height:100dvh; overflow:hidden; overscroll-behavior:no
 .cg-anonymous-profile .cg-profile-name {
     text-align:left;
 }
+
+/* Mobile club directory uses the same compact rows as the Messenger Clubs tab. */
+@media (max-width:767px) {
+    .cg-discovery .cg-catalog { display:block; margin-left:-16px; margin-right:-16px; background:#fff; border-top:1px solid #f0edef; border-bottom:1px solid #f0edef; }
+    .cg-discovery .cg-group-card { position:relative; display:grid; grid-template-columns:52px minmax(0,1fr) 28px; grid-template-rows:auto auto auto; align-items:center; column-gap:12px; row-gap:2px; min-height:80px; padding:12px 16px; border:0; border-radius:0; background:#fff; box-shadow:none; }
+    .cg-discovery .cg-group-card + .cg-group-card { border-top:1px solid #f0edef; }
+    .cg-discovery .cg-group-card:hover { background:#fff7fa; }
+    .cg-discovery .cg-card-head { grid-column:1; grid-row:1 / 4; display:block; width:52px; margin:0; }
+    .cg-discovery .cg-card-head > img { display:block; width:52px; height:52px; border-radius:50%; object-fit:cover; }
+    .cg-discovery .cg-card-head .cg-tag { display:none; }
+    .cg-discovery .cg-group-card h2 { grid-column:2; grid-row:1; min-width:0; margin:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:15px; font-weight:700; line-height:1.4; }
+    .cg-discovery .cg-group-card > p { grid-column:2; grid-row:2; min-width:0; margin:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:12px; line-height:1.4; color:#797181; }
+    .cg-discovery .cg-card-meta { grid-column:2; grid-row:3; min-width:0; margin:0; font-size:10px; line-height:1.4; color:#928795; }
+    .cg-discovery .cg-card-meta > span + span { display:none; }
+    .cg-discovery .cg-card-actions { grid-column:3; grid-row:1 / 4; display:block; }
+    .cg-discovery .cg-card-actions .cg-button { display:flex; align-items:center; justify-content:center; width:28px; min-height:36px; margin:0; padding:0; gap:0; border:0; border-radius:0; background:transparent; color:#a395a6; box-shadow:none; font-size:0; }
+    .cg-discovery .cg-card-actions .cg-button .cg-icon { width:17px; height:17px; }
+    .cg-discovery .cg-card-actions .cg-button::after { content:''; position:absolute; inset:0; }
+    .cg-discovery .cg-card-actions .cg-button:focus-visible::after { outline:2px solid var(--cg-brand); outline-offset:-2px; }
+}

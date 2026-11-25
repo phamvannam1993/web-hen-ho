@@ -1,215 +1,116 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
-/**
- * Trang Tổng quan tài khoản — dựng theo `src/routes/tai-khoan.index.tsx`.
- *
- * Khung (cột trái, thanh trên/dưới trên điện thoại) do account/_shell.php lo,
- * tệp này chỉ in phần nội dung.
- */
-
-/* Phần trăm và danh sách việc còn thiếu lấy từ CÙNG một hàm với trang Hồ sơ,
-   để hai trang không bao giờ nói hai con số khác nhau. */
-$hs        = tk_ho_so_day_du($me);
-$diem      = $hs['phan_tram'];
-$con_thieu = $hs['thieu'];
-
-$co_tin_dang = !empty($settings['enable_posts']);
-$chuoi       = (int) ($streak['streak'] ?? 0);   // M_streak::cham_cong() trả khoá `streak`
-$vip_admin = super_admin_unlimited($me, 'vip');
-$vip_het_han = !$vip_admin && !empty($me['vip_expired_at']) ? strtotime($me['vip_expired_at']) : null;
-$hero_vip    = $vip_admin || (!empty($me['is_vip']) && ($vip_het_han === null || $vip_het_han > time()));
-$vip_con_lai = $hero_vip && $vip_het_han ? $vip_het_han - time() : null;
-$vip_den     = $hero_vip && $vip_het_han ? date('H:i · d/m/Y', $vip_het_han) : null;
-
-// array(biểu tượng, giá trị, nhãn, đường dẫn, sắc thái)
+$profile_progress = tk_ho_so_day_du($me);
+$progress = max(0, min(100, (int)$profile_progress['phan_tram']));
+$is_vip = member_has_vip($me);
+$vip_forever = $is_vip && (super_admin_unlimited($me, 'vip') || empty($me['vip_expired_at']));
+$vip_until = $is_vip && !$vip_forever ? date('d/m/Y', strtotime($me['vip_expired_at'])) : null;
+$streak_days = (int)($streak['streak'] ?? 0);
+$coins = super_admin_unlimited($me, 'coins') ? '∞' : number_format((int)($me['coin_balance'] ?? 0));
+$verified = !empty($me['email_verified_at']);
+$account_frame = $me['profile_frame'] ?? 'none';
+if (!array_key_exists($account_frame, profile_frame_catalog())) $account_frame = 'none';
 $stats = array(
-    array('coins',   (super_admin_unlimited($me, 'coins') ? '∞' : number_format((int) $me['coin_balance'])), 'Số dư xu',        site_url('tai-khoan/nap-xu'),       'gold'),
-    array('heart',   number_format($liked_count),              'Người thích bạn', site_url('tai-khoan/ai-thich-ban'), 'brand'),
-    array('match',   number_format(count($matches)),           'Đã ghép đôi',     site_url('tai-khoan/quan-tam'),     ''),
-    array('message', number_format($unread_msg),               'Tin nhắn mới',    site_url('messenger'),     ''),
-    array('eye',     number_format($viewer_count),             'Lượt xem hồ sơ',  site_url('tai-khoan/ai-xem-ho-so'), ''),
-    array('file',    number_format($post_count),               'Tin đăng',        $co_tin_dang ? site_url('tai-khoan/tin-dang') : null, ''),
-    array('bell',    number_format($unread_noti),              'Thông báo',       site_url('tai-khoan/thong-bao'),    ''),
-    array('flame',   $chuoi . ' ngày',                         'Chuỗi đăng nhập', site_url('tai-khoan/chuoi'),        ''),
+    array('Thích bạn', $liked_count, 'tai-khoan/quan-tam?tab=thich-ban'),
+    array('Bạn đã thích', $my_liked_count, 'tai-khoan/quan-tam?tab=ban-thich'),
+    array('Đã ghép đôi', $match_count, 'tai-khoan/quan-tam?tab=ghep-doi'),
+    array('Lượt xem · 7 ngày', $viewer_count, 'tai-khoan/ai-xem-ho-so'),
 );
+$feature_groups = array(
+    'Hồ sơ của bạn' => array(
+        array('user', 'Chỉnh sửa hồ sơ', 'Thông tin cá nhân và tiêu chí tìm kiếm', 'tai-khoan/ho-so', null),
+        array('images', 'Ảnh của tôi', 'Quản lý hình ảnh trên hồ sơ', 'tai-khoan/anh', null),
+        array('eye', 'Xem trang cá nhân', 'Hồ sơ của bạn hiển thị với mọi người', 'profile/' . $me['slug'], null),
+        array('crown', 'Khung hồ sơ', 'Chọn khung đại diện của bạn', 'tai-khoan/ho-so#kho-khung', null),
+    ),
+    'Kết nối & hoạt động' => array(
+        array('match', 'Quan tâm & ghép đôi', 'Những kết nối đang chờ bạn', 'tai-khoan/quan-tam', $tk['interest'] ?? 0),
+        array('message', 'Tin nhắn', 'Tiếp tục những cuộc trò chuyện', 'messenger', $tk['msg'] ?? $unread_msg),
+        array('eye', 'Ai đã xem hồ sơ', 'Xem những người ghé thăm bạn', 'tai-khoan/ai-xem-ho-so', $tk['viewers'] ?? 0),
+        array('sparkles', 'Lịch sử gợi ý', 'Xem lại các gợi ý kết nối mỗi ngày', 'tai-khoan/goi-y', null),
+        array('flame', 'Chuỗi hoạt động', 'Theo dõi chuỗi và các mốc thưởng', 'tai-khoan/chuoi', null),
+    ),
+    'Ví & tài khoản' => array(
+        array('wallet', 'Ví xu & VIP', 'Nạp xu, nâng cấp và xem lịch sử giao dịch', 'tai-khoan/nap-xu', null),
+        array('bell', 'Thông báo', 'Cập nhật hoạt động mới của bạn', 'tai-khoan/thong-bao', $unread_noti),
+        array('mail', 'Cài đặt email', 'Quản lý email và tùy chọn nhận thông báo', 'tai-khoan/email', null),
+        array('key', 'Đổi mật khẩu', 'Bảo vệ tài khoản của bạn', 'tai-khoan/doi-mat-khau', null),
+    ),
+);
+if (!empty($settings['enable_posts'])) {
+    $feature_groups['Hồ sơ của bạn'][] = array('file', 'Tin đăng của tôi', 'Quản lý các tin bạn đã đăng', 'tai-khoan/tin-dang', $post_count);
+}
 ?>
-<!-- Thẻ chào -->
-<section class="tk-card tk-hero<?= $hero_vip ? ' tk-hero--vip' : '' ?>">
-    <div class="tk-hero__in">
-        <a class="tk-hero__profile" href="<?= e(site_url('profile/' . $me['slug'])) ?>" aria-label="Xem trang cá nhân của tôi">
-            <?= tk_icon('eye') ?><span>Xem trang cá nhân</span>
-        </a>
-        <div class="tk-hero__top">
-            <span class="tk-hero__avatar">
-            <img class="tk-hero__av" src="<?= e(avatar_url($me['avatar'] ?? null, $me['gender'] ?? 'other')) ?>"
-                 alt="<?= e(display_name($me)) ?>" width="80" height="80">
-            <?php if ($hero_vip): ?><button type="button" class="tk-hero__vip-badge" data-vip-benefits aria-haspopup="dialog" aria-controls="vip-benefits-dialog" aria-label="Xem quyền lợi VIP"><?= tk_icon('crown') ?>VIP</button><?php endif; ?>
-            </span>
-            <div style="min-width:0">
-                <p class="tk-hero__hi"><?= tk_loi_chao() ?>,</p>
-                <h1 class="tk-hero__name"><?= e(display_name($me)) ?></h1>
-                <?php if ($hero_vip || $chuoi > 0): ?>
-                    <div class="tk-hero__pills">
-                        <?php if ($hero_vip): ?>
-                            <button type="button" class="tk-pill tk-pill--gold" data-vip-benefits aria-haspopup="dialog" aria-controls="vip-benefits-dialog"><?= tk_icon('crown') ?>Thành viên VIP · Đang hiệu lực</button>
-                        <?php endif; ?>
-                        <?php if ($chuoi > 0): ?>
-                            <span class="tk-pill tk-pill--onbrand"><?= tk_icon('flame') ?>Chuỗi <?= $chuoi ?> ngày</span>
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
-        <?php if ($hero_vip): ?>
-            <div class="tk-hero__vip-status">
-                <span class="tk-hero__vip-status-icon" aria-hidden="true"><?= tk_icon('crown') ?></span>
-                <div>
-                    <p class="tk-hero__vip-remaining"><?= $vip_con_lai === null ? 'Chưa có thông tin hết hạn VIP' : ($vip_con_lai <= 0 ? 'Gói VIP đã hết hạn' : ($vip_con_lai < 86400 ? 'VIP còn dưới 1 ngày' : 'VIP còn ' . (int) ceil($vip_con_lai / 86400) . ' ngày')) ?></p>
-                    <?php if ($vip_den): ?><p class="tk-hero__vip-expiry">Hết hạn lúc <?= $vip_den ?></p><?php endif; ?>
+<div class="account-hub">
+    <section class="account-hub-identity" aria-labelledby="account-hub-name">
+        <div class="account-hub-person">
+            <a class="account-hub-avatar<?= $account_frame !== 'none' ? ' has-frame profile-frame-preview profile-frame-preview--' . e($account_frame) : '' ?>" href="<?= site_url('tai-khoan/ho-so') ?>" aria-label="<?= e('Chỉnh sửa ảnh đại diện' . ($account_frame !== 'none' ? ' · Khung ' . profile_frame_catalog()[$account_frame] : '')) ?>">
+                <img src="<?= e(avatar_url($me['avatar'] ?? null, $me['gender'] ?? 'other')) ?>" alt="<?= e(display_name($me)) ?>" width="88" height="88">
+                <span class="account-hub-avatar-edit" aria-hidden="true"><?= tk_icon('edit') ?></span>
+            </a>
+            <div class="account-hub-person-info">
+                <p class="account-hub-eyebrow">Tài khoản của tôi</p>
+                <h1 id="account-hub-name"><?= e(display_name($me)) ?></h1>
+                <p class="account-hub-id">ID: <?= (int)$me['id'] ?></p>
+                <div class="account-hub-status">
+                    <?php if ($is_vip): ?><button type="button" class="account-hub-vip-pill" data-vip-benefits aria-haspopup="dialog" aria-controls="vip-benefits-dialog"><?= tk_icon('crown') ?>Thành viên VIP</button><?php endif; ?>
+                    <?php if ($verified): ?><span class="account-hub-verified"><?= tk_icon('shield-check') ?>Đã xác thực email</span>
+                    <?php else: ?><a href="<?= site_url('xac-thuc') ?>"><?= tk_icon('shield-check') ?>Xác thực email</a><?php endif; ?>
                 </div>
             </div>
-        <?php endif; ?>
-        <div class="tk-hero__acts">
-            <a class="tk-btn tk-btn--gold" href="<?= site_url('swipe-match') ?>"><?= tk_icon('match') ?>Khám phá &amp; ghép đôi</a>
-            <a class="tk-btn tk-btn--onbrand" href="<?= site_url('tai-khoan/nap-xu') ?>"><?= tk_icon('coins') ?>Nạp xu / VIP</a>
+            <a class="account-hub-edit" href="<?= site_url('tai-khoan/ho-so') ?>" aria-label="Chỉnh sửa hồ sơ"><?= tk_icon('edit') ?><span>Chỉnh sửa</span></a>
         </div>
-    </div>
-</section>
-
-<!-- Ô số liệu -->
-<div class="tk-stats">
-    <?php foreach ($stats as $s): ?>
-        <?php $tag = $s[3] ? 'a' : 'div'; ?>
-        <<?= $tag ?> class="tk-stat<?= $s[4] ? ' tk-stat--' . $s[4] : '' ?>"<?= $s[3] ? ' href="' . $s[3] . '"' : '' ?>>
-            <span class="tk-stat__ic"><?= tk_icon($s[0]) ?></span>
-            <span class="tk-stat__b">
-                <span class="tk-stat__n"><?= e($s[1]) ?></span>
-                <span class="tk-stat__l"><?= e($s[2]) ?></span>
-            </span>
-        </<?= $tag ?>>
-    <?php endforeach; ?>
-</div>
-
-<div class="tk-split">
-    <!-- Hoàn thiện hồ sơ -->
-    <section class="tk-card">
-        <div class="tk-card__h">
-            <div>
-                <h2 class="tk-card__t">Hoàn thiện hồ sơ</h2>
-                <p class="tk-card__d">Hồ sơ đầy đủ được ưu tiên hiển thị và nhận nhiều lượt thích hơn</p>
-            </div>
-        </div>
-        <div class="tk-pc__top">
-            <span class="tk-pc__n"><?= $diem ?>%</span>
-            <span class="tk-card__d"><?= $con_thieu ? 'Còn ' . count($con_thieu) . ' việc cần làm' : 'Hồ sơ đã đầy đủ' ?></span>
-        </div>
-        <div class="tk-progress" style="margin-top:12px" role="progressbar" aria-valuenow="<?= $diem ?>" aria-valuemin="0" aria-valuemax="100">
-            <i style="width:<?= max(0, min(100, $diem)) ?>%"></i>
-        </div>
-
-        <?php if ($con_thieu): ?>
-            <ul class="tk-pc__list">
-                <?php foreach (array_slice($con_thieu, 0, 4) as $nhan): ?>
-                    <li><span><?= e($nhan) ?></span><span class="tk-pc__miss">Chưa có</span></li>
-                <?php endforeach; ?>
-            </ul>
-            <a class="tk-btn tk-btn--brand" style="margin-top:16px" href="<?= site_url('tai-khoan/ho-so') ?>">
-                Bổ sung ngay <?= tk_icon('arrow') ?>
-            </a>
-        <?php else: ?>
-            <ul class="tk-pc__list">
-                <li><span>Mọi mục đã khai đủ</span><span class="tk-pc__miss" style="color:var(--tk-success)"><?= tk_icon('check') ?></span></li>
-            </ul>
-        <?php endif; ?>
-    </section>
-
-    <!-- Hoạt động gần đây -->
-    <section class="tk-card">
-        <div class="tk-card__h">
-            <div><h2 class="tk-card__t">Hoạt động gần đây</h2></div>
-            <?php if (!empty($hoat_dong)): ?>
-                <a class="tk-btn tk-btn--ghost tk-btn--sm tk-card__act" href="<?= site_url('tai-khoan/thong-bao') ?>">Xem tất cả</a>
-            <?php endif; ?>
-        </div>
-        <?php if (empty($hoat_dong)): ?>
-            <div class="tk-empty">
-                <span class="tk-empty__ic"><?= tk_icon('bell') ?></span>
-                <h3>Chưa có hoạt động nào</h3>
-                <p>Hãy thích vài hồ sơ để bắt đầu nhận lượt thích và ghép đôi.</p>
-            </div>
-        <?php else: ?>
-            <ul class="tk-feed">
-                <?php foreach ($hoat_dong as $n): ?>
-                    <li>
-                        <span class="tk-ibox"><?= tk_icon(tk_noti_icon($n['type'] ?? '')) ?></span>
-                        <div style="min-width:0">
-                            <p class="tk-feed__tx"><?= e($n['title']) ?></p>
-                            <p class="tk-feed__ti"><?= e(time_ago($n['created_at'])) ?></p>
-                        </div>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
-        <?php endif; ?>
-    </section>
-</div>
-
-<!-- Gợi ý -->
-<section class="tk-card">
-    <div class="tk-card__h">
-        <div>
-            <h2 class="tk-card__t">Gợi ý phù hợp hôm nay</h2>
-            <p class="tk-card__d">Chọn theo tiêu chí tìm kiếm bạn đã khai trong hồ sơ</p>
-        </div>
-        <a class="tk-btn tk-btn--soft tk-btn--sm tk-card__act" href="<?= site_url('tai-khoan/goi-y') ?>"><?= tk_icon('sparkles') ?>Xem gợi ý</a>
-    </div>
-    <?php if (empty($goi_y_them)): ?>
-        <div class="tk-empty">
-            <span class="tk-empty__ic"><?= tk_icon('sparkles') ?></span>
-            <h3>Chưa có gợi ý nào</h3>
-            <p>Khai đủ tiêu chí tìm kiếm để hệ thống tìm người phù hợp với bạn.</p>
-            <div class="tk-empty__act"><a class="tk-btn tk-btn--brand" href="<?= site_url('tai-khoan/ho-so') ?>">Cập nhật tiêu chí</a></div>
-        </div>
-    <?php else: ?>
-        <div class="tk-stack tk-stack--sm tk-only-mobile" data-account-suggestions="compact">
-            <?php foreach ($goi_y_them as $g): ?>
-                <?php $this->load->view('account/_person', array('p' => $g, 'o' => array('compact' => true))); ?>
+        <nav class="account-hub-stats" aria-label="Thống kê kết nối">
+            <?php foreach ($stats as $stat): ?>
+            <a href="<?= e(site_url($stat[2])) ?>"><strong><?= number_format((int)$stat[1]) ?></strong><span><?= e($stat[0]) ?></span></a>
             <?php endforeach; ?>
-        </div>
-        <div class="tk-people tk-people--3 tk-only-desktop" data-account-suggestions="desktop">
-            <?php foreach ($goi_y_them as $g): ?>
-                <?php $this->load->view('account/_person', array('p' => $g, 'o' => array())); ?>
-            <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
-</section>
+        </nav>
+    </section>
 
-<?php if ($co_tin_dang): ?>
-    <!-- Tin đăng -->
-    <section class="tk-card">
-        <div class="tk-card__h">
-            <div><h2 class="tk-card__t">Tin đăng của bạn</h2></div>
-            <?php if (!empty($recent_posts)): ?>
-                <a class="tk-btn tk-btn--ghost tk-btn--sm tk-card__act" href="<?= site_url('tai-khoan/tin-dang') ?>">Xem tất cả</a>
-            <?php endif; ?>
-        </div>
-        <?php if (empty($recent_posts)): ?>
-            <div class="tk-empty">
-                <span class="tk-empty__ic"><?= tk_icon('file') ?></span>
-                <h3>Chưa có tin đăng nào</h3>
-                <p>Đăng một tin để nhiều người phù hợp tìm thấy bạn nhanh hơn.</p>
-                <div class="tk-empty__act"><a class="tk-btn tk-btn--brand" href="<?= site_url('dang-tin') ?>">Đăng tin mới</a></div>
-            </div>
-        <?php else: ?>
-            <ul class="tk-list">
-                <?php foreach ($recent_posts as $p): ?>
-                    <li>
-                        <span class="tk-ibox"><?= tk_icon('file') ?></span>
-                        <div style="min-width:0;flex:1">
-                            <a class="tk-feed__tx tk-truncate" style="display:block;font-weight:600" href="<?= site_url('tai-khoan/sua-tin/' . $p['id']) ?>"><?= e($p['title']) ?></a>
-                            <p class="tk-feed__ti"><?= e(time_ago($p['created_at'])) ?></p>
-                        </div>
-                    </li>
+    <section class="account-hub-shortcuts" aria-label="Thông tin quan trọng">
+        <a class="account-hub-shortcut account-hub-shortcut--vip" href="<?= site_url('tai-khoan/nap-xu') ?>">
+            <span class="account-hub-shortcut-icon"><?= tk_icon('crown') ?></span>
+            <span><strong><?= $is_vip ? 'VIP đang hiệu lực' : 'Nâng cấp VIP' ?></strong><small><?= $is_vip ? ($vip_forever ? 'Quyền lợi VIP không thời hạn' : 'Đến ' . $vip_until) : 'Khám phá quyền lợi dành riêng cho bạn' ?></small></span>
+            <?= tk_icon('chevron-right', 'tk-ic account-hub-arrow') ?>
+        </a>
+        <a class="account-hub-shortcut account-hub-shortcut--wallet" href="<?= site_url('tai-khoan/nap-xu') ?>">
+            <span class="account-hub-shortcut-icon"><?= tk_icon('coins') ?></span>
+            <span><strong><?= $coins ?> xu</strong><small>Số dư có thể thanh toán</small></span>
+            <?= tk_icon('chevron-right', 'tk-ic account-hub-arrow') ?>
+        </a>
+        <a class="account-hub-shortcut account-hub-shortcut--streak" href="<?= site_url('tai-khoan/chuoi') ?>">
+            <span class="account-hub-shortcut-icon"><?= tk_icon('flame') ?></span>
+            <span><strong><?= number_format($streak_days) ?> ngày liên tiếp</strong><small>Chuỗi hoạt động của bạn</small></span>
+            <?= tk_icon('chevron-right', 'tk-ic account-hub-arrow') ?>
+        </a>
+        <a class="account-hub-shortcut account-hub-shortcut--notifications" href="<?= site_url('tai-khoan/thong-bao') ?>">
+            <span class="account-hub-shortcut-icon"><?= tk_icon('bell') ?></span>
+            <span><strong><?= number_format((int)$unread_noti) ?> thông báo mới</strong><small>Cập nhật những hoạt động gần đây</small></span>
+            <?= tk_icon('chevron-right', 'tk-ic account-hub-arrow') ?>
+        </a>
+    </section>
+
+    <a class="account-hub-completeness" href="<?= site_url('tai-khoan/ho-so') ?>">
+        <span><?= tk_icon('user') ?><strong>Hồ sơ hoàn thiện <?= $progress ?>%</strong></span>
+        <span class="account-hub-progress" role="progressbar" aria-label="Mức độ hoàn thiện hồ sơ" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?= $progress ?>"><span style="width:<?= $progress ?>%"></span></span>
+        <small><?= $progress < 100 ? 'Bổ sung thông tin để có thêm kết nối phù hợp' : 'Hồ sơ của bạn đã sẵn sàng kết nối' ?><?= tk_icon('chevron-right') ?></small>
+    </a>
+
+    <div class="account-hub-feature-groups">
+        <?php foreach ($feature_groups as $group_title => $features): ?>
+        <section class="account-hub-feature-group" aria-label="<?= e($group_title) ?>">
+            <h2><?= e($group_title) ?></h2>
+            <ul>
+                <?php foreach ($features as $feature): ?>
+                <li><a class="account-hub-feature" href="<?= e(site_url($feature[3])) ?>">
+                    <span class="account-hub-feature-icon"><?= tk_icon($feature[0]) ?></span>
+                    <span class="account-hub-feature-text"><strong><?= e($feature[1]) ?></strong><small><?= e($feature[2]) ?></small></span>
+                    <?php if ((int)$feature[4] > 0): ?><span class="account-hub-count"><?= (int)$feature[4] > 99 ? '99+' : (int)$feature[4] ?></span><?php endif; ?>
+                    <?= tk_icon('chevron-right', 'tk-ic account-hub-arrow') ?>
+                </a></li>
                 <?php endforeach; ?>
             </ul>
-        <?php endif; ?>
-    </section>
-<?php endif; ?>
+        </section>
+        <?php endforeach; ?>
+    </div>
+    <a class="account-hub-logout" href="<?= site_url('dang-xuat') ?>"><?= tk_icon('logout') ?>Đăng xuất</a>
+</div>

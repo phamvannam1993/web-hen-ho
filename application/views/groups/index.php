@@ -16,7 +16,7 @@
 </div><h2><?= e($g['name']) ?></h2><p><?= e($g['description']) ?></p>
 <div class="cg-card-meta"><span><i class="cg-online-dot" aria-hidden="true"></i><?= (int) $g['online'] ?> đang online<?= $g['status'] === 'readonly' ? ' · Chỉ đọc' : '' ?></span>
 <?php if ($g['last_activity_at']): ?><span>Hoạt động <?= e(time_ago($g['last_activity_at'])) ?></span><?php endif; ?></div>
-<div class="cg-card-actions"><a class="cg-button" href="<?= site_url('clubs/' . $g['slug']) ?>">Mở nhóm <?= tk_icon('chevron-right', 'cg-icon') ?></a></div></article>
+<div class="cg-card-actions"><a class="cg-button" href="<?= site_url('clubs/' . $g['slug']) ?>" aria-label="<?= e('Mở nhóm ' . $g['name']) ?>">Mở nhóm <?= tk_icon('chevron-right', 'cg-icon') ?></a></div></article>
 <?php endforeach; ?></div>
 <?php if (!$groups): ?><p class="cg-empty">Chưa tìm thấy nhóm phù hợp. Thử đổi bộ lọc hoặc <a href="<?= site_url('clubs') ?>">xem tất cả nhóm</a>.</p><?php endif; ?>
 <div class="cg-pagination"><?php foreach (array($page - 1 => 'Trang trước', $page + 1 => 'Xem thêm') as $n => $label): if ($n < 1 || ($n > $page && !$more)) continue; ?><a href="<?= e(site_url('clubs') . '?' . http_build_query(array('q'=>$q,'mode'=>$mode,'category'=>$category,'province'=>$province,'page'=>$n))) ?>"><?= $label ?></a><?php endforeach; ?></div>

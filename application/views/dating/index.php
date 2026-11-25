@@ -1,13 +1,18 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
 $sorts = array('nearby' => 'Gần bạn nhất', 'active' => 'Vừa online', 'new' => 'Mới tham gia', 'verified' => 'Đã xác thực');
+if (!empty($directory_mode)) $sorts += array('vip'=>'Thành viên VIP', 'listened'=>'Được quan tâm');
 ?>
 <div class="container dating-page">
     <?php $this->load->view('dating/_discovery', array('sorts' => $sorts)); ?>
 
     <?php if (empty($members)): ?>
+        <?php if (!empty($directory_mode)): ?>
+        <p class="empty">Chưa có thành viên phù hợp. <a href="<?= site_url('thanh-vien') ?>">Xóa bộ lọc và xem tất cả thành viên</a>.</p>
+        <?php else: ?>
         <p class="empty">Chưa có hồ sơ nào trong mục này.
             <a href="<?= site_url('hen-ho') ?>">Xem tất cả</a> hoặc
             <a href="<?= site_url('thanh-vien') ?>">duyệt toàn bộ thành viên</a>.</p>
+        <?php endif; ?>
     <?php else: ?>
         <div class="member-grid">
             <?php foreach ($members as $m): ?>

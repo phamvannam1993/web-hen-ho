@@ -165,8 +165,8 @@ $route['swipe-match/thich/(:num)']   = 'discover/like/$1';
 $route['swipe-match/bo-qua/(:num)']  = 'discover/pass/$1';
 $route['swipe-match/xem-lai']        = 'discover/undo';
 
-$route['thanh-vien']              = 'members/index';
-$route['thanh-vien/trang/(:num)'] = 'members/index/$1';
+$route['thanh-vien']              = 'dating/members';
+$route['thanh-vien/trang/(:num)'] = 'dating/members/$1';
 $route['user/(:any)/preview'] = 'members/preview/$1';
 $route['user/(:any)/purchase'] = 'members/purchase/$1';
 $route['user/(:any)'] = 'members/profile/$1';
