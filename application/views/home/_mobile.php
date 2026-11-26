@@ -50,7 +50,7 @@ $home_banner_slides = array(
 
     <?php foreach ($home_groups as $group_index => $group): ?>
     <section class="home-mobile-members" aria-label="<?= e($group[0]) ?>">
-        <div class="home-mobile-heading"><h2><?= e($group[0]) ?></h2><a href="<?= site_url('thanh-vien') ?>">Tất cả <span aria-hidden="true">›</span></a></div>
+        <div class="home-mobile-heading"><h2><?= e($group[0]) ?></h2><a href="<?= site_url($group_index === 0 ? 'hen-ho' : 'thanh-vien') ?>">Tất cả <span aria-hidden="true">›</span></a></div>
         <p class="home-mobile-description"><?= e($group[1]) ?></p>
         <div class="home-mobile-list<?= $group_index === 0 ? ' home-mobile-list--carousel' : ' home-mobile-list--suggestions hm-sugs' ?>"<?= $group_index === 1 && $user ? ' data-account-suggestions="home"' : '' ?>>
             <?php foreach ($group[3] as $member): ?>

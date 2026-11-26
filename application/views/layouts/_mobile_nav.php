@@ -3,28 +3,25 @@ $nav_path = trim($this->uri->uri_string(), '/');
 $mobile_items = array(
     array('', 'Trang chủ', 'home'),
     array('hen-ho', 'Hẹn hò', 'match'),
-    array('kham-pha', 'Khám phá', ''),
+    array('clubs', 'Clubs', ''),
     array('messenger', 'Tin nhắn', 'message'),
-    array('tai-khoan/ho-so', 'Hồ sơ', 'user'),
+    array('tai-khoan', 'Hồ sơ', 'user'),
 );
 ?>
 <nav class="tk-bnav site-mobile-nav<?= $nav_path === 'swipe-match' ? ' site-mobile-nav--swipe' : ($nav_path === 'kham-pha' ? ' site-mobile-nav--explore' : '') ?>" aria-label="Điều hướng nhanh">
     <ul>
         <?php foreach ($mobile_items as $item): ?>
             <?php
-            $is_explore = $item[0] === 'kham-pha';
-            $active = $is_explore
-                ? ($nav_path === 'kham-pha' || $nav_path === 'swipe-match' || strpos($nav_path, 'swipe-match/') === 0 || $nav_path === 'clubs' || strpos($nav_path, 'clubs/') === 0)
-                : ($nav_path === $item[0] || ($item[0] === 'hen-ho' && strpos($nav_path, 'hen-ho/') === 0));
+            $is_clubs = $item[0] === 'clubs';
+            $active = $is_clubs
+                ? ($nav_path === 'clubs' || strpos($nav_path, 'clubs/') === 0)
+                : ($nav_path === $item[0] || ($item[0] === 'hen-ho' && strpos($nav_path, 'hen-ho/') === 0) || ($item[0] === 'tai-khoan' && strpos($nav_path, 'tai-khoan/') === 0));
             ?>
             <li>
-                <?php if ($is_explore): ?>
-                <a href="<?= site_url($item[0]) ?>"<?= $active ? ' class="is-active"' : '' ?><?= $nav_path === 'kham-pha' ? ' aria-current="page"' : '' ?>>
-                    <svg class="tk-ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                        <rect x="2" y="3" width="8" height="8" rx="1.5"/>
-                        <rect x="14" y="2" width="8" height="8" rx="1.5" transform="rotate(35 18 6)"/>
-                        <rect x="2" y="14" width="8" height="8" rx="1.5"/>
-                        <rect x="14" y="14" width="8" height="8" rx="1.5"/>
+                <?php if ($is_clubs): ?>
+                <a href="<?= site_url($item[0]) ?>"<?= $active ? ' class="is-active" aria-current="page"' : '' ?>>
+                    <svg class="tk-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6M21 20v-2a6 6 0 0 0-4-5.65"/>
                     </svg>
                     <span><?= e($item[1]) ?></span>
                 </a>
@@ -32,7 +29,7 @@ $mobile_items = array(
                 <a href="<?= site_url($item[0]) ?>"<?= $active ? ' class="is-active" aria-current="page"' : '' ?>>
                     <?= tk_icon($item[2]) ?>
                     <span><?= e($item[1]) ?></span>
-                    <?php if ($item[0] === 'tai-khoan/ho-so' && $user): ?>
+                    <?php if ($item[0] === 'tai-khoan' && $user): ?>
                         <?php $interest_count = (int) ($account_menu_counts['interest'] ?? 0); ?>
                         <span class="tk-dot-count" data-account-menu-count="interest" <?= $interest_count ? '' : 'hidden' ?> aria-label="<?= $interest_count ?> mục quan tâm chưa xem"><?= $interest_count > 99 ? '99+' : $interest_count ?></span>
                     <?php endif; ?>

@@ -20,6 +20,7 @@ $chosen = function ($key, $option) use ($value) { return (string) $value($key) =
         </div>
         <?php endif; ?>
     </header>
+    <?php if (empty($directory_mode)): ?>
     <form class="dating-discovery-form" id="dating-distance-fields" action="<?= site_url($base_url) ?>" method="get" data-all-url="<?= e(site_url('hen-ho')) ?>" data-male-url="<?= e(site_url('hen-ho/nam')) ?>" data-female-url="<?= e(site_url('hen-ho/nu')) ?>">
         <label class="dating-query">
             <span class="dating-sr-only">Tìm theo tên, khu vực hoặc nghề nghiệp</span>
@@ -57,7 +58,10 @@ $chosen = function ($key, $option) use ($value) { return (string) $value($key) =
         <button type="submit" class="dating-submit">Tìm người phù hợp</button>
         <p id="dating-location-status" role="status"><?= !$distance_origin ? 'Bấm biểu tượng vị trí để tìm người gần bạn. Chọn tỉnh thành để ước tính khoảng cách khi chưa chia sẻ vị trí.' : (empty($distance_origin['real']) ? 'Khoảng cách được ước tính theo tỉnh thành.' : 'Đang dùng vị trí bạn đã chia sẻ để tìm người gần bạn.') ?></p>
     </form>
+    <?php endif; ?>
 </section>
 <div class="dating-results-heading"><p class="result-total"><b><?= number_format($total) ?></b> hồ sơ phù hợp</p>
 </div>
+<?php if (empty($directory_mode)): ?>
 <script defer src="<?= base_url('assets/site/js/dating-location.js') ?>?v=<?= @filemtime(FCPATH.'assets/site/js/dating-location.js') ?>"></script>
+<?php endif; ?>

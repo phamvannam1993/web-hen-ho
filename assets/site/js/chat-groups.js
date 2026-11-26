@@ -729,7 +729,9 @@
             }).catch(function (error) { if (request === inboxRequest) content.textContent = error.message; });
         }
         var sidebarFeedback = {};
-        inbox.querySelectorAll('[data-inbox-group]').forEach(function (link) {
+        function bindInboxClub(link) {
+            if (link.dataset.clubMounted === '1') return;
+            link.dataset.clubMounted = '1';
             link.addEventListener('click', function (event) {
                 if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
                 event.preventDefault(); openInboxGroup(link);
@@ -764,6 +766,10 @@
                 if (wasOpen) { wasOpen = false; closePopover(menu); return; }
                 showPopover(menu, toggle, true);
             };
+        }
+        inbox.querySelectorAll('[data-inbox-group]').forEach(bindInboxClub);
+        inbox.addEventListener('inbox:clubs-updated', function () {
+            inbox.querySelectorAll('[data-inbox-group]').forEach(bindInboxClub);
         });
         window.addEventListener('pagehide', function () {
             clearTimeout(sidebarFeedback.toastTimer);

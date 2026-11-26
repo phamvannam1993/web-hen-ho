@@ -270,6 +270,16 @@ class M_interaction extends CI_Model
         ))->update('likes', array('status' => 'pending'));
     }
 
+    public function matches_count($user_id)
+    {
+        return (int) $this->db->query(
+            'SELECT COUNT(*) AS total FROM matches m
+             JOIN users u ON u.id = IF(m.user_low_id = ?, m.user_high_id, m.user_low_id)
+             WHERE ? IN (m.user_low_id, m.user_high_id) AND u.deleted_at IS NULL',
+            array((int)$user_id, (int)$user_id)
+        )->row('total');
+    }
+
     public function matches($user_id, $limit = 50)
     {
         return $this->db->query(

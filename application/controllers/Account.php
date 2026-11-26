@@ -23,21 +23,12 @@ class Account extends Member_Controller
             'title'         => 'Tài khoản của tôi',
             'me'            => $me,
             'post_count'    => $this->db->where('user_id', $me['id'])->where('deleted_at', null)->count_all_results('posts'),
-            'liked_me'      => $this->m_interaction->liked_me($me['id'], 8),
             'viewer_count'  => $this->m_interaction->viewer_count($me['id']),
             'liked_count'   => $this->m_interaction->liked_me_count($me['id']),
-            'matches'       => $this->m_interaction->matches($me['id'], 8),
+            'my_liked_count'=> $this->m_interaction->my_likes_count($me['id']),
+            'match_count'   => $this->m_interaction->matches_count($me['id']),
             'unread_msg'    => $this->m_interaction->unread_count($me['id']),
             'unread_noti'   => $this->m_notification->unread_count($me['id']),
-            'recent_posts'  => $this->m_post->by_user($me['id'], null, 5),
-            /* Hai khối bổ sung cho trang Tổng quan (theo bản thiết kế SaigonCupid).
-               Dùng lại model sẵn có, không thêm truy vấn mới nào ngoài hai dòng này. */
-            'hoat_dong'     => $this->m_notification->for_user($me['id'], 5),
-            'goi_y_hom_nay' => $this->m_daily->today($me['id']),
-            /* `M_daily::today()` chỉ trả MỘT người mỗi ngày (đúng luật của tính năng
-               ghép đôi hằng ngày). Lưới lấy các hồ sơ phù hợp từ bộ chấm điểm
-               hiện có và luân phiên mỗi ngày lúc 08:00 giờ Việt Nam. */
-            'goi_y_them'    => $this->m_user->account_suggestions($me, 3),
         ));
     }
 

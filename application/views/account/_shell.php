@@ -68,7 +68,7 @@ foreach ($groups as $items) {
     if (isset($items[$current])) { $trang_nay = $items[$current][0]; }
 }
 ?>
-<div class="tk-layout">
+<div class="tk-layout<?= $content_view === 'account/index' ? ' tk-layout--overview' : '' ?>">
     <!-- Dải mở menu tài khoản — chỉ hiện trên điện thoại -->
     <div class="tk-mhead">
         <button type="button" class="tk-mhead__menu" data-tk-drawer="open"

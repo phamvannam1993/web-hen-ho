@@ -242,10 +242,10 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
                 <?php $header_vip = member_has_vip($user); ?>
                 <div class="btn-account<?= $header_vip ? ' btn-account--vip' : '' ?>">
                     <span class="account-avatar">
-                        <a href="<?= site_url('tai-khoan/ho-so') ?>" aria-label="Xem hồ sơ của tôi"><img src="<?= avatar_url($user['avatar'], $user['gender']) ?>" alt=""></a>
+                        <a href="<?= site_url('tai-khoan') ?>" aria-label="Vào tài khoản của tôi"><img src="<?= avatar_url($user['avatar'], $user['gender']) ?>" alt=""></a>
                         <?php if ($header_vip): ?><span class="account-vip-badge" aria-label="Thành viên VIP">VIP</span><?php endif; ?>
                     </span>
-                    <a class="account-main" href="<?= site_url('tai-khoan/ho-so') ?>">
+                    <a class="account-main" href="<?= site_url('tai-khoan') ?>">
                     <span>Tài Khoản</span>
                     <span class="account-total-badge" data-account-total-count <?= empty($account_badge_total) ? 'hidden' : '' ?> aria-label="<?= (int) ($account_badge_total ?? 0) ?> thông báo trong tài khoản"><?= ($account_badge_total ?? 0) > 99 ? '99+' : (int) ($account_badge_total ?? 0) ?></span>
                     </a>

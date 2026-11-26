@@ -1,0 +1,55 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Inbox Clubs refresh regression</title>
+<div class="tk-ms" data-inbox-conversations-url="https://example.test/ajax/hoi-thoai" data-inbox-groups-url="https://example.test/ajax/nhom/0/sticky">
+ <div class="tk-ms-side">
+  <input id="tk-ms-search">
+  <button id="priority" data-inbox-tab="priority">Ưu tiên</button><button id="clubs" data-inbox-tab="clubs">Clubs</button>
+  <div id="tk-ms-inbox-panel"><section class="tk-ms-private"><ul id="tk-ms-list">
+   <li data-name="friend"><a data-conversation-id="9"><span class="tk-ms-item__l">Direct chat</span></a></li>
+  </ul><p id="tk-ms-nores" hidden></p></section></div>
+ </div><div class="tk-ms-pane"></div>
+</div>
+<pre id="result" data-status="running">RUNNING</pre>
+<script>
+var refresh;
+window.setInterval=function(fn){refresh=fn;return 1};
+var rooms=[{id:1,name:'Ẩn danh',mode:'guest',url:'https://example.test/clubs/anonymous',avatar:'../assets/images/chat-guest.svg',last:'Xin chào',last_at:'2026-11-25 09:00:00',unread:0},
+ {id:2,name:'Công khai <img>',mode:'public',url:'https://example.test/clubs/public',avatar:'../assets/images/chat-community.svg',last:'Tin công khai',last_sender:'An',last_at:'2026-11-25 10:00:00',unread:12}];
+window.fetch=async function(url){var data=url.includes('/sticky')?{ok:true,groups:JSON.parse(JSON.stringify(rooms))}:{ok:true,items:[]};return {ok:true,json:async()=>data}};
+</script>
+<script src="../assets/site/js/inbox-tabs.js"></script>
+<script src="../assets/site/js/chat-groups.js"></script>
+<script>
+(async function(){
+ var count=0,result=document.getElementById('result');
+ function check(ok,label){if(!ok)throw Error(label);count++}
+ async function until(fn){for(var i=0;i<100;i++){if(fn())return;await new Promise(r=>setTimeout(r,10))}throw Error('Timed out')}
+ function link(id){return document.querySelector('[data-inbox-group="'+id+'"]')}
+ try{
+  await until(()=>link(2));
+  check(link(1)&&link(2),'Initial refresh inserts both anonymous and public clubs');
+  check(link(2).dataset.panelUrl==='https://example.test/ajax/nhom-panel/2','New public row opens its correct chat panel');
+  check(link(2).querySelector('.tk-ms-item__n').textContent==='Công khai <img>'&&!link(2).querySelector('.tk-ms-item__n img'),'Club names are text, not HTML');
+  check(link(2).querySelector('.tk-ms-item__l').textContent==='An: Tin công khai','Public preview includes sender');
+  check(link(2).querySelector('.tk-count').textContent==='12','New row includes unread count');
+  document.getElementById('clubs').click();
+  check(!link(1).closest('li').hidden&&!link(2).closest('li').hidden,'Clubs tab includes both identity modes');
+  check(document.querySelector('[data-conversation-id="9"]').closest('li').hidden,'Private conversation does not appear in Clubs tab');
+  var search=document.getElementById('tk-ms-search');search.value='công khai';search.dispatchEvent(new Event('input'));
+  check(link(1).closest('li').hidden&&!link(2).closest('li').hidden,'Public clubs can be searched by name');
+  search.value='';search.dispatchEvent(new Event('input'));
+  rooms=[Object.assign({},rooms[1],{unread:0}),{id:3,name:'Nhóm mới',mode:'public',url:'https://example.test/clubs/new',avatar:'../assets/images/chat-community.svg',last:'',last_at:'',unread:0}];
+  refresh();await until(()=>link(3));
+  check(!link(1),'Authoritative refresh removes clubs no longer accessible');
+  check(document.querySelectorAll('[data-inbox-group="2"]').length===1&&link(2).querySelector('.tk-count').hidden,'Refresh does not duplicate rows and clears read badge');
+  check(!!document.querySelector('[data-conversation-id="9"]'),'Group reconciliation preserves private conversations');
+  check(!!link(3).closest('li').querySelector('[data-cg-inbox-more]'),'New clubs include the delegated options button');
+  check(link(3).dataset.clubMounted==='1','Dynamically inserted club receives chat handlers');
+  var toggle=link(3).closest('li').querySelector('[data-cg-inbox-more]');toggle.click();
+  check(toggle.getAttribute('aria-expanded')==='true','New club options menu opens');
+  toggle.click();await until(()=>toggle.getAttribute('aria-expanded')==='false');check(true,'New club options menu closes on second click');
+  result.dataset.status='pass';result.textContent='PASS: '+count+' Clubs refresh assertions.';
+ }catch(error){result.dataset.status='fail';result.textContent='FAIL: '+error.stack}
+})();
+</script>
