@@ -470,6 +470,14 @@ class Api_Controller extends CI_Controller
             'verified' => ($u['kyc_status'] ?? '') === 'verified',
             'is_vip'   => member_has_vip($u),
         );
+        // Khoá xu như thẻ web (profile_access_card): hồ sơ bật thu xu mà người xem chưa mua → khung vàng + "🔒 N xu";
+        // đã mua → khung trắng. Không dùng detail_locked để vẽ khoá (khách chưa đăng nhập luôn detail_locked).
+        if (function_exists('profile_access_card') && array_key_exists('charge_enabled', $u)) {
+            $truy_cap = profile_access_card($u, (int) ($this->me['id'] ?? 0));
+            $ra['charge_enabled'] = (bool) $truy_cap['charge'];
+            $ra['purchased']      = (bool) $truy_cap['purchased'];
+            $ra['unlock_cost']    = $truy_cap['charge'] ? profile_unlock_cost() : 0;
+        }
         if (isset($u['liked'])) {
             $ra['liked'] = (bool) $u['liked'];
         }
