@@ -1,7 +1,8 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
 <link rel="stylesheet" href="<?= base_url('assets/site/css/chat-groups.css') ?>?v=<?= filemtime(FCPATH . 'assets/site/css/chat-groups.css') ?>">
 <main class="container cg-discovery">
-<header class="cg-heading"><p class="cg-eyebrow"><?= tk_icon('message', 'cg-icon') ?> TRÒ CHUYỆN &amp; KẾT NỐI</p><h1>Khám phá nhóm chat</h1><p>Tìm một nhóm hợp với bạn, chia sẻ câu chuyện và làm quen những người bạn mới.</p></header>
+<header class="cg-heading"><h1>Khám phá nhóm chat</h1></header>
+<img class="community-page-banner" src="<?= base_url('assets/images/clubs-banner.jpg') ?>" width="2172" height="724" alt="Saigon Cupid Clubs — Tìm nhóm hợp gu. Cùng trò chuyện, cùng sẻ chia." fetchpriority="high">
 <?php /* Tạm ẩn thanh tìm kiếm và bộ lọc nhóm.
 <form class="cg-filters" method="get" action="<?= site_url('clubs') ?>">
 <input name="q" value="<?= e($q) ?>" placeholder="Tìm tên hoặc mô tả nhóm" aria-label="Tìm nhóm">

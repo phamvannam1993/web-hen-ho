@@ -91,10 +91,17 @@ body.has-guest-banner .site-footer { padding-bottom: 115px; margin-bottom: 0 !im
     }
     .site-mobile-nav {
         position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+        box-sizing: border-box;
         background: rgba(255,255,255,.95);
         backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
         border-top: 1px solid var(--tk-border, #e2e2e2);
+        /* Keep the buttons above the home indicator; the bar background fills
+         * the safe area. Devices without an inset keep their existing spacing. */
+        padding-bottom: 0;
+        padding-bottom: constant(safe-area-inset-bottom);
         padding-bottom: env(safe-area-inset-bottom, 0px);
+        padding-left: env(safe-area-inset-left, 0px);
+        padding-right: env(safe-area-inset-right, 0px);
     }
     .site-mobile-nav ul {
         display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));

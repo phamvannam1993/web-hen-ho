@@ -4,6 +4,10 @@ $chosen = function ($key, $option) use ($value) { return (string) $value($key) =
 ?>
 <link rel="stylesheet" href="<?= base_url('assets/site/css/dating-discovery.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/dating-discovery.css') ?>">
 <section class="dating-discovery">
+    <?php if (!empty($directory_mode)): ?>
+    <header class="dating-directory-heading"><h1><?= e($heading) ?></h1></header>
+    <img class="community-page-banner" src="<?= base_url('assets/images/member-banner.jpg') ?>" width="2172" height="724" alt="Saigon Cupid Thành viên — Mỗi người một câu chuyện. Khám phá những người bạn cùng sở thích." fetchpriority="high">
+    <?php else: ?>
     <header class="dating-hero">
         <div class="dating-hero-copy">
             <span class="dating-eyebrow">Kết nối gần bạn</span>
@@ -20,13 +24,21 @@ $chosen = function ($key, $option) use ($value) { return (string) $value($key) =
         </div>
         <?php endif; ?>
     </header>
+    <?php endif; ?>
     <?php if (empty($directory_mode)): ?>
     <form class="dating-discovery-form" id="dating-distance-fields" action="<?= site_url($base_url) ?>" method="get" data-all-url="<?= e(site_url('hen-ho')) ?>" data-male-url="<?= e(site_url('hen-ho/nam')) ?>" data-female-url="<?= e(site_url('hen-ho/nu')) ?>">
+        <div class="dating-search-row">
         <label class="dating-query">
             <span class="dating-sr-only">Tìm theo tên, khu vực hoặc nghề nghiệp</span>
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg>
             <input type="search" name="q" value="<?= e($value('keyword')) ?>" placeholder="Nhập tên hoặc số điện thoại..." aria-label="Tìm thành viên theo tên hoặc số điện thoại" maxlength="100">
         </label>
+        <button type="button" class="dating-filter-icon" id="dating-filter-toggle" aria-label="Hiện bộ lọc" title="Bộ lọc" aria-expanded="false" aria-controls="dating-filter-panel">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/></svg>
+        </button>
+        </div>
+        <div class="dating-filters-slide" id="dating-filter-panel" hidden>
+        <div class="dating-filter-fields">
         <label><span class="dating-sr-only">Giới tính</span>
             <select name="gender"><option value="">Tất cả giới tính</option><option value="male" <?= $chosen('gender', 'male') ?>>Nam</option><option value="female" <?= $chosen('gender', 'female') ?>>Nữ</option></select>
         </label>
@@ -55,8 +67,10 @@ $chosen = function ($key, $option) use ($value) { return (string) $value($key) =
         <label><span class="dating-sr-only">Sắp xếp</span><select name="sort"><?php foreach ($sorts as $key => $label): ?><option value="<?= $key ?>" <?= $sort === $key ? 'selected' : '' ?>><?= $label ?></option><?php endforeach; ?></select></label>
         <a class="dating-reset" href="<?= site_url($base_url) ?>">Xóa bộ lọc</a>
         <?php if ($origin_province): ?><input type="hidden" name="origin_province" value="<?= (int) $origin_province ?>"><?php endif; ?>
-        <button type="submit" class="dating-submit">Tìm người phù hợp</button>
         <p id="dating-location-status" role="status"><?= !$distance_origin ? 'Bấm biểu tượng vị trí để tìm người gần bạn. Chọn tỉnh thành để ước tính khoảng cách khi chưa chia sẻ vị trí.' : (empty($distance_origin['real']) ? 'Khoảng cách được ước tính theo tỉnh thành.' : 'Đang dùng vị trí bạn đã chia sẻ để tìm người gần bạn.') ?></p>
+        </div>
+        </div>
+        <button type="submit" class="dating-submit">Tìm người phù hợp</button>
     </form>
     <?php endif; ?>
 </section>

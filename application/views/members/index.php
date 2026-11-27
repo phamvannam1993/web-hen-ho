@@ -52,6 +52,9 @@ $with = function ($key, $value) use ($base_url) {
 <link rel="stylesheet" href="<?= base_url('assets/site/css/members-discovery.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/members-discovery.css') ?>">
 <?php endif; ?>
 <div class="container members-page <?= $base_url === 'thanh-vien' ? 'members-discovery' : '' ?><?= $province ? ' dating-page' : '' ?>">
+    <?php if ($compact_members): ?>
+        <img class="community-page-banner" src="<?= base_url('assets/images/member-banner.jpg') ?>" width="2172" height="724" alt="Saigon Cupid Thành viên — Mỗi người một câu chuyện. Khám phá những người bạn cùng sở thích." fetchpriority="high">
+    <?php endif; ?>
     <?php if ($province): ?>
         <nav class="breadcrumb">
             <a href="<?= site_url() ?>">Trang chủ</a> ›

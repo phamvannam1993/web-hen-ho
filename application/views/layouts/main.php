@@ -12,7 +12,7 @@ $flash = $this->session->flashdata('flash');
 
   gtag('config', 'G-NXYG6XSVEK');
 </script>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta charset="utf-8">
 <?php
 /*
@@ -282,7 +282,8 @@ foreach (array('facebook', 'instagram', 'youtube', 'tiktok') as $social_name) {
 </main>
 <?php endif; ?>
 
-<?php if (empty($bare) && $content_view !== 'groups/detail'): ?>
+<?php if (empty($bare) && $content_view !== 'groups/detail'
+    && !($content_view === 'members/index' && ($base_url ?? '') === 'thanh-vien')): ?>
 <footer class="site-footer">
     <div class="site-footer__container">
         <div class="site-footer__top">

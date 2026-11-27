@@ -71,6 +71,34 @@ body.tk-app {
   --tk-head: 114px;
 }
 
+/* Safari cũ vẫn nhận custom property chứa oklch(), nhưng không dùng được nó
+ * làm màu. var(--token, fallback) vì thế không đủ: phải thay chính token. */
+@supports not (color: oklch(0.5 0.1 13)) {
+  body.tk-app {
+    --tk-fg: #24212a;
+    --tk-primary: #ed5576;
+    --tk-primary-soft: #fa7b95;
+    --tk-primary-tint: #ffeaed;
+    --tk-secondary: #faf1f6;
+    --tk-secondary-fg: #473140;
+    --tk-muted: #f9f2f6;
+    --tk-muted-fg: #766d79;
+    --tk-accent: #ffeaed;
+    --tk-accent-fg: #ad2347;
+    --tk-danger: #df2233;
+    --tk-success: #32a669;
+    --tk-warning: #e8ac39;
+    --tk-warning-fg: #422300;
+    --tk-gold: #dbb54c;
+    --tk-gold-fg: #3b2b00;
+    --tk-border: #ede3e9;
+    --tk-shadow: 0 1px 2px rgba(197, 39, 80, .06), 0 8px 24px -12px rgba(197, 39, 80, .14);
+    --tk-shadow-float: 0 12px 40px -16px rgba(197, 39, 80, .28);
+    --tk-grad-brand: linear-gradient(135deg, #ed5576, #fd829f);
+    --tk-grad-blush: linear-gradient(160deg, #fff2f5, #fff7fd);
+  }
+}
+
 /* Gỡ dáng chung của style.css (gạch chân link, lề tiêu đề…) trong khu này */
 /* `:where()` giữ độ ưu tiên bằng 0, để mọi lớp `tk-` bên dưới luôn thắng */
 :where(.tk-layout) a { color: inherit; text-decoration: none; }

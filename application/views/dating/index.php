@@ -22,6 +22,7 @@ if (!empty($directory_mode)) $sorts += array('vip'=>'Thành viên VIP', 'listene
         <?= $pagination ?>
     <?php endif; ?>
 
+    <?php if (empty($directory_mode)): ?>
     <!-- Mẹo hẹn hò an toàn -->
     <section class="safety-box">
         <h2>Hẹn hò an toàn</h2>
@@ -69,4 +70,5 @@ if (!empty($directory_mode)) $sorts += array('vip'=>'Thành viên VIP', 'listene
         </div>
         <button type="button" class="seo-toggle" id="seo-toggle" aria-expanded="false">Xem thêm</button>
     </section>
+    <?php endif; ?>
 </div>

@@ -20,12 +20,29 @@
     var panel = document.getElementById('dating-filter-panel');
     var toggle = document.getElementById('dating-filter-toggle');
     if (panel && toggle) {
-        panel.classList.add('is-collapsible');
-        toggle.hidden = false;
+        var filterAnimation;
         toggle.addEventListener('click', function () {
             var expanded = toggle.getAttribute('aria-expanded') !== 'true';
+            var startHeight = panel.hidden ? 0 : panel.getBoundingClientRect().height;
+            if (filterAnimation) filterAnimation.cancel();
             toggle.setAttribute('aria-expanded', String(expanded));
-            panel.classList.toggle('is-expanded', expanded);
+            toggle.setAttribute('aria-label', expanded ? 'Ẩn bộ lọc' : 'Hiện bộ lọc');
+            if (!panel.animate || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                panel.hidden = !expanded;
+                panel.style.overflow = '';
+                return;
+            }
+            panel.hidden = false;
+            panel.style.overflow = 'hidden';
+            filterAnimation = panel.animate([
+                {height: startHeight + 'px'},
+                {height: (expanded ? panel.scrollHeight : 0) + 'px'}
+            ], {duration: 260, easing: 'cubic-bezier(.25,.1,.25,1)'});
+            filterAnimation.onfinish = function () {
+                panel.hidden = !expanded;
+                panel.style.overflow = '';
+                filterAnimation = null;
+            };
         });
     }
     var button = document.getElementById('dating-location');

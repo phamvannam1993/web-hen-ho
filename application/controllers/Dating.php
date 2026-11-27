@@ -173,7 +173,7 @@ class Dating extends MY_Controller
             'meta_desc'  => $current['desc'],
             'heading'    => $current['heading'],
             'filters'    => $filters,
-            'hero_members' => $this->m_user->dating_hero_members(),
+            'hero_members' => $directory_mode ? array() : $this->m_user->dating_hero_members(),
             'tabs'       => $tabs,
             'tab'        => $tab,
             'sort'       => $sort,
