@@ -93,7 +93,8 @@ check_discovery($directory['sort'] === 'listened' && $directory['filters']['has_
     && $directory['filters']['height_min'] === '150' && $directory['filters']['interests'] === array(2,3), 'Existing directory filters and sorting remain supported');
 check_discovery($directory['filters'] === $controller->m_user->count_filters, 'Directory count and results share filters');
 $html = $view->render($directory);
-check_discovery(strpos($html,'dating-hero')!==false && strpos($html,'Khám phá các thành viên')!==false, 'Directory retains the top banner');
+check_discovery(strpos($html,'community-page-banner')!==false && strpos($html,'member-banner.jpg')!==false, 'Directory retains the top banner');
+check_discovery(strpos($html,'Khám phá các thành viên')===false, 'Directory omits the extra heading');
 check_discovery(strpos($html,'<form')===false && strpos($html,'dating-location.js')===false, 'Directory omits search/filter controls and their script');
 $route = array(); require __DIR__.'/../application/config/routes.php';
 check_discovery($route['thanh-vien']==='dating/members' && $route['thanh-vien/trang/(:num)']==='dating/members/$1'

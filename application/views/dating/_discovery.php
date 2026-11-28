@@ -5,7 +5,6 @@ $chosen = function ($key, $option) use ($value) { return (string) $value($key) =
 <link rel="stylesheet" href="<?= base_url('assets/site/css/dating-discovery.css') ?>?v=<?= @filemtime(FCPATH.'assets/site/css/dating-discovery.css') ?>">
 <section class="dating-discovery">
     <?php if (!empty($directory_mode)): ?>
-    <header class="dating-directory-heading"><h1><?= e($heading) ?></h1></header>
     <img class="community-page-banner" src="<?= base_url('assets/images/member-banner.jpg') ?>" width="2172" height="724" alt="Saigon Cupid Thành viên — Mỗi người một câu chuyện. Khám phá những người bạn cùng sở thích." fetchpriority="high">
     <?php else: ?>
     <header class="dating-hero">
